@@ -1,0 +1,34 @@
+{
+  "name": "react-native-keychain",
+  "version": "0.1.0",
+  "description": "Keychain Access for React Native",
+  "main": "index.ios.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "react-native",
+    "react-component",
+    "react-native-component",
+    "react",
+    "mobile",
+    "ios",
+    "keychain"
+  ],
+  "author": {
+    "name": "Joel Arvidsson",
+    "email": "joel@oblador.se"
+  },
+  "homepage": "https://github.com/oblador/react-native-keychain",
+  "bugs": {
+    "url": "https://github.com/oblador/react-native-keychain/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/oblador/react-native-keychain.git"
+  },
+  "license": "MIT",
+  "peerDependencies": {
+    "react-native": "^0.4.0"
+  }
+}
