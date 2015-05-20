@@ -12,6 +12,8 @@ Currently functionality is limited to just storing internet passwords. More to c
 
 ## Usage
 
+See `KeychainExample` for fully working project example.
+
 ```js
 var Keychain = require('Keychain');
 
