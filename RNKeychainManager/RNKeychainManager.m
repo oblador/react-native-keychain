@@ -10,11 +10,17 @@
 #import "RNKeychainManager.h"
 #import "RCTConvert.h"
 #import "RCTBridge.h"
+#import "RCTUtils.h"
 
 @implementation RNKeychainManager
 
 @synthesize bridge = _bridge;
 RCT_EXPORT_MODULE();
+
+NSDictionary * makeError(NSError *error)
+{
+  return RCTMakeAndLogError(error.localizedDescription, nil, [error dictionaryWithValuesForKeys:@[@"domain", @"code"]]);
+}
 
 
 RCT_EXPORT_METHOD(setInternetCredentialsForServer:(NSString*)server withUsername:(NSString*)username withPassword:(NSString*)password callback:(RCTResponseSenderBlock)callback){
@@ -30,10 +36,10 @@ RCT_EXPORT_METHOD(setInternetCredentialsForServer:(NSString*)server withUsername
   
   // Try to save to keychain
   osStatus = SecItemAdd((__bridge CFDictionaryRef) dict, NULL);
-  
-  if (osStatus) {
+
+  if (osStatus != noErr) {
     NSError *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:osStatus userInfo:nil];
-      callback(@[error]);
+    return callback(@[makeError(error)]);
   }
   
   callback(@[[NSNull null]]);
@@ -57,9 +63,9 @@ RCT_EXPORT_METHOD(getInternetCredentialsForServer:(NSString*)server callback:(RC
   NSString* username = (NSString*) [found objectForKey:(__bridge id)(kSecAttrAccount)];
   NSString* password = [[NSString alloc] initWithData:[found objectForKey:(__bridge id)(kSecValueData)] encoding:NSUTF8StringEncoding];
 
-  if (osStatus) {
+  if (osStatus != noErr) {
     NSError *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:osStatus userInfo:nil];
-    callback(@[error]);
+    return callback(@[makeError(error)]);
   }
   
   callback(@[[NSNull null], username, password]);
@@ -73,9 +79,9 @@ RCT_EXPORT_METHOD(resetInternetCredentialsForServer:(NSString*)server callback:(
 
   // Remove any old values from the keychain
   OSStatus osStatus = SecItemDelete((__bridge CFDictionaryRef) dict);
-  if (osStatus) {
+  if (osStatus != noErr) {
     NSError *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:osStatus userInfo:nil];
-      callback(@[error]);
+    return callback(@[makeError(error)]);
   }
   
   callback(@[[NSNull null]]);
