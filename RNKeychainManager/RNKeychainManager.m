@@ -53,21 +53,23 @@ RCT_EXPORT_METHOD(getInternetCredentialsForServer:(NSString*)server callback:(RC
   
   // Look up server in the keychain
   NSDictionary* found = nil;
-  CFDictionaryRef foundCF;
-  OSStatus osStatus = SecItemCopyMatching((__bridge CFDictionaryRef) dict, (CFTypeRef*)&foundCF);
-  
-  found = (__bridge NSDictionary*)(foundCF);
-  if (!found) return callback(@[[NSNull null]]);
-  
-  // Found
-  NSString* username = (NSString*) [found objectForKey:(__bridge id)(kSecAttrAccount)];
-  NSString* password = [[NSString alloc] initWithData:[found objectForKey:(__bridge id)(kSecValueData)] encoding:NSUTF8StringEncoding];
+  CFTypeRef foundTypeRef = NULL;
+  OSStatus osStatus = SecItemCopyMatching((__bridge CFDictionaryRef) dict, (CFTypeRef*)&foundTypeRef);
 
   if (osStatus != noErr) {
     NSError *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:osStatus userInfo:nil];
     return callback(@[makeError(error)]);
   }
-  
+
+  found = (__bridge NSDictionary*)(foundTypeRef);
+  if (!found) {
+    return callback(@[[NSNull null]]);
+  }
+
+  // Found
+  NSString* username = (NSString*) [found objectForKey:(__bridge id)(kSecAttrAccount)];
+  NSString* password = [[NSString alloc] initWithData:[found objectForKey:(__bridge id)(kSecValueData)] encoding:NSUTF8StringEncoding];
+
   callback(@[[NSNull null], username, password]);
   
 }
