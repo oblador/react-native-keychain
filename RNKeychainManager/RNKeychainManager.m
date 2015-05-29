@@ -85,7 +85,7 @@ RCT_EXPORT_METHOD(setInternetCredentialsForServer:(NSString*)server withUsername
   // Try to save to keychain
   osStatus = SecItemAdd((__bridge CFDictionaryRef) dict, NULL);
 
-  if (osStatus != noErr) {
+  if (osStatus != noErr && osStatus != errSecItemNotFound) {
     NSError *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:osStatus userInfo:nil];
     return callback(@[makeError(error)]);
   }
@@ -104,7 +104,7 @@ RCT_EXPORT_METHOD(getInternetCredentialsForServer:(NSString*)server callback:(RC
   CFTypeRef foundTypeRef = NULL;
   OSStatus osStatus = SecItemCopyMatching((__bridge CFDictionaryRef) dict, (CFTypeRef*)&foundTypeRef);
 
-  if (osStatus != noErr) {
+  if (osStatus != noErr && osStatus != errSecItemNotFound) {
     NSError *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:osStatus userInfo:nil];
     return callback(@[makeError(error)]);
   }
@@ -129,7 +129,7 @@ RCT_EXPORT_METHOD(resetInternetCredentialsForServer:(NSString*)server callback:(
 
   // Remove any old values from the keychain
   OSStatus osStatus = SecItemDelete((__bridge CFDictionaryRef) dict);
-  if (osStatus != noErr) {
+  if (osStatus != noErr && osStatus != errSecItemNotFound) {
     NSError *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:osStatus userInfo:nil];
     return callback(@[makeError(error)]);
   }
