@@ -5,12 +5,11 @@
 'use strict';
 
 var KeychainAccessibilityEnum = module.exports = {
-  NTLM: true,
-  MSN: true,
-  DPA: true,
-  RPA: true,
-  HTTPBasic: true,
-  HTTPDigest: true,
-  HTMLForm: true,
-  Default: true,
+  whenUnlocked: true,
+  afterFirstUnlock: true,
+  always: true,
+  whenPasscodeSetThisDeviceOnly: true,
+  whenUnlockedThisDeviceOnly: true,
+  afterFirstUnlockThisDeviceOnly: true,
+  alwaysThisDeviceOnly: true,
 };
