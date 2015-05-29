@@ -19,7 +19,6 @@ var Keychain = require('Keychain');
 var KeychainExample = React.createClass({
   getInitialState: function() {
     return {
-      server: 'http://localhost/',
       username: '',
       password: '',
       status: '',
@@ -28,36 +27,36 @@ var KeychainExample = React.createClass({
 
   _save: function() {
     Keychain
-      .setInternetCredentials(this.state.server, this.state.username, this.state.password)
-      .then(function() {
+      .setGenericPassword(this.state.username, this.state.password)
+      .then(() => {
         this.setState({status: 'Credentials saved!'});
-      }.bind(this))
-      .catch(function(err) {
+      })
+      .catch((err) => {
         this.setState({status: 'Could not save credentials, ' + err});
-      }.bind(this));
+      });
   },
 
   _load: function() {
     Keychain
-      .getInternetCredentials(this.state.server)
-      .then(function(credentials) {
+      .getGenericPassword()
+      .then((credentials) => {
         this.setState(credentials);
         this.setState({status: 'Credentials loaded!'});
-      }.bind(this))
-      .catch(function(err) {
+      })
+      .catch((err) => {
         this.setState({status: 'Could not load credentials. ' + err});
-      }.bind(this));
+      });
   },
 
   _reset: function() {
     Keychain
-      .resetInternetCredentials(this.state.server)
-      .then(function() {
+      .resetGenericPassword()
+      .then(() => {
         this.setState({status: 'Credentials Reset!', username: '', password: '' });
-      }.bind(this))
-      .catch(function(err) {
-        this.setState({status: 'Could not save credentials, ' + err});
-      }.bind(this));
+      })
+      .catch((err) => {
+        this.setState({status: 'Could not reset credentials, ' + err});
+      });
   },
 
   render: function() {
@@ -66,16 +65,6 @@ var KeychainExample = React.createClass({
         <Text style={styles.welcome}>
           React Native Keychain Example
         </Text>
-        <View style={styles.field}>
-          <Text style={styles.label}>Server</Text>
-          <TextInput 
-            style={styles.input} 
-            keyboardType="url" 
-            autoCapitalize="none" 
-            value={this.state.server}
-            onChange={(event) => this.setState({ server: event.nativeEvent.text })}
-           />
-        </View>
         <View style={styles.field}>
           <Text style={styles.label}>Username</Text>
           <TextInput 
@@ -122,9 +111,9 @@ var KeychainExample = React.createClass({
 var styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#F5FCFF',
+    paddingTop: 30,
   },
   welcome: {
     fontSize: 20,
