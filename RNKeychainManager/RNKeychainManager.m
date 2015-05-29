@@ -17,9 +17,57 @@
 @synthesize bridge = _bridge;
 RCT_EXPORT_MODULE();
 
+// Messages from the comments in <Security/SecBase.h>
+NSString *messageForError(NSError *error)
+{
+  switch (error.code) {
+    case errSecUnimplemented:
+      return @"Function or operation not implemented.";
+
+    case errSecIO:
+      return @"I/O error.";
+
+    case errSecOpWr:
+      return @"File already open with with write permission.";
+
+    case errSecParam:
+      return @"One or more parameters passed to a function where not valid.";
+
+    case errSecAllocate:
+      return @"Failed to allocate memory.";
+
+    case errSecUserCanceled:
+      return @"User canceled the operation.";
+
+    case errSecBadReq:
+      return @"Bad parameter or invalid state for operation.";
+
+    case errSecNotAvailable:
+      return @"No keychain is available. You may need to restart your computer.";
+
+    case errSecDuplicateItem:
+      return @"The specified item already exists in the keychain.";
+
+    case errSecItemNotFound:
+      return @"The specified item could not be found in the keychain.";
+
+    case errSecInteractionNotAllowed:
+      return @"User interaction is not allowed.";
+
+    case errSecDecode:
+      return @"Unable to decode the provided data.";
+
+    case errSecAuthFailed:
+      return @"The user name or passphrase you entered is not correct.";
+
+    default:
+      return error.localizedDescription;
+  }
+}
+
 NSDictionary * makeError(NSError *error)
 {
-  return RCTMakeAndLogError(error.localizedDescription, nil, [error dictionaryWithValuesForKeys:@[@"domain", @"code"]]);
+  return RCTMakeAndLogError(messageForError(error), nil, [error dictionaryWithValuesForKeys:@[@"domain", @"code"]]);
 }
 
 
