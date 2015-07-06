@@ -15,7 +15,7 @@ Currently functionality is limited to just storing internet and generic password
 See `KeychainExample` for fully working project example.
 
 ```js
-var Keychain = require('Keychain');
+var Keychain = require('react-native-keychain');
 
 var username = 'zuck';
 var password = 'poniesRgr8';

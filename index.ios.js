@@ -3,7 +3,7 @@
  */
 'use strict';
 
-var NativeModules = require('NativeModules');
+var { NativeModules } = require('react-native');
 var RNKeychainManager = NativeModules.RNKeychainManager;
 
 var Keychain = {
