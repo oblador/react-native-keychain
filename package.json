@@ -1,6 +1,6 @@
 {
   "name": "react-native-keychain",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Keychain Access for React Native",
   "main": "index.ios.js",
   "scripts": {
@@ -29,6 +29,6 @@
   },
   "license": "MIT",
   "peerDependencies": {
-    "react-native": ">=0.4.4 || 0.5.0-rc1 || 0.6.0-rc || 0.7.0-rc || 0.7.0-rc.2"
+    "react-native": ">=0.4.4 || 0.5.0-rc1 || 0.6.0-rc || 0.7.0-rc || 0.7.0-rc.2 || 0.8.0-rc || 0.8.0-rc.2"
   }
 }
