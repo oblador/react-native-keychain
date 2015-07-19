@@ -14,7 +14,7 @@ var {
   TouchableHighlight,
 } = React;
 
-var Keychain = require('Keychain');
+var Keychain = require('react-native-keychain');
 
 var KeychainExample = React.createClass({
   getInitialState: function() {
@@ -67,20 +67,20 @@ var KeychainExample = React.createClass({
         </Text>
         <View style={styles.field}>
           <Text style={styles.label}>Username</Text>
-          <TextInput 
-            style={styles.input} 
-            autoFocus={true} 
-            autoCapitalize="none" 
+          <TextInput
+            style={styles.input}
+            autoFocus={true}
+            autoCapitalize="none"
             value={this.state.username}
             onChange={(event) => this.setState({ username: event.nativeEvent.text })}
            />
         </View>
         <View style={styles.field}>
           <Text style={styles.label}>Password</Text>
-          <TextInput 
-            style={styles.input} 
-            password={true} 
-            autoCapitalize="none" 
+          <TextInput
+            style={styles.input}
+            password={true}
+            autoCapitalize="none"
             value={this.state.password}
             onChange={(event) => this.setState({ password: event.nativeEvent.text })}
            />
