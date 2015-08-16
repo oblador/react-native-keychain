@@ -1,6 +1,6 @@
 /**
  * Reference: <https://developer.apple.com/library/ios/documentation/Security/Reference/keychainservices/index.html#//apple_ref/doc/constant_group/Protocol_Values>
- * @providesModule KeychainAuthenticationTypesEnum
+ * @providesModule KeychainProtocolsEnum
  */
 'use strict';
 
