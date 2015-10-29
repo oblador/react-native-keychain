@@ -1,14 +1,24 @@
 # react-native-keychain
 Keychain Access for React Native
 
-Currently functionality is limited to just storing internet and generic passwords. Wider exposure of the underlying API coming.
+Currently functionality is limited to just storing internet and generic passwords. 
 
 ## Installation
 
-* `$ npm install react-native-keychain`
+`$ npm install react-native-keychain`
+
+### Option: Manually
+
 * Right click on Libraries, select **Add files to "…"** and select `node_modules/react-native-keychain/RNKeychain.xcodeproj`
 * Select your project and under **Build Phases** -> **Link Binary With Libraries**, press the + and select `libRNKeychain.a`.
 
+### Option: With [CocoaPods](https://cocoapods.org/)
+
+Add the following to your `Podfile` and run `pod update`:
+
+```
+pod 'RNKeychain', :path => 'node_modules/react-native-keychain'
+```
 
 ## Usage
 
