@@ -71,5 +71,12 @@ Keychain
 
 ```
 
+## Todo
+
+- [x] iOS support
+- [ ] Android support
+- [ ] Storing objects as JSON
+- [ ] Expose wider selection of underlying native APIs
+
 ## License
 MIT © Joel Arvidsson 2015
