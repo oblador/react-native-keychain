@@ -1,7 +1,7 @@
 Pod::Spec.new do |s|
 
   s.name         = "RNKeychain"
-  s.version      = "0.2.5"
+  s.version      = "0.2.6"
   s.summary      = "Keychain Access for React Native."
   s.homepage     = "https://github.com/oblador/react-native-keychain"
   s.license      = "MIT"
