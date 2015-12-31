@@ -76,15 +76,18 @@ RCT_EXPORT_METHOD(setGenericPasswordForService:(NSString*)service withUsername:(
     service = [[NSBundle mainBundle] bundleIdentifier];
   }
 
-  // Create dictionary of search parameters
-  NSDictionary* dict = [NSDictionary dictionaryWithObjectsAndKeys:(__bridge id)(kSecClassGenericPassword),  kSecClass, service, kSecAttrService, kCFBooleanTrue, kSecReturnAttributes, nil];
-
   // Remove any old values from the keychain
-  OSStatus osStatus = SecItemDelete((__bridge CFDictionaryRef) dict);
+  OSStatus osStatus = [self deletePasswordForService:service withUsername:username];
 
   // Create dictionary of parameters to add
   NSData* passwordData = [password dataUsingEncoding:NSUTF8StringEncoding];
-  dict = [NSDictionary dictionaryWithObjectsAndKeys:(__bridge id)(kSecClassGenericPassword), kSecClass, service, kSecAttrService, passwordData, kSecValueData, username, kSecAttrAccount, nil];
+  NSDictionary* dict = @{
+                         (__bridge id)kSecClass:(__bridge id)(kSecClassGenericPassword),
+                         (__bridge id)kSecAttrService: service,
+                         (__bridge id)kSecAttrAccount: username,
+                         (__bridge id)kSecReturnAttributes: @YES,
+                         (__bridge id)kSecValueData: passwordData
+                         };
 
   // Try to save to keychain
   osStatus = SecItemAdd((__bridge CFDictionaryRef) dict, NULL);
@@ -98,13 +101,19 @@ RCT_EXPORT_METHOD(setGenericPasswordForService:(NSString*)service withUsername:(
 
 }
 
-RCT_EXPORT_METHOD(getGenericPasswordForService:(NSString*)service callback:(RCTResponseSenderBlock)callback){
+RCT_EXPORT_METHOD(getGenericPasswordForService:(NSString*)service username:(NSString*)username callback:(RCTResponseSenderBlock)callback){
   if(service == nil) {
     service = [[NSBundle mainBundle] bundleIdentifier];
   }
 
   // Create dictionary of search parameters
-  NSDictionary* dict = [NSDictionary dictionaryWithObjectsAndKeys:(__bridge id)(kSecClassGenericPassword), kSecClass, service, kSecAttrService, kCFBooleanTrue, kSecReturnAttributes, kCFBooleanTrue, kSecReturnData, nil];
+  NSDictionary* dict = @{
+                       (__bridge id)kSecClass:(__bridge id)(kSecClassGenericPassword),
+                       (__bridge id)kSecAttrService: service,
+                       (__bridge id)kSecAttrAccount: username,
+                       (__bridge id)kSecReturnAttributes: @YES,
+                       (__bridge id)kSecReturnData: @YES
+                       };
 
   // Look up server in the keychain
   NSDictionary* found = nil;
@@ -121,31 +130,18 @@ RCT_EXPORT_METHOD(getGenericPasswordForService:(NSString*)service callback:(RCTR
     return callback(@[[NSNull null]]);
   }
 
-  // Found
-  NSString* username = (NSString*) [found objectForKey:(__bridge id)(kSecAttrAccount)];
   NSString* password = [[NSString alloc] initWithData:[found objectForKey:(__bridge id)(kSecValueData)] encoding:NSUTF8StringEncoding];
-
-  callback(@[[NSNull null], username, password]);
-
+  callback(@[[NSNull null], password]);
 }
 
-RCT_EXPORT_METHOD(resetGenericPasswordForService:(NSString*)service callback:(RCTResponseSenderBlock)callback){
-  if(service == nil) {
-    service = [[NSBundle mainBundle] bundleIdentifier];
-  }
-
-  // Create dictionary of search parameters
-  NSDictionary* dict = [NSDictionary dictionaryWithObjectsAndKeys:(__bridge id)(kSecClassGenericPassword), kSecClass, service, kSecAttrService, kCFBooleanTrue, kSecReturnAttributes, kCFBooleanTrue, kSecReturnData, nil];
-
-  // Remove any old values from the keychain
-  OSStatus osStatus = SecItemDelete((__bridge CFDictionaryRef) dict);
+RCT_EXPORT_METHOD(resetGenericPasswordForService:(NSString*)service username:(NSString*)username callback:(RCTResponseSenderBlock)callback){
+  OSStatus osStatus = [self deletePasswordForService:service withUsername:username];
   if (osStatus != noErr && osStatus != errSecItemNotFound) {
     NSError *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:osStatus userInfo:nil];
     return callback(@[makeError(error)]);
   }
 
   callback(@[[NSNull null]]);
-
 }
 
 RCT_EXPORT_METHOD(setInternetCredentialsForServer:(NSString*)server withUsername:(NSString*)username withPassword:(NSString*)password callback:(RCTResponseSenderBlock)callback){
@@ -213,6 +209,28 @@ RCT_EXPORT_METHOD(resetInternetCredentialsForServer:(NSString*)server callback:(
 
   callback(@[[NSNull null]]);
 
+}
+
+- (OSStatus) deletePasswordForService:(NSString*)service withUsername:(NSString*)username
+{
+  if (service == nil) {
+    service = [[NSBundle mainBundle] bundleIdentifier];
+  }
+  
+  // Create dictionary of search parameters
+  NSMutableDictionary* dict = [NSMutableDictionary dictionaryWithDictionary: @{
+    (__bridge id)kSecClass:(__bridge id)(kSecClassGenericPassword),
+    (__bridge id)kSecAttrService: service,
+    (__bridge id)kSecReturnAttributes: @YES,
+    (__bridge id)kSecReturnData: @YES
+  }];
+
+  if (username != nil) {
+    [dict setObject:username forKey:(__bridge id)kSecAttrAccount];
+  }
+  
+  // Remove any old values from the keychain
+  return SecItemDelete((__bridge CFDictionaryRef) dict);
 }
 
 @end

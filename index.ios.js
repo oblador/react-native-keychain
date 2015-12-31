@@ -89,9 +89,10 @@ var Keychain = {
   ): Promise {
     return new Promise((resolve, reject) => {
       RNKeychainManager.setGenericPasswordForService(service, username, password, function(err) {
-        callback && callback((err && convertError(err)) || null);
+        err = convertError(err);
+        if (callback) callback(err);
         if (err) {
-          reject(convertError(err));
+          reject(err);
         } else {
           resolve();
         }
@@ -100,29 +101,31 @@ var Keychain = {
   },
 
   /**
-   * Fetches login combination for `service` (defaults to `bundleId`) as an object with the format
-   * `{ username, password }` and passes the result to `callback`, along with an `Error` if
-   * there is any.
+   * Fetches password for `username` with `service` (defaults to `bundleId`) and
+   * passes the result to `callback`, along with an `Error` if there is any.
    * Returns a `Promise` object.
    */
   getGenericPassword: function(
+    username: username,
     service?: string,
     callback?: ?(error: ?Error, result: ?string) => void
   ): Promise {
     return new Promise((resolve, reject) => {
-      RNKeychainManager.getGenericPasswordForService(service, function(err, username, password) {
-        err = convertError(err);
-        if(!err && arguments.length === 1) {
-          err = new Error('No keychain entry found' + (service ? ' for service "' + service + '"' : ''));
+      RNKeychainManager.getGenericPasswordForService(service, username, function(err, password) {
+        if (!err && arguments.length === 1) {
+          let s = (service ? ' for service "' + service + '"' : '')
+          err = new Error(`No keychain entry found for username ${username} ${s}`);
         }
-        callback && callback((err && convertError(err)) || null, username, password);
+
+        err = convertError(err)
+        if (callback) callback(err, password)
         if (err) {
-          reject(convertError(err));
+          reject(err);
         } else {
-          resolve({ username, password });
+          resolve(password);
         }
       });
-    });
+    })
   },
 
   /**
@@ -130,15 +133,16 @@ var Keychain = {
    * `callback` with an `Error` if there is any.
    * Returns a `Promise` object.
    */
-  resetGenericPassword: function(
+  resetGenericPasswords: function(
     service?: string,
     callback?: ?(error: ?Error) => void
   ): Promise {
     return new Promise((resolve, reject) => {
-      RNKeychainManager.resetGenericPasswordForService(service, function(err) {
-        callback && callback((err && convertError(err)) || null);
+      RNKeychainManager.resetGenericPasswordForService(service, null, function(err) {
+        err = convertError(err)
+        if (callback) callback(err)
         if (err) {
-          reject(convertError(err));
+          reject(err);
         } else {
           resolve();
         }
@@ -146,6 +150,30 @@ var Keychain = {
     });
   },
 
+  /**
+   * Deletes generic password keychain entry for `username` with `service` (defaults to `bundleId`)
+   * and calls `callback` with an `Error` if there is any.
+   * Returns a `Promise` object.
+   */
+  resetGenericPassword: function(
+    username: string,
+    service?: string,
+    callback?: ?(error: ?Error) => void
+  ): Promise {
+    if (!username) throw new Error('missing required parameter "username"');
+
+    return new Promise((resolve, reject) => {
+      RNKeychainManager.resetGenericPasswordForService(service, username, function(err) {
+        err = convertError(err)
+        if (callback) callback(err)
+        if (err) {
+          reject(err);
+        } else {
+          resolve();
+        }
+      });
+    });
+  },
 };
 
 function convertError(err) {
