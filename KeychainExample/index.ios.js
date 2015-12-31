@@ -38,9 +38,8 @@ var KeychainExample = React.createClass({
 
   _load: function() {
     Keychain
-      .getGenericPassword()
-      .then((credentials) => {
-        this.setState(credentials);
+      .getGenericPassword(this.state.username)
+      .then((password) => {
         this.setState({status: 'Credentials loaded!'});
       })
       .catch((err) => {
@@ -50,7 +49,7 @@ var KeychainExample = React.createClass({
 
   _reset: function() {
     Keychain
-      .resetGenericPassword()
+      .resetGenericPassword(this.state.username)
       .then(() => {
         this.setState({status: 'Credentials Reset!', username: '', password: '' });
       })
