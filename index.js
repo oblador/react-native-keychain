@@ -3,7 +3,7 @@
  */
 'use strict';
 
-var { NativeModules } = require('react-native');
+var { NativeModules, Platform } = require('react-native');
 var RNKeychainManager = NativeModules.RNKeychainManager;
 
 var Keychain = {
@@ -149,6 +149,9 @@ var Keychain = {
 };
 
 function convertError(err) {
+  if (Platform.OS === 'android') {
+      return new Error(err);
+  }
   if (!err) {
     return null;
   }
