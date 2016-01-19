@@ -20,6 +20,10 @@ Add the following to your `Podfile` and run `pod update`:
 pod 'RNKeychain', :path => 'node_modules/react-native-keychain'
 ```
 
+### Option: With [rnpm](https://github.com/rnpm/rnpm)
+
+`$ rnpm link`
+
 ## Usage
 
 See `KeychainExample` for fully working project example.
