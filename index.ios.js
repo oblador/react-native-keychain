@@ -146,6 +146,75 @@ var Keychain = {
     });
   },
 
+  /**
+   * Saves the `key` and `value` combination for the current `bundleId`
+   * and calls `callback` with an `Error` if there is any.
+   * Returns a `Promise` object.
+   */
+  setSecureString: function(
+    key: string,
+    value: string,
+    callback?: ?(error: ?Error) => void
+  ): Promise {
+    return new Promise((resolve, reject) => {
+      RNKeychainManager.setSecureString(key, value, function(err) {
+        callback && callback((err && convertError(err)) || null);
+        if (err) {
+          reject(convertError(err));
+        } else {
+          resolve();
+        }
+      });
+    });
+  },
+
+  /**
+   * Fetches value for the provided key in the current `bundleId` as an object with the format
+   * `{ key, value }` and passes the result to `callback`, along with an `Error` if
+   * there is any.
+   * Returns a `Promise` object.
+   */
+  getSecureString: function(
+    key: string,
+    callback?: ?(error: ?Error, result: ?string) => void
+  ): Promise {
+    return new Promise((resolve, reject) => {
+      RNKeychainManager.getSecureStringForKey(key, function(err, key, value) {
+        err = convertError(err);
+        if(!err && arguments.length === 1) {
+          err = new Error('No keychain entry found' + (key ? ' for key "' + key + '"' : ''));
+        }
+        callback && callback((err && convertError(err)) || null, key, value);
+        if (err) {
+          reject(convertError(err));
+        } else {
+          resolve({ key, value });
+        }
+      });
+    });
+  },
+
+  /**
+   * Deletes the entry for the specified key in the current `bundleId` and calls
+   * `callback` with an `Error` if there is any.
+   * Returns a `Promise` object.
+   */
+  resetSecureString: function(
+    key: string,
+    callback?: ?(error: ?Error) => void
+  ): Promise {
+    return new Promise((resolve, reject) => {
+      RNKeychainManager.resetSecureStringForKey(key, function(err) {
+        callback && callback((err && convertError(err)) || null);
+        if (err) {
+          reject(convertError(err));
+        } else {
+          resolve();
+        }
+      });
+    });
+  },
+
 };
 
 function convertError(err) {

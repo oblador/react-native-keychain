@@ -215,4 +215,81 @@ RCT_EXPORT_METHOD(resetInternetCredentialsForServer:(NSString*)server callback:(
 
 }
 
+- (NSDictionary *)genericPasswordDictWithAccount:(NSString *)account password:(NSString *)password andReturnData:(BOOL)returnData {
+    if (password) {
+        NSData *passwordData = [password dataUsingEncoding:NSUTF8StringEncoding];
+
+        return @{
+            (__bridge NSString *)kSecClass: (__bridge id)(kSecClassGenericPassword),
+            (__bridge NSString *)kSecAttrService: [[NSBundle mainBundle] bundleIdentifier],
+            (__bridge NSString *)kSecAttrAccount: account,
+            (__bridge NSString *)kSecValueData: passwordData,
+            (__bridge NSString *)kSecReturnAttributes: @(returnData),
+            (__bridge NSString *)kSecReturnData: @(returnData)
+        };
+    }
+
+    return @{
+        (__bridge NSString *)kSecClass: (__bridge id)(kSecClassGenericPassword),
+        (__bridge NSString *)kSecAttrService: [[NSBundle mainBundle] bundleIdentifier],
+        (__bridge NSString *)kSecAttrAccount: account,
+        (__bridge NSString *)kSecReturnAttributes: @(returnData),
+        (__bridge NSString *)kSecReturnData: @(returnData)
+    };
+}
+
+RCT_EXPORT_METHOD(setSecureString:(NSString *)value forKey:(NSString *)key callback:(RCTResponseSenderBlock)callback) {
+    // Remove any old values from the keychain
+    NSDictionary *searchDict = [self genericPasswordDictWithAccount:key password:nil andReturnData:NO];
+    OSStatus osStatus = SecItemDelete((__bridge CFDictionaryRef)searchDict);
+
+    // Try to save to keychain
+    NSDictionary *saveDict = [self genericPasswordDictWithAccount:key password:value andReturnData:NO];
+    osStatus = SecItemAdd((__bridge CFDictionaryRef) saveDict, NULL);
+
+    if (osStatus != noErr && osStatus != errSecItemNotFound) {
+        NSError *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:osStatus userInfo:nil];
+        return callback(@[makeError(error)]);
+    }
+
+    callback(@[[NSNull null]]);
+}
+
+RCT_EXPORT_METHOD(getSecureStringForKey:(NSString *)key callback:(RCTResponseSenderBlock)callback){
+    // Look up server in the keychain
+    NSDictionary *searchDict = [self genericPasswordDictWithAccount:key password:nil andReturnData:YES];
+
+    NSDictionary *found = nil;
+    CFTypeRef foundTypeRef = NULL;
+    OSStatus osStatus = SecItemCopyMatching((__bridge CFDictionaryRef)searchDict, (CFTypeRef*)&foundTypeRef);
+
+    if (osStatus != noErr && osStatus != errSecItemNotFound) {
+        NSError *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:osStatus userInfo:nil];
+        return callback(@[makeError(error)]);
+    }
+
+    found = (__bridge NSDictionary*)(foundTypeRef);
+    if (!found) {
+        return callback(@[[NSNull null]]);
+    }
+
+    // Found
+    NSString *value = [[NSString alloc] initWithData:[found objectForKey:(__bridge id)(kSecValueData)] encoding:NSUTF8StringEncoding];
+
+    callback(@[[NSNull null], key, value]);
+}
+
+RCT_EXPORT_METHOD(resetSecureStringForKey:(NSString *)key callback:(RCTResponseSenderBlock)callback) {
+    // Remove any old values from the keychain
+    NSDictionary *searchDict = [self genericPasswordDictWithAccount:key password:nil andReturnData:YES];
+
+    OSStatus osStatus = SecItemDelete((__bridge CFDictionaryRef) searchDict);
+    if (osStatus != noErr && osStatus != errSecItemNotFound) {
+        NSError *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:osStatus userInfo:nil];
+        return callback(@[makeError(error)]);
+    }
+
+    callback(@[[NSNull null]]);
+}
+
 @end
