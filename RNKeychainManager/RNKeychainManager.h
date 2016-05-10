@@ -11,4 +11,6 @@
 
 @interface RNKeychainManager : NSObject <RCTBridgeModule>
 
++ (void)setBundleIdentifier:(NSString *)bundleIdentifier;
+
 @end
