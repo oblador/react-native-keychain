@@ -256,8 +256,18 @@ RCT_EXPORT_METHOD(setSecureString:(NSString *)value forKey:(NSString *)key callb
     osStatus = SecItemAdd((__bridge CFDictionaryRef) saveDict, NULL);
     
     if (osStatus != noErr && osStatus != errSecItemNotFound) {
-        NSError *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:osStatus userInfo:nil];
-        return callback(@[makeError(error)]);
+        if (osStatus == errSecDuplicateItem) {
+            osStatus = SecItemUpdate((__bridge CFDictionaryRef) saveDict, NULL);
+            
+            if (osStatus != noErr && osStatus != errSecItemNotFound) {
+                NSError *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:osStatus userInfo:nil];
+                return callback(@[makeError(error)]);
+            }
+        }
+        else {
+            NSError *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:osStatus userInfo:nil];
+            return callback(@[makeError(error)]);
+        }
     }
     
     callback(@[[NSNull null]]);
