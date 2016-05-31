@@ -2,7 +2,7 @@
   "name": "react-native-keychain",
   "version": "0.2.7",
   "description": "Keychain Access for React Native",
-  "main": "index.ios.js",
+  "main": "index",
   "scripts": {
     "test": "flow"
   },
