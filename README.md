@@ -78,7 +78,7 @@ Keychain
 ### Android
 
 * Note: Android support requires React Native 0.19 or later
-* on Android, the `*InternetCredentials` calls will be resolved as calls to `*GenericPassword()` and the data will be saved in `SharedPreferences`
+* on Android, the `*InternetCredentials` calls will be resolved as calls to `*GenericPassword()` and the data will be saved in `SharedPreferences`, encrypted using Facebook conceal.
 
 * Edit `android/settings.gradle` to look like this (without the +):
 
