@@ -20,9 +20,10 @@ var Keychain = {
   ): Promise {
     return new Promise((resolve, reject) => {
       RNKeychainManager.setInternetCredentialsForServer(server, username, password, function(err) {
-        callback && callback((err && convertError(err)) || null);
+        err = convertError(err);
+        callback && callback(err || null);
         if (err) {
-          reject(convertError(err));
+          reject(err);
         } else {
           resolve();
         }
@@ -45,9 +46,9 @@ var Keychain = {
         if(!err && arguments.length === 1) {
           err = new Error('No keychain entry found for server "' + server + '"');
         }
-        callback && callback((err && convertError(err)) || null, username, password);
+        callback && callback(err || null, username, password);
         if (err) {
-          reject(convertError(err));
+          reject(err);
         } else {
           resolve({ username, password });
         }
@@ -66,9 +67,10 @@ var Keychain = {
   ): Promise {
     return new Promise((resolve, reject) => {
       RNKeychainManager.resetInternetCredentialsForServer(server, function(err) {
-        callback && callback((err && convertError(err)) || null);
+        err = convertError(err);
+        callback && callback(err || null);
         if (err) {
-          reject(convertError(err));
+          reject(err);
         } else {
           resolve();
         }
@@ -89,9 +91,10 @@ var Keychain = {
   ): Promise {
     return new Promise((resolve, reject) => {
       RNKeychainManager.setGenericPasswordForService(service, username, password, function(err) {
-        callback && callback((err && convertError(err)) || null);
+        err = convertError(err);
+        callback && callback(err || null);
         if (err) {
-          reject(convertError(err));
+          reject(err);
         } else {
           resolve();
         }
@@ -115,9 +118,9 @@ var Keychain = {
         if(!err && arguments.length === 1) {
           err = new Error('No keychain entry found' + (service ? ' for service "' + service + '"' : ''));
         }
-        callback && callback((err && convertError(err)) || null, username, password);
+        callback && callback(err || null, username, password);
         if (err) {
-          reject(convertError(err));
+          reject(err);
         } else {
           resolve({ username, password });
         }
@@ -136,9 +139,10 @@ var Keychain = {
   ): Promise {
     return new Promise((resolve, reject) => {
       RNKeychainManager.resetGenericPasswordForService(service, function(err) {
-        callback && callback((err && convertError(err)) || null);
+        err = convertError(err);
+        callback && callback(err || null);
         if (err) {
-          reject(convertError(err));
+          reject(err);
         } else {
           resolve();
         }
@@ -149,11 +153,11 @@ var Keychain = {
 };
 
 function convertError(err) {
-  if (Platform.OS === 'android') {
-      return new Error(err);
-  }
   if (!err) {
     return null;
+  }
+  if (Platform.OS === 'android') {
+    return new Error(err);
   }
   var out = new Error(err.message);
   out.key = err.key;
