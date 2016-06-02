@@ -66,6 +66,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
             prefsEditor.putString(service + ":p", encryptedPassword);
             prefsEditor.apply();
             Log.d("KeychainModule saved: ", service + encryptedUsername + ":" + encryptedPassword);
+            callback.invoke("", "KeychainModule saved the data");
         } catch (Exception e) {
             Log.e("KeychainModule ", e.getLocalizedMessage());
             callback.invoke(e.getLocalizedMessage());
