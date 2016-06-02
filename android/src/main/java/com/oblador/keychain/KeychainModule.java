@@ -125,6 +125,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
             prefsEditor.remove(service + ":u");
             prefsEditor.remove(service + ":p");
             prefsEditor.apply();
+            callback.invoke("", "KeychainModule password was reset");
         } catch (Exception e) {
             //this probably never happens but it is here so that the android api is the same as on iOS
             callback.invoke(e.getLocalizedMessage());
