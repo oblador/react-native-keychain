@@ -41,12 +41,14 @@ Keychain
     console.log('Credentials saved successfully!');
   });
 
+// service argument optional
 Keychain
   .getGenericPassword()
   .then(function(credentials) {
     console.log('Credentials successfully loaded for user ' + credentials.username);
   });
 
+// service argument optional
 Keychain
   .resetGenericPassword()
   .then(function() {
@@ -78,7 +80,7 @@ Keychain
 ### Android
 
 * Note: Android support requires React Native 0.19 or later
-* on Android, the `*InternetCredentials` calls will be resolved as calls to `*GenericPassword()` and the data will be saved in `SharedPreferences`, encrypted using Facebook conceal.
+* on Android, the `setInternetCredentials(server, username, password)` call will be resolved as call to `setGenericPassword(username, password, server)` and the data will be saved in `SharedPreferences`, encrypted using Facebook conceal. Use the `server` argument to distinguish between multiple entries.
 
 * Edit `android/settings.gradle` to look like this (without the +):
 
