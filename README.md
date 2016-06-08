@@ -46,6 +46,8 @@ Keychain
   .getGenericPassword()
   .then(function(credentials) {
     console.log('Credentials successfully loaded for user ' + credentials.username);
+  }).catch(function(error) {
+    console.log('Keychain couldn\'t be accessed! Maybe no value set?', error);
   });
 
 // service argument optional
@@ -140,4 +142,4 @@ Keychain
 - [ ] Expose wider selection of underlying native APIs
 
 ## License
-MIT © Joel Arvidsson 2015
+MIT © Joel Arvidsson 2016
