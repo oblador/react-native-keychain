@@ -16,8 +16,7 @@ import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 
-import java.nio.charset.StandardCharsets;
-
+import java.nio.charset.Charset;
 
 public class KeychainModule extends ReactContextBaseJavaModule {
 
@@ -75,7 +74,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
 
     private String encryptWithEntity(String toEncypt, Entity entity, Callback callback) {
         try {
-            byte[] encryptedBytes = crypto.encrypt(toEncypt.getBytes(StandardCharsets.UTF_8), entity);
+            byte[] encryptedBytes = crypto.encrypt(toEncypt.getBytes(Charset.forName("UTF-8")), entity);
             return Base64.encodeToString(encryptedBytes, Base64.DEFAULT);
         } catch (Exception e) {
             Log.e("KeychainModule ", e.getLocalizedMessage());
@@ -109,7 +108,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
             byte[] decryptedUsername = crypto.decrypt(recuser, userentity);
             byte[] decryptedPass = crypto.decrypt(recpass, pwentity);
 
-            callback.invoke("", new String(decryptedUsername, StandardCharsets.UTF_8), new String(decryptedPass, StandardCharsets.UTF_8));
+            callback.invoke("", new String(decryptedUsername, Charset.forName("UTF-8")), new String(decryptedPass, Charset.forName("UTF-8")));
         } catch (Exception e) {
             Log.e("KeychainModule ", e.getLocalizedMessage());
             callback.invoke(e.getLocalizedMessage());
