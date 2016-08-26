@@ -5,7 +5,7 @@ Currently functionality is limited to just storing internet and generic password
 
 ## Installation
 
-`$ npm install react-native-keychain`
+`$ npm install --save react-native-keychain`
 
 ### Option: Manually
 
@@ -20,9 +20,9 @@ Add the following to your `Podfile` and run `pod update`:
 pod 'RNKeychain', :path => 'node_modules/react-native-keychain'
 ```
 
-### Option: With [rnpm](https://github.com/rnpm/rnpm)
+### Option: With `react-native link`
 
-`$ rnpm link`
+`$ react-native link`
 
 ## Usage
 
@@ -81,8 +81,16 @@ Keychain
 
 ### Android
 
+### Option: With `react-native link`
+
+`$ react-native link` and check MainApplication.java to verify the package was added.
+
 * Note: Android support requires React Native 0.19 or later
 * on Android, the `setInternetCredentials(server, username, password)` call will be resolved as call to `setGenericPassword(username, password, server)` and the data will be saved in `SharedPreferences`, encrypted using Facebook conceal. Use the `server` argument to distinguish between multiple entries.
+
+
+### Option: Manually
+
 
 * Edit `android/settings.gradle` to look like this (without the +):
 
