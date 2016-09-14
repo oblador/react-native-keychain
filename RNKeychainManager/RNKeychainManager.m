@@ -245,12 +245,35 @@ RCT_EXPORT_METHOD(setSecureString:(NSString *)value forKey:(NSString *)key callb
     
   // Try to save to keychain
   NSDictionary *saveDict = [self genericPasswordDictWithAccount:key password:value andReturnData:NO];
+    
+  if (saveDict == nil) {
+      NSError *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:@(-1) userInfo:nil];
+      return callback(@[makeError(error)]);
+  }
+    
   osStatus = SecItemAdd((__bridge CFDictionaryRef) saveDict, NULL);
+    
+  if (osStatus == nil) {
+      NSError *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:@(-1) userInfo:nil];
+      return callback(@[makeError(error)]);
+  }
     
   if (osStatus != noErr && osStatus != errSecItemNotFound) {
     if (osStatus == errSecDuplicateItem) {
-      osStatus = SecItemUpdate((__bridge CFDictionaryRef) saveDict, NULL);
-            
+      NSDictionary *saveDict2 = [self genericPasswordDictWithAccount:key password:value andReturnData:NO];
+    
+      if (saveDict2 == nil) {
+        NSError *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:@(-1) userInfo:nil];
+        return callback(@[makeError(error)]);
+      }
+        
+      osStatus = SecItemUpdate((__bridge CFDictionaryRef) saveDict2, NULL);
+      
+      if (osStatus == nil) {
+        NSError *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:@(-1) userInfo:nil];
+        return callback(@[makeError(error)]);
+      }
+        
       if (osStatus != noErr && osStatus != errSecItemNotFound) {
         NSError *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:osStatus userInfo:nil];
         return callback(@[makeError(error)]);
@@ -258,7 +281,7 @@ RCT_EXPORT_METHOD(setSecureString:(NSString *)value forKey:(NSString *)key callb
     }
     else {
       NSError *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:osStatus userInfo:nil];
-        return callback(@[makeError(error)]);
+      return callback(@[makeError(error)]);
     }
   }
     
