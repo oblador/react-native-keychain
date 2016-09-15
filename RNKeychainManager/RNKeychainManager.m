@@ -247,42 +247,26 @@ RCT_EXPORT_METHOD(setSecureString:(NSString *)value forKey:(NSString *)key callb
   NSDictionary *saveDict = [self genericPasswordDictWithAccount:key password:value andReturnData:NO];
     
   if (saveDict == nil) {
-      NSError *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:@(-1) userInfo:nil];
-      return callback(@[makeError(error)]);
+    NSError *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:@(-1) userInfo:nil];
+    return callback(@[makeError(error)]);
   }
     
   osStatus = SecItemAdd((__bridge CFDictionaryRef) saveDict, NULL);
     
-  if (osStatus == nil) {
+  if (osStatus == errSecDuplicateItem) {
+    NSDictionary *saveDict2 = [self genericPasswordDictWithAccount:key password:value andReturnData:NO];
+        
+    if (saveDict2 == nil) {
       NSError *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:@(-1) userInfo:nil];
       return callback(@[makeError(error)]);
+    }
+        
+    osStatus = SecItemUpdate((__bridge CFDictionaryRef) saveDict2, NULL);
   }
     
   if (osStatus != noErr && osStatus != errSecItemNotFound) {
-    if (osStatus == errSecDuplicateItem) {
-      NSDictionary *saveDict2 = [self genericPasswordDictWithAccount:key password:value andReturnData:NO];
-    
-      if (saveDict2 == nil) {
-        NSError *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:@(-1) userInfo:nil];
-        return callback(@[makeError(error)]);
-      }
-        
-      osStatus = SecItemUpdate((__bridge CFDictionaryRef) saveDict2, NULL);
-      
-      if (osStatus == nil) {
-        NSError *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:@(-1) userInfo:nil];
-        return callback(@[makeError(error)]);
-      }
-        
-      if (osStatus != noErr && osStatus != errSecItemNotFound) {
-        NSError *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:osStatus userInfo:nil];
-        return callback(@[makeError(error)]);
-      }
-    }
-    else {
-      NSError *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:osStatus userInfo:nil];
-      return callback(@[makeError(error)]);
-    }
+    NSError *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:osStatus userInfo:nil];
+    return callback(@[makeError(error)]);
   }
     
   callback(@[[NSNull null]]);
