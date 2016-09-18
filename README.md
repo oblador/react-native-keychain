@@ -3,7 +3,7 @@ Keychain Access for React Native
 
 Currently functionality is limited to just storing internet and generic passwords. 
 
-## iOS 10
+## ❗ Enable `Keychain Sharing` entitlement for iOS 10
 
 For iOS 10 you'll need to enable the `Keychain Sharing` entitlement in the `Capabilities` section of your build target. (See screenshot). Otherwise you'll experience the error shown below.
 
