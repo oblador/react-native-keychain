@@ -3,6 +3,20 @@ Keychain Access for React Native
 
 Currently functionality is limited to just storing internet and generic passwords. 
 
+## iOS 10
+
+For iOS 10 you'll need to enable the `Keychain Sharing` entitlement in the `Capabilities` section of your build target. (See screenshot). Otherwise you'll experience the error shown below.
+
+![screen shot 2016-09-16 at 20 56 33](https://cloud.githubusercontent.com/assets/512692/18597833/15316342-7c50-11e6-92e7-781651e61563.png)
+
+```
+Error: {
+    code = "-34018";
+    domain = NSOSStatusErrorDomain;
+    message = "The operation couldn\U2019t be completed. (OSStatus error -34018.)";
+}
+```
+
 ## Installation
 
 `$ npm install --save react-native-keychain`
