@@ -38,7 +38,7 @@ var Keychain = {
    */
   getInternetCredentials: function(
     server: string,
-    callback?: ?(error: ?Error, result: ?string) => void
+    callback?: ?(error: ?Error, username: ?string, password: ?string) => void
   ): Promise {
     return new Promise((resolve, reject) => {
       RNKeychainManager.getInternetCredentialsForServer(server, function(err, username, password) {
@@ -110,7 +110,7 @@ var Keychain = {
    */
   getGenericPassword: function(
     service?: string,
-    callback?: ?(error: ?Error, result: ?string) => void
+    callback?: ?(error: ?Error, username: ?string, password: ?string) => void
   ): Promise {
     return new Promise((resolve, reject) => {
       RNKeychainManager.getGenericPasswordForService(service, function(err, username, password) {
