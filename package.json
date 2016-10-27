@@ -24,6 +24,9 @@
   "bugs": {
     "url": "https://github.com/oblador/react-native-keychain/issues"
   },
+  "typescript": {
+    "definition": "typings/react-native-keychain.d.ts"
+  },
   "repository": {
     "type": "git",
     "url": "git://github.com/oblador/react-native-keychain.git"
