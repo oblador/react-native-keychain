@@ -118,16 +118,15 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     @ReactMethod
     public void resetGenericPasswordForService(String service, Callback callback) {
         service = service == null ? "" : service;
+        SharedPreferences.Editor prefsEditor = prefs.edit();
 
-        try {
-            SharedPreferences.Editor prefsEditor = prefs.edit();
+        if (prefs.contains(service + ":u")) {
             prefsEditor.remove(service + ":u");
             prefsEditor.remove(service + ":p");
             prefsEditor.apply();
             callback.invoke("", "KeychainModule password was reset");
-        } catch (Exception e) {
-            //this probably never happens but it is here so that the android api is the same as on iOS
-            callback.invoke(e.getLocalizedMessage());
+        } else {
+            callback.invoke("Error when resetting password: entry not found for service: " + service);
         }
     }
 
