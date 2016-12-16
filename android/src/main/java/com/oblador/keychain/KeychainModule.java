@@ -44,6 +44,8 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     public void setGenericPasswordForService(String service, String username, String password, Callback callback) {
         if (!crypto.isAvailable()) {
             Log.e("KeychainModule", "Crypto is missing");
+            callback.invoke("KeychainModule: crypto is missing");
+            return;
         }
         if (username == null || username.isEmpty() || password == null || password.isEmpty()) {
             Log.e("KeychainModule", "you passed empty or null username/password");
@@ -95,11 +97,8 @@ public class KeychainModule extends ReactContextBaseJavaModule {
             return;
         }
 
-        Log.d("KeychainModule ", "will attempt to decrypt for " + service + username + ":" + password);
-
         byte[] recuser = Base64.decode(username, Base64.DEFAULT);
         byte[] recpass = Base64.decode(password, Base64.DEFAULT);
-
 
         Entity userentity = Entity.create(KEYCHAIN_DATA + ":" + service + "user");
         Entity pwentity = Entity.create(KEYCHAIN_DATA + ":" + service + "pass");
