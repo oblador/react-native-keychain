@@ -65,13 +65,17 @@ NSString *messageForError(NSError *error)
   }
 }
 
-NSDictionary * makeError(NSError *error)
+NSString *codeForError(NSError *error)
 {
-  return RCTMakeAndLogError(messageForError(error), nil, [error dictionaryWithValuesForKeys:@[@"domain", @"code"]]);
+  return [NSString stringWithFormat:@"%li", (long)error.code];
 }
 
+void rejectWithError(RCTPromiseRejectBlock reject, NSError *error)
+{
+  return reject(codeForError(error), messageForError(error), nil);
+}
 
-RCT_EXPORT_METHOD(setGenericPasswordForService:(NSString*)service withUsername:(NSString*)username withPassword:(NSString*)password callback:(RCTResponseSenderBlock)callback){
+RCT_EXPORT_METHOD(setGenericPasswordForService:(NSString*)service withUsername:(NSString*)username withPassword:(NSString*)password resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject){
   if(service == nil) {
     service = [[NSBundle mainBundle] bundleIdentifier];
   }
@@ -91,14 +95,14 @@ RCT_EXPORT_METHOD(setGenericPasswordForService:(NSString*)service withUsername:(
 
   if (osStatus != noErr && osStatus != errSecItemNotFound) {
     NSError *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:osStatus userInfo:nil];
-    return callback(@[makeError(error)]);
+    return rejectWithError(reject, error);
   }
 
-  callback(@[[NSNull null]]);
+  return resolve(@(YES));
 
 }
 
-RCT_EXPORT_METHOD(getGenericPasswordForService:(NSString*)service callback:(RCTResponseSenderBlock)callback){
+RCT_EXPORT_METHOD(getGenericPasswordForService:(NSString*)service resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject){
   if(service == nil) {
     service = [[NSBundle mainBundle] bundleIdentifier];
   }
@@ -113,23 +117,27 @@ RCT_EXPORT_METHOD(getGenericPasswordForService:(NSString*)service callback:(RCTR
 
   if (osStatus != noErr && osStatus != errSecItemNotFound) {
     NSError *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:osStatus userInfo:nil];
-    return callback(@[makeError(error)]);
+    return rejectWithError(reject, error);
   }
 
   found = (__bridge NSDictionary*)(foundTypeRef);
   if (!found) {
-    return callback(@[[NSNull null]]);
+    return resolve(@(NO));
   }
 
   // Found
   NSString* username = (NSString*) [found objectForKey:(__bridge id)(kSecAttrAccount)];
   NSString* password = [[NSString alloc] initWithData:[found objectForKey:(__bridge id)(kSecValueData)] encoding:NSUTF8StringEncoding];
 
-  callback(@[[NSNull null], username, password]);
+  return resolve(@{
+    @"service": service,
+    @"username": username,
+    @"password": password
+  });
 
 }
 
-RCT_EXPORT_METHOD(resetGenericPasswordForService:(NSString*)service callback:(RCTResponseSenderBlock)callback){
+RCT_EXPORT_METHOD(resetGenericPasswordForService:(NSString*)service resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject){
   if(service == nil) {
     service = [[NSBundle mainBundle] bundleIdentifier];
   }
@@ -141,14 +149,14 @@ RCT_EXPORT_METHOD(resetGenericPasswordForService:(NSString*)service callback:(RC
   OSStatus osStatus = SecItemDelete((__bridge CFDictionaryRef) dict);
   if (osStatus != noErr && osStatus != errSecItemNotFound) {
     NSError *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:osStatus userInfo:nil];
-    return callback(@[makeError(error)]);
+    return rejectWithError(reject, error);
   }
 
-  callback(@[[NSNull null]]);
+  return resolve(@(YES));
 
 }
 
-RCT_EXPORT_METHOD(setInternetCredentialsForServer:(NSString*)server withUsername:(NSString*)username withPassword:(NSString*)password callback:(RCTResponseSenderBlock)callback){
+RCT_EXPORT_METHOD(setInternetCredentialsForServer:(NSString*)server withUsername:(NSString*)username withPassword:(NSString*)password resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject){
   // Create dictionary of search parameters
   NSDictionary* dict = [NSDictionary dictionaryWithObjectsAndKeys:(__bridge id)(kSecClassInternetPassword),  kSecClass, server, kSecAttrServer, kCFBooleanTrue, kSecReturnAttributes, nil];
 
@@ -164,14 +172,13 @@ RCT_EXPORT_METHOD(setInternetCredentialsForServer:(NSString*)server withUsername
 
   if (osStatus != noErr && osStatus != errSecItemNotFound) {
     NSError *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:osStatus userInfo:nil];
-    return callback(@[makeError(error)]);
+    return rejectWithError(reject, error);
   }
 
-  callback(@[[NSNull null]]);
-
+  return resolve(@(YES));
 }
 
-RCT_EXPORT_METHOD(getInternetCredentialsForServer:(NSString*)server callback:(RCTResponseSenderBlock)callback){
+RCT_EXPORT_METHOD(getInternetCredentialsForServer:(NSString*)server resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject){
 
   // Create dictionary of search parameters
   NSDictionary* dict = [NSDictionary dictionaryWithObjectsAndKeys:(__bridge id)(kSecClassInternetPassword), kSecClass, server, kSecAttrServer, kCFBooleanTrue, kSecReturnAttributes, kCFBooleanTrue, kSecReturnData, nil];
@@ -183,23 +190,27 @@ RCT_EXPORT_METHOD(getInternetCredentialsForServer:(NSString*)server callback:(RC
 
   if (osStatus != noErr && osStatus != errSecItemNotFound) {
     NSError *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:osStatus userInfo:nil];
-    return callback(@[makeError(error)]);
+    return rejectWithError(reject, error);
   }
 
   found = (__bridge NSDictionary*)(foundTypeRef);
   if (!found) {
-    return callback(@[[NSNull null]]);
+    return resolve(@(NO));
   }
 
   // Found
   NSString* username = (NSString*) [found objectForKey:(__bridge id)(kSecAttrAccount)];
   NSString* password = [[NSString alloc] initWithData:[found objectForKey:(__bridge id)(kSecValueData)] encoding:NSUTF8StringEncoding];
 
-  callback(@[[NSNull null], username, password]);
+  return resolve(@{
+    @"server": server,
+    @"username": username,
+    @"password": password
+  });
 
 }
 
-RCT_EXPORT_METHOD(resetInternetCredentialsForServer:(NSString*)server callback:(RCTResponseSenderBlock)callback){
+RCT_EXPORT_METHOD(resetInternetCredentialsForServer:(NSString*)server resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject){
 
   // Create dictionary of search parameters
   NSDictionary* dict = [NSDictionary dictionaryWithObjectsAndKeys:(__bridge id)(kSecClassInternetPassword), kSecClass, server, kSecAttrServer, kCFBooleanTrue, kSecReturnAttributes, kCFBooleanTrue, kSecReturnData, nil];
@@ -208,10 +219,10 @@ RCT_EXPORT_METHOD(resetInternetCredentialsForServer:(NSString*)server callback:(
   OSStatus osStatus = SecItemDelete((__bridge CFDictionaryRef) dict);
   if (osStatus != noErr && osStatus != errSecItemNotFound) {
     NSError *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:osStatus userInfo:nil];
-    return callback(@[makeError(error)]);
+    return rejectWithError(reject, error);
   }
 
-  callback(@[[NSNull null]]);
+  return resolve(@(YES));
 
 }
 
@@ -222,14 +233,14 @@ RCT_EXPORT_METHOD(requestSharedWebCredentials:(RCTPromiseResolveBlock)resolve re
       NSError *nsError = (__bridge NSError *)error;
       return reject([NSString stringWithFormat:@"%li", (long)nsError.code], nsError.description, nil);
     }
-    
+
     if (CFArrayGetCount(credentials) > 0) {
-      
+
       CFDictionaryRef credentialDict = CFArrayGetValueAtIndex(credentials, 0);
       NSString *server = (__bridge NSString *)CFDictionaryGetValue(credentialDict, kSecAttrServer);
       NSString *username = (__bridge NSString *)CFDictionaryGetValue(credentialDict, kSecAttrAccount);
       NSString *password = (__bridge NSString *)CFDictionaryGetValue(credentialDict, kSecSharedPassword);
-      
+
       return resolve(@{
         @"server": server,
         @"username": username,

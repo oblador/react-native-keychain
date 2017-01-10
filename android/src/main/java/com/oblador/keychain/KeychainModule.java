@@ -11,10 +11,12 @@ import com.facebook.crypto.Crypto;
 import com.facebook.crypto.CryptoConfig;
 import com.facebook.crypto.Entity;
 import com.facebook.crypto.keychain.KeyChain;
-import com.facebook.react.bridge.Callback;
+import com.facebook.react.bridge.Arguments;
+import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
+import com.facebook.react.bridge.WritableMap;
 
 import java.nio.charset.Charset;
 
@@ -41,15 +43,15 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void setGenericPasswordForService(String service, String username, String password, Callback callback) {
+    public void setGenericPasswordForService(String service, String username, String password, Promise promise) {
         if (!crypto.isAvailable()) {
             Log.e(KEYCHAIN_MODULE, "Crypto is missing");
-            callback.invoke("KeychainModule: crypto is missing");
+            promise.reject("KeychainModule: crypto is missing");
             return;
         }
         if (username == null || username.isEmpty() || password == null || password.isEmpty()) {
             Log.e(KEYCHAIN_MODULE, "you passed empty or null username/password");
-            callback.invoke("KeychainModule: you passed empty or null username/password");
+            promise.reject("KeychainModule: you passed empty or null username/password");
             return;
         }
         service = service == null ? EMPTY_STRING : service;
@@ -59,37 +61,37 @@ public class KeychainModule extends ReactContextBaseJavaModule {
         Entity pwentity = Entity.create(KEYCHAIN_DATA + ":" + service + "pass");
 
 
-        String encryptedUsername = encryptWithEntity(username, userentity, callback);
-        String encryptedPassword = encryptWithEntity(password, pwentity, callback);
+        String encryptedUsername = encryptWithEntity(username, userentity, promise);
+        String encryptedPassword = encryptWithEntity(password, pwentity, promise);
 
         SharedPreferences.Editor prefsEditor = prefs.edit();
         prefsEditor.putString(service + ":u", encryptedUsername);
         prefsEditor.putString(service + ":p", encryptedPassword);
         prefsEditor.apply();
         Log.d(KEYCHAIN_MODULE, "saved the data");
-        callback.invoke(EMPTY_STRING, "KeychainModule saved the data");
+        promise.resolve("KeychainModule saved the data");
     }
 
-    private String encryptWithEntity(String toEncypt, Entity entity, Callback callback) {
+    private String encryptWithEntity(String toEncypt, Entity entity, Promise promise) {
         try {
             byte[] encryptedBytes = crypto.encrypt(toEncypt.getBytes(Charset.forName("UTF-8")), entity);
             return Base64.encodeToString(encryptedBytes, Base64.DEFAULT);
         } catch (Exception e) {
             Log.e(KEYCHAIN_MODULE, e.getLocalizedMessage());
-            callback.invoke(e.getLocalizedMessage());
+            promise.reject(e.getLocalizedMessage(), e);
             return null;
         }
     }
 
     @ReactMethod
-    public void getGenericPasswordForService(String service, Callback callback) {
+    public void getGenericPasswordForService(String service, Promise promise) {
         service = service == null ? EMPTY_STRING : service;
 
         String username = prefs.getString(service + ":u", "user_not_found");
         String password = prefs.getString(service + ":p", "pass_not_found");
         if (username.equals("user_not_found") || password.equals("pass_not_found")) {
             Log.e(KEYCHAIN_MODULE, "no keychain entry found for service: " + service);
-            callback.invoke("no keychain entry found for service: " + service);
+            promise.reject("no keychain entry found for service: " + service);
             return;
         }
 
@@ -103,15 +105,21 @@ public class KeychainModule extends ReactContextBaseJavaModule {
             byte[] decryptedUsername = crypto.decrypt(recuser, userentity);
             byte[] decryptedPass = crypto.decrypt(recpass, pwentity);
 
-            callback.invoke(EMPTY_STRING, new String(decryptedUsername, Charset.forName("UTF-8")), new String(decryptedPass, Charset.forName("UTF-8")));
+            WritableMap credentials = Arguments.createMap();
+
+            credentials.putString("service", service);
+            credentials.putString("username", new String(decryptedUsername, Charset.forName("UTF-8")));
+            credentials.putString("password", new String(decryptedPass, Charset.forName("UTF-8")));
+
+            promise.resolve(credentials);
         } catch (Exception e) {
             Log.e(KEYCHAIN_MODULE, e.getLocalizedMessage());
-            callback.invoke(e.getLocalizedMessage());
+            promise.reject(e.getLocalizedMessage(), e);
         }
     }
 
     @ReactMethod
-    public void resetGenericPasswordForService(String service, Callback callback) {
+    public void resetGenericPasswordForService(String service, Promise promise) {
         service = service == null ? EMPTY_STRING : service;
         SharedPreferences.Editor prefsEditor = prefs.edit();
 
@@ -119,25 +127,25 @@ public class KeychainModule extends ReactContextBaseJavaModule {
             prefsEditor.remove(service + ":u");
             prefsEditor.remove(service + ":p");
             prefsEditor.apply();
-            callback.invoke(EMPTY_STRING, "KeychainModule password was reset");
+            promise.resolve("KeychainModule password was reset");
         } else {
-            callback.invoke("Error when resetting password: entry not found for service: " + service);
+            promise.reject("Error when resetting password: entry not found for service: " + service);
         }
     }
 
     @ReactMethod
-    public void setInternetCredentialsForServer(@NonNull String server, String username, String password, Callback callback) {
-        setGenericPasswordForService(server, username, password, callback);
+    public void setInternetCredentialsForServer(@NonNull String server, String username, String password, Promise promise) {
+        setGenericPasswordForService(server, username, password, promise);
     }
 
     @ReactMethod
-    public void getInternetCredentialsForServer(@NonNull String server, Callback callback) {
-        getGenericPasswordForService(server, callback);
+    public void getInternetCredentialsForServer(@NonNull String server, Promise promise) {
+        getGenericPasswordForService(server, promise);
     }
 
     @ReactMethod
-    public void resetInternetCredentialsForServer(@NonNull String server, Callback callback) {
-        resetGenericPasswordForService(server, callback);
+    public void resetInternetCredentialsForServer(@NonNull String server, Promise promise) {
+        resetGenericPasswordForService(server, promise);
     }
 
 
