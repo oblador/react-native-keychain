@@ -5,39 +5,43 @@ declare module 'react-native-keychain' {
         password: string;
     }
 
+    export interface SharedWebCredentials {
+        server: string;
+        username: string;
+        password: string;
+    }
+
     function setInternetCredentials(
         server: string,
         username: string,
-        password: string,
-        callback?: (error?: Error) => void
+        password: string
     ): Promise<void>;
 
     function getInternetCredentials(
-        server: string,
-        callback?: (error?: Error, username?: string, password?: string) => void
+        server: string
     ): Promise<UserCredentials>;
 
     function resetInternetCredentials(
-        server: string,
-        callback?: (error?: Error) => void
+        server: string
     ): Promise<void>;
 
     function setGenericPassword(
         username: string,
         password: string,
-        service?: string,
-        callback?: (error?: Error) => void
+        service?: string
     ): Promise<void>;
 
+    function getGenericPassword(
+        service?: string
+    ): Promise<void>;
 
-  function getGenericPassword(
-    service?: string,
-    callback?: (error?: Error, result?: string) => void
-  ): Promise<void>;
+    function requestSharedWebCredentials (
+    ): Promise<SharedWebCredentials>;
 
-  function resetGenericPassword (
-    service?: string,
-    callback?: (error?: Error) => void
-  ): Promise<void>;
+    function setSharedWebCredentials(
+        server: string,
+        username: string,
+        password: string
+    ): Promise<void>;
 
 }
