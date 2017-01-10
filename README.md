@@ -45,8 +45,8 @@ See `KeychainExample` for fully working project example.
 ```js
 import * as Keychain from 'react-native-keychain';
 
-let username = 'zuck';
-let password = 'poniesRgr8';
+const username = 'zuck';
+const password = 'poniesRgr8';
 
 // Generic Password, service argument optional
 Keychain
@@ -72,7 +72,7 @@ Keychain
   });
 
 // Internet Password, server argument required
-var server = 'http://facebook.com';
+const server = 'http://facebook.com';
 Keychain
   .setInternetCredentials(server, username, password)
   .then(function() {
@@ -97,6 +97,12 @@ Keychain
     if (credentials) {
       console.log('Shared web credentials successfully loaded for user ' + credentials.username);
     } 
+  })
+
+Keychain
+  .setSharedWebCredentials(server, username, password)
+  .then(function() {
+    console.log('Shared web credentials saved successfully!');
   })
 
 ```
@@ -164,12 +170,5 @@ Keychain
   }
   ```
 
-## Todo
-
-- [x] iOS support
-- [x] Android support
-- [ ] Storing objects as JSON
-- [ ] Expose wider selection of underlying native APIs
-
 ## License
-MIT © Joel Arvidsson 2016
+MIT © Joel Arvidsson 2016-2017
