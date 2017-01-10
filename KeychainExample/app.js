@@ -8,7 +8,7 @@ import {
   View,
 } from 'react-native';
 
-import Keychain from 'react-native-keychain';
+import * as Keychain from 'react-native-keychain';
 
 export default class KeychainExample extends Component {
   state = {
