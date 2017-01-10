@@ -155,3 +155,30 @@ export function resetGenericPassword(
     });
   });
 }
+
+/**
+ * Asks the user for a shared web credential, resolves to `{ server, username, password }` if approved
+ * `false` if denied and throws an error if not supported on platform or there's no shared credentials.
+ * Returns a `Promise` object.
+ */
+export function requestSharedWebCredentials() : Promise {
+  if (Platform.OS !== 'ios') {
+    return Promise.reject(new Error(`requestSharedWebCredentials() is not supported on ${Platform.OS} yet`));
+  }
+  return RNKeychainManager.requestSharedWebCredentials();
+}
+
+/**
+ * Sets a shared web credential.
+ * Returns a `Promise` object.
+ */
+export function setSharedWebCredentials(
+  server: string,
+  username: string,
+  password: string
+) : Promise {
+  if (Platform.OS !== 'ios') {
+    return Promise.reject(new Error(`setSharedWebCredentials() is not supported on ${Platform.OS} yet`));
+  }
+  return RNKeychainManager.setSharedWebCredentialsForServer(server, username, password);
+}

@@ -43,10 +43,10 @@ pod 'RNKeychain', :path => 'node_modules/react-native-keychain'
 See `KeychainExample` for fully working project example.
 
 ```js
-var Keychain = require('react-native-keychain');
+import * as Keychain from 'react-native-keychain';
 
-var username = 'zuck';
-var password = 'poniesRgr8';
+let username = 'zuck';
+let password = 'poniesRgr8';
 
 // Generic Password, service argument optional
 Keychain
@@ -90,6 +90,14 @@ Keychain
   .then(function() {
     console.log('Credentials successfully deleted');
   });
+
+Keychain
+  .requestSharedWebCredentials()
+  .then(function(credentials) {
+    if (credentials) {
+      console.log('Shared web credentials successfully loaded for user ' + credentials.username);
+    } 
+  })
 
 ```
 
