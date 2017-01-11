@@ -43,7 +43,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void setGenericPasswordForService(String service, String username, String password, Promise promise) {
+    public void setGenericPasswordForService(String service, String username, String password, String accessible, Promise promise) {
         if (!crypto.isAvailable()) {
             Log.e(KEYCHAIN_MODULE, "Crypto is missing");
             promise.reject("KeychainModule: crypto is missing");
@@ -134,8 +134,8 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void setInternetCredentialsForServer(@NonNull String server, String username, String password, Promise promise) {
-        setGenericPasswordForService(server, username, password, promise);
+    public void setInternetCredentialsForServer(@NonNull String server, String username, String password, String accessible, Promise promise) {
+        setGenericPasswordForService(server, username, password, accessible, promise);
     }
 
     @ReactMethod

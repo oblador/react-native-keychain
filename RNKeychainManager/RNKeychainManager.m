@@ -70,12 +70,34 @@ NSString *codeForError(NSError *error)
   return [NSString stringWithFormat:@"%li", (long)error.code];
 }
 
+
 void rejectWithError(RCTPromiseRejectBlock reject, NSError *error)
 {
   return reject(codeForError(error), messageForError(error), nil);
 }
 
-RCT_EXPORT_METHOD(setGenericPasswordForService:(NSString*)service withUsername:(NSString*)username withPassword:(NSString*)password resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject){
+CFStringRef accessibleValue(NSString *jsAccessibleKey)
+{
+    if (jsAccessibleKey) {
+        NSDictionary *keyMap = @{
+                                 @"AccessibleWhenUnlocked": (__bridge NSString *)kSecAttrAccessibleWhenUnlocked,
+                                 @"AccessibleAfterFirstUnlock": (__bridge NSString *)kSecAttrAccessibleAfterFirstUnlock,
+                                 @"AccessibleAlways": (__bridge NSString *)kSecAttrAccessibleAlways,
+                                 @"AccessibleWhenPasscodeSetThisDeviceOnly": (__bridge NSString *)kSecAttrAccessibleWhenPasscodeSetThisDeviceOnly,
+                                 @"AccessibleWhenUnlockedThisDeviceOnly": (__bridge NSString *)kSecAttrAccessibleWhenUnlockedThisDeviceOnly,
+                                 @"AccessibleAfterFirstUnlockThisDeviceOnly": (__bridge NSString *)kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly,
+                                 @"AccessibleAlwaysThisDeviceOnly": (__bridge NSString *)kSecAttrAccessibleAlwaysThisDeviceOnly
+                                 };
+        NSString *result = [keyMap valueForKey:jsAccessibleKey];
+        if (result) {
+            return (__bridge CFStringRef)result;
+            
+        }
+    }
+    return kSecAttrAccessibleAfterFirstUnlock
+}
+
+RCT_EXPORT_METHOD(setGenericPasswordForService:(NSString*)service withUsername:(NSString*)username withPassword:(NSString*)password withAccessible:(NSString *)accessible resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject){
   if(service == nil) {
     service = [[NSBundle mainBundle] bundleIdentifier];
   }
@@ -88,7 +110,7 @@ RCT_EXPORT_METHOD(setGenericPasswordForService:(NSString*)service withUsername:(
 
   // Create dictionary of parameters to add
   NSData* passwordData = [password dataUsingEncoding:NSUTF8StringEncoding];
-  dict = [NSDictionary dictionaryWithObjectsAndKeys:(__bridge id)(kSecClassGenericPassword), kSecClass, kSecAttrAccessibleAfterFirstUnlock, kSecAttrAccessible, service, kSecAttrService, passwordData, kSecValueData, username, kSecAttrAccount, nil];
+  dict = [NSDictionary dictionaryWithObjectsAndKeys:(__bridge id)(kSecClassGenericPassword), kSecClass, accessibleValue(accessible), kSecAttrAccessible, service, kSecAttrService, passwordData, kSecValueData, username, kSecAttrAccount, nil];
 
   // Try to save to keychain
   osStatus = SecItemAdd((__bridge CFDictionaryRef) dict, NULL);
@@ -156,7 +178,7 @@ RCT_EXPORT_METHOD(resetGenericPasswordForService:(NSString*)service resolver:(RC
 
 }
 
-RCT_EXPORT_METHOD(setInternetCredentialsForServer:(NSString*)server withUsername:(NSString*)username withPassword:(NSString*)password resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject){
+RCT_EXPORT_METHOD(setInternetCredentialsForServer:(NSString*)server withUsername:(NSString*)username withPassword:(NSString*)password withAccessible:(NSString *)accessible resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject){
   // Create dictionary of search parameters
   NSDictionary* dict = [NSDictionary dictionaryWithObjectsAndKeys:(__bridge id)(kSecClassInternetPassword),  kSecClass, server, kSecAttrServer, kCFBooleanTrue, kSecReturnAttributes, nil];
 
@@ -165,7 +187,7 @@ RCT_EXPORT_METHOD(setInternetCredentialsForServer:(NSString*)server withUsername
 
   // Create dictionary of parameters to add
   NSData* passwordData = [password dataUsingEncoding:NSUTF8StringEncoding];
-  dict = [NSDictionary dictionaryWithObjectsAndKeys:(__bridge id)(kSecClassInternetPassword), kSecClass, kSecAttrAccessibleAfterFirstUnlock, kSecAttrAccessible, server, kSecAttrServer, passwordData, kSecValueData, username, kSecAttrAccount, nil];
+  dict = [NSDictionary dictionaryWithObjectsAndKeys:(__bridge id)(kSecClassInternetPassword), kSecClass, accessibleValue(accessible), kSecAttrAccessible, server, kSecAttrServer, passwordData, kSecValueData, username, kSecAttrAccount, nil];
 
   // Try to save to keychain
   osStatus = SecItemAdd((__bridge CFDictionaryRef) dict, NULL);

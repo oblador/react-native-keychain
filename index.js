@@ -1,19 +1,42 @@
 import { NativeModules, Platform } from 'react-native';
 const { RNKeychainManager } = NativeModules;
 
+type SecAccessible =
+  | 'AccessibleWhenUnlocked'
+  | 'AccessibleAfterFirstUnlock'
+  | 'AccessibleAlways'
+  | 'AccessibleWhenPasscodeSetThisDeviceOnly'
+  | 'AccessibleWhenUnlockedThisDeviceOnly'
+  | 'AccessibleAfterFirstUnlockThisDeviceOnly'
+  | 'AccessibleAlwaysThisDeviceOnly'
+
+function convertError(err) {
+  if (!err) {
+    return null;
+  }
+  if (Platform.OS === 'android') {
+    return new Error(err);
+  }
+  var out = new Error(err.message);
+  out.key = err.key;
+  return out;
+}
+
 /**
  * Saves the `username` and `password` combination for `server`.
  * @param {string} server URL to server.
  * @param {string} username Associated username or e-mail to be saved.
  * @param {string} password Associated password to be saved.
+ * @param {string} accessible (iOS only) kSecAccessibleKey
  * @return {Promise} Resolves to `true` when successful
  */
 export function setInternetCredentials(
   server: string,
   username: string,
-  password: string
+  password: string,
+  accessible?: SecAccessible
 ): Promise {
-  return RNKeychainManager.setInternetCredentialsForServer(server, username, password);
+  return RNKeychainManager.setInternetCredentialsForServer(server, username, password, accessible);
 }
 
 /**
@@ -43,14 +66,16 @@ export function resetInternetCredentials(
  * @param {string} username Associated username or e-mail to be saved.
  * @param {string} password Associated password to be saved.
  * @param {string} service Reverse domain name qualifier for the service, defaults to `bundleId`.
+ * @param {string} accessible (iOS only) kSecAccessibleKey
  * @return {Promise} Resolves to `true` when successful
  */
 export function setGenericPassword(
   username: string,
   password: string,
   service?: string
+  accessible?: SecAccessible
 ): Promise {
-  return RNKeychainManager.setGenericPasswordForService(service, username, password);
+  return RNKeychainManager.setGenericPasswordForService(service, username, password, accessible);
 }
 
 /**
