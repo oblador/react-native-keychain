@@ -94,7 +94,7 @@ CFStringRef accessibleValue(NSString *jsAccessibleKey)
             
         }
     }
-    return kSecAttrAccessibleAfterFirstUnlock
+    return kSecAttrAccessibleAfterFirstUnlock;
 }
 
 RCT_EXPORT_METHOD(setGenericPasswordForService:(NSString*)service withUsername:(NSString*)username withPassword:(NSString*)password withAccessible:(NSString *)accessible resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject){
