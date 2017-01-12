@@ -10,18 +10,6 @@ type SecAccessible =
   | 'AccessibleAfterFirstUnlockThisDeviceOnly'
   | 'AccessibleAlwaysThisDeviceOnly'
 
-function convertError(err) {
-  if (!err) {
-    return null;
-  }
-  if (Platform.OS === 'android') {
-    return new Error(err);
-  }
-  var out = new Error(err.message);
-  out.key = err.key;
-  return out;
-}
-
 /**
  * Saves the `username` and `password` combination for `server`.
  * @param {string} server URL to server.
