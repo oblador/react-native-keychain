@@ -75,20 +75,28 @@ void rejectWithError(RCTPromiseRejectBlock reject, NSError *error)
   return reject(codeForError(error), messageForError(error), nil);
 }
 
-RCT_EXPORT_METHOD(setGenericPasswordForService:(NSString*)service withUsername:(NSString*)username withPassword:(NSString*)password resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject){
+RCT_EXPORT_METHOD(setGenericPasswordForService:(NSString*)service withAccessGroup:(NSString *)accessGroup withUsername:(NSString*)username withPassword:(NSString*)password resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject){
   if(service == nil) {
     service = [[NSBundle mainBundle] bundleIdentifier];
   }
 
   // Create dictionary of search parameters
-  NSDictionary* dict = [NSDictionary dictionaryWithObjectsAndKeys:(__bridge id)(kSecClassGenericPassword),  kSecClass, service, kSecAttrService, kCFBooleanTrue, kSecReturnAttributes, nil];
+  NSMutableDictionary* dict = [NSMutableDictionary dictionaryWithObjectsAndKeys:(__bridge id)(kSecClassGenericPassword),  kSecClass, service, kSecAttrService, kCFBooleanTrue, kSecReturnAttributes, nil];
+
+  if (accessGroup) {
+    [dict setObject:accessGroup forKey:kSecAttrAccessGroup];
+  }
 
   // Remove any old values from the keychain
   OSStatus osStatus = SecItemDelete((__bridge CFDictionaryRef) dict);
 
   // Create dictionary of parameters to add
   NSData* passwordData = [password dataUsingEncoding:NSUTF8StringEncoding];
-  dict = [NSDictionary dictionaryWithObjectsAndKeys:(__bridge id)(kSecClassGenericPassword), kSecClass, service, kSecAttrService, passwordData, kSecValueData, username, kSecAttrAccount, nil];
+  dict = [NSMutableDictionary dictionaryWithObjectsAndKeys:(__bridge id)(kSecClassGenericPassword), kSecClass, service, kSecAttrService, passwordData, kSecValueData, username, kSecAttrAccount, nil];
+
+  if (accessGroup) {
+    [dict setObject:accessGroup forKey:kSecAttrAccessGroup];
+  }
 
   // Try to save to keychain
   osStatus = SecItemAdd((__bridge CFDictionaryRef) dict, NULL);
@@ -102,13 +110,17 @@ RCT_EXPORT_METHOD(setGenericPasswordForService:(NSString*)service withUsername:(
 
 }
 
-RCT_EXPORT_METHOD(getGenericPasswordForService:(NSString*)service resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject){
+RCT_EXPORT_METHOD(getGenericPasswordForService:(NSString*)service withAccessGroup:(NSString *)accessGroup resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject){
   if(service == nil) {
     service = [[NSBundle mainBundle] bundleIdentifier];
   }
 
   // Create dictionary of search parameters
-  NSDictionary* dict = [NSDictionary dictionaryWithObjectsAndKeys:(__bridge id)(kSecClassGenericPassword), kSecClass, service, kSecAttrService, kCFBooleanTrue, kSecReturnAttributes, kCFBooleanTrue, kSecReturnData, nil];
+  NSMutableDictionary* dict = [NSMutableDictionary dictionaryWithObjectsAndKeys:(__bridge id)(kSecClassGenericPassword), kSecClass, service, kSecAttrService, kCFBooleanTrue, kSecReturnAttributes, kCFBooleanTrue, kSecReturnData, nil];
+
+  if (accessGroup) {
+    [dict setObject:accessGroup forKey:kSecAttrAccessGroup];
+  }
 
   // Look up server in the keychain
   NSDictionary* found = nil;
@@ -137,13 +149,17 @@ RCT_EXPORT_METHOD(getGenericPasswordForService:(NSString*)service resolver:(RCTP
 
 }
 
-RCT_EXPORT_METHOD(resetGenericPasswordForService:(NSString*)service resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject){
+RCT_EXPORT_METHOD(resetGenericPasswordForService:(NSString*)service withAccessGroup:(NSString *)accessGroup resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject){
   if(service == nil) {
     service = [[NSBundle mainBundle] bundleIdentifier];
   }
 
   // Create dictionary of search parameters
-  NSDictionary* dict = [NSDictionary dictionaryWithObjectsAndKeys:(__bridge id)(kSecClassGenericPassword), kSecClass, service, kSecAttrService, kCFBooleanTrue, kSecReturnAttributes, kCFBooleanTrue, kSecReturnData, nil];
+  NSMutableDictionary* dict = [NSMutableDictionary dictionaryWithObjectsAndKeys:(__bridge id)(kSecClassGenericPassword), kSecClass, service, kSecAttrService, kCFBooleanTrue, kSecReturnAttributes, kCFBooleanTrue, kSecReturnData, nil];
+
+  if (accessGroup) {
+    [dict setObject:accessGroup forKey:kSecAttrAccessGroup];
+  }
 
   // Remove any old values from the keychain
   OSStatus osStatus = SecItemDelete((__bridge CFDictionaryRef) dict);
@@ -156,16 +172,24 @@ RCT_EXPORT_METHOD(resetGenericPasswordForService:(NSString*)service resolver:(RC
 
 }
 
-RCT_EXPORT_METHOD(setInternetCredentialsForServer:(NSString*)server withUsername:(NSString*)username withPassword:(NSString*)password resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject){
+RCT_EXPORT_METHOD(setInternetCredentialsForServer:(NSString*)server withAccessGroup:(NSString *)accessGroup withUsername:(NSString*)username withPassword:(NSString*)password resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject){
   // Create dictionary of search parameters
-  NSDictionary* dict = [NSDictionary dictionaryWithObjectsAndKeys:(__bridge id)(kSecClassInternetPassword),  kSecClass, server, kSecAttrServer, kCFBooleanTrue, kSecReturnAttributes, nil];
+  NSMutableDictionary* dict = [NSMutableDictionary dictionaryWithObjectsAndKeys:(__bridge id)(kSecClassInternetPassword),  kSecClass, server, kSecAttrServer, kCFBooleanTrue, kSecReturnAttributes, nil];
+
+  if (accessGroup) {
+    [dict setObject:accessGroup forKey:kSecAttrAccessGroup];
+  }
 
   // Remove any old values from the keychain
   OSStatus osStatus = SecItemDelete((__bridge CFDictionaryRef) dict);
 
   // Create dictionary of parameters to add
   NSData* passwordData = [password dataUsingEncoding:NSUTF8StringEncoding];
-  dict = [NSDictionary dictionaryWithObjectsAndKeys:(__bridge id)(kSecClassInternetPassword), kSecClass, server, kSecAttrServer, passwordData, kSecValueData, username, kSecAttrAccount, nil];
+  dict = [NSMutableDictionary dictionaryWithObjectsAndKeys:(__bridge id)(kSecClassInternetPassword), kSecClass, server, kSecAttrServer, passwordData, kSecValueData, username, kSecAttrAccount, nil];
+
+  if (accessGroup) {
+    [dict setObject:accessGroup forKey:kSecAttrAccessGroup];
+  }
 
   // Try to save to keychain
   osStatus = SecItemAdd((__bridge CFDictionaryRef) dict, NULL);
@@ -178,10 +202,14 @@ RCT_EXPORT_METHOD(setInternetCredentialsForServer:(NSString*)server withUsername
   return resolve(@(YES));
 }
 
-RCT_EXPORT_METHOD(getInternetCredentialsForServer:(NSString*)server resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject){
+RCT_EXPORT_METHOD(getInternetCredentialsForServer:(NSString*)server withAccessGroup:(NSString *)accessGroup resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject){
 
   // Create dictionary of search parameters
-  NSDictionary* dict = [NSDictionary dictionaryWithObjectsAndKeys:(__bridge id)(kSecClassInternetPassword), kSecClass, server, kSecAttrServer, kCFBooleanTrue, kSecReturnAttributes, kCFBooleanTrue, kSecReturnData, nil];
+  NSMutableDictionary* dict = [NSMutableDictionary dictionaryWithObjectsAndKeys:(__bridge id)(kSecClassInternetPassword), kSecClass, server, kSecAttrServer, kCFBooleanTrue, kSecReturnAttributes, kCFBooleanTrue, kSecReturnData, nil];
+
+  if (accessGroup) {
+    [dict setObject:accessGroup forKey:kSecAttrAccessGroup];
+  }
 
   // Look up server in the keychain
   NSDictionary* found = nil;
@@ -210,10 +238,14 @@ RCT_EXPORT_METHOD(getInternetCredentialsForServer:(NSString*)server resolver:(RC
 
 }
 
-RCT_EXPORT_METHOD(resetInternetCredentialsForServer:(NSString*)server resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject){
+RCT_EXPORT_METHOD(resetInternetCredentialsForServer:(NSString*)server withAccessGroup:(NSString *)accessGroup resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject){
 
   // Create dictionary of search parameters
-  NSDictionary* dict = [NSDictionary dictionaryWithObjectsAndKeys:(__bridge id)(kSecClassInternetPassword), kSecClass, server, kSecAttrServer, kCFBooleanTrue, kSecReturnAttributes, kCFBooleanTrue, kSecReturnData, nil];
+  NSMutableDictionary* dict = [NSMutableDictionary dictionaryWithObjectsAndKeys:(__bridge id)(kSecClassInternetPassword), kSecClass, server, kSecAttrServer, kCFBooleanTrue, kSecReturnAttributes, kCFBooleanTrue, kSecReturnData, nil];
+
+  if (accessGroup) {
+    [dict setObject:accessGroup forKey:kSecAttrAccessGroup];
+  }
 
   // Remove any old values from the keychain
   OSStatus osStatus = SecItemDelete((__bridge CFDictionaryRef) dict);

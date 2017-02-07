@@ -81,10 +81,7 @@ export function resetGenericPassword(
  * `false` if denied and throws an error if not supported on platform or there's no shared credentials
  */
 export function requestSharedWebCredentials() : Promise {
-  if (Platform.OS !== 'ios') {
-    return Promise.reject(new Error(`requestSharedWebCredentials() is not supported on ${Platform.OS} yet`));
-  }
-  return RNKeychainManager.requestSharedWebCredentials();
+  return Promise.reject(new Error(`requestSharedWebCredentials() is not supported on ${Platform.OS} yet`));
 }
 
 /**
@@ -99,8 +96,5 @@ export function setSharedWebCredentials(
   username: string,
   password: string
 ) : Promise {
-  if (Platform.OS !== 'ios') {
-    return Promise.reject(new Error(`setSharedWebCredentials() is not supported on ${Platform.OS} yet`));
-  }
-  return RNKeychainManager.setSharedWebCredentialsForServer(server, username, password);
+  return Promise.reject(new Error(`setSharedWebCredentials() is not supported on ${Platform.OS} yet`));
 }
