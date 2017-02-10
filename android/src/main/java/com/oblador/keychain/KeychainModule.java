@@ -16,6 +16,7 @@ import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
+import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.WritableMap;
 
 import java.nio.charset.Charset;
@@ -43,7 +44,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void setGenericPasswordForService(String service, String username, String password, String accessible, Promise promise) {
+    public void setGenericPasswordForOptions(String service, String username, String password, Promise promise) {
         if (!crypto.isAvailable()) {
             Log.e(KEYCHAIN_MODULE, "Crypto is missing");
             promise.reject("KeychainModule: crypto is missing");
@@ -84,7 +85,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void getGenericPasswordForService(String service, Promise promise) {
+    public void getGenericPasswordForOptions(String service, Promise promise) {
         service = service == null ? EMPTY_STRING : service;
 
         String username = prefs.getString(service + ":u", "user_not_found");
@@ -119,7 +120,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void resetGenericPasswordForService(String service, Promise promise) {
+    public void resetGenericPasswordForOptions(String service, Promise promise) {
         service = service == null ? EMPTY_STRING : service;
         SharedPreferences.Editor prefsEditor = prefs.edit();
 
@@ -134,18 +135,18 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void setInternetCredentialsForServer(@NonNull String server, String username, String password, String accessible, Promise promise) {
-        setGenericPasswordForService(server, username, password, accessible, promise);
+    public void setInternetCredentialsForServer(@NonNull String server, String username, String password, ReadableMap unusedOptions, Promise promise) {
+        setGenericPasswordForOptions(server, username, password, promise);
     }
 
     @ReactMethod
-    public void getInternetCredentialsForServer(@NonNull String server, Promise promise) {
-        getGenericPasswordForService(server, promise);
+    public void getInternetCredentialsForServer(@NonNull String server, ReadableMap unusedOptions, Promise promise) {
+        getGenericPasswordForOptions(server, promise);
     }
 
     @ReactMethod
-    public void resetInternetCredentialsForServer(@NonNull String server, Promise promise) {
-        resetGenericPasswordForService(server, promise);
+    public void resetInternetCredentialsForServer(@NonNull String server, ReadableMap unusedOptions, Promise promise) {
+        resetGenericPasswordForOptions(server, promise);
     }
 
 

@@ -82,7 +82,9 @@ Keychain
 Keychain
   .getInternetCredentials(server)
   .then(function(credentials) {
-    console.log('Credentials successfully loaded for user ' + credentials.username);
+    if (credentials) {
+      console.log('Credentials successfully loaded for user ' + credentials.username);
+    }
   });
 
 Keychain

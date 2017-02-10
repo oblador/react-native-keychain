@@ -10,82 +10,96 @@ type SecAccessible =
   | 'AccessibleAfterFirstUnlockThisDeviceOnly'
   | 'AccessibleAlwaysThisDeviceOnly'
 
+type Options = {
+  accessible?: SecAccessible;
+  service?: string;
+};
+
 /**
  * Saves the `username` and `password` combination for `server`.
  * @param {string} server URL to server.
  * @param {string} username Associated username or e-mail to be saved.
  * @param {string} password Associated password to be saved.
- * @param {string} accessible (iOS only) kSecAccessibleKey
+ * @param {object} options Keychain options, iOS only
  * @return {Promise} Resolves to `true` when successful
  */
 export function setInternetCredentials(
   server: string,
   username: string,
   password: string,
-  accessible?: SecAccessible
+  options?: Options
 ): Promise {
-  return RNKeychainManager.setInternetCredentialsForServer(server, username, password, accessible);
+  return RNKeychainManager.setInternetCredentialsForServer(server, username, password, options);
 }
 
 /**
  * Fetches login combination for `server`.
  * @param {string} server URL to server.
+ * @param {object} options Keychain options, iOS only
  * @return {Promise} Resolves to `{ server, username, password }` when successful
  */
 export function getInternetCredentials(
-  server: string
+  server: string,
+  options?: Options
 ): Promise {
-  return RNKeychainManager.getInternetCredentialsForServer(server);
+  return RNKeychainManager.getInternetCredentialsForServer(server, options);
 }
 
 /**
  * Deletes all internet password keychain entries for `server`.
  * @param {string} server URL to server.
+ * @param {object} options Keychain options, iOS only
  * @return {Promise} Resolves to `true` when successful
  */
 export function resetInternetCredentials(
-  server: string
+  server: string,
+  options?: Options
 ): Promise {
-  return RNKeychainManager.resetInternetCredentialsForServer(server);
+  return RNKeychainManager.resetInternetCredentialsForServer(server, options);
+}
+
+function getOptionsArgument(serviceOrOptions?: string | KeychainOptions) {
+  if (Platform.OS !== 'ios') {
+    return typeof serviceOrOptions === 'object' ? serviceOrOptions.service : serviceOrOptions;
+  }
+  return typeof serviceOrOptions === 'string' ? { service: serviceOrOptions } : serviceOrOptions;
 }
 
 /**
  * Saves the `username` and `password` combination for `service`.
  * @param {string} username Associated username or e-mail to be saved.
  * @param {string} password Associated password to be saved.
- * @param {string} service Reverse domain name qualifier for the service, defaults to `bundleId`.
- * @param {string} accessible (iOS only) kSecAccessibleKey
+ * @param {string|object} serviceOrOptions Reverse domain name qualifier for the service, defaults to `bundleId` or an options object.
  * @return {Promise} Resolves to `true` when successful
  */
 export function setGenericPassword(
   username: string,
   password: string,
-  service?: string
-  accessible?: SecAccessible
+  serviceOrOptions?: string | KeychainOptions
 ): Promise {
-  return RNKeychainManager.setGenericPasswordForService(service, username, password, accessible);
+  return RNKeychainManager.setGenericPasswordForOptions(getOptionsArgument(serviceOrOptions), username, password);
 }
 
 /**
  * Fetches login combination for `service`.
- * @param {string} service Reverse domain name qualifier for the service, defaults to `bundleId`.
+ * @param {string|object} serviceOrOptions Reverse domain name qualifier for the service, defaults to `bundleId` or an options object.
  * @return {Promise} Resolves to `{ service, username, password }` when successful
  */
 export function getGenericPassword(
-  service?: string
+  serviceOrOptions?: string | KeychainOptions
 ): Promise {
-  return RNKeychainManager.getGenericPasswordForService(service);
+  return RNKeychainManager.getGenericPasswordForOptions(getOptionsArgument(serviceOrOptions));
 }
 
 /**
  * Deletes all generic password keychain entries for `service`.
- * @param {string} service Reverse domain name qualifier for the service, defaults to `bundleId`.
+ * @param {string|object} serviceOrOptions Reverse domain name qualifier for the service, defaults to `bundleId` or an options object.
  * @return {Promise} Resolves to `true` when successful
  */
 export function resetGenericPassword(
-  service?: string
+  serviceOrOptions?: string | KeychainOptions
 ): Promise {
-  return RNKeychainManager.resetGenericPasswordForService(service);
+  return RNKeychainManager.resetGenericPasswordForOptions(getOptionsArgument(serviceOrOptions));
 }
 
 /**
