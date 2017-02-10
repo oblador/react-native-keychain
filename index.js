@@ -12,6 +12,7 @@ type SecAccessible =
 
 type Options = {
   accessible?: SecAccessible;
+  accessGroup?: string;
   service?: string;
 };
 
