@@ -21,10 +21,10 @@ export default class KeychainExample extends Component {
     Keychain
       .setGenericPassword(this.state.username, this.state.password)
       .then(() => {
-        this.setState({status: 'Credentials saved!'});
+        this.setState({ status: 'Credentials saved!' });
       })
       .catch((err) => {
-        this.setState({status: 'Could not save credentials, ' + err});
+        this.setState({ status: 'Could not save credentials, ' + err });
       });
   }
 
@@ -32,11 +32,14 @@ export default class KeychainExample extends Component {
     Keychain
       .getGenericPassword()
       .then((credentials) => {
-        this.setState(credentials);
-        this.setState({status: 'Credentials loaded!'});
+        if (credentials) {
+          this.setState({ ...credentials, status: 'Credentials loaded!' });
+        } else {
+          this.setState({ status: 'No credentials stored.' });
+        }
       })
       .catch((err) => {
-        this.setState({status: 'Could not load credentials. ' + err});
+        this.setState({ status: 'Could not load credentials. ' + err });
       });
   }
 
@@ -44,10 +47,10 @@ export default class KeychainExample extends Component {
     Keychain
       .resetGenericPassword()
       .then(() => {
-        this.setState({status: 'Credentials Reset!', username: '', password: '' });
+        this.setState({ status: 'Credentials Reset!', username: '', password: '' });
       })
       .catch((err) => {
-        this.setState({status: 'Could not reset credentials, ' + err});
+        this.setState({ status: 'Could not reset credentials, ' + err });
       });
   }
 
