@@ -128,10 +128,8 @@ public class KeychainModule extends ReactContextBaseJavaModule {
             prefsEditor.remove(service + ":u");
             prefsEditor.remove(service + ":p");
             prefsEditor.apply();
-            promise.resolve("KeychainModule password was reset");
-        } else {
-            promise.reject("Error when resetting password: entry not found for service: " + service);
         }
+        promise.resolve(true);
     }
 
     @ReactMethod
