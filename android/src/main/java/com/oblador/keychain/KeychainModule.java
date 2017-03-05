@@ -92,7 +92,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
         String password = prefs.getString(service + ":p", "pass_not_found");
         if (username.equals("user_not_found") || password.equals("pass_not_found")) {
             Log.e(KEYCHAIN_MODULE, "no keychain entry found for service: " + service);
-            promise.reject("no keychain entry found for service: " + service);
+            promise.resolve(false);
             return;
         }
 
