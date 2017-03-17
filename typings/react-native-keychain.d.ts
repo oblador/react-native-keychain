@@ -29,11 +29,15 @@ declare module 'react-native-keychain' {
         username: string,
         password: string,
         service?: string
-    ): Promise<void>;
+    ): Promise<boolean>;
 
     function getGenericPassword(
         service?: string
-    ): Promise<void>;
+    ): Promise<boolean | {service: string, username: string, password: string}>;
+
+    function resetGenericPassword(
+        service?: string
+    ): Promise<boolean>
 
     function requestSharedWebCredentials (
     ): Promise<SharedWebCredentials>;
