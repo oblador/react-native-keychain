@@ -92,7 +92,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
         String password = prefs.getString(service + ":p", "pass_not_found");
         if (username.equals("user_not_found") || password.equals("pass_not_found")) {
             Log.e(KEYCHAIN_MODULE, "no keychain entry found for service: " + service);
-            promise.reject("no keychain entry found for service: " + service);
+            promise.resolve(false);
             return;
         }
 
@@ -128,10 +128,8 @@ public class KeychainModule extends ReactContextBaseJavaModule {
             prefsEditor.remove(service + ":u");
             prefsEditor.remove(service + ":p");
             prefsEditor.apply();
-            promise.resolve("KeychainModule password was reset");
-        } else {
-            promise.reject("Error when resetting password: entry not found for service: " + service);
         }
+        promise.resolve(true);
     }
 
     @ReactMethod
