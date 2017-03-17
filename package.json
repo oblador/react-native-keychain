@@ -27,6 +27,7 @@
   "typescript": {
     "definition": "typings/react-native-keychain.d.ts"
   },
+  "types": "typings/react-native-keychain.d.ts",
   "repository": {
     "type": "git",
     "url": "git://github.com/oblador/react-native-keychain.git"
