@@ -21,6 +21,8 @@ Error: {
 
 `$ npm install --save react-native-keychain`
 
+Check out the "releases" tab for breaking changes and RN version compatibility. v1.0.0 is for RN >= 0.40
+
 ### Option: Manually
 
 * Right click on Libraries, select **Add files to "…"** and select `node_modules/react-native-keychain/RNKeychain.xcodeproj`
