@@ -11,8 +11,25 @@
 
 #import <React/RCTBundleURLProvider.h>
 #import <React/RCTRootView.h>
+#import <RNKeychain/RNKeychainAuthenticationListener.h>
+
+@interface AppDelegate() <RNKeychainAuthenticationListener>
+
+@end
 
 @implementation AppDelegate
+
+@synthesize willPromptForAuthentication = _willPromptForAuthentication;
+
+- (void)setWillPromptForAuthentication:(BOOL)willPromptForAuthentication {
+  _willPromptForAuthentication = willPromptForAuthentication;
+  
+  if (willPromptForAuthentication) {
+    NSLog(@"APPDELEGATE::: will prompt TouchId");
+  } else {
+    NSLog(@"APPDELEGATE::: ended prompt TouchId");
+  }
+}
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {

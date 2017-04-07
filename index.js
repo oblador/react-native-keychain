@@ -16,6 +16,46 @@ type Options = {
   service?: string;
 };
 
+type SecureOptions = {
+  customPrompt?: string;
+  authenticationType?: string;
+};
+
+export function canImplyAuthentication(
+  options?: SecureOptions
+): Promise {
+  return RNKeychainManager.canCheckAuthentication(options);
+}
+
+/**
+ * Saves the `username` and `password` combination for `service` securely - needs authentication to retrieve it.
+ * @param {string} service Associated service.
+ * @param {string} username Associated username or e-mail to be saved.
+ * @param {string} password Associated password to be saved.
+ * @param {object} options Keychain options, iOS only
+ * @return {Promise} Resolves to `true` when successful
+ */
+export function setSecurePassword(
+  password: string,
+  username: string,
+  service: string,
+  options?: SecureOptions
+): Promise {
+  return RNKeychainManager.setSecurePasswordForService(service, username, password, options);
+}
+
+/**
+ * Fetches login combination for `service` - demands for authentication if necessary.
+ * @param {string|object} serviceOrOptions Reverse domain name qualifier for the service, defaults to `bundleId` or an options object.
+ * @return {Promise} Resolves to `{ service, username, password }` when successful
+ */
+export function getSecurePassword(
+  service: string,
+  options?: SecureOptions
+): Promise {
+  return RNKeychainManager.getSecurePasswordForService(service, options);
+}
+
 /**
  * Saves the `username` and `password` combination for `server`.
  * @param {string} server URL to server.

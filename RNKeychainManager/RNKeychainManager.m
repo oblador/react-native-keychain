@@ -111,10 +111,10 @@ NSString *serviceValue(NSDictionary *options)
 
 #pragma mark - Proposed functionality
 
-#define kAuthenticationType "AuthenticationTypeKey"
-#define kBiometrics "Biometrics"
+#define kAuthenticationType @"authenticationType"
+#define kBiometrics @"Biometrics"
 
-#define kCustomPromptMessage "CustomPrompt"
+#define kCustomPromptMessage @"customPrompt"
 
 //LAPolicyDeviceOwnerAuthenticationWithBiometrics | LAPolicyDeviceOwnerAuthentication
 
@@ -142,7 +142,7 @@ RCT_EXPORT_METHOD(canCheckAuthentication:(NSDictionary *)options resolver:(RCTPr
     return [[[ LAContext alloc] init ] canEvaluatePolicy:policyToEvaluate error:err ];
 }
 
-RCT_EXPORT_METHOD(setSecurePassword:(NSString *)password withUsername:(NSString *)username withService:(NSString *)service withOptions:(NSDictionary *)options resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
+RCT_EXPORT_METHOD(setSecurePasswordForService:(NSString *)service withUsername:(NSString *)username withPassword:(NSString *)password withOptions:(NSDictionary *)options resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
 {
     // Delete old entry for that key if Available
     NSError *aerr = nil;
@@ -151,18 +151,17 @@ RCT_EXPORT_METHOD(setSecurePassword:(NSString *)password withUsername:(NSString 
         return rejectWithError(reject, aerr);
     }
     
-    NSMutableDictionary *dict = @{ kSecClass : (__bridge id)(kSecClassGenericPassword),
-                                   kSecAttrService: service,
-                                   kSecReturnAttributes: kCFBooleanTrue
+    NSMutableDictionary *dict = @{ (__bridge NSString *)kSecClass : (__bridge id)(kSecClassGenericPassword),
+                                   (__bridge NSString *)kSecAttrService: service,
+                                   (__bridge NSString *)kSecReturnAttributes: (__bridge id)kCFBooleanTrue
                                    }.mutableCopy;
     
     OSStatus osStatus = SecItemDelete((__bridge CFDictionaryRef) dict);
     
     // make new entry
-    dict = @{ kSecClass : (__bridge id)(kSecClassGenericPassword),
-              kSecAttrAccessible : accessibleValue(options),
-              kSecAttrService : service,
-              kSecAttrAccount : username
+    dict = @{ (__bridge NSString *)kSecClass : (__bridge id)(kSecClassGenericPassword),
+              (__bridge NSString *)kSecAttrService : service,
+              (__bridge NSString *)kSecAttrAccount : username
               }.mutableCopy;
     
     CFErrorRef error = NULL;
@@ -204,18 +203,22 @@ RCT_EXPORT_METHOD(getSecurePasswordForService:(NSString *)service withOptions:(N
         promptMessage = options[kCustomPromptMessage];
     }
     
-    NSMutableDictionary *dict = @{ kSecClass : (__bridge id)(kSecClassGenericPassword),
-                                   kSecAttrService : service,
-                                   kSecReturnAttributes : kCFBooleanTrue,
-                                   kSecReturnData : kCFBooleanTrue,
-                                   kSecMatchLimit : kSecMatchLimitOne,
-                                   kSecUseOperationPrompt : promptMessage
+    NSMutableDictionary *dict = @{ (__bridge NSString *)kSecClass : (__bridge id)(kSecClassGenericPassword),
+                                   (__bridge NSString *)kSecAttrService : service,
+                                   (__bridge NSString *)kSecReturnAttributes : (__bridge id)kCFBooleanTrue,
+                                   (__bridge NSString *)kSecReturnData : (__bridge id)kCFBooleanTrue,
+                                   (__bridge NSString *)kSecMatchLimit : (__bridge NSString *)kSecMatchLimitOne,
+                                   (__bridge NSString *)kSecUseOperationPrompt : promptMessage
                                    }.mutableCopy;
     
+    // Notify AppDelegate
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [ self notifyAuthenticationListener: YES ];
+    });
+    
     // Look up password for service in the keychain
-    [ self notifyAuthenticationListener: YES ];
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        NSDictionary* found = nil;
+        __block NSDictionary* found = nil;
         CFTypeRef foundTypeRef = NULL;
         OSStatus osStatus = SecItemCopyMatching((__bridge CFDictionaryRef) dict, (CFTypeRef*)&foundTypeRef);
         
@@ -241,7 +244,7 @@ RCT_EXPORT_METHOD(getSecurePasswordForService:(NSString *)service withOptions:(N
                              @"username": username,
                              @"password": password
                              });
-        })
+        });
         
     });
 }
@@ -249,7 +252,7 @@ RCT_EXPORT_METHOD(getSecurePasswordForService:(NSString *)service withOptions:(N
 - (void) notifyAuthenticationListener:(BOOL)willPresent {
     id<UIApplicationDelegate> appDelegate = [ UIApplication sharedApplication ].delegate;
     
-    if ([ appDelegate conformsToProtocol:@protocol(@"RNKeychainAuthenticationListener") ]) {
+    if ([ appDelegate conformsToProtocol:@protocol(RNKeychainAuthenticationListener) ]) {
         ((id<RNKeychainAuthenticationListener>)appDelegate).willPromptForAuthentication = willPresent;
     }
 }
