@@ -12,6 +12,11 @@
 #import <React/RCTBridge.h>
 #import <React/RCTUtils.h>
 
+#import <LocalAuthentication/LAContext.h>
+#import <UIKit/UIKit.h>
+
+#import "RNKeychainAuthenticationListener.h"
+
 @implementation RNKeychainManager
 
 @synthesize bridge = _bridge;
@@ -103,6 +108,142 @@ NSString *serviceValue(NSDictionary *options)
   }
   return [[NSBundle mainBundle] bundleIdentifier];
 }
+
+#pragma mark - Proposed functionality
+
+#define kTouchIdCheck "AuthenticationTypeKey"
+#define kBiometrics "Biometrics"
+
+#define kCustomPromptMessage "CustomPrompt"
+
+//LAPolicyDeviceOwnerAuthenticationWithBiometrics | LAPolicyDeviceOwnerAuthentication
+
+RCT_EXPORT_METHOD(canCheckAuthentication:(NSDictionary *)options resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
+{
+    NSString *authenticationType = options[kTouchIdCheck];
+    LAPolicy policyToEvaluate = LAPolicyDeviceOwnerAuthentication;
+    
+    if ([ authenticationType isEqualToString:kBiometrics ]) {
+        policyToEvaluate = LAPolicyDeviceOwnerAuthenticationWithBiometrics;
+    }
+    
+    NSError *aerr = nil;
+    BOOL canBeProtected = [[[ LAContext alloc] init ] canEvaluatePolicy:policyToEvaluate error:&aerr ];
+    
+    if (aerr) {
+        return rejectWithError(reject, aerr);
+    } else {
+        return resolve(@(YES));
+    }
+}
+
+RCT_EXPORT_METHOD(setSecurePassword:(NSString *)password withUsername:(NSString *)username withService:(NSString *)service withOptions:(NSDictionary *)options resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
+{
+    // Delete old entry for that key if Available
+    NSMutableDictionary *dict = @{ kSecClass : (__bridge id)(kSecClassGenericPassword),
+                                   kSecAttrService: service,
+                                   kSecReturnAttributes: kCFBooleanTrue
+                                   }.mutableCopy;
+    
+    OSStatus osStatus = SecItemDelete((__bridge CFDictionaryRef) dict);
+    
+    // make new entry
+    dict = @{ kSecClass : (__bridge id)(kSecClassGenericPassword),
+              kSecAttrAccessible : accessibleValue(options),
+              kSecAttrService : service,
+              kSecAttrAccount : username
+              }.mutableCopy;
+    
+    CFErrorRef error = NULL;
+    SecAccessControlRef sacRef = SecAccessControlCreateWithFlags(kCFAllocatorDefault,
+                                                                 kSecAttrAccessibleWhenUnlockedThisDeviceOnly, //kSecAttrAccessibleWhenPasscodeSetThisDeviceOnly,
+                                                                 kSecAccessControlTouchIDCurrentSet|kSecAccessControlOr|kSecAccessControlDevicePasscode,
+                                                                 &error);
+    
+    if (error) {
+        // ok: failed
+        return rejectWithError(reject, aerr);
+    }
+    
+    NSData *passwordData = [password dataUsingEncoding:NSUTF8StringEncoding];
+    [ dict setObject:(__bridge id)sacRef forKey:kSecAttrAccessControl ];
+    
+    [ dict setObject:passwordData forKey:kSecValueData ];
+    
+    // Try to save to keychain
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        OSStatus osStatus = SecItemAdd((__bridge CFDictionaryRef) dict, NULL);
+        
+        dispatch_async(dispatch_get_main_queue(), ^{
+            if (osStatus != noErr && osStatus != errSecItemNotFound) {
+                NSError *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:osStatus userInfo:nil];
+                return rejectWithError(reject, error);
+            } else {
+                return resolve(@(YES));
+            }
+        });
+        
+    });
+}
+
+RCT_EXPORT_METHOD(getSecurePasswordForService:(NSString *)service withOptions:(NSDictionary *)options resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
+{
+    NSString *promptMessage = @"Authenticate to retrieve secret!";
+    if (options && options[kCustomPromptMessage]) {
+        promptMessage = options[kCustomPromptMessage];
+    }
+    
+    NSMutableDictionary *dict = @{ kSecClass : (__bridge id)(kSecClassGenericPassword),
+                                   kSecAttrService : service,
+                                   kSecReturnAttributes : kCFBooleanTrue,
+                                   kSecReturnData : kCFBooleanTrue,
+                                   kSecMatchLimit : kSecMatchLimitOne,
+                                   kSecUseOperationPrompt : promptMessage
+                                   }.mutableCopy;
+    
+    // Look up password for service in the keychain
+    [ self notifyAuthenticationListener: YES ];
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        NSDictionary* found = nil;
+        CFTypeRef foundTypeRef = NULL;
+        OSStatus osStatus = SecItemCopyMatching((__bridge CFDictionaryRef) dict, (CFTypeRef*)&foundTypeRef);
+        
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [ self notifyAuthenticationListener: NO ];
+            
+            if (osStatus != noErr && osStatus != errSecItemNotFound) {
+                NSError *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:osStatus userInfo:nil];
+                return rejectWithError(reject, error);
+            }
+            
+            found = (__bridge NSDictionary*)(foundTypeRef);
+            if (!found) {
+                return resolve(@(NO));
+            }
+            
+            // Found
+            NSString* username = (NSString *) [found objectForKey:(__bridge id)(kSecAttrAccount)];
+            NSString* password = [[NSString alloc] initWithData:[found objectForKey:(__bridge id)(kSecValueData)] encoding:NSUTF8StringEncoding];
+            
+            return resolve(@{
+                             @"service": service,
+                             @"username": username,
+                             @"password": password
+                             });
+        })
+        
+    });
+}
+
+- (void) notifyAuthenticationListener:(BOOL)willPresent {
+    id<UIApplicationDelegate> appDelegate = [ UIApplication sharedApplication ].delegate;
+    
+    if ([ appDelegate conformsToProtocol:@protocol(@"RNKeychainAuthenticationListener") ]) {
+        ((id<RNKeychainAuthenticationListener>)appDelegate).willPromptForAuthentication = willPresent;
+    }
+}
+
+#pragma mark - RNKeychain
 
 RCT_EXPORT_METHOD(setGenericPasswordForOptions:(NSDictionary *)options withUsername:(NSString *)username withPassword:(NSString *)password resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
 {
