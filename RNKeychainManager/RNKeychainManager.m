@@ -111,7 +111,7 @@ NSString *serviceValue(NSDictionary *options)
 
 #pragma mark - Proposed functionality
 
-#define kTouchIdCheck "AuthenticationTypeKey"
+#define kAuthenticationType "AuthenticationTypeKey"
 #define kBiometrics "Biometrics"
 
 #define kCustomPromptMessage "CustomPrompt"
@@ -120,26 +120,37 @@ NSString *serviceValue(NSDictionary *options)
 
 RCT_EXPORT_METHOD(canCheckAuthentication:(NSDictionary *)options resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
 {
-    NSString *authenticationType = options[kTouchIdCheck];
     LAPolicy policyToEvaluate = LAPolicyDeviceOwnerAuthentication;
     
-    if ([ authenticationType isEqualToString:kBiometrics ]) {
-        policyToEvaluate = LAPolicyDeviceOwnerAuthenticationWithBiometrics;
+    if (options && options[kAuthenticationType]) {
+        if ([ options[kAuthenticationType] isEqualToString:kBiometrics ]) {
+            policyToEvaluate = LAPolicyDeviceOwnerAuthenticationWithBiometrics;
+        }
     }
     
     NSError *aerr = nil;
-    BOOL canBeProtected = [[[ LAContext alloc] init ] canEvaluatePolicy:policyToEvaluate error:&aerr ];
+    BOOL canBeProtected = [self canCheckAuthentication:policyToEvaluate error:&aerr ];
     
-    if (aerr) {
+    if (aerr || !canBeProtected) {
         return rejectWithError(reject, aerr);
     } else {
         return resolve(@(YES));
     }
 }
 
+- (BOOL) canCheckAuthentication:(LAPolicy)policyToEvaluate error:(NSError **)err {
+    return [[[ LAContext alloc] init ] canEvaluatePolicy:policyToEvaluate error:err ];
+}
+
 RCT_EXPORT_METHOD(setSecurePassword:(NSString *)password withUsername:(NSString *)username withService:(NSString *)service withOptions:(NSDictionary *)options resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
 {
     // Delete old entry for that key if Available
+    NSError *aerr = nil;
+    BOOL canAuthenticate = [ self canCheckAuthentication:LAPolicyDeviceOwnerAuthentication error:&aerr ];
+    if (aerr || !canAuthenticate) {
+        return rejectWithError(reject, aerr);
+    }
+    
     NSMutableDictionary *dict = @{ kSecClass : (__bridge id)(kSecClassGenericPassword),
                                    kSecAttrService: service,
                                    kSecReturnAttributes: kCFBooleanTrue
