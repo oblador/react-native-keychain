@@ -109,24 +109,60 @@ NSString *serviceValue(NSDictionary *options)
   return [[NSBundle mainBundle] bundleIdentifier];
 }
 
-#pragma mark - Proposed functionality
+#pragma mark - Proposed functionality - Helpers
 
 #define kAuthenticationType @"authenticationType"
-#define kBiometrics @"Biometrics"
+#define kBiometrics @"AuthenticationWithBiometrics"
+
+#define kAccessControlType @"accessControl"
+#define kAccessControlUserPresence @"UserPresence"
+#define kAccessControlTouchIDAny @"TouchIDAny"
+#define kAccessControlTouchIDCurrentSet @"TouchIDCurrentSet"
+#define kAccessControlDevicePasscode @"DevicePasscode"
+#define kAccessControlTouchIDCurrentSetOrDevicePasscode @"TouchIDCurrentSetOrDevicePasscode"
+
 
 #define kCustomPromptMessage @"customPrompt"
 
+LAPolicy authPolicy(NSDictionary *options)
+{
+    if (options && options[kAuthenticationType]) {
+        if ([ options[kAuthenticationType] isEqualToString:kBiometrics ]) {
+            return LAPolicyDeviceOwnerAuthenticationWithBiometrics;
+        }
+    }
+    return LAPolicyDeviceOwnerAuthentication;
+}
+
+SecAccessControlCreateFlags secureAccessControl(NSDictionary *options)
+{
+    if (options && options[kAccessControlType]) {
+        if ([ options[kAccessControlType] isEqualToString: kAccessControlUserPresence ]) {
+            return kSecAccessControlUserPresence;
+        }
+        else if ([ options[kAccessControlType] isEqualToString: kAccessControlTouchIDAny ]) {
+            return kSecAccessControlTouchIDAny;
+        }
+        else if ([ options[kAccessControlType] isEqualToString: kAccessControlTouchIDCurrentSet ]) {
+            return kSecAccessControlTouchIDCurrentSet;
+        }
+        else if ([ options[kAccessControlType] isEqualToString: kAccessControlDevicePasscode ]) {
+            return kSecAccessControlDevicePasscode;
+        }
+        else if ([ options[kAccessControlType] isEqualToString: kAccessControlTouchIDCurrentSetOrDevicePasscode ]) {
+            return kSecAccessControlTouchIDCurrentSet|kSecAccessControlOr|kSecAccessControlDevicePasscode;
+        }
+    }
+    return kSecAccessControlTouchIDCurrentSet|kSecAccessControlOr|kSecAccessControlDevicePasscode;
+}
+
 //LAPolicyDeviceOwnerAuthenticationWithBiometrics | LAPolicyDeviceOwnerAuthentication
+
+#pragma mark - Proposed functionality - RCT_EXPORT_METHOD
 
 RCT_EXPORT_METHOD(canCheckAuthentication:(NSDictionary *)options resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
 {
-    LAPolicy policyToEvaluate = LAPolicyDeviceOwnerAuthentication;
-    
-    if (options && options[kAuthenticationType]) {
-        if ([ options[kAuthenticationType] isEqualToString:kBiometrics ]) {
-            policyToEvaluate = LAPolicyDeviceOwnerAuthenticationWithBiometrics;
-        }
-    }
+    LAPolicy policyToEvaluate = authPolicy(options);
     
     NSError *aerr = nil;
     BOOL canBeProtected = [self canCheckAuthentication:policyToEvaluate error:&aerr ];
@@ -167,7 +203,7 @@ RCT_EXPORT_METHOD(setSecurePasswordForService:(NSString *)service withUsername:(
     CFErrorRef error = NULL;
     SecAccessControlRef sacRef = SecAccessControlCreateWithFlags(kCFAllocatorDefault,
                                                                  kSecAttrAccessibleWhenUnlockedThisDeviceOnly, //kSecAttrAccessibleWhenPasscodeSetThisDeviceOnly,
-                                                                 kSecAccessControlTouchIDCurrentSet|kSecAccessControlOr|kSecAccessControlDevicePasscode,
+                                                                 secureAccessControl(options),
                                                                  &error);
     
     if (error) {

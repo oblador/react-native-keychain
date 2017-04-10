@@ -16,9 +16,21 @@ type Options = {
   service?: string;
 };
 
+type SecAccessControl =
+  | 'UserPresence'
+  | 'TouchIDAny'
+  | 'TouchIDCurrentSet'
+  | 'DevicePasscode'
+  | 'TouchIDCurrentSetOrDevicePasscode'
+
+  type LAPolicy =
+    | 'Authentication'
+    | 'AuthenticationWithBiometrics'
+
 type SecureOptions = {
   customPrompt?: string;
-  authenticationType?: string;
+  authenticationType?: LAPolicy;
+  accessControl?: SecAccessControl;
 };
 
 export function canImplyAuthentication(
@@ -36,9 +48,9 @@ export function canImplyAuthentication(
  * @return {Promise} Resolves to `true` when successful
  */
 export function setSecurePassword(
-  password: string,
-  username: string,
   service: string,
+  username: string,
+  password: string,
   options?: SecureOptions
 ): Promise {
   return RNKeychainManager.setSecurePasswordForService(service, username, password, options);
