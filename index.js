@@ -21,6 +21,7 @@ type SecAccessControl =
   | 'TouchIDAny'
   | 'TouchIDCurrentSet'
   | 'DevicePasscode'
+  | 'TouchIDAnyOrDevicePasscode'
   | 'TouchIDCurrentSetOrDevicePasscode'
 
   type LAPolicy =
@@ -33,6 +34,12 @@ type SecureOptions = {
   accessControl?: SecAccessControl;
 };
 
+/**
+ * Inquire if the type of local authentication policy (LAPolicy) is supported
+ * on this device with the device settings the user chose.
+ * @param {object} options LAPolicy option, iOS only
+ * @return {Promise} Resolves to `true` when successful
+ */
 export function canImplyAuthentication(
   options?: SecureOptions
 ): Promise {

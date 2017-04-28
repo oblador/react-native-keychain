@@ -119,6 +119,7 @@ NSString *serviceValue(NSDictionary *options)
 #define kAccessControlTouchIDAny @"TouchIDAny"
 #define kAccessControlTouchIDCurrentSet @"TouchIDCurrentSet"
 #define kAccessControlDevicePasscode @"DevicePasscode"
+#define kAccessControlTouchIDAnyOrDevicePasscode @"TouchIDAnyOrDevicePasscode"
 #define kAccessControlTouchIDCurrentSetOrDevicePasscode @"TouchIDCurrentSetOrDevicePasscode"
 
 
@@ -148,6 +149,9 @@ SecAccessControlCreateFlags secureAccessControl(NSDictionary *options)
         }
         else if ([ options[kAccessControlType] isEqualToString: kAccessControlDevicePasscode ]) {
             return kSecAccessControlDevicePasscode;
+        }
+        else if ([ options[kAccessControlType] isEqualToString: kAccessControlTouchIDAnyOrDevicePasscode ]) {
+            return kSecAccessControlTouchIDAny|kSecAccessControlOr|kSecAccessControlDevicePasscode;
         }
         else if ([ options[kAccessControlType] isEqualToString: kAccessControlTouchIDCurrentSetOrDevicePasscode ]) {
             return kSecAccessControlTouchIDCurrentSet|kSecAccessControlOr|kSecAccessControlDevicePasscode;
