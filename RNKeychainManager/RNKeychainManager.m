@@ -343,6 +343,11 @@ RCT_EXPORT_METHOD(getGenericPasswordForOptions:(NSDictionary *)options resolver:
   if (options && options[@"accessGroup"]) {
     [dict setObject:options[@"accessGroup"] forKey:kSecAttrAccessGroup];
   }
+    
+    // secure compatibility with TouchId / Passcode secured stored items
+    // http://stackoverflow.com/questions/42339000/ksecuseauthenticationuiskip-how-to-use-it
+    // Silently skip any items that require user authentication. Only use this value with the SecItemCopyMatching function.
+    [ dict setObject:kSecUseAuthenticationUISkip forKey:kSecUseAuthenticationUI ];
 
   // Look up server in the keychain
   NSDictionary* found = nil;
@@ -432,6 +437,11 @@ RCT_EXPORT_METHOD(getInternetCredentialsForServer:(NSString *)server withOptions
   if (options && options[@"accessGroup"]) {
     [dict setObject:options[@"accessGroup"] forKey:kSecAttrAccessGroup];
   }
+    
+    // secure compatibility with TouchId / Passcode secured stored items
+    // http://stackoverflow.com/questions/42339000/ksecuseauthenticationuiskip-how-to-use-it
+    // Silently skip any items that require user authentication. Only use this value with the SecItemCopyMatching function.
+    [ dict setObject:kSecUseAuthenticationUISkip forKey:kSecUseAuthenticationUI ];
 
   // Look up server in the keychain
   NSDictionary *found = nil;
