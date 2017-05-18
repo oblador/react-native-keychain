@@ -99,9 +99,9 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     public void setGenericPasswordForOptions(String service, String username, String password, Promise promise) {
         try {
             setGenericPasswordForOptions(service, username, password);
-            // Clean legacy values (if any)
 
-            resetGenericPasswordForOptionsWithDelimiter(service, LEGACY_DELIMITER, false);
+            // Clean legacy values (if any)
+            resetGenericPasswordForOptionsLegacy(service);
             promise.resolve("KeychainModule saved the data");
         } catch (EmptyParameterException e) {
             Log.e(KEYCHAIN_MODULE, e.getMessage());
@@ -209,7 +209,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
                             new String(resultSet.decryptedUsername, Charset.forName("UTF-8")),
                             new String(resultSet.decryptedUsername, Charset.forName("UTF-8")));
                     // Remove the legacy value(s)
-                    resetGenericPasswordForOptionsWithDelimiter(service, LEGACY_DELIMITER, false);
+                    resetGenericPasswordForOptionsLegacy(service);
                     recuser = resultSet.decryptedUsername;
                     recpass = resultSet.decryptedPassword;
                 } else {
@@ -308,7 +308,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     @ReactMethod
     public void resetGenericPasswordForOptions(String service, Promise promise) {
         try {
-            resetGenericPasswordForOptionsWithDelimiter(service, DELIMITER, true);
+            resetGenericPasswordForOptions(service);
             promise.resolve(true);
         } catch (KeyStoreException e) {
             Log.e(KEYCHAIN_MODULE, e.getMessage());
@@ -319,21 +319,32 @@ public class KeychainModule extends ReactContextBaseJavaModule {
         }
     }
 
-    private void resetGenericPasswordForOptionsWithDelimiter(String service, String delimiter, boolean resetKeyStore) throws KeyStoreException, KeyStoreAccessException {
+    private void resetGenericPasswordForOptions(String service) throws KeyStoreException, KeyStoreAccessException {
         service = service == null ? DEFAULT_ALIAS : service;
 
-        if (resetKeyStore) {
-            KeyStore keyStore = getKeyStoreAndLoad();
+        KeyStore keyStore = getKeyStoreAndLoad();
 
-            if (keyStore.containsAlias(service)) {
-                keyStore.deleteEntry(service);
-            }
+        if (keyStore.containsAlias(service)) {
+            keyStore.deleteEntry(service);
         }
+
         SharedPreferences.Editor prefsEditor = prefs.edit();
 
-        if (prefs.contains(service + delimiter + "u")) {
-            prefsEditor.remove(service + delimiter + "u");
-            prefsEditor.remove(service + delimiter + "p");
+        if (prefs.contains(service + DELIMITER + "u")) {
+            prefsEditor.remove(service + DELIMITER + "u");
+            prefsEditor.remove(service + DELIMITER + "p");
+            prefsEditor.apply();
+        }
+    }
+
+    private void resetGenericPasswordForOptionsLegacy(String service) throws KeyStoreException, KeyStoreAccessException {
+        service = service == null ? DEFAULT_ALIAS : service;
+
+        SharedPreferences.Editor prefsEditor = prefs.edit();
+
+        if (prefs.contains(service + LEGACY_DELIMITER + "u")) {
+            prefsEditor.remove(service + LEGACY_DELIMITER + "u");
+            prefsEditor.remove(service + LEGACY_DELIMITER + "p");
             prefsEditor.apply();
         }
     }
