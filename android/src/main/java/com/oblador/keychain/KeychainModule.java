@@ -60,6 +60,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
 
     public static final String KEYCHAIN_MODULE = "RNKeychainManager";
     public static final String KEYCHAIN_DATA = "RN_KEYCHAIN";
+    public static final String EMPTY_STRING = "";
     public static final String DEFAULT_ALIAS = "RN_KEYCHAIN_DEFAULT_ALIAS";
     public static final int YEARS_TO_LAST = 15;
     public static final String LEGACY_DELIMITER = ":";
@@ -194,6 +195,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
 
     @ReactMethod
     public void getGenericPasswordForOptions(String service, Promise promise) {
+        String originalService = service;
         service = service == null ? DEFAULT_ALIAS : service;
 
         try {
@@ -201,15 +203,15 @@ public class KeychainModule extends ReactContextBaseJavaModule {
             byte[] recpass = getBytesFromPrefs(service, DELIMITER + "p");
             if (recuser == null || recpass == null) {
                 // Check if the values are stored using the LEGACY_DELIMITER and thus encrypted using FaceBook's Conceal
-                ResultSet resultSet = getGenericPasswordForOptionsUsingConceal(service);
+                ResultSet resultSet = getGenericPasswordForOptionsUsingConceal(originalService);
                 if (resultSet != null) {
                     // Store the values using the new delimiter and the KeyStore
                     setGenericPasswordForOptions(
-                            resultSet.service,
+                            originalService,
                             new String(resultSet.decryptedUsername, Charset.forName("UTF-8")),
                             new String(resultSet.decryptedUsername, Charset.forName("UTF-8")));
                     // Remove the legacy value(s)
-                    resetGenericPasswordForOptionsLegacy(service);
+                    resetGenericPasswordForOptionsLegacy(originalService);
                     recuser = resultSet.decryptedUsername;
                     recpass = resultSet.decryptedPassword;
                 } else {
@@ -274,8 +276,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
         if (!crypto.isAvailable()) {
             throw new CryptoFailedException("Crypto is missing");
         }
-
-        service = service == null ? DEFAULT_ALIAS : service;
+        service = service == null ? EMPTY_STRING : service;
 
         byte[] recuser = getBytesFromPrefs(service, LEGACY_DELIMITER + "u");
         byte[] recpass = getBytesFromPrefs(service, LEGACY_DELIMITER + "p");
@@ -338,7 +339,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     }
 
     private void resetGenericPasswordForOptionsLegacy(String service) throws KeyStoreException, KeyStoreAccessException {
-        service = service == null ? DEFAULT_ALIAS : service;
+        service = service == null ? EMPTY_STRING : service;
 
         SharedPreferences.Editor prefsEditor = prefs.edit();
 
