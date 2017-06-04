@@ -3,7 +3,6 @@ package com.oblador.keychain;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Build;
-import android.security.KeyPairGeneratorSpec;
 import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyProperties;
 import android.support.annotation.NonNull;
@@ -30,26 +29,22 @@ import com.oblador.keychain.exceptions.KeyStoreAccessException;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.math.BigInteger;
 import java.nio.charset.Charset;
 import java.security.InvalidAlgorithmParameterException;
-import java.security.KeyPairGenerator;
+import java.security.Key;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
-import java.security.PrivateKey;
-import java.security.PublicKey;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.security.spec.AlgorithmParameterSpec;
-import java.util.Calendar;
-import java.util.Date;
 
 import javax.crypto.Cipher;
 import javax.crypto.CipherInputStream;
 import javax.crypto.CipherOutputStream;
-import javax.security.auth.x500.X500Principal;
+import javax.crypto.KeyGenerator;
+import javax.crypto.spec.IvParameterSpec;
 
 public class KeychainModule extends ReactContextBaseJavaModule {
 
@@ -62,11 +57,17 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     public static final String KEYCHAIN_DATA = "RN_KEYCHAIN";
     public static final String EMPTY_STRING = "";
     public static final String DEFAULT_ALIAS = "RN_KEYCHAIN_DEFAULT_ALIAS";
-    public static final int YEARS_TO_LAST = 15;
     public static final String LEGACY_DELIMITER = ":";
     public static final String DELIMITER = "_";
     public static final String KEYSTORE_TYPE = "AndroidKeyStore";
-    public static final String RSA_ALGORITHM = "RSA/ECB/PKCS1Padding";
+    public static final String ENCRYPTION_ALGORITHM = KeyProperties.KEY_ALGORITHM_AES;
+    public static final String ENCRYPTION_BLOCK_MODE = KeyProperties.BLOCK_MODE_CBC;
+    public static final String ENCRYPTION_PADDING = KeyProperties.ENCRYPTION_PADDING_PKCS7;
+    public static final String ENCRYPTION_TRANSFORMATION =
+            ENCRYPTION_ALGORITHM + "/" +
+            ENCRYPTION_BLOCK_MODE + "/" +
+            ENCRYPTION_PADDING;
+    public static final int ENCRYPTION_KEY_SIZE = 256;
 
     private final Crypto crypto;
     private final SharedPreferences prefs;
@@ -134,58 +135,50 @@ public class KeychainModule extends ReactContextBaseJavaModule {
                     spec = new KeyGenParameterSpec.Builder(
                             service,
                             KeyProperties.PURPOSE_DECRYPT | KeyProperties.PURPOSE_ENCRYPT)
-                            .setDigests(KeyProperties.DIGEST_SHA256, KeyProperties.DIGEST_SHA512)
-                            .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1)
+                            .setBlockModes(ENCRYPTION_BLOCK_MODE)
+                            .setEncryptionPaddings(ENCRYPTION_PADDING)
                             .setRandomizedEncryptionRequired(true)
                             //.setUserAuthenticationRequired(true) // Will throw InvalidAlgorithmParameterException if there is no fingerprint enrolled on the device
-                            .setKeySize(2048)
-                            .build();
-                } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                    Calendar cal = Calendar.getInstance();
-                    Date start = cal.getTime();
-                    cal.add(Calendar.YEAR, YEARS_TO_LAST);
-                    Date end = cal.getTime();
-                    spec = new KeyPairGeneratorSpec.Builder(this.getReactApplicationContext())
-                            .setAlias(service)
-                            .setSubject(new X500Principal("CN=domain.com, O=security"))
-                            .setSerialNumber(BigInteger.ONE)
-                            .setStartDate(start)
-                            .setEndDate(end)
-                            .setKeySize(2048)
+                            .setKeySize(ENCRYPTION_KEY_SIZE)
                             .build();
                 } else {
                     throw new CryptoFailedException("Unsupported Android SDK " + Build.VERSION.SDK_INT);
                 }
 
-                KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA", KEYSTORE_TYPE);
-                generator.initialize(spec);
+                KeyGenerator generator = KeyGenerator.getInstance(ENCRYPTION_ALGORITHM, KEYSTORE_TYPE);
+                generator.init(spec);
 
-                generator.generateKeyPair();
+                generator.generateKey();
             }
 
-            PublicKey publicKey = keyStore.getCertificate(service).getPublicKey();
+            Key key = keyStore.getKey(service, null);
 
-            String encryptedUsername = encryptString(publicKey, service, username);
-            String encryptedPassword = encryptString(publicKey, service, password);
+            String encryptedUsername = encryptString(key, service, username);
+            String encryptedPassword = encryptString(key, service, password);
 
             SharedPreferences.Editor prefsEditor = prefs.edit();
             prefsEditor.putString(service + DELIMITER + "u", encryptedUsername);
             prefsEditor.putString(service + DELIMITER + "p", encryptedPassword);
             prefsEditor.apply();
             Log.d(KEYCHAIN_MODULE, "saved the data");
-        } catch (NoSuchAlgorithmException | InvalidAlgorithmParameterException | NoSuchProviderException e) {
+        } catch (NoSuchAlgorithmException | InvalidAlgorithmParameterException | NoSuchProviderException | UnrecoverableKeyException e) {
             throw new CryptoFailedException("Could not encrypt data for service " + service, e);
         }
     }
 
-    private String encryptString(PublicKey publicKey, String service, String value) throws CryptoFailedException {
+    private String encryptString(Key key, String service, String value) throws CryptoFailedException {
         try {
-            Cipher cipher = Cipher.getInstance(RSA_ALGORITHM);
-            cipher.init(Cipher.ENCRYPT_MODE, publicKey);
+            Cipher cipher = Cipher.getInstance(ENCRYPTION_TRANSFORMATION);
+            cipher.init(Cipher.ENCRYPT_MODE, key);
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            // write initialization vector to the beginning of the stream
+            byte[] iv = cipher.getIV();
+            outputStream.write(iv, 0, iv.length);
+            // encrypt the value using a CipherOutputStream
             CipherOutputStream cipherOutputStream = new CipherOutputStream(outputStream, cipher);
             cipherOutputStream.write(value.getBytes("UTF-8"));
             cipherOutputStream.close();
+            // return a Base64 encoded String of the stream
             byte[] encryptedBytes = outputStream.toByteArray();
             return Base64.encodeToString(encryptedBytes, Base64.DEFAULT);
         } catch (Exception e) {
@@ -223,10 +216,10 @@ public class KeychainModule extends ReactContextBaseJavaModule {
 
             KeyStore keyStore = getKeyStoreAndLoad();
 
-            PrivateKey privateKey = (PrivateKey) keyStore.getKey(service, null);
+            Key key = keyStore.getKey(service, null);
 
-            byte[] decryptedUsername = decryptBytes(privateKey, recuser);
-            byte[] decryptedPassword = decryptBytes(privateKey, recpass);
+            byte[] decryptedUsername = decryptBytes(key, recuser);
+            byte[] decryptedPassword = decryptBytes(key, recpass);
 
             WritableMap credentials = Arguments.createMap();
 
@@ -250,13 +243,16 @@ public class KeychainModule extends ReactContextBaseJavaModule {
         }
     }
 
-    private byte[] decryptBytes(PrivateKey privateKey, byte[] bytes) throws CryptoFailedException {
+    private byte[] decryptBytes(Key key, byte[] bytes) throws CryptoFailedException {
         try {
-            Cipher cipher = Cipher.getInstance(RSA_ALGORITHM);
-            cipher.init(Cipher.DECRYPT_MODE, privateKey);
+            Cipher cipher = Cipher.getInstance(ENCRYPTION_TRANSFORMATION);
+            ByteArrayInputStream inputStream = new ByteArrayInputStream(bytes);
+            // read the initialization vector from the beginning of the stream
+            IvParameterSpec ivParams = readIvFromStream(inputStream);
+            cipher.init(Cipher.DECRYPT_MODE, key, ivParams);
+            // decrypt the bytes using a CipherInputStream
             CipherInputStream cipherInputStream = new CipherInputStream(
-                    new ByteArrayInputStream(bytes), cipher);
-
+                    inputStream, cipher);
             ByteArrayOutputStream output = new ByteArrayOutputStream();
             byte[] buffer = new byte[1024];
             while (true) {
@@ -270,6 +266,12 @@ public class KeychainModule extends ReactContextBaseJavaModule {
         } catch (Exception e) {
             throw new CryptoFailedException("Could not decrypt bytes", e);
         }
+    }
+
+    private IvParameterSpec readIvFromStream(ByteArrayInputStream inputStream) {
+        byte[] iv = new byte[16];
+        inputStream.read(iv, 0, iv.length);
+        return new IvParameterSpec(iv);
     }
 
     private ResultSet getGenericPasswordForOptionsUsingConceal(String service) throws CryptoFailedException {
