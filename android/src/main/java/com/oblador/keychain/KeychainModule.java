@@ -192,6 +192,8 @@ public class KeychainModule extends ReactContextBaseJavaModule {
         service = service == null ? DEFAULT_ALIAS : service;
 
         try {
+            final byte[] decryptedUsername;
+            final byte[] decryptedPassword;
             byte[] recuser = getBytesFromPrefs(service, DELIMITER + "u");
             byte[] recpass = getBytesFromPrefs(service, DELIMITER + "p");
             if (recuser == null || recpass == null) {
@@ -202,24 +204,25 @@ public class KeychainModule extends ReactContextBaseJavaModule {
                     setGenericPasswordForOptions(
                             originalService,
                             new String(resultSet.decryptedUsername, Charset.forName("UTF-8")),
-                            new String(resultSet.decryptedUsername, Charset.forName("UTF-8")));
+                            new String(resultSet.decryptedPassword, Charset.forName("UTF-8")));
                     // Remove the legacy value(s)
                     resetGenericPasswordForOptionsLegacy(originalService);
-                    recuser = resultSet.decryptedUsername;
-                    recpass = resultSet.decryptedPassword;
+                    decryptedUsername = resultSet.decryptedUsername;
+                    decryptedPassword = resultSet.decryptedPassword;
                 } else {
                     Log.e(KEYCHAIN_MODULE, "no keychain entry found for service: " + service);
                     promise.resolve(false);
                     return;
                 }
             }
+            else {
+                KeyStore keyStore = getKeyStoreAndLoad();
 
-            KeyStore keyStore = getKeyStoreAndLoad();
+                Key key = keyStore.getKey(service, null);
 
-            Key key = keyStore.getKey(service, null);
-
-            byte[] decryptedUsername = decryptBytes(key, recuser);
-            byte[] decryptedPassword = decryptBytes(key, recpass);
+                decryptedUsername = decryptBytes(key, recuser);
+                decryptedPassword = decryptBytes(key, recpass);
+            }
 
             WritableMap credentials = Arguments.createMap();
 
@@ -300,7 +303,6 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     }
 
     private byte[] getBytesFromPrefs(String service, String prefix) {
-        String key = service + prefix;
         String value = prefs.getString(service + prefix, null);
         if (value != null) {
             return Base64.decode(value, Base64.DEFAULT);
