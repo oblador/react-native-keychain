@@ -3,25 +3,34 @@ package com.oblador.keychain;
 import android.content.SharedPreferences;
 import android.util.Base64;
 
-/**
- * Created by pcoltau on 6/15/17.
- */
-
 public class PrefsUtils {
+    static public class ResultSet {
+        final String service;
+        final byte[] usernameBytes;
+        final byte[] passwordBytes;
+
+        public ResultSet(String service, byte[] usernameBytes, byte[] passwordBytes) {
+            this.service = service;
+            this.usernameBytes = usernameBytes;
+            this.passwordBytes = passwordBytes;
+        }
+    }
+
     private final SharedPreferences prefs;
 
     public PrefsUtils(SharedPreferences prefs) {
         this.prefs = prefs;
     }
 
-    public byte[] getBytesForUsername(String service, String delimiter) {
-        String key = getKeyForUsername(service, delimiter);
-        return getBytes(key);
-    }
-
-    public byte[] getBytesForPassword(String service, String delimiter) {
-        String key = getKeyForPassword(service, delimiter);
-        return getBytes(key);
+    public ResultSet getBytesForUsernameAndPassword(String service, String delimiter) {
+        String keyForUsername = getKeyForUsername(service, delimiter);
+        String keyForPassword = getKeyForPassword(service, delimiter);
+        byte[] bytesForUsername = getBytes(keyForUsername);
+        byte[] bytesForPassword = getBytes(keyForPassword);
+        if (bytesForUsername != null && bytesForPassword != null) {
+            return new ResultSet(service, bytesForUsername, bytesForPassword);
+        }
+        return null;
     }
 
     public void resetPassword(String service, String delimiter) {
@@ -41,6 +50,16 @@ public class PrefsUtils {
         prefsEditor.putString(getKeyForUsername(service, delimiter), encryptedUsername);
         prefsEditor.putString(getKeyForPassword(service, delimiter), encryptedPassword);
         prefsEditor.apply();
+    }
+
+    private byte[] getBytesForUsername(String service, String delimiter) {
+        String key = getKeyForUsername(service, delimiter);
+        return getBytes(key);
+    }
+
+    private byte[] getBytesForPassword(String service, String delimiter) {
+        String key = getKeyForPassword(service, delimiter);
+        return getBytes(key);
     }
 
     private String getKeyForUsername(String service, String delimiter) {

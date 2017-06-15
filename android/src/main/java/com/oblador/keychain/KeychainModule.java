@@ -1,5 +1,6 @@
 package com.oblador.keychain;
 
+import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Build;
@@ -14,6 +15,8 @@ import com.facebook.android.crypto.keychain.SharedPrefsBackedKeyChain;
 import com.facebook.crypto.Crypto;
 import com.facebook.crypto.CryptoConfig;
 import com.facebook.crypto.Entity;
+import com.facebook.crypto.exception.CryptoInitializationException;
+import com.facebook.crypto.exception.KeyChainException;
 import com.facebook.crypto.keychain.KeyChain;
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.Promise;
@@ -22,6 +25,7 @@ import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.WritableMap;
+import com.oblador.keychain.PrefsUtils.ResultSet;
 import com.oblador.keychain.exceptions.CryptoFailedException;
 import com.oblador.keychain.exceptions.EmptyParameterException;
 import com.oblador.keychain.exceptions.KeyStoreAccessException;
@@ -73,18 +77,6 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     private final SharedPreferences prefs;
     private final PrefsUtils prefsUtils;
 
-    private class ResultSet {
-        final String service;
-        final byte[] decryptedUsername;
-        final byte[] decryptedPassword;
-
-        public ResultSet(String service, byte[] decryptedUsername, byte[] decryptedPassword) {
-            this.service = service;
-            this.decryptedUsername = decryptedUsername;
-            this.decryptedPassword = decryptedPassword;
-        }
-    }
-
     @Override
     public String getName() {
         return KEYCHAIN_MODULE;
@@ -102,10 +94,18 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     @ReactMethod
     public void setGenericPasswordForOptions(String service, String username, String password, Promise promise) {
         try {
-            setGenericPasswordForOptions(service, username, password);
+            if (username == null || username.isEmpty() || password == null || password.isEmpty()) {
+                throw new EmptyParameterException("you passed empty or null username/password");
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                setGenericPasswordForOptions(service, username, password);
 
-            // Clean legacy values (if any)
-            resetGenericPasswordForOptionsLegacy(service);
+                // Clean legacy values (if any)
+                resetGenericPasswordForOptionsLegacy(service);
+            }
+            else {
+                setGenericPasswordForOptionsUsingConceal(service, username, password);
+            }
             promise.resolve("KeychainModule saved the data");
         } catch (EmptyParameterException e) {
             Log.e(KEYCHAIN_MODULE, e.getMessage());
@@ -122,10 +122,8 @@ public class KeychainModule extends ReactContextBaseJavaModule {
         }
     }
 
-    private void setGenericPasswordForOptions(String service, String username, String password) throws EmptyParameterException, CryptoFailedException, KeyStoreException, KeyStoreAccessException {
-        if (username == null || username.isEmpty() || password == null || password.isEmpty()) {
-            throw new EmptyParameterException("you passed empty or null username/password");
-        }
+    @TargetApi(Build.VERSION_CODES.M)
+    private void setGenericPasswordForOptions(String service, String username, String password) throws CryptoFailedException, KeyStoreException, KeyStoreAccessException {
         service = service == null ? DEFAULT_ALIAS : service;
 
         KeyStore keyStore = getKeyStoreAndLoad();
@@ -133,7 +131,6 @@ public class KeychainModule extends ReactContextBaseJavaModule {
         try {
             if (!keyStore.containsAlias(service)) {
                 AlgorithmParameterSpec spec;
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                     spec = new KeyGenParameterSpec.Builder(
                             service,
                             KeyProperties.PURPOSE_DECRYPT | KeyProperties.PURPOSE_ENCRYPT)
@@ -143,9 +140,6 @@ public class KeychainModule extends ReactContextBaseJavaModule {
                             //.setUserAuthenticationRequired(true) // Will throw InvalidAlgorithmParameterException if there is no fingerprint enrolled on the device
                             .setKeySize(ENCRYPTION_KEY_SIZE)
                             .build();
-                } else {
-                    throw new CryptoFailedException("Unsupported Android SDK " + Build.VERSION.SDK_INT);
-                }
 
                 KeyGenerator generator = KeyGenerator.getInstance(ENCRYPTION_ALGORITHM, KEYSTORE_TYPE);
                 generator.init(spec);
@@ -187,47 +181,24 @@ public class KeychainModule extends ReactContextBaseJavaModule {
 
     @ReactMethod
     public void getGenericPasswordForOptions(String service, Promise promise) {
-        String originalService = service;
-        service = service == null ? DEFAULT_ALIAS : service;
-
         try {
-            final byte[] decryptedUsername;
-            final byte[] decryptedPassword;
-            byte[] recuser = prefsUtils.getBytesForUsername(service, DELIMITER);
-            byte[] recpass = prefsUtils.getBytesForPassword(service, DELIMITER);
-            if (recuser == null || recpass == null) {
-                // Check if the values are stored using the LEGACY_DELIMITER and thus encrypted using FaceBook's Conceal
-                ResultSet resultSet = getGenericPasswordForOptionsUsingConceal(originalService);
-                if (resultSet != null) {
-                    // Store the values using the new delimiter and the KeyStore
-                    setGenericPasswordForOptions(
-                            originalService,
-                            new String(resultSet.decryptedUsername, Charset.forName("UTF-8")),
-                            new String(resultSet.decryptedPassword, Charset.forName("UTF-8")));
-                    // Remove the legacy value(s)
-                    resetGenericPasswordForOptionsLegacy(originalService);
-                    decryptedUsername = resultSet.decryptedUsername;
-                    decryptedPassword = resultSet.decryptedPassword;
-                } else {
-                    Log.e(KEYCHAIN_MODULE, "no keychain entry found for service: " + service);
-                    promise.resolve(false);
-                    return;
-                }
+            final ResultSet resultSet;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                resultSet = getGenericPasswordForOptions(service);
             }
             else {
-                KeyStore keyStore = getKeyStoreAndLoad();
-
-                Key key = keyStore.getKey(service, null);
-
-                decryptedUsername = decryptBytes(key, recuser);
-                decryptedPassword = decryptBytes(key, recpass);
+                resultSet = getGenericPasswordForOptionsUsingConceal(service);
             }
-
+            if (resultSet == null) {
+                Log.e(KEYCHAIN_MODULE, "no keychain entry found for service: " + service);
+                promise.resolve(false);
+                return;
+            }
             WritableMap credentials = Arguments.createMap();
 
-            credentials.putString("service", service);
-            credentials.putString("username", new String(decryptedUsername, Charset.forName("UTF-8")));
-            credentials.putString("password", new String(decryptedPassword, Charset.forName("UTF-8")));
+            credentials.putString("service", resultSet.service);
+            credentials.putString("username", new String(resultSet.usernameBytes, Charset.forName("UTF-8")));
+            credentials.putString("password", new String(resultSet.passwordBytes, Charset.forName("UTF-8")));
 
             promise.resolve(credentials);
         } catch (KeyStoreException e) {
@@ -239,10 +210,43 @@ public class KeychainModule extends ReactContextBaseJavaModule {
         } catch (UnrecoverableKeyException | NoSuchAlgorithmException | CryptoFailedException e) {
             Log.e(KEYCHAIN_MODULE, e.getMessage());
             promise.reject(E_CRYPTO_FAILED, e);
-        } catch (EmptyParameterException e) {
-            Log.e(KEYCHAIN_MODULE, e.getMessage());
-            promise.reject(E_EMPTY_PARAMETERS, e);
         }
+    }
+
+    @TargetApi(Build.VERSION_CODES.M)
+    private ResultSet getGenericPasswordForOptions(String service) throws CryptoFailedException, KeyStoreException, KeyStoreAccessException, UnrecoverableKeyException, NoSuchAlgorithmException {
+        String originalService = service;
+        service = service == null ? DEFAULT_ALIAS : service;
+
+        final byte[] decryptedUsername;
+        final byte[] decryptedPassword;
+        ResultSet encryptedResultSet = prefsUtils.getBytesForUsernameAndPassword(service, DELIMITER);
+        if (encryptedResultSet == null) {
+            // Check if the values are stored using the LEGACY_DELIMITER and thus encrypted using FaceBook's Conceal
+            ResultSet legacyResultSet = getGenericPasswordForOptionsUsingConceal(originalService);
+            if (legacyResultSet != null) {
+                // Store the values using the new delimiter and the KeyStore
+                setGenericPasswordForOptions(
+                        originalService,
+                        new String(legacyResultSet.usernameBytes, Charset.forName("UTF-8")),
+                        new String(legacyResultSet.passwordBytes, Charset.forName("UTF-8")));
+                // Remove the legacy value(s)
+                resetGenericPasswordForOptionsLegacy(originalService);
+                decryptedUsername = legacyResultSet.usernameBytes;
+                decryptedPassword = legacyResultSet.passwordBytes;
+            } else {
+                return null;
+            }
+        }
+        else {
+            KeyStore keyStore = getKeyStoreAndLoad();
+
+            Key key = keyStore.getKey(service, null);
+
+            decryptedUsername = decryptBytes(key, encryptedResultSet.usernameBytes);
+            decryptedPassword = decryptBytes(key, encryptedResultSet.passwordBytes);
+        }
+        return new ResultSet(service, decryptedUsername, decryptedPassword);
     }
 
     private byte[] decryptBytes(Key key, byte[] bytes) throws CryptoFailedException {
@@ -282,9 +286,8 @@ public class KeychainModule extends ReactContextBaseJavaModule {
         }
         service = service == null ? EMPTY_STRING : service;
 
-        byte[] recuser = prefsUtils.getBytesForUsername(service, LEGACY_DELIMITER);
-        byte[] recpass = prefsUtils.getBytesForPassword(service, LEGACY_DELIMITER);
-        if (recuser == null || recpass == null) {
+        ResultSet legacyResultSet = prefsUtils.getBytesForUsernameAndPassword(service, LEGACY_DELIMITER);
+        if (legacyResultSet == null) {
             return null;
         }
 
@@ -292,13 +295,37 @@ public class KeychainModule extends ReactContextBaseJavaModule {
         Entity pwentity = Entity.create(KEYCHAIN_DATA + ":" + service + "pass");
 
         try {
-            byte[] decryptedUsername = crypto.decrypt(recuser, userentity);
-            byte[] decryptedPassword = crypto.decrypt(recpass, pwentity);
+            byte[] decryptedUsername = crypto.decrypt(legacyResultSet.usernameBytes, userentity);
+            byte[] decryptedPassword = crypto.decrypt(legacyResultSet.passwordBytes, pwentity);
 
             return new ResultSet(service, decryptedUsername, decryptedPassword);
         } catch (Exception e) {
             throw new CryptoFailedException("Decryption failed for service " + service, e);
         }
+    }
+
+    private void setGenericPasswordForOptionsUsingConceal(String service, String username, String password) throws CryptoFailedException {
+        if (!crypto.isAvailable()) {
+            throw new CryptoFailedException("Crypto is missing");
+        }
+        service = service == null ? EMPTY_STRING : service;
+
+        Entity userentity = Entity.create(KEYCHAIN_DATA + ":" + service + "user");
+        Entity pwentity = Entity.create(KEYCHAIN_DATA + ":" + service + "pass");
+
+        try {
+            String encryptedUsername = encryptWithEntity(username, userentity);
+            String encryptedPassword = encryptWithEntity(password, pwentity);
+
+            prefsUtils.storeEncryptedValues(service, LEGACY_DELIMITER, encryptedUsername, encryptedPassword);
+        } catch (Exception e) {
+            throw new CryptoFailedException("Encryption failed for service " + service, e);
+        }
+    }
+
+    private String encryptWithEntity(String toEncypt, Entity entity) throws KeyChainException, CryptoInitializationException, IOException {
+        byte[] encryptedBytes = crypto.encrypt(toEncypt.getBytes(Charset.forName("UTF-8")), entity);
+        return Base64.encodeToString(encryptedBytes, Base64.DEFAULT);
     }
 
     @ReactMethod
