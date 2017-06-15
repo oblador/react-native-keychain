@@ -71,6 +71,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
 
     private final Crypto crypto;
     private final SharedPreferences prefs;
+    private final PrefsUtils prefsUtils;
 
     private class ResultSet {
         final String service;
@@ -95,6 +96,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
         KeyChain keyChain = new SharedPrefsBackedKeyChain(getReactApplicationContext(), CryptoConfig.KEY_256);
         crypto = AndroidConceal.get().createDefaultCrypto(keyChain);
         prefs = this.getReactApplicationContext().getSharedPreferences(KEYCHAIN_DATA, Context.MODE_PRIVATE);
+        prefsUtils = new PrefsUtils(this.prefs);
     }
 
     @ReactMethod
@@ -156,10 +158,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
             String encryptedUsername = encryptString(key, service, username);
             String encryptedPassword = encryptString(key, service, password);
 
-            SharedPreferences.Editor prefsEditor = prefs.edit();
-            prefsEditor.putString(service + DELIMITER + "u", encryptedUsername);
-            prefsEditor.putString(service + DELIMITER + "p", encryptedPassword);
-            prefsEditor.apply();
+            prefsUtils.storeEncryptedValues(service, DELIMITER, encryptedUsername, encryptedPassword);
             Log.d(KEYCHAIN_MODULE, "saved the data");
         } catch (NoSuchAlgorithmException | InvalidAlgorithmParameterException | NoSuchProviderException | UnrecoverableKeyException e) {
             throw new CryptoFailedException("Could not encrypt data for service " + service, e);
@@ -194,8 +193,8 @@ public class KeychainModule extends ReactContextBaseJavaModule {
         try {
             final byte[] decryptedUsername;
             final byte[] decryptedPassword;
-            byte[] recuser = getBytesFromPrefs(service, DELIMITER + "u");
-            byte[] recpass = getBytesFromPrefs(service, DELIMITER + "p");
+            byte[] recuser = prefsUtils.getBytesForUsername(service, DELIMITER);
+            byte[] recpass = prefsUtils.getBytesForPassword(service, DELIMITER);
             if (recuser == null || recpass == null) {
                 // Check if the values are stored using the LEGACY_DELIMITER and thus encrypted using FaceBook's Conceal
                 ResultSet resultSet = getGenericPasswordForOptionsUsingConceal(originalService);
@@ -283,8 +282,8 @@ public class KeychainModule extends ReactContextBaseJavaModule {
         }
         service = service == null ? EMPTY_STRING : service;
 
-        byte[] recuser = getBytesFromPrefs(service, LEGACY_DELIMITER + "u");
-        byte[] recpass = getBytesFromPrefs(service, LEGACY_DELIMITER + "p");
+        byte[] recuser = prefsUtils.getBytesForUsername(service, LEGACY_DELIMITER);
+        byte[] recpass = prefsUtils.getBytesForPassword(service, LEGACY_DELIMITER);
         if (recuser == null || recpass == null) {
             return null;
         }
@@ -300,14 +299,6 @@ public class KeychainModule extends ReactContextBaseJavaModule {
         } catch (Exception e) {
             throw new CryptoFailedException("Decryption failed for service " + service, e);
         }
-    }
-
-    private byte[] getBytesFromPrefs(String service, String prefix) {
-        String value = prefs.getString(service + prefix, null);
-        if (value != null) {
-            return Base64.decode(value, Base64.DEFAULT);
-        }
-        return null;
     }
 
     @ReactMethod
@@ -333,25 +324,13 @@ public class KeychainModule extends ReactContextBaseJavaModule {
             keyStore.deleteEntry(service);
         }
 
-        SharedPreferences.Editor prefsEditor = prefs.edit();
-
-        if (prefs.contains(service + DELIMITER + "u")) {
-            prefsEditor.remove(service + DELIMITER + "u");
-            prefsEditor.remove(service + DELIMITER + "p");
-            prefsEditor.apply();
-        }
+        prefsUtils.resetPassword(service, DELIMITER);
     }
 
     private void resetGenericPasswordForOptionsLegacy(String service) throws KeyStoreException, KeyStoreAccessException {
         service = service == null ? EMPTY_STRING : service;
 
-        SharedPreferences.Editor prefsEditor = prefs.edit();
-
-        if (prefs.contains(service + LEGACY_DELIMITER + "u")) {
-            prefsEditor.remove(service + LEGACY_DELIMITER + "u");
-            prefsEditor.remove(service + LEGACY_DELIMITER + "p");
-            prefsEditor.apply();
-        }
+        prefsUtils.resetPassword(service, LEGACY_DELIMITER);
     }
 
     @ReactMethod
