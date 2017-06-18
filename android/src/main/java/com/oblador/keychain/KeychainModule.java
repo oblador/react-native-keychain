@@ -12,14 +12,14 @@ import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.WritableMap;
 import com.oblador.keychain.PrefsStorage.ResultSet;
-import com.oblador.keychain.exceptions.CryptoFailedException;
-import com.oblador.keychain.exceptions.EmptyParameterException;
-import com.oblador.keychain.exceptions.KeyStoreAccessException;
 import com.oblador.keychain.cipherStorage.CipherStorage;
 import com.oblador.keychain.cipherStorage.CipherStorage.DecryptionResult;
 import com.oblador.keychain.cipherStorage.CipherStorage.EncryptionResult;
 import com.oblador.keychain.cipherStorage.CipherStorageFacebookConceal;
 import com.oblador.keychain.cipherStorage.CipherStorageKeystoreAESCBC;
+import com.oblador.keychain.exceptions.CryptoFailedException;
+import com.oblador.keychain.exceptions.EmptyParameterException;
+import com.oblador.keychain.exceptions.KeyStoreAccessException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -96,8 +96,8 @@ public class KeychainModule extends ReactContextBaseJavaModule {
                 decryptionResult = currentCipherStorage.decrypt(service, resultSet.usernameBytes, resultSet.passwordBytes);
             }
             else {
-                // The encrypted data is encrypted using an older CipherStorage, so we need to decrypt the data, encrypt it using the current CipherStorage and then store it again
-                CipherStorage oldCipherStorage = cipherStorageMap.get(resultSet.cipherStorageName);
+                // The encrypted data is encrypted using an older CipherStorage, so we need to decrypt the data first, then encrypt it using the current CipherStorage, then store it again and return
+                CipherStorage oldCipherStorage = getCipherStorageByName(resultSet.cipherStorageName);
                 // decrypt using the older cipher storage
                 decryptionResult = oldCipherStorage.decrypt(service, resultSet.usernameBytes, resultSet.passwordBytes);
                 // encrypt using the current cipher storage
@@ -130,7 +130,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
             // First we clean up the cipher storage (using the cipher storage that was used to store the entry)
             ResultSet resultSet = prefsStorage.getEncryptedEntry(service);
             if (resultSet != null) {
-                CipherStorage cipherStorage = cipherStorageMap.get(resultSet.cipherStorageName);
+                CipherStorage cipherStorage = getCipherStorageByName(resultSet.cipherStorageName);
                 if (cipherStorage != null) {
                     cipherStorage.removeKey(service);
                 }
@@ -160,7 +160,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
         resetGenericPasswordForOptions(server, promise);
     }
 
-    // The "Current" CipherStorage is the cipherStorage with the highest API level that is lower than the current API level
+    // The "Current" CipherStorage is the cipherStorage with the highest API level that is lower than or equal to the current API level
     private CipherStorage getCipherStorageForCurrentAPILevel() {
         int currentAPILevel = Build.VERSION.SDK_INT;
         CipherStorage currentCipherStorage = null;
@@ -174,5 +174,9 @@ public class KeychainModule extends ReactContextBaseJavaModule {
             }
         }
         return currentCipherStorage;
+    }
+
+    private CipherStorage getCipherStorageByName(String cipherStorageName) {
+        return cipherStorageMap.get(cipherStorageName);
     }
 }

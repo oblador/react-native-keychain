@@ -6,6 +6,7 @@ import android.util.Base64;
 
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.oblador.keychain.cipherStorage.CipherStorage.EncryptionResult;
+import com.oblador.keychain.cipherStorage.CipherStorageFacebookConceal;
 
 public class PrefsStorage {
     public static final String KEYCHAIN_DATA = "RN_KEYCHAIN";
@@ -33,6 +34,10 @@ public class PrefsStorage {
         byte[] bytesForPassword = getBytesForPassword(service);
         String cipherStorageName = getCipherStorageName(service);
         if (bytesForUsername != null && bytesForPassword != null) {
+            if (cipherStorageName == null) {
+                // If the CipherStorage name is not found, we assume it is because the entry was written by an older version of this library. The older version used Facebook Conceal, so we default to that.
+                cipherStorageName = CipherStorageFacebookConceal.CIPHER_STORAGE_NAME;
+            }
             return new ResultSet(cipherStorageName, bytesForUsername, bytesForPassword);
         }
         return null;
@@ -43,13 +48,21 @@ public class PrefsStorage {
         String keyForPassword = getKeyForPassword(service);
         String keyForCipherStorage = getKeyForCipherStorage(service);
 
-        prefs.edit().remove(keyForUsername).remove(keyForPassword).remove(keyForCipherStorage).apply();
+        prefs.edit()
+                .remove(keyForUsername)
+                .remove(keyForPassword)
+                .remove(keyForCipherStorage).apply();
     }
 
     public void storeEncryptedEntry(String service, EncryptionResult encryptionResult) {
-        prefs.edit().putString(getKeyForUsername(service), Base64.encodeToString(encryptionResult.username, Base64.DEFAULT))
-                .putString(getKeyForPassword(service), Base64.encodeToString(encryptionResult.password, Base64.DEFAULT))
-                .putString(getKeyForCipherStorage(service), encryptionResult.cipherStorage.getCipherStorageName())
+        String keyForUsername = getKeyForUsername(service);
+        String keyForPassword = getKeyForPassword(service);
+        String keyForCipherStorage = getKeyForCipherStorage(service);
+
+        prefs.edit()
+                .putString(keyForUsername, Base64.encodeToString(encryptionResult.username, Base64.DEFAULT))
+                .putString(keyForPassword, Base64.encodeToString(encryptionResult.password, Base64.DEFAULT))
+                .putString(keyForCipherStorage, encryptionResult.cipherStorage.getCipherStorageName())
                 .apply();
     }
 
@@ -77,7 +90,7 @@ public class PrefsStorage {
     }
 
     private String getKeyForCipherStorage(String service) {
-        return service + ":" + "i";
+        return service + ":" + "c";
     }
 
     private byte[] getBytes(String key) {
