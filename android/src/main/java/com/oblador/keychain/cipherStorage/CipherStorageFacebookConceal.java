@@ -30,7 +30,7 @@ public class CipherStorageFacebookConceal implements CipherStorage {
     }
 
     @Override
-    public int getAPILevel() {
+    public int getMinSupportedApiLevel() {
         return Build.VERSION_CODES.JELLY_BEAN;
     }
 

@@ -10,6 +10,7 @@ import com.oblador.keychain.cipherStorage.CipherStorageFacebookConceal;
 
 public class PrefsStorage {
     public static final String KEYCHAIN_DATA = "RN_KEYCHAIN";
+    public static final String EMPTY_STRING = "";
 
     static public class ResultSet {
         public final String cipherStorageName;
@@ -30,6 +31,8 @@ public class PrefsStorage {
     }
 
     public ResultSet getEncryptedEntry(String service) {
+        service = service == null ? EMPTY_STRING : service;
+
         byte[] bytesForUsername = getBytesForUsername(service);
         byte[] bytesForPassword = getBytesForPassword(service);
         String cipherStorageName = getCipherStorageName(service);
@@ -44,6 +47,8 @@ public class PrefsStorage {
     }
 
     public void resetPassword(String service) {
+        service = service == null ? EMPTY_STRING : service;
+
         String keyForUsername = getKeyForUsername(service);
         String keyForPassword = getKeyForPassword(service);
         String keyForCipherStorage = getKeyForCipherStorage(service);
@@ -55,6 +60,8 @@ public class PrefsStorage {
     }
 
     public void storeEncryptedEntry(String service, EncryptionResult encryptionResult) {
+        service = service == null ? EMPTY_STRING : service;
+
         String keyForUsername = getKeyForUsername(service);
         String keyForPassword = getKeyForPassword(service);
         String keyForCipherStorage = getKeyForCipherStorage(service);

@@ -37,5 +37,5 @@ public interface CipherStorage {
 
     String getCipherStorageName();
 
-    int getAPILevel();
+    int getMinSupportedApiLevel();
 }

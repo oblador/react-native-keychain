@@ -58,9 +58,6 @@ public class KeychainModule extends ReactContextBaseJavaModule {
                 throw new EmptyParameterException("you passed empty or null username/password");
             }
             CipherStorage currentCipherStorage = getCipherStorageForCurrentAPILevel();
-            if (currentCipherStorage == null) {
-                throw new CryptoFailedException("Unsupported Android SDK " + Build.VERSION.SDK_INT);
-            }
 
             EncryptionResult result = currentCipherStorage.encrypt(service, username, password);
             prefsStorage.storeEncryptedEntry(service, result);
@@ -79,9 +76,6 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     public void getGenericPasswordForOptions(String service, Promise promise) {
         try {
             CipherStorage currentCipherStorage = getCipherStorageForCurrentAPILevel();
-            if (currentCipherStorage == null) {
-                throw new CryptoFailedException("Unsupported Android SDK " + Build.VERSION.SDK_INT);
-            }
 
             final DecryptionResult decryptionResult;
             ResultSet resultSet = prefsStorage.getEncryptedEntry(service);
@@ -161,17 +155,20 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     }
 
     // The "Current" CipherStorage is the cipherStorage with the highest API level that is lower than or equal to the current API level
-    private CipherStorage getCipherStorageForCurrentAPILevel() {
+    private CipherStorage getCipherStorageForCurrentAPILevel() throws CryptoFailedException {
         int currentAPILevel = Build.VERSION.SDK_INT;
         CipherStorage currentCipherStorage = null;
         for (CipherStorage cipherStorage : cipherStorageMap.values()) {
-            int cipherStorageAPILevel = cipherStorage.getAPILevel();
+            int cipherStorageAPILevel = cipherStorage.getMinSupportedApiLevel();
             // Is the cipherStorage supported on the current API level?
             boolean isSupported = (cipherStorageAPILevel <= currentAPILevel);
             // Is the API level better than the one we previously selected (if any)?
-            if (isSupported && (currentCipherStorage == null || cipherStorageAPILevel > currentCipherStorage.getAPILevel())) {
+            if (isSupported && (currentCipherStorage == null || cipherStorageAPILevel > currentCipherStorage.getMinSupportedApiLevel())) {
                 currentCipherStorage = cipherStorage;
             }
+        }
+        if (currentCipherStorage == null) {
+            throw new CryptoFailedException("Unsupported Android SDK " + Build.VERSION.SDK_INT);
         }
         return currentCipherStorage;
     }
