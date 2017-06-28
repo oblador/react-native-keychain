@@ -129,8 +129,8 @@ public class KeychainModule extends ReactContextBaseJavaModule {
                     cipherStorage.removeKey(service);
                 }
             }
-            // And then we reset
-            prefsStorage.resetPassword(service);
+            // And then we remove the entry in the shared preferences
+            prefsStorage.removeEntry(service);
 
             promise.resolve(true);
         } catch (KeyStoreAccessException e) {

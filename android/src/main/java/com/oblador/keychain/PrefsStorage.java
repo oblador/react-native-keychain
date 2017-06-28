@@ -46,7 +46,7 @@ public class PrefsStorage {
         return null;
     }
 
-    public void resetPassword(String service) {
+    public void removeEntry(String service) {
         service = service == null ? EMPTY_STRING : service;
 
         String keyForUsername = getKeyForUsername(service);
