@@ -1,6 +1,7 @@
 package com.oblador.keychain.cipherStorage;
 
 import android.os.Build;
+import android.support.annotation.NonNull;
 
 import com.facebook.android.crypto.keychain.AndroidConceal;
 import com.facebook.android.crypto.keychain.SharedPrefsBackedKeyChain;
@@ -16,7 +17,6 @@ import java.nio.charset.Charset;
 public class CipherStorageFacebookConceal implements CipherStorage {
     public static final String CIPHER_STORAGE_NAME = "FacebookConceal";
     public static final String KEYCHAIN_DATA = "RN_KEYCHAIN";
-    public static final String EMPTY_STRING = "";
     private final Crypto crypto;
 
     public CipherStorageFacebookConceal(ReactApplicationContext reactContext) {
@@ -35,12 +35,10 @@ public class CipherStorageFacebookConceal implements CipherStorage {
     }
 
     @Override
-    public EncryptionResult encrypt(String service, String username, String password) throws CryptoFailedException {
+    public EncryptionResult encrypt(@NonNull String service, @NonNull String username, @NonNull String password) throws CryptoFailedException {
         if (!crypto.isAvailable()) {
             throw new CryptoFailedException("Crypto is missing");
         }
-        service = service == null ? EMPTY_STRING : service;
-
         Entity usernameEntity = createUsernameEntity(service);
         Entity passwordEntity = createPasswordEntity(service);
 
@@ -55,12 +53,10 @@ public class CipherStorageFacebookConceal implements CipherStorage {
     }
 
     @Override
-    public DecryptionResult decrypt(String service, byte[] username, byte[] password) throws CryptoFailedException {
+    public DecryptionResult decrypt(@NonNull String service, @NonNull byte[] username, @NonNull byte[] password) throws CryptoFailedException {
         if (!crypto.isAvailable()) {
             throw new CryptoFailedException("Crypto is missing");
         }
-        service = service == null ? EMPTY_STRING : service;
-
         Entity usernameEntity = createUsernameEntity(service);
         Entity passwordEntity = createPasswordEntity(service);
 
@@ -77,9 +73,10 @@ public class CipherStorageFacebookConceal implements CipherStorage {
     }
 
     @Override
-    public void removeKey(String service) {
+    public void removeKey(@NonNull String service) {
         // Facebook Conceal stores only one key across all services, so we cannot delete the key (otherwise decryption will fail for encrypted data of other services).
     }
+
     private Entity createUsernameEntity(String service) {
         String prefix = getEntityPrefix(service);
         return Entity.create(prefix + "user");

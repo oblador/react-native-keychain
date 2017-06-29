@@ -4,6 +4,7 @@ import android.annotation.TargetApi;
 import android.os.Build;
 import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyProperties;
+import android.support.annotation.NonNull;
 
 import com.oblador.keychain.exceptions.CryptoFailedException;
 import com.oblador.keychain.exceptions.KeyStoreAccessException;
@@ -30,7 +31,7 @@ import javax.crypto.spec.IvParameterSpec;
 
 public class CipherStorageKeystoreAESCBC implements CipherStorage {
     public static final String CIPHER_STORAGE_NAME = "KeystoreAESCBC";
-    public static final String DEFAULT_ALIAS = "RN_KEYCHAIN_DEFAULT_ALIAS";
+    public static final String DEFAULT_SERVICE = "RN_KEYCHAIN_DEFAULT_ALIAS";
     public static final String KEYSTORE_TYPE = "AndroidKeyStore";
     public static final String ENCRYPTION_ALGORITHM = KeyProperties.KEY_ALGORITHM_AES;
     public static final String ENCRYPTION_BLOCK_MODE = KeyProperties.BLOCK_MODE_CBC;
@@ -53,8 +54,8 @@ public class CipherStorageKeystoreAESCBC implements CipherStorage {
 
     @TargetApi(Build.VERSION_CODES.M)
     @Override
-    public EncryptionResult encrypt(String service, String username, String password) throws CryptoFailedException {
-        service = service == null ? DEFAULT_ALIAS : service;
+    public EncryptionResult encrypt(@NonNull String service, @NonNull String username, @NonNull String password) throws CryptoFailedException {
+        service = getDefaultServiceIfEmpty(service);
 
         try {
             KeyStore keyStore = getKeyStoreAndLoad();
@@ -91,8 +92,8 @@ public class CipherStorageKeystoreAESCBC implements CipherStorage {
     }
 
     @Override
-    public DecryptionResult decrypt(String service, byte[] username, byte[] password) throws CryptoFailedException {
-        service = service == null ? DEFAULT_ALIAS : service;
+    public DecryptionResult decrypt(@NonNull String service, @NonNull byte[] username, @NonNull byte[] password) throws CryptoFailedException {
+        service = getDefaultServiceIfEmpty(service);
 
         try {
             KeyStore keyStore = getKeyStoreAndLoad();
@@ -111,8 +112,8 @@ public class CipherStorageKeystoreAESCBC implements CipherStorage {
     }
 
     @Override
-    public void removeKey(String service) throws KeyStoreAccessException {
-        service = service == null ? DEFAULT_ALIAS : service;
+    public void removeKey(@NonNull String service) throws KeyStoreAccessException {
+        service = getDefaultServiceIfEmpty(service);
 
         try {
             KeyStore keyStore = getKeyStoreAndLoad();
@@ -182,5 +183,10 @@ public class CipherStorageKeystoreAESCBC implements CipherStorage {
         } catch (NoSuchAlgorithmException | CertificateException | IOException e) {
             throw new KeyStoreAccessException("Could not access Keystore", e);
         }
+    }
+
+    @NonNull
+    private String getDefaultServiceIfEmpty(@NonNull String service) {
+        return service.isEmpty() ? DEFAULT_SERVICE : service;
     }
 }

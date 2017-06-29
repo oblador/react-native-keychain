@@ -1,5 +1,7 @@
 package com.oblador.keychain.cipherStorage;
 
+import android.support.annotation.NonNull;
+
 import com.oblador.keychain.exceptions.CryptoFailedException;
 import com.oblador.keychain.exceptions.KeyStoreAccessException;
 
@@ -29,11 +31,11 @@ public interface CipherStorage {
         }
     }
 
-    EncryptionResult encrypt(String service, String username, String password) throws CryptoFailedException;
+    EncryptionResult encrypt(@NonNull String service, @NonNull String username, @NonNull String password) throws CryptoFailedException;
 
-    DecryptionResult decrypt(String service, byte[] username, byte[] password) throws CryptoFailedException;
+    DecryptionResult decrypt(@NonNull String service, @NonNull byte[] username, @NonNull byte[] password) throws CryptoFailedException;
 
-    void removeKey(String service) throws KeyStoreAccessException;
+    void removeKey(@NonNull String service) throws KeyStoreAccessException;
 
     String getCipherStorageName();
 

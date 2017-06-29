@@ -2,6 +2,7 @@ package com.oblador.keychain;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.support.annotation.NonNull;
 import android.util.Base64;
 
 import com.facebook.react.bridge.ReactApplicationContext;
@@ -10,7 +11,6 @@ import com.oblador.keychain.cipherStorage.CipherStorageFacebookConceal;
 
 public class PrefsStorage {
     public static final String KEYCHAIN_DATA = "RN_KEYCHAIN";
-    public static final String EMPTY_STRING = "";
 
     static public class ResultSet {
         public final String cipherStorageName;
@@ -30,9 +30,7 @@ public class PrefsStorage {
         this.prefs = reactContext.getSharedPreferences(KEYCHAIN_DATA, Context.MODE_PRIVATE);
     }
 
-    public ResultSet getEncryptedEntry(String service) {
-        service = service == null ? EMPTY_STRING : service;
-
+    public ResultSet getEncryptedEntry(@NonNull String service) {
         byte[] bytesForUsername = getBytesForUsername(service);
         byte[] bytesForPassword = getBytesForPassword(service);
         String cipherStorageName = getCipherStorageName(service);
@@ -46,9 +44,7 @@ public class PrefsStorage {
         return null;
     }
 
-    public void removeEntry(String service) {
-        service = service == null ? EMPTY_STRING : service;
-
+    public void removeEntry(@NonNull String service) {
         String keyForUsername = getKeyForUsername(service);
         String keyForPassword = getKeyForPassword(service);
         String keyForCipherStorage = getKeyForCipherStorage(service);
@@ -59,9 +55,7 @@ public class PrefsStorage {
                 .remove(keyForCipherStorage).apply();
     }
 
-    public void storeEncryptedEntry(String service, EncryptionResult encryptionResult) {
-        service = service == null ? EMPTY_STRING : service;
-
+    public void storeEncryptedEntry(@NonNull String service, @NonNull EncryptionResult encryptionResult) {
         String keyForUsername = getKeyForUsername(service);
         String keyForPassword = getKeyForPassword(service);
         String keyForCipherStorage = getKeyForCipherStorage(service);
