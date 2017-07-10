@@ -174,5 +174,42 @@ Keychain
   }
   ```
 
+## Maintainers
+
+<table>
+  <tbody>
+    <tr>
+      <td align="center">
+        <a href="https://github.com/oblador">
+          <img width="150" height="150" src="https://github.com/oblador.png?v=3&s=150">
+          <br>
+          <strong>Joel Arvidsson</strong>
+        </a>
+        <br>
+        Author
+      </td>
+      <td align="center">
+        <a href="https://github.com/vonovak">
+          <img width="150" height="150" src="https://github.com/vonovak.png?v=3&s=150">
+          </br>
+          <strong>Vojtech Novak</strong>
+        </a>
+        <br>
+        Maintainer
+      </td>
+      <td align="center">
+        <a href="https://github.com/pcoltau">
+          <img width="150" height="150" src="https://github.com/pcoltau.png?v=3&s=150">
+          </br>
+          <strong>Pelle Stenild Coltau</strong>
+        </a>
+        <br>
+        Maintainer
+      </td>
+    </tr>
+  <tbody>
+</table>
+
+
 ## License
 MIT © Joel Arvidsson 2016-2017
