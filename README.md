@@ -1,7 +1,34 @@
 # react-native-keychain
-Keychain Access for React Native
+Keychain Access for React Native. Currently functionality is limited to just storing internet and generic passwords.
 
-Currently functionality is limited to just storing internet and generic passwords. 
+### New 2.0.0-rc with improved android implementation
+
+install using `yarn add react-native-keychain@2.0.0-rc`
+
+The KeychainModule will now automatically use the appropriate CipherStorage implementation based on API level:
+
+* API level 16-22 will en/de crypt using Facebook Conceal
+* API level 23+ will en/de crypt using Android Keystore
+
+Encrypted data is stored in SharedPreferences.
+
+## Installation
+
+1 . `$ npm install --save react-native-keychain`
+
+or
+
+`$ yarn add react-native-keychain`
+
+
+2 . `$ react-native link` and check `MainApplication.java` to verify the package was added.
+
+3 .  rebuild your project
+
+
+* on Android, the `setInternetCredentials(server, username, password)` call will be resolved as call to `setGenericPassword(username, password, server)`. Use the `server` argument to distinguish between multiple entries.
+
+Check out the "releases" tab for breaking changes and RN version compatibility. v1.0.0 is for RN >= 0.40
 
 ## ❗ Enable `Keychain Sharing` entitlement for iOS 10
 
@@ -17,28 +44,6 @@ Error: {
 }
 ```
 
-## Installation
-
-`$ npm install --save react-native-keychain`
-
-Check out the "releases" tab for breaking changes and RN version compatibility. v1.0.0 is for RN >= 0.40
-
-### Option: Manually
-
-* Right click on Libraries, select **Add files to "…"** and select `node_modules/react-native-keychain/RNKeychain.xcodeproj`
-* Select your project and under **Build Phases** -> **Link Binary With Libraries**, press the + and select `libRNKeychain.a`.
-
-### Option: With [CocoaPods](https://cocoapods.org/)
-
-Add the following to your `Podfile` and run `pod update`:
-
-```
-pod 'RNKeychain', :path => 'node_modules/react-native-keychain'
-```
-
-### Option: With `react-native link`
-
-`$ react-native link`
 
 ## Usage
 
@@ -111,18 +116,30 @@ Keychain
 
 ```
 
+### Note on security
+
+On API levels that do not support Android keystore, Facebook Conceal is used to en/decrypt stored data. The encrypted data is then stored in SharedPreferences. Since Conceal itself stores its encryption key in SharedPreferences, it follows that if the device is rooted (or if an attacker can somehow access the filesystem), the key can be obtained and the stored data can be decrypted. Therefore, on such a device, the conceal encryption is only an obscurity. On API level 23+ the key is stored in the Android Keystore, which makes the key non-exportable and therefore makes the entire process more secure. Follow best practices and do not store user credentials on a device. Instead use tokens or other forms of authentication and re-ask for user credentials before performing sensitive operations.
+
+## Manual Installation
+
+### iOS
+
+#### Option: Manually
+
+* Right click on Libraries, select **Add files to "…"** and select `node_modules/react-native-keychain/RNKeychain.xcodeproj`
+* Select your project and under **Build Phases** -> **Link Binary With Libraries**, press the + and select `libRNKeychain.a`.
+
+#### Option: With [CocoaPods](https://cocoapods.org/)
+
+Add the following to your `Podfile` and run `pod update`:
+
+```
+pod 'RNKeychain', :path => 'node_modules/react-native-keychain'
+```
+
 ### Android
 
-### Option: With `react-native link`
-
-`$ react-native link` and check MainApplication.java to verify the package was added.
-
-* Note: Android support requires React Native 0.19 or later
-* on Android, the `setInternetCredentials(server, username, password)` call will be resolved as call to `setGenericPassword(username, password, server)` and the data will be saved in `SharedPreferences`, encrypted using Facebook conceal. Use the `server` argument to distinguish between multiple entries.
-
-
-### Option: Manually
-
+#### Option: Manually
 
 * Edit `android/settings.gradle` to look like this (without the +):
 
