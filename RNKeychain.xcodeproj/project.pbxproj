@@ -9,6 +9,8 @@
 /* Begin PBXBuildFile section */
 		5D82368F1B0CE3CB005A9EF3 /* RNKeychainManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 5D82368C1B0CE2A6005A9EF3 /* RNKeychainManager.m */; };
 		5D8236911B0CE3D6005A9EF3 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5D8236901B0CE3D6005A9EF3 /* Security.framework */; };
+		6478986A1F38BF9D00DA1C12 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 647898691F38BF9D00DA1C12 /* Security.framework */; };
+		6478986B1F38BFA100DA1C12 /* RNKeychainManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 5D82368C1B0CE2A6005A9EF3 /* RNKeychainManager.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -22,6 +24,15 @@
 			name = "Copy Files";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		6478985D1F38BF9100DA1C12 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "include/$(PRODUCT_NAME)";
+			dstSubfolderSpec = 16;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
@@ -29,6 +40,8 @@
 		5D82368B1B0CE2A6005A9EF3 /* RNKeychainManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RNKeychainManager.h; sourceTree = "<group>"; };
 		5D82368C1B0CE2A6005A9EF3 /* RNKeychainManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RNKeychainManager.m; sourceTree = "<group>"; };
 		5D8236901B0CE3D6005A9EF3 /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
+		6478985F1F38BF9100DA1C12 /* libRNKeychain.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libRNKeychain.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		647898691F38BF9D00DA1C12 /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = Platforms/AppleTVOS.platform/Developer/SDKs/AppleTVOS10.2.sdk/System/Library/Frameworks/Security.framework; sourceTree = DEVELOPER_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -37,6 +50,14 @@
 			buildActionMask = 2147483647;
 			files = (
 				5D8236911B0CE3D6005A9EF3 /* Security.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6478985C1F38BF9100DA1C12 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6478986A1F38BF9D00DA1C12 /* Security.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -49,6 +70,7 @@
 				5D8236901B0CE3D6005A9EF3 /* Security.framework */,
 				5D82368A1B0CE2A6005A9EF3 /* RNKeychainManager */,
 				5D8236701B0CE05B005A9EF3 /* Products */,
+				647898681F38BF9C00DA1C12 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 			wrapsLines = 0;
@@ -57,6 +79,7 @@
 			isa = PBXGroup;
 			children = (
 				5D82366F1B0CE05B005A9EF3 /* libRNKeychain.a */,
+				6478985F1F38BF9100DA1C12 /* libRNKeychain.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -68,6 +91,14 @@
 				5D82368C1B0CE2A6005A9EF3 /* RNKeychainManager.m */,
 			);
 			path = RNKeychainManager;
+			sourceTree = "<group>";
+		};
+		647898681F38BF9C00DA1C12 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				647898691F38BF9D00DA1C12 /* Security.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -90,6 +121,23 @@
 			productReference = 5D82366F1B0CE05B005A9EF3 /* libRNKeychain.a */;
 			productType = "com.apple.product-type.library.static";
 		};
+		6478985E1F38BF9100DA1C12 /* RNKeychain-tvOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 647898671F38BF9100DA1C12 /* Build configuration list for PBXNativeTarget "RNKeychain-tvOS" */;
+			buildPhases = (
+				6478985B1F38BF9100DA1C12 /* Sources */,
+				6478985C1F38BF9100DA1C12 /* Frameworks */,
+				6478985D1F38BF9100DA1C12 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "RNKeychain-tvOS";
+			productName = "RNKeychain-tvOS";
+			productReference = 6478985F1F38BF9100DA1C12 /* libRNKeychain.a */;
+			productType = "com.apple.product-type.library.static";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -101,6 +149,10 @@
 				TargetAttributes = {
 					5D82366E1B0CE05B005A9EF3 = {
 						CreatedOnToolsVersion = 6.3.1;
+					};
+					6478985E1F38BF9100DA1C12 = {
+						CreatedOnToolsVersion = 8.3.3;
+						ProvisioningStyle = Automatic;
 					};
 				};
 			};
@@ -117,6 +169,7 @@
 			projectRoot = "";
 			targets = (
 				5D82366E1B0CE05B005A9EF3 /* RNKeychain */,
+				6478985E1F38BF9100DA1C12 /* RNKeychain-tvOS */,
 			);
 		};
 /* End PBXProject section */
@@ -127,6 +180,14 @@
 			buildActionMask = 2147483647;
 			files = (
 				5D82368F1B0CE3CB005A9EF3 /* RNKeychainManager.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6478985B1F38BF9100DA1C12 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6478986B1F38BFA100DA1C12 /* RNKeychainManager.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -243,6 +304,40 @@
 			};
 			name = Release;
 		};
+		647898651F38BF9100DA1C12 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_TESTABILITY = YES;
+				OTHER_LDFLAGS = "-ObjC";
+				PRODUCT_NAME = RNKeychain;
+				SDKROOT = appletvos;
+				SKIP_INSTALL = YES;
+				TVOS_DEPLOYMENT_TARGET = 10.2;
+			};
+			name = Debug;
+		};
+		647898661F38BF9100DA1C12 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				OTHER_LDFLAGS = "-ObjC";
+				PRODUCT_NAME = RNKeychain;
+				SDKROOT = appletvos;
+				SKIP_INSTALL = YES;
+				TVOS_DEPLOYMENT_TARGET = 10.2;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -263,6 +358,14 @@
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
+		};
+		647898671F38BF9100DA1C12 /* Build configuration list for PBXNativeTarget "RNKeychain-tvOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				647898651F38BF9100DA1C12 /* Debug */,
+				647898661F38BF9100DA1C12 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
 		};
 /* End XCConfigurationList section */
 	};
