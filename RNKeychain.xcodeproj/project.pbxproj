@@ -67,7 +67,6 @@
 		5D8236661B0CE05B005A9EF3 = {
 			isa = PBXGroup;
 			children = (
-				5D8236901B0CE3D6005A9EF3 /* Security.framework */,
 				5D82368A1B0CE2A6005A9EF3 /* RNKeychainManager */,
 				5D8236701B0CE05B005A9EF3 /* Products */,
 				647898681F38BF9C00DA1C12 /* Frameworks */,
@@ -96,6 +95,7 @@
 		647898681F38BF9C00DA1C12 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				5D8236901B0CE3D6005A9EF3 /* Security.framework */,
 				647898691F38BF9D00DA1C12 /* Security.framework */,
 			);
 			name = Frameworks;
@@ -366,6 +366,7 @@
 				647898661F38BF9100DA1C12 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
