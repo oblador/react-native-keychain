@@ -134,7 +134,7 @@ On API levels that do not support Android keystore, Facebook Conceal is used to 
 Add the following to your `Podfile` and run `pod update`:
 
 ```
-pod 'RNKeychain', :path => 'node_modules/react-native-keychain'
+pod 'RNKeychain', :path => '../node_modules/react-native-keychain'
 ```
 
 ### Android
