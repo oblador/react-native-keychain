@@ -285,6 +285,7 @@ RCT_EXPORT_METHOD(resetInternetCredentialsForServer:(NSString *)server withOptio
 
 }
 
+#if TARGET_OS_IOS
 RCT_EXPORT_METHOD(requestSharedWebCredentials:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
 {
   SecRequestSharedWebCredential(NULL, NULL, ^(CFArrayRef credentials, CFErrorRef error) {
@@ -328,5 +329,6 @@ RCT_EXPORT_METHOD(setSharedWebCredentialsForServer:(NSString *)server withUserna
     resolve(@(YES));
   });
 }
+#endif
 
 @end
