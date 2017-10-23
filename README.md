@@ -190,6 +190,23 @@ pod 'RNKeychain', :path => '../node_modules/react-native-keychain'
     ...
   }
   ```
+  
+#### Proguard Rules
+
+On Android builds that use proguard (like release), you may see the following error:
+
+```
+RNKeychainManager: no keychain entry found for service:
+JNI DETECTED ERROR IN APPLICATION: JNI FindClass called with pending exception java.lang.NoSuchFieldError: no "J" field "mCtxPtr" in class "Lcom/facebook/crypto/cipher/NativeGCMCipher;" or its superclasses
+```
+
+If so, add a proguard rule in `proguard-rules.pro`:
+
+```
+-keep class com.facebook.crypto.** {
+   *;
+}
+```
 
 ## Maintainers
 
