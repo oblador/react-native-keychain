@@ -1,4 +1,7 @@
 # react-native-keychain
+
+[![Travis](https://img.shields.io/travis/oblador/react-native-keychain.svg)](https://travis-ci.org/oblador/react-native-keychain) [![npm](https://img.shields.io/npm/v/react-native-keychain.svg)](https://npmjs.com/package/react-native-keychain) [![npm](https://img.shields.io/npm/dm/react-native-keychain.svg)](https://npmjs.com/package/react-native-keychain)
+
 Keychain Access for React Native. Currently functionality is limited to just storing internet and generic passwords.
 
 ### New 2.0.0-rc with improved android implementation
