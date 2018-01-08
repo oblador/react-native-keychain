@@ -4,9 +4,7 @@
 
 Keychain Access for React Native. Currently functionality is limited to just storing internet and generic passwords.
 
-### New 2.0.0-rc with improved android implementation
-
-install using `yarn add react-native-keychain@2.0.0-rc`
+### New 2.0.0 with improved android implementation
 
 The KeychainModule will now automatically use the appropriate CipherStorage implementation based on API level:
 
@@ -24,7 +22,7 @@ or
 `$ yarn add react-native-keychain`
 
 
-2 . `$ react-native link` and check `MainApplication.java` to verify the package was added.
+2 . `$ react-native link react-native-keychain` and check `MainApplication.java` to verify the package was added.
 
 3 .  rebuild your project
 
@@ -249,4 +247,4 @@ If so, add a proguard rule in `proguard-rules.pro`:
 
 
 ## License
-MIT © Joel Arvidsson 2016-2017
+MIT © Joel Arvidsson 2016-2018
