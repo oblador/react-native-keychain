@@ -1,0 +1,20 @@
+language: node_js
+node_js:
+- stable
+cache:
+  yarn: true
+  directories:
+  - node_modules
+install:
+- yarn
+script:
+- yarn run test
+deploy:
+  provider: npm
+  email: joel@oblador.se
+  api_key:
+    secure: "nQuYddBeisi88YQ3xmC4RZEhW7RrVugvnlbNnWym6/uwyL9hWQX6h2hsr1GpKAdvvqBJkDrt+TQOdqigrHIabPEw10FIasr7Xoe9Lb26eAaR4ca3Do2nNCZNFPgWyBoKNWzS61Bb1zuhgnLpQDZSxXDvj9Yzk7Y+2bNrUzxMIuP59f83mVxro8p8Ku4WLx+f7Wlq1zLrhTVN7/A1jYgrTHRE4fq0Sfyyuy9LE8Z3GSx2LclpI/YVgX/XsVO+G73VieEdUFGf6gyCOH2sGeJ6Lb2Gyu0tY260PzXrP1NGlDX7cbuqia26fOMkgaYqsV4EKnhTMuB75dfhjcBbYHPjqZQ+0V17C+7WFLyH3zpd4GOwTsK4yPlr1wcVrgtW2Dw6vnz01FecNujCBunxLsVratGWXd44pDXjyqb7roS1i31+ouEvEeiQl6f41NGhQYxzX9jJbEUmakneLbf5RpVvUDM0IbEC7pLNaSrkMCbU9ib16zGGS72l/3jjFb8Vqb4i0EMmR+1Gxo1bw5bsS6M4/1uj4f9z6eECDYhn1QcOM2SqpfjDDuKZgc6NpyucFfGz9cUiut8trtTq4dxNt+chsBz4aZNyU2gOKS4TrrFopsMAc2gF2/VBmbc+dl+ZYdAyF87afVwLcmWl1NH+DqOnTdMPYgSBgVScJeDXzry6HBo="
+  on:
+    tags: true
+    repo: oblador/react-native-keychain
+    condition: "$TRAVIS_TAG =~ ^v[0-9]+\\.[0-9]+\\.[0-9]+.*$"

@@ -32,5 +32,8 @@
     "type": "git",
     "url": "git://github.com/oblador/react-native-keychain.git"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "flow-bin": "0.61.0"
+  }
 }
