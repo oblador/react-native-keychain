@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import {
   KeyboardAvoidingView,
+  Platform,
   StyleSheet,
   Text,
   TextInput,
@@ -18,11 +19,7 @@ export default class KeychainExample extends Component {
   };
 
   save() {
-    Keychain.setSecurePassword(
-      'myService',
-      this.state.username,
-      this.state.password
-    )
+    Keychain.setGenericPassword(this.state.username, this.state.password)
       .then(() => {
         this.setState({ status: 'Credentials saved!' });
       })
@@ -32,7 +29,7 @@ export default class KeychainExample extends Component {
   }
 
   load() {
-    Keychain.getSecurePassword('myService')
+    Keychain.getGenericPassword()
       .then(credentials => {
         if (credentials) {
           this.setState({ ...credentials, status: 'Credentials loaded!' });
@@ -61,7 +58,10 @@ export default class KeychainExample extends Component {
 
   render() {
     return (
-      <KeyboardAvoidingView behavior="padding" style={styles.container}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={styles.container}
+      >
         <View style={styles.content}>
           <Text style={styles.title}>Keychain Example</Text>
           <View style={styles.field}>
@@ -73,6 +73,7 @@ export default class KeychainExample extends Component {
               value={this.state.username}
               onChange={event =>
                 this.setState({ username: event.nativeEvent.text })}
+              underlineColorAndroid="transparent"
             />
           </View>
           <View style={styles.field}>
@@ -84,6 +85,7 @@ export default class KeychainExample extends Component {
               value={this.state.password}
               onChange={event =>
                 this.setState({ password: event.nativeEvent.text })}
+              underlineColorAndroid="transparent"
             />
           </View>
           {!!this.state.status && (
