@@ -87,11 +87,7 @@ export function canImplyAuthentication(options?: SecureOptions): Promise {
  */
 export function getSupportedBiometryType(): Promise {
   if (Platform.OS !== 'ios') {
-    return Promise.reject(
-      new Error(
-        `getSupportedBiometryType() is not supported on ${Platform.OS} yet`
-      )
-    );
+    return Promise.resolve(null);
   }
   return RNKeychainManager.getSupportedBiometryType();
 }

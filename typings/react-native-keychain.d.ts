@@ -22,6 +22,9 @@ declare module 'react-native-keychain' {
         options?: SecureOptions
     ): Promise<boolean>;
 
+    function getSupportedBiometryType(
+    ): Promise<string>;
+
     function setSecurePassword(
         username: string,
         password: string,
