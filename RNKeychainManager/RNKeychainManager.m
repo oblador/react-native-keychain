@@ -165,6 +165,7 @@ SecAccessControlCreateFlags secureAccessControl(NSDictionary *options)
 
 #pragma mark - Proposed functionality - RCT_EXPORT_METHOD
 
+#if TARGET_OS_IOS
 RCT_EXPORT_METHOD(canCheckAuthentication:(NSDictionary *)options resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
 {
   LAPolicy policyToEvaluate = authPolicy(options);
@@ -178,7 +179,9 @@ RCT_EXPORT_METHOD(canCheckAuthentication:(NSDictionary *)options resolver:(RCTPr
     return resolve(@(YES));
   }
 }
+#endif
 
+#if TARGET_OS_IOS
 RCT_EXPORT_METHOD(getSupportedBiometryType:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
 {
   NSError *aerr = nil;
@@ -193,8 +196,10 @@ RCT_EXPORT_METHOD(getSupportedBiometryType:(RCTPromiseResolveBlock)resolve rejec
     }
     return resolve(kBiometryTypeTouchID);
   }
+
   return resolve([NSNull null]);
 }
+#endif
 
 - (BOOL) canCheckAuthentication:(LAPolicy)policyToEvaluate error:(NSError **)err {
   return [[[ LAContext alloc] init ] canEvaluatePolicy:policyToEvaluate error:err ];

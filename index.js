@@ -70,11 +70,9 @@ type SecureOptions = {
  * @return {Promise} Resolves to `true` when supported, otherwise `false`
  */
 export function canImplyAuthentication(options?: SecureOptions): Promise {
-  if (Platform.OS !== 'ios') {
+  if (RNKeychainManager.canCheckAuthentication) {
     return Promise.reject(
-      new Error(
-        `canImplyAuthentication() is not supported on ${Platform.OS} yet`
-      )
+      new Error(`canImplyAuthentication() is not supported on this platform`)
     );
   }
   return RNKeychainManager.canCheckAuthentication(options);
@@ -86,7 +84,7 @@ export function canImplyAuthentication(options?: SecureOptions): Promise {
  * @return {Promise} Resolves to a `BIOMETRY_TYPE` when supported, otherwise `null`
  */
 export function getSupportedBiometryType(): Promise {
-  if (Platform.OS !== 'ios') {
+  if (!RNKeychainManager.getSupportedBiometryType) {
     return Promise.resolve(null);
   }
   return RNKeychainManager.getSupportedBiometryType();

@@ -9,30 +9,36 @@
 /* Begin PBXBuildFile section */
 		5D82368F1B0CE3CB005A9EF3 /* RNKeychainManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 5D82368C1B0CE2A6005A9EF3 /* RNKeychainManager.m */; };
 		5D8236911B0CE3D6005A9EF3 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5D8236901B0CE3D6005A9EF3 /* Security.framework */; };
-		B2AF06371E97BF10006435CD /* LocalAuthentication.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B2AF06361E97BF10006435CD /* LocalAuthentication.framework */; };
-		B2AF063D1E97DE25006435CD /* RNKeychainAuthenticationListener.h in Headers */ = {isa = PBXBuildFile; fileRef = B22856161E950BB300CCF753 /* RNKeychainAuthenticationListener.h */; };
-		B2AF063F1E97DF85006435CD /* RNKeychainAuthenticationListener.h in Copy Headers */ = {isa = PBXBuildFile; fileRef = B22856161E950BB300CCF753 /* RNKeychainAuthenticationListener.h */; };
+		5DE632D52043423E004F9598 /* LocalAuthentication.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5DE632D42043423E004F9598 /* LocalAuthentication.framework */; };
+		5DE632D720434276004F9598 /* RNKeychainAuthenticationListener.h in Copy Headers */ = {isa = PBXBuildFile; fileRef = 5DE632D62043426A004F9598 /* RNKeychainAuthenticationListener.h */; };
+		5DE632D920434291004F9598 /* RNKeychainAuthenticationListener.h in Headers */ = {isa = PBXBuildFile; fileRef = 5DE632D62043426A004F9598 /* RNKeychainAuthenticationListener.h */; };
+		5DE632DB204342AE004F9598 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5DE632DA204342AE004F9598 /* Security.framework */; };
+		5DE632DC204342B5004F9598 /* RNKeychainAuthenticationListener.h in Copy Headers */ = {isa = PBXBuildFile; fileRef = 5DE632D62043426A004F9598 /* RNKeychainAuthenticationListener.h */; };
+		5DE632DE204342C3004F9598 /* RNKeychainAuthenticationListener.h in Headers */ = {isa = PBXBuildFile; fileRef = 5DE632D62043426A004F9598 /* RNKeychainAuthenticationListener.h */; };
+		6478986B1F38BFA100DA1C12 /* RNKeychainManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 5D82368C1B0CE2A6005A9EF3 /* RNKeychainManager.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
 		5D82366D1B0CE05B005A9EF3 /* Copy Headers */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
-			dstPath = include/RNKeychain;
+			dstPath = "include/$(PRODUCT_NAME)";
 			dstSubfolderSpec = 16;
 			files = (
-				B2AF063F1E97DF85006435CD /* RNKeychainAuthenticationListener.h in Copy Headers */,
+				5DE632D720434276004F9598 /* RNKeychainAuthenticationListener.h in Copy Headers */,
 			);
 			name = "Copy Headers";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		6478985D1F38BF9100DA1C12 /* CopyFiles */ = {
+		6478985D1F38BF9100DA1C12 /* Copy Headers */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = "include/$(PRODUCT_NAME)";
 			dstSubfolderSpec = 16;
 			files = (
+				5DE632DC204342B5004F9598 /* RNKeychainAuthenticationListener.h in Copy Headers */,
 			);
+			name = "Copy Headers";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */
@@ -42,8 +48,10 @@
 		5D82368B1B0CE2A6005A9EF3 /* RNKeychainManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RNKeychainManager.h; sourceTree = "<group>"; };
 		5D82368C1B0CE2A6005A9EF3 /* RNKeychainManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RNKeychainManager.m; sourceTree = "<group>"; };
 		5D8236901B0CE3D6005A9EF3 /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
-		B22856161E950BB300CCF753 /* RNKeychainAuthenticationListener.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RNKeychainAuthenticationListener.h; sourceTree = "<group>"; };
-		B2AF06361E97BF10006435CD /* LocalAuthentication.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = LocalAuthentication.framework; path = System/Library/Frameworks/LocalAuthentication.framework; sourceTree = SDKROOT; };
+		5DE632D42043423E004F9598 /* LocalAuthentication.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = LocalAuthentication.framework; path = System/Library/Frameworks/LocalAuthentication.framework; sourceTree = SDKROOT; };
+		5DE632D62043426A004F9598 /* RNKeychainAuthenticationListener.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RNKeychainAuthenticationListener.h; sourceTree = "<group>"; };
+		5DE632DA204342AE004F9598 /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = Platforms/AppleTVOS.platform/Developer/SDKs/AppleTVOS11.2.sdk/System/Library/Frameworks/Security.framework; sourceTree = DEVELOPER_DIR; };
+		6478985F1F38BF9100DA1C12 /* libRNKeychain.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libRNKeychain.a; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -51,7 +59,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				B2AF06371E97BF10006435CD /* LocalAuthentication.framework in Frameworks */,
+				5DE632D52043423E004F9598 /* LocalAuthentication.framework in Frameworks */,
 				5D8236911B0CE3D6005A9EF3 /* Security.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -60,7 +68,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				6478986A1F38BF9D00DA1C12 /* Security.framework in Frameworks */,
+				5DE632DB204342AE004F9598 /* Security.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -72,7 +80,7 @@
 			children = (
 				5D82368A1B0CE2A6005A9EF3 /* RNKeychainManager */,
 				5D8236701B0CE05B005A9EF3 /* Products */,
-				B2AF06351E97BF10006435CD /* Frameworks */,
+				647898681F38BF9C00DA1C12 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 			wrapsLines = 0;
@@ -89,17 +97,19 @@
 		5D82368A1B0CE2A6005A9EF3 /* RNKeychainManager */ = {
 			isa = PBXGroup;
 			children = (
+				5DE632D62043426A004F9598 /* RNKeychainAuthenticationListener.h */,
 				5D82368B1B0CE2A6005A9EF3 /* RNKeychainManager.h */,
 				5D82368C1B0CE2A6005A9EF3 /* RNKeychainManager.m */,
-				B22856161E950BB300CCF753 /* RNKeychainAuthenticationListener.h */,
 			);
 			path = RNKeychainManager;
 			sourceTree = "<group>";
 		};
-		B2AF06351E97BF10006435CD /* Frameworks */ = {
+		647898681F38BF9C00DA1C12 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				B2AF06361E97BF10006435CD /* LocalAuthentication.framework */,
+				5DE632DA204342AE004F9598 /* Security.framework */,
+				5DE632D42043423E004F9598 /* LocalAuthentication.framework */,
+				5D8236901B0CE3D6005A9EF3 /* Security.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -107,11 +117,19 @@
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
-		B2AF063C1E97DE1E006435CD /* Headers */ = {
+		5DE632D820434281004F9598 /* Headers */ = {
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				B2AF063D1E97DE25006435CD /* RNKeychainAuthenticationListener.h in Headers */,
+				5DE632D920434291004F9598 /* RNKeychainAuthenticationListener.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		5DE632DD204342BC004F9598 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5DE632DE204342C3004F9598 /* RNKeychainAuthenticationListener.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -124,7 +142,7 @@
 			buildPhases = (
 				5D82366B1B0CE05B005A9EF3 /* Sources */,
 				5D82366C1B0CE05B005A9EF3 /* Frameworks */,
-				B2AF063C1E97DE1E006435CD /* Headers */,
+				5DE632D820434281004F9598 /* Headers */,
 				5D82366D1B0CE05B005A9EF3 /* Copy Headers */,
 			);
 			buildRules = (
@@ -142,7 +160,8 @@
 			buildPhases = (
 				6478985B1F38BF9100DA1C12 /* Sources */,
 				6478985C1F38BF9100DA1C12 /* Frameworks */,
-				6478985D1F38BF9100DA1C12 /* CopyFiles */,
+				5DE632DD204342BC004F9598 /* Headers */,
+				6478985D1F38BF9100DA1C12 /* Copy Headers */,
 			);
 			buildRules = (
 			);
