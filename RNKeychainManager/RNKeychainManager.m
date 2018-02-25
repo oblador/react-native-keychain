@@ -65,6 +65,9 @@ NSString *messageForError(NSError *error)
     case errSecAuthFailed:
       return @"The user name or passphrase you entered is not correct.";
 
+    case errSecMissingEntitlement:
+      return @"Internal error when a required entitlement isn't present.";
+
     default:
       return error.localizedDescription;
   }
