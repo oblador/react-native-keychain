@@ -399,21 +399,21 @@ RCT_EXPORT_METHOD(resetGenericPasswordForOptions:(NSDictionary *)options resolve
   NSString *service = serviceValue(options);
 
   // Create dictionary of search parameters
-  NSMutableDictionary *dict = [NSMutableDictionary dictionaryWithObjectsAndKeys:(__bridge id)(kSecClassGenericPassword), kSecClass, service, kSecAttrService, kCFBooleanTrue, kSecReturnAttributes, kCFBooleanTrue, kSecReturnData, nil];
+  NSDictionary *query = @{
+    (__bridge NSString *)kSecClass: (__bridge id)(kSecClassGenericPassword),
+    (__bridge NSString *)kSecAttrService: service,
+    (__bridge NSString *)kSecReturnAttributes: (__bridge id)kCFBooleanTrue,
+    (__bridge NSString *)kSecReturnData: (__bridge id)kCFBooleanFalse
+  };
 
-  if (options[@"accessGroup"]) {
-    [dict setObject:options[@"accessGroup"] forKey:kSecAttrAccessGroup];
-  }
-
-  // Remove any old values from the keychain
-  OSStatus osStatus = SecItemDelete((__bridge CFDictionaryRef) dict);
+  // Remove matching entries in the keychain
+  OSStatus osStatus = SecItemDelete((__bridge CFDictionaryRef) query);
   if (osStatus != noErr && osStatus != errSecItemNotFound) {
     NSError *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:osStatus userInfo:nil];
     return rejectWithError(reject, error);
   }
 
   return resolve(@(YES));
-
 }
 
 RCT_EXPORT_METHOD(setInternetCredentialsForServer:(NSString *)server withUsername:(NSString*)username withPassword:(NSString*)password withOptions:(NSDictionary *)options resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
