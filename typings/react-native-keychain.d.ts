@@ -12,10 +12,11 @@ declare module 'react-native-keychain' {
     }
 
     export interface SecureOptions {
-        service?: string;
+        accessControl?: string;
+        accessGroup?: string;
         authenticationPrompt?: string;
         authenticationType?: string;
-        accessControl?: string;
+        service?: string;
     }
 
     function canImplyAuthentication(

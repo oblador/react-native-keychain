@@ -41,8 +41,8 @@ type SecAccessible =
   | 'AccessibleAlwaysThisDeviceOnly';
 
 type Options = {
-  accessible?: SecAccessible,
   accessGroup?: string,
+  accessible?: SecAccessible,
   service?: string,
 };
 
@@ -57,10 +57,11 @@ type SecAccessControl =
 type LAPolicy = 'Authentication' | 'AuthenticationWithBiometrics';
 
 type SecureOptions = {
-  service?: string,
+  accessControl?: SecAccessControl,
+  accessGroup?: string,
   authenticationPrompt?: string,
   authenticationType?: LAPolicy,
-  accessControl?: SecAccessControl,
+  service?: string,
 };
 
 /**
