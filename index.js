@@ -39,6 +39,13 @@ type SecureOptions = {
  * @return {Promise} Resolves to `true` when successful
  */
 export function canImplyAuthentication(options?: SecureOptions): Promise {
+  if (Platform.OS !== 'ios') {
+    return Promise.reject(
+      new Error(
+        `canImplyAuthentication() is not supported on ${Platform.OS} yet`
+      )
+    );
+  }
   return RNKeychainManager.canCheckAuthentication(options);
 }
 
@@ -56,6 +63,11 @@ export function setSecurePassword(
   password: string,
   options?: SecureOptions
 ): Promise {
+  if (Platform.OS !== 'ios') {
+    return Promise.reject(
+      new Error(`setSecurePassword() is not supported on ${Platform.OS} yet`)
+    );
+  }
   return RNKeychainManager.setSecurePasswordForService(
     service,
     username,
@@ -73,6 +85,11 @@ export function getSecurePassword(
   service: string,
   options?: SecureOptions
 ): Promise {
+  if (Platform.OS !== 'ios') {
+    return Promise.reject(
+      new Error(`getSecurePassword() is not supported on ${Platform.OS} yet`)
+    );
+  }
   return RNKeychainManager.getSecurePasswordForService(service, options);
 }
 
