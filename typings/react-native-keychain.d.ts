@@ -11,6 +11,28 @@ declare module 'react-native-keychain' {
         password: string;
     }
 
+    export interface SecureOptions {
+      customPrompt?: string;
+      authenticationType?: string;
+      accessControl?: string;
+    }
+
+    function canImplyAuthentication(
+      options?: SecureOptions
+    ): Promise<boolean>;
+
+    function setSecurePassword(
+      service: string,
+      username: string,
+      password: string,
+      options?: SecureOptions
+    ): Promise<boolean>;
+
+    function getSecurePassword(
+      service: string,
+      options?: SecureOptions
+    ): Promise<boolean | {service: string, username: string, password: string}>;
+
     function setInternetCredentials(
         server: string,
         username: string,

@@ -19,7 +19,7 @@ export default class KeychainExample extends Component {
 
   save() {
     Keychain
-      .setGenericPassword(this.state.username, this.state.password)
+      .setSecurePassword('myService', this.state.username, this.state.password)
       .then(() => {
         this.setState({ status: 'Credentials saved!' });
       })
@@ -30,7 +30,7 @@ export default class KeychainExample extends Component {
 
   load() {
     Keychain
-      .getGenericPassword()
+      .getSecurePassword('myService')
       .then((credentials) => {
         if (credentials) {
           this.setState({ ...credentials, status: 'Credentials loaded!' });
