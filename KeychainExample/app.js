@@ -25,42 +25,60 @@ export default class KeychainExample extends Component {
     });
   }
 
-  save() {
-    Keychain.setGenericPassword(this.state.username, this.state.password)
-      .then(() => {
-        this.setState({ status: 'Credentials saved!' });
-      })
-      .catch(err => {
-        this.setState({ status: 'Could not save credentials, ' + err });
-      });
+  async save() {
+    try {
+      if (this.state.biometryType) {
+        await Keychain.setPasswordWithAuthentication(
+          this.state.username,
+          this.state.password,
+          {
+            accessControl:
+              Keychain.ACCESS_CONTROL.TOUCH_ID_ANY_OR_DEVICE_PASSCODE,
+            authenticationType: Keychain.AUTHENTICATION_TYPE.BIOMETRICS,
+          }
+        );
+      } else {
+        await Keychain.setGenericPassword(
+          this.state.username,
+          this.state.password
+        );
+      }
+      this.setState({ status: 'Credentials saved!' });
+    } catch (err) {
+      this.setState({ status: 'Could not save credentials, ' + err });
+    }
   }
 
-  load() {
-    Keychain.getGenericPassword()
-      .then(credentials => {
-        if (credentials) {
-          this.setState({ ...credentials, status: 'Credentials loaded!' });
-        } else {
-          this.setState({ status: 'No credentials stored.' });
-        }
-      })
-      .catch(err => {
-        this.setState({ status: 'Could not load credentials. ' + err });
-      });
+  async load() {
+    try {
+      const credentials = await (this.state.biometryType
+        ? Keychain.getPasswordWithAuthentication({
+            accessControl:
+              Keychain.ACCESS_CONTROL.TOUCH_ID_ANY_OR_DEVICE_PASSCODE,
+            authenticationType: Keychain.AUTHENTICATION_TYPE.BIOMETRICS,
+          })
+        : Keychain.getGenericPassword());
+      if (credentials) {
+        this.setState({ ...credentials, status: 'Credentials loaded!' });
+      } else {
+        this.setState({ status: 'No credentials stored.' });
+      }
+    } catch (err) {
+      this.setState({ status: 'Could not load credentials. ' + err });
+    }
   }
 
-  reset() {
-    Keychain.resetGenericPassword()
-      .then(() => {
-        this.setState({
-          status: 'Credentials Reset!',
-          username: '',
-          password: '',
-        });
-      })
-      .catch(err => {
-        this.setState({ status: 'Could not reset credentials, ' + err });
+  async reset() {
+    try {
+      await Keychain.resetGenericPassword();
+      this.setState({
+        status: 'Credentials Reset!',
+        username: '',
+        password: '',
       });
+    } catch (err) {
+      this.setState({ status: 'Could not reset credentials, ' + err });
+    }
   }
 
   render() {
