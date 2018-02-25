@@ -57,6 +57,7 @@ type SecAccessControl =
 type LAPolicy = 'Authentication' | 'AuthenticationWithBiometrics';
 
 type SecureOptions = {
+  service?: string,
   customPrompt?: string,
   authenticationType?: LAPolicy,
   accessControl?: SecAccessControl,
@@ -96,29 +97,28 @@ export function getSupportedBiometryType(): Promise {
 }
 
 /**
- * Saves the `username` and `password` combination for `service` securely - needs authentication to retrieve it.
- * @param {string} service Associated service.
+ * Saves the `username` and `password` combination securely - needs authentication to retrieve it.
  * @param {string} username Associated username or e-mail to be saved.
  * @param {string} password Associated password to be saved.
  * @param {object} options Keychain options, iOS only
  * @return {Promise} Resolves to `true` when successful
  */
-export function setSecurePassword(
-  service: string,
+export function setPasswordWithAuthentication(
   username: string,
   password: string,
   options?: SecureOptions
 ): Promise {
   if (Platform.OS !== 'ios') {
     return Promise.reject(
-      new Error(`setSecurePassword() is not supported on ${Platform.OS} yet`)
+      new Error(
+        `setPasswordWithAuthentication() is not supported on ${Platform.OS} yet`
+      )
     );
   }
-  return RNKeychainManager.setSecurePasswordForService(
-    service,
+  return RNKeychainManager.setPasswordWithAuthentication(
+    options,
     username,
-    password,
-    options
+    password
   );
 }
 
@@ -127,16 +127,17 @@ export function setSecurePassword(
  * @param {string|object} serviceOrOptions Reverse domain name qualifier for the service, defaults to `bundleId` or an options object.
  * @return {Promise} Resolves to `{ service, username, password }` when successful
  */
-export function getSecurePassword(
-  service: string,
+export function getPasswordWithAuthentication(
   options?: SecureOptions
 ): Promise {
   if (Platform.OS !== 'ios') {
     return Promise.reject(
-      new Error(`getSecurePassword() is not supported on ${Platform.OS} yet`)
+      new Error(
+        `getPasswordWithAuthentication() is not supported on ${Platform.OS} yet`
+      )
     );
   }
-  return RNKeychainManager.getSecurePasswordForService(service, options);
+  return RNKeychainManager.getPasswordWithAuthentication(options);
 }
 
 /**

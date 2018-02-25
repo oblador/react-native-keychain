@@ -200,8 +200,9 @@ RCT_EXPORT_METHOD(getSupportedBiometryType:(RCTPromiseResolveBlock)resolve rejec
   return [[[ LAContext alloc] init ] canEvaluatePolicy:policyToEvaluate error:err ];
 }
 
-RCT_EXPORT_METHOD(setSecurePasswordForService:(NSString *)service withUsername:(NSString *)username withPassword:(NSString *)password withOptions:(NSDictionary *)options resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
+RCT_EXPORT_METHOD(setPasswordWithAuthentication:(NSDictionary *)options withUsername:(NSString *)username withPassword:(NSString *)password resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
 {
+  NSString *service = serviceValue(options);
   // Delete old entry for that key if Available
   NSError *aerr = nil;
   BOOL canAuthenticate = [ self canCheckAuthentication:LAPolicyDeviceOwnerAuthentication error:&aerr ];
@@ -254,8 +255,9 @@ RCT_EXPORT_METHOD(setSecurePasswordForService:(NSString *)service withUsername:(
   });
 }
 
-RCT_EXPORT_METHOD(getSecurePasswordForService:(NSString *)service withOptions:(NSDictionary *)options resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
+RCT_EXPORT_METHOD(getPasswordWithAuthentication:(NSDictionary *)options resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
 {
+  NSString *service = serviceValue(options);
   NSString *promptMessage = @"Authenticate to retrieve secret!";
   if (options && options[kCustomPromptMessage]) {
     promptMessage = options[kCustomPromptMessage];
