@@ -8,13 +8,13 @@
   },
   "dependencies": {
     "react": "16.2.0",
-    "react-native": "0.52.0",
-    "react-native-keychain": "^1.2.1"
+    "react-native": "0.53.3",
+    "react-native-keychain": "^2.0.0"
   },
   "devDependencies": {
-    "babel-jest": "22.0.4",
+    "babel-jest": "22.4.1",
     "babel-preset-react-native": "4.0.0",
-    "jest": "22.0.4",
+    "jest": "22.4.2",
     "react-test-renderer": "16.2.0"
   },
   "jest": {
