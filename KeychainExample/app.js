@@ -18,38 +18,43 @@ export default class KeychainExample extends Component {
   };
 
   save() {
-    Keychain
-      .setSecurePassword('myService', this.state.username, this.state.password)
+    Keychain.setSecurePassword(
+      'myService',
+      this.state.username,
+      this.state.password
+    )
       .then(() => {
         this.setState({ status: 'Credentials saved!' });
       })
-      .catch((err) => {
+      .catch(err => {
         this.setState({ status: 'Could not save credentials, ' + err });
       });
   }
 
   load() {
-    Keychain
-      .getSecurePassword('myService')
-      .then((credentials) => {
+    Keychain.getSecurePassword('myService')
+      .then(credentials => {
         if (credentials) {
           this.setState({ ...credentials, status: 'Credentials loaded!' });
         } else {
           this.setState({ status: 'No credentials stored.' });
         }
       })
-      .catch((err) => {
+      .catch(err => {
         this.setState({ status: 'Could not load credentials. ' + err });
       });
   }
 
   reset() {
-    Keychain
-      .resetGenericPassword()
+    Keychain.resetGenericPassword()
       .then(() => {
-        this.setState({ status: 'Credentials Reset!', username: '', password: '' });
+        this.setState({
+          status: 'Credentials Reset!',
+          username: '',
+          password: '',
+        });
       })
-      .catch((err) => {
+      .catch(err => {
         this.setState({ status: 'Could not reset credentials, ' + err });
       });
   }
@@ -58,9 +63,7 @@ export default class KeychainExample extends Component {
     return (
       <KeyboardAvoidingView behavior="padding" style={styles.container}>
         <View style={styles.content}>
-          <Text style={styles.title}>
-            Keychain Example
-          </Text>
+          <Text style={styles.title}>Keychain Example</Text>
           <View style={styles.field}>
             <Text style={styles.label}>Username</Text>
             <TextInput
@@ -68,8 +71,9 @@ export default class KeychainExample extends Component {
               autoFocus={true}
               autoCapitalize="none"
               value={this.state.username}
-              onChange={(event) => this.setState({ username: event.nativeEvent.text })}
-             />
+              onChange={event =>
+                this.setState({ username: event.nativeEvent.text })}
+            />
           </View>
           <View style={styles.field}>
             <Text style={styles.label}>Password</Text>
@@ -78,22 +82,34 @@ export default class KeychainExample extends Component {
               password={true}
               autoCapitalize="none"
               value={this.state.password}
-              onChange={(event) => this.setState({ password: event.nativeEvent.text })}
-             />
+              onChange={event =>
+                this.setState({ password: event.nativeEvent.text })}
+            />
           </View>
-          {!!this.state.status && (<Text style={styles.status}>{this.state.status}</Text>)}
+          {!!this.state.status && (
+            <Text style={styles.status}>{this.state.status}</Text>
+          )}
           <View style={styles.buttons}>
-            <TouchableHighlight onPress={() => this.save()} style={styles.button}>
+            <TouchableHighlight
+              onPress={() => this.save()}
+              style={styles.button}
+            >
               <View style={styles.save}>
                 <Text style={styles.buttonText}>Save</Text>
               </View>
             </TouchableHighlight>
-            <TouchableHighlight onPress={() => this.load()} style={styles.button}>
+            <TouchableHighlight
+              onPress={() => this.load()}
+              style={styles.button}
+            >
               <View style={styles.load}>
                 <Text style={styles.buttonText}>Load</Text>
               </View>
             </TouchableHighlight>
-            <TouchableHighlight onPress={() => this.reset()} style={styles.button}>
+            <TouchableHighlight
+              onPress={() => this.reset()}
+              style={styles.button}
+            >
               <View style={styles.reset}>
                 <Text style={styles.buttonText}>Reset</Text>
               </View>
@@ -110,7 +126,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#F5FCFF'
+    backgroundColor: '#F5FCFF',
   },
   content: {
     width: 250,
@@ -165,5 +181,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
     paddingHorizontal: 16,
     paddingVertical: 8,
-  }
+  },
 });

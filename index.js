@@ -8,12 +8,12 @@ type SecAccessible =
   | 'AccessibleWhenPasscodeSetThisDeviceOnly'
   | 'AccessibleWhenUnlockedThisDeviceOnly'
   | 'AccessibleAfterFirstUnlockThisDeviceOnly'
-  | 'AccessibleAlwaysThisDeviceOnly'
+  | 'AccessibleAlwaysThisDeviceOnly';
 
 type Options = {
-  accessible?: SecAccessible;
-  accessGroup?: string;
-  service?: string;
+  accessible?: SecAccessible,
+  accessGroup?: string,
+  service?: string,
 };
 
 type SecAccessControl =
@@ -22,16 +22,14 @@ type SecAccessControl =
   | 'TouchIDCurrentSet'
   | 'DevicePasscode'
   | 'TouchIDAnyOrDevicePasscode'
-  | 'TouchIDCurrentSetOrDevicePasscode'
+  | 'TouchIDCurrentSetOrDevicePasscode';
 
-  type LAPolicy =
-    | 'Authentication'
-    | 'AuthenticationWithBiometrics'
+type LAPolicy = 'Authentication' | 'AuthenticationWithBiometrics';
 
 type SecureOptions = {
-  customPrompt?: string;
-  authenticationType?: LAPolicy;
-  accessControl?: SecAccessControl;
+  customPrompt?: string,
+  authenticationType?: LAPolicy,
+  accessControl?: SecAccessControl,
 };
 
 /**
@@ -40,9 +38,7 @@ type SecureOptions = {
  * @param {object} options LAPolicy option, iOS only
  * @return {Promise} Resolves to `true` when successful
  */
-export function canImplyAuthentication(
-  options?: SecureOptions
-): Promise {
+export function canImplyAuthentication(options?: SecureOptions): Promise {
   return RNKeychainManager.canCheckAuthentication(options);
 }
 
@@ -60,7 +56,12 @@ export function setSecurePassword(
   password: string,
   options?: SecureOptions
 ): Promise {
-  return RNKeychainManager.setSecurePasswordForService(service, username, password, options);
+  return RNKeychainManager.setSecurePasswordForService(
+    service,
+    username,
+    password,
+    options
+  );
 }
 
 /**
@@ -89,7 +90,12 @@ export function setInternetCredentials(
   password: string,
   options?: Options
 ): Promise {
-  return RNKeychainManager.setInternetCredentialsForServer(server, username, password, options);
+  return RNKeychainManager.setInternetCredentialsForServer(
+    server,
+    username,
+    password,
+    options
+  );
 }
 
 /**
@@ -120,9 +126,13 @@ export function resetInternetCredentials(
 
 function getOptionsArgument(serviceOrOptions?: string | KeychainOptions) {
   if (Platform.OS !== 'ios') {
-    return typeof serviceOrOptions === 'object' ? serviceOrOptions.service : serviceOrOptions;
+    return typeof serviceOrOptions === 'object'
+      ? serviceOrOptions.service
+      : serviceOrOptions;
   }
-  return typeof serviceOrOptions === 'string' ? { service: serviceOrOptions } : serviceOrOptions;
+  return typeof serviceOrOptions === 'string'
+    ? { service: serviceOrOptions }
+    : serviceOrOptions;
 }
 
 /**
@@ -137,7 +147,11 @@ export function setGenericPassword(
   password: string,
   serviceOrOptions?: string | KeychainOptions
 ): Promise {
-  return RNKeychainManager.setGenericPasswordForOptions(getOptionsArgument(serviceOrOptions), username, password);
+  return RNKeychainManager.setGenericPasswordForOptions(
+    getOptionsArgument(serviceOrOptions),
+    username,
+    password
+  );
 }
 
 /**
@@ -148,7 +162,9 @@ export function setGenericPassword(
 export function getGenericPassword(
   serviceOrOptions?: string | KeychainOptions
 ): Promise {
-  return RNKeychainManager.getGenericPasswordForOptions(getOptionsArgument(serviceOrOptions));
+  return RNKeychainManager.getGenericPasswordForOptions(
+    getOptionsArgument(serviceOrOptions)
+  );
 }
 
 /**
@@ -159,7 +175,9 @@ export function getGenericPassword(
 export function resetGenericPassword(
   serviceOrOptions?: string | KeychainOptions
 ): Promise {
-  return RNKeychainManager.resetGenericPasswordForOptions(getOptionsArgument(serviceOrOptions));
+  return RNKeychainManager.resetGenericPasswordForOptions(
+    getOptionsArgument(serviceOrOptions)
+  );
 }
 
 /**
@@ -167,9 +185,13 @@ export function resetGenericPassword(
  * @return {Promise} Resolves to `{ server, username, password }` if approved and
  * `false` if denied and throws an error if not supported on platform or there's no shared credentials
  */
-export function requestSharedWebCredentials() : Promise {
+export function requestSharedWebCredentials(): Promise {
   if (Platform.OS !== 'ios') {
-    return Promise.reject(new Error(`requestSharedWebCredentials() is not supported on ${Platform.OS} yet`));
+    return Promise.reject(
+      new Error(
+        `requestSharedWebCredentials() is not supported on ${Platform.OS} yet`
+      )
+    );
   }
   return RNKeychainManager.requestSharedWebCredentials();
 }
@@ -185,9 +207,17 @@ export function setSharedWebCredentials(
   server: string,
   username: string,
   password: string
-) : Promise {
+): Promise {
   if (Platform.OS !== 'ios') {
-    return Promise.reject(new Error(`setSharedWebCredentials() is not supported on ${Platform.OS} yet`));
+    return Promise.reject(
+      new Error(
+        `setSharedWebCredentials() is not supported on ${Platform.OS} yet`
+      )
+    );
   }
-  return RNKeychainManager.setSharedWebCredentialsForServer(server, username, password);
+  return RNKeychainManager.setSharedWebCredentialsForServer(
+    server,
+    username,
+    password
+  );
 }
