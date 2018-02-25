@@ -52,6 +52,10 @@ Error: {
 
 See `KeychainExample` for fully working project example.
 
+Both `setGenericPassword` and `setInternetCredentials` allow to store strings only!
+
+Both `getInternetCredentials` and `getGenericPassword` will resolve to the stored value, or to false, in case there is no record stored. They will reject only if an unexpected error is encountered.
+
 ```js
 import * as Keychain from 'react-native-keychain';
 
@@ -71,7 +75,7 @@ Keychain
   .then(function(credentials) {
     console.log('Credentials successfully loaded for user ' + credentials.username);
   }).catch(function(error) {
-    console.log('Keychain couldn\'t be accessed! Maybe no value set?', error);
+    console.log('Keychain couldn\'t be accessed!', error);
   });
 
 // service argument optional
