@@ -111,7 +111,7 @@ NSString *serviceValue(NSDictionary *options)
 #pragma mark - Proposed functionality - Helpers
 
 #define kAuthenticationType @"authenticationType"
-#define kBiometrics @"AuthenticationWithBiometrics"
+#define kAuthenticationTypeBiometrics @"AuthenticationWithBiometrics"
 
 #define kAccessControlType @"accessControl"
 #define kAccessControlUserPresence @"UserPresence"
@@ -124,12 +124,12 @@ NSString *serviceValue(NSDictionary *options)
 #define kBiometryTypeTouchID @"TouchID"
 #define kBiometryTypeFaceID @"FaceID"
 
-#define kCustomPromptMessage @"customPrompt"
+#define kAuthenticationPromptMessage @"authenticationPrompt"
 
 LAPolicy authPolicy(NSDictionary *options)
 {
   if (options && options[kAuthenticationType]) {
-    if ([ options[kAuthenticationType] isEqualToString:kBiometrics ]) {
+    if ([ options[kAuthenticationType] isEqualToString:kAuthenticationTypeBiometrics ]) {
       return LAPolicyDeviceOwnerAuthenticationWithBiometrics;
     }
   }
@@ -264,8 +264,8 @@ RCT_EXPORT_METHOD(getPasswordWithAuthentication:(NSDictionary *)options resolver
 {
   NSString *service = serviceValue(options);
   NSString *promptMessage = @"Authenticate to retrieve secret!";
-  if (options && options[kCustomPromptMessage]) {
-    promptMessage = options[kCustomPromptMessage];
+  if (options && options[kAuthenticationPromptMessage]) {
+    promptMessage = options[kAuthenticationPromptMessage];
   }
 
   NSMutableDictionary *dict = @{ (__bridge NSString *)kSecClass : (__bridge id)(kSecClassGenericPassword),

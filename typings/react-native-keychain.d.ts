@@ -12,8 +12,8 @@ declare module 'react-native-keychain' {
     }
 
     export interface SecureOptions {
-        service: string;
-        customPrompt?: string;
+        service?: string;
+        authenticationPrompt?: string;
         authenticationType?: string;
         accessControl?: string;
     }

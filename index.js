@@ -58,7 +58,7 @@ type LAPolicy = 'Authentication' | 'AuthenticationWithBiometrics';
 
 type SecureOptions = {
   service?: string,
-  customPrompt?: string,
+  authenticationPrompt?: string,
   authenticationType?: LAPolicy,
   accessControl?: SecAccessControl,
 };
