@@ -16,7 +16,14 @@ export default class KeychainExample extends Component {
     username: '',
     password: '',
     status: '',
+    biometryType: null,
   };
+
+  componentDidMount() {
+    Keychain.getSupportedBiometryType().then(biometryType => {
+      this.setState({ biometryType });
+    });
+  }
 
   save() {
     Keychain.setGenericPassword(this.state.username, this.state.password)
@@ -91,6 +98,11 @@ export default class KeychainExample extends Component {
           {!!this.state.status && (
             <Text style={styles.status}>{this.state.status}</Text>
           )}
+          {!!this.state.biometryType && (
+            <Text style={styles.biometryType}>
+              Supported biometry: {this.state.biometryType}
+            </Text>
+          )}
           <View style={styles.buttons}>
             <TouchableHighlight
               onPress={() => this.save()}
@@ -156,6 +168,11 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   status: {
+    color: '#333',
+    fontSize: 12,
+    marginTop: 15,
+  },
+  biometryType: {
     color: '#333',
     fontSize: 12,
     marginTop: 15,

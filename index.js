@@ -1,6 +1,11 @@
 import { NativeModules, Platform } from 'react-native';
 const { RNKeychainManager } = NativeModules;
 
+export const BIOMETRY_TYPE = {
+  TOUCH_ID: 'TouchID',
+  FACE_ID: 'FaceID',
+};
+
 type SecAccessible =
   | 'AccessibleWhenUnlocked'
   | 'AccessibleAfterFirstUnlock'
@@ -47,6 +52,22 @@ export function canImplyAuthentication(options?: SecureOptions): Promise {
     );
   }
   return RNKeychainManager.canCheckAuthentication(options);
+}
+
+/**
+ * Get what type of local authentication policy (LAPolicy) is supported
+ * on this device with the device settings the user chose.
+ * @return {Promise} Resolves to a `BIOMETRY_TYPE` when supported, otherwise `null`
+ */
+export function getSupportedBiometryType(): Promise {
+  if (Platform.OS !== 'ios') {
+    return Promise.reject(
+      new Error(
+        `getSupportedBiometryType() is not supported on ${Platform.OS} yet`
+      )
+    );
+  }
+  return RNKeychainManager.getSupportedBiometryType();
 }
 
 /**

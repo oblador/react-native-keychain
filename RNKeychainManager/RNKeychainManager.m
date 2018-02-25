@@ -178,6 +178,23 @@ RCT_EXPORT_METHOD(canCheckAuthentication:(NSDictionary *)options resolver:(RCTPr
     }
 }
 
+RCT_EXPORT_METHOD(getSupportedBiometryType:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
+{
+  NSError *aerr = nil;
+  LAContext *context = [LAContext new];
+  BOOL canBeProtected = [context canEvaluatePolicy:LAPolicyDeviceOwnerAuthenticationWithBiometrics error:&aerr];
+
+  if (!aerr && canBeProtected) {
+    if (@available(iOS 11, *)) {
+      if (context.biometryType == LABiometryTypeFaceID) {
+        return resolve(@"FaceID");
+      }
+    }
+    return resolve(@"TouchID");
+  }
+  return resolve([NSNull null]);
+}
+
 - (BOOL) canCheckAuthentication:(LAPolicy)policyToEvaluate error:(NSError **)err {
     return [[[ LAContext alloc] init ] canEvaluatePolicy:policyToEvaluate error:err ];
 }
