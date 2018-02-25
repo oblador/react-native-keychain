@@ -172,7 +172,7 @@ RCT_EXPORT_METHOD(canCheckAuthentication:(NSDictionary *)options resolver:(RCTPr
     BOOL canBeProtected = [self canCheckAuthentication:policyToEvaluate error:&aerr ];
     
     if (aerr || !canBeProtected) {
-        return rejectWithError(reject, aerr);
+        return resolve(@(NO));
     } else {
         return resolve(@(YES));
     }

@@ -41,7 +41,7 @@ type SecureOptions = {
  * Inquire if the type of local authentication policy (LAPolicy) is supported
  * on this device with the device settings the user chose.
  * @param {object} options LAPolicy option, iOS only
- * @return {Promise} Resolves to `true` when successful
+ * @return {Promise} Resolves to `true` when supported, otherwise `false`
  */
 export function canImplyAuthentication(options?: SecureOptions): Promise {
   if (Platform.OS !== 'ios') {
