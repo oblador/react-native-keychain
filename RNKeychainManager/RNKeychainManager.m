@@ -126,11 +126,11 @@ NSString *accessGroupValue(NSDictionary *options)
 
 #define kAccessControlType @"accessControl"
 #define kAccessControlUserPresence @"UserPresence"
-#define kAccessControlTouchIDAny @"TouchIDAny"
-#define kAccessControlTouchIDCurrentSet @"TouchIDCurrentSet"
+#define kAccessControlBiometryAny @"BiometryAny"
+#define kAccessControlBiometryCurrentSet @"BiometryCurrentSet"
 #define kAccessControlDevicePasscode @"DevicePasscode"
-#define kAccessControlTouchIDAnyOrDevicePasscode @"TouchIDAnyOrDevicePasscode"
-#define kAccessControlTouchIDCurrentSetOrDevicePasscode @"TouchIDCurrentSetOrDevicePasscode"
+#define kAccessControlBiometryAnyOrDevicePasscode @"BiometryAnyOrDevicePasscode"
+#define kAccessControlBiometryCurrentSetOrDevicePasscode @"BiometryCurrentSetOrDevicePasscode"
 
 #define kBiometryTypeTouchID @"TouchID"
 #define kBiometryTypeFaceID @"FaceID"
@@ -153,19 +153,19 @@ SecAccessControlCreateFlags secureAccessControl(NSDictionary *options)
     if ([ options[kAccessControlType] isEqualToString: kAccessControlUserPresence ]) {
       return kSecAccessControlUserPresence;
     }
-    else if ([ options[kAccessControlType] isEqualToString: kAccessControlTouchIDAny ]) {
+    else if ([ options[kAccessControlType] isEqualToString: kAccessControlBiometryAny ]) {
       return kSecAccessControlTouchIDAny;
     }
-    else if ([ options[kAccessControlType] isEqualToString: kAccessControlTouchIDCurrentSet ]) {
+    else if ([ options[kAccessControlType] isEqualToString: kAccessControlBiometryCurrentSet ]) {
       return kSecAccessControlTouchIDCurrentSet;
     }
     else if ([ options[kAccessControlType] isEqualToString: kAccessControlDevicePasscode ]) {
       return kSecAccessControlDevicePasscode;
     }
-    else if ([ options[kAccessControlType] isEqualToString: kAccessControlTouchIDAnyOrDevicePasscode ]) {
+    else if ([ options[kAccessControlType] isEqualToString: kAccessControlBiometryAnyOrDevicePasscode ]) {
       return kSecAccessControlTouchIDAny|kSecAccessControlOr|kSecAccessControlDevicePasscode;
     }
-    else if ([ options[kAccessControlType] isEqualToString: kAccessControlTouchIDCurrentSetOrDevicePasscode ]) {
+    else if ([ options[kAccessControlType] isEqualToString: kAccessControlBiometryCurrentSetOrDevicePasscode ]) {
       return kSecAccessControlTouchIDCurrentSet|kSecAccessControlOr|kSecAccessControlDevicePasscode;
     }
   }

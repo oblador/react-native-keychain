@@ -14,11 +14,11 @@ export const ACCESSIBLE = {
 
 export const ACCESS_CONTROL = {
   USER_PRESENCE: 'UserPresence',
-  TOUCH_ID_ANY: 'TouchIDAny',
-  TOUCH_ID_CURRENT_SET: 'TouchIDCurrentSet',
+  BIOMETRY_ANY: 'BiometryAny',
+  BIOMETRY_CURRENT_SET: 'BiometryCurrentSet',
   DEVICE_PASSCODE: 'DevicePasscode',
-  TOUCH_ID_ANY_OR_DEVICE_PASSCODE: 'TouchIDAnyOrDevicePasscode',
-  TOUCH_ID_CURRENT_SET_OR_DEVICE_PASSCODE: 'TouchIDCurrentSetOrDevicePasscode',
+  BIOMETRY_ANY_OR_DEVICE_PASSCODE: 'BiometryAnyOrDevicePasscode',
+  BIOMETRY_CURRENT_SET_OR_DEVICE_PASSCODE: 'BiometryCurrentSetOrDevicePasscode',
 };
 
 export const AUTHENTICATION_TYPE = {
@@ -48,11 +48,11 @@ type Options = {
 
 type SecAccessControl =
   | 'UserPresence'
-  | 'TouchIDAny'
-  | 'TouchIDCurrentSet'
+  | 'BiometryAny'
+  | 'BiometryCurrentSet'
   | 'DevicePasscode'
-  | 'TouchIDAnyOrDevicePasscode'
-  | 'TouchIDCurrentSetOrDevicePasscode';
+  | 'BiometryAnyOrDevicePasscode'
+  | 'BiometryCurrentSetOrDevicePasscode';
 
 type LAPolicy = 'Authentication' | 'AuthenticationWithBiometrics';
 
