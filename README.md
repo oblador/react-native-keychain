@@ -123,6 +123,47 @@ Keychain
 
 ```
 
+### Options
+
+| Key | Applies to | Description | Default |
+|---|---|---|---|
+|**`accessControl`**|`PasswordWithAuthentication`|This dictates how a keychain item may be used, see possible values in `Keychain.ACCESS_CONTROL`. |*`Keychain.ACCESS_CONTROL.TOUCH_ID_CURRENT_SET_OR_DEVICE_PASSCODE`*|
+|**`accessible`**|`GenericPassword`, `InternetCredentials`|This dictates when a keychain item is accessible, see possible values in `Keychain.ACCESSIBLE`. |*`Keychain.ACCESSIBLE.WHEN_UNLOCKED`*|
+|**`accessGroup`**|`GenericPassword`, `InternetCredentials`, `PasswordWithAuthentication`|In which App Group to share the keychain. Requires additional setup with entitlements. |*None*|
+|**`authenticationPrompt`**|`PasswordWithAuthentication`|What to prompt the user when unlocking the keychain with biometry or device password. |`Authenticate to retrieve secret!`|
+|**`authenticationType`**|`canImplyAuthentication`|Policies specifying which forms of authentication are acceptable. |`Keychain.AUTHENTICATION_TYPE.DEVICE_PASSCODE_OR_BIOMETRICS`|
+|**`service`**|`GenericPassword`, `PasswordWithAuthentication`|Reverse domain name qualifier for the service associated with password. |*App bundle ID*|
+
+#### `Keychain.ACCESS_CONTROL` enum
+
+| Key | Description |
+|-----|-------------|
+|**`USER_PRESENCE`**|Constraint to access an item with either Touch ID or passcode.|
+|**`BIOMETRY_ANY`**|Constraint to access an item with Touch ID for any enrolled fingers.|
+|**`BIOMETRY_CURRENT_SET`**|Constraint to access an item with Touch ID for currently enrolled fingers.|
+|**`DEVICE_PASSCODE`**|Constraint to access an item with a passcode.|
+|**`BIOMETRY_ANY_OR_DEVICE_PASSCODE`**|Constraint to access an item with Touch ID for any enrolled fingers or passcode.|
+|**`BIOMETRY_CURRENT_SET_OR_DEVICE_PASSCODE`**|Constraint to access an item with Touch ID for currently enrolled fingers or passcode.|
+
+#### `Keychain.ACCESSIBLE` enum
+
+| Key | Description |
+|-----|-------------|
+|**`WHEN_UNLOCKED`**|The data in the keychain item can be accessed only while the device is unlocked by the user.|
+|**`AFTER_FIRST_UNLOCK`**|The data in the keychain item cannot be accessed after a restart until the device has been unlocked once by the user.|
+|**`ALWAYS`**|The data in the keychain item can always be accessed regardless of whether the device is locked.|
+|**`WHEN_PASSCODE_SET_THIS_DEVICE_ONLY`**|The data in the keychain can only be accessed when the device is unlocked. Only available if a passcode is set on the device. Items with this attribute never migrate to a new device.|
+|**`WHEN_UNLOCKED_THIS_DEVICE_ONLY`**|The data in the keychain item can be accessed only while the device is unlocked by the user. Items with this attribute do not migrate to a new device.|
+|**`AFTER_FIRST_UNLOCK_THIS_DEVICE_ONLY`**|The data in the keychain item cannot be accessed after a restart until the device has been unlocked once by the user. Items with this attribute never migrate to a new device.|
+|**`ALWAYS_THIS_DEVICE_ONLY`**|The data in the keychain item can always be accessed regardless of whether the device is locked. Items with this attribute never migrate to a new device.|
+
+#### `Keychain.AUTHENTICATION_TYPE` enum
+
+| Key | Description |
+|-----|-------------|
+|**`DEVICE_PASSCODE_OR_BIOMETRICS`**|Device owner is going to be authenticated by biometry or device passcode.|
+|**`BIOMETRICS`**|Device owner is going to be authenticated using a biometric method (Touch ID or Face ID).|
+
 ### Note on security
 
 On API levels that do not support Android keystore, Facebook Conceal is used to en/decrypt stored data. The encrypted data is then stored in SharedPreferences. Since Conceal itself stores its encryption key in SharedPreferences, it follows that if the device is rooted (or if an attacker can somehow access the filesystem), the key can be obtained and the stored data can be decrypted. Therefore, on such a device, the conceal encryption is only an obscurity. On API level 23+ the key is stored in the Android Keystore, which makes the key non-exportable and therefore makes the entire process more secure. Follow best practices and do not store user credentials on a device. Instead use tokens or other forms of authentication and re-ask for user credentials before performing sensitive operations.
