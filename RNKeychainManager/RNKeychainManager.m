@@ -75,7 +75,6 @@ NSString *codeForError(NSError *error)
   return [NSString stringWithFormat:@"%li", (long)error.code];
 }
 
-
 void rejectWithError(RCTPromiseRejectBlock reject, NSError *error)
 {
   return reject(codeForError(error), messageForError(error), nil);
@@ -122,42 +121,44 @@ NSString *serviceValue(NSDictionary *options)
 #define kAccessControlTouchIDAnyOrDevicePasscode @"TouchIDAnyOrDevicePasscode"
 #define kAccessControlTouchIDCurrentSetOrDevicePasscode @"TouchIDCurrentSetOrDevicePasscode"
 
+#define kBiometryTypeTouchID @"TouchID"
+#define kBiometryTypeFaceID @"FaceID"
 
 #define kCustomPromptMessage @"customPrompt"
 
 LAPolicy authPolicy(NSDictionary *options)
 {
-    if (options && options[kAuthenticationType]) {
-        if ([ options[kAuthenticationType] isEqualToString:kBiometrics ]) {
-            return LAPolicyDeviceOwnerAuthenticationWithBiometrics;
-        }
+  if (options && options[kAuthenticationType]) {
+    if ([ options[kAuthenticationType] isEqualToString:kBiometrics ]) {
+      return LAPolicyDeviceOwnerAuthenticationWithBiometrics;
     }
-    return LAPolicyDeviceOwnerAuthentication;
+  }
+  return LAPolicyDeviceOwnerAuthentication;
 }
 
 SecAccessControlCreateFlags secureAccessControl(NSDictionary *options)
 {
-    if (options && options[kAccessControlType]) {
-        if ([ options[kAccessControlType] isEqualToString: kAccessControlUserPresence ]) {
-            return kSecAccessControlUserPresence;
-        }
-        else if ([ options[kAccessControlType] isEqualToString: kAccessControlTouchIDAny ]) {
-            return kSecAccessControlTouchIDAny;
-        }
-        else if ([ options[kAccessControlType] isEqualToString: kAccessControlTouchIDCurrentSet ]) {
-            return kSecAccessControlTouchIDCurrentSet;
-        }
-        else if ([ options[kAccessControlType] isEqualToString: kAccessControlDevicePasscode ]) {
-            return kSecAccessControlDevicePasscode;
-        }
-        else if ([ options[kAccessControlType] isEqualToString: kAccessControlTouchIDAnyOrDevicePasscode ]) {
-            return kSecAccessControlTouchIDAny|kSecAccessControlOr|kSecAccessControlDevicePasscode;
-        }
-        else if ([ options[kAccessControlType] isEqualToString: kAccessControlTouchIDCurrentSetOrDevicePasscode ]) {
-            return kSecAccessControlTouchIDCurrentSet|kSecAccessControlOr|kSecAccessControlDevicePasscode;
-        }
+  if (options && options[kAccessControlType]) {
+    if ([ options[kAccessControlType] isEqualToString: kAccessControlUserPresence ]) {
+      return kSecAccessControlUserPresence;
     }
-    return kSecAccessControlTouchIDCurrentSet|kSecAccessControlOr|kSecAccessControlDevicePasscode;
+    else if ([ options[kAccessControlType] isEqualToString: kAccessControlTouchIDAny ]) {
+      return kSecAccessControlTouchIDAny;
+    }
+    else if ([ options[kAccessControlType] isEqualToString: kAccessControlTouchIDCurrentSet ]) {
+      return kSecAccessControlTouchIDCurrentSet;
+    }
+    else if ([ options[kAccessControlType] isEqualToString: kAccessControlDevicePasscode ]) {
+      return kSecAccessControlDevicePasscode;
+    }
+    else if ([ options[kAccessControlType] isEqualToString: kAccessControlTouchIDAnyOrDevicePasscode ]) {
+      return kSecAccessControlTouchIDAny|kSecAccessControlOr|kSecAccessControlDevicePasscode;
+    }
+    else if ([ options[kAccessControlType] isEqualToString: kAccessControlTouchIDCurrentSetOrDevicePasscode ]) {
+      return kSecAccessControlTouchIDCurrentSet|kSecAccessControlOr|kSecAccessControlDevicePasscode;
+    }
+  }
+  return kSecAccessControlTouchIDCurrentSet|kSecAccessControlOr|kSecAccessControlDevicePasscode;
 }
 
 //LAPolicyDeviceOwnerAuthenticationWithBiometrics | LAPolicyDeviceOwnerAuthentication
@@ -166,16 +167,16 @@ SecAccessControlCreateFlags secureAccessControl(NSDictionary *options)
 
 RCT_EXPORT_METHOD(canCheckAuthentication:(NSDictionary *)options resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
 {
-    LAPolicy policyToEvaluate = authPolicy(options);
-    
-    NSError *aerr = nil;
-    BOOL canBeProtected = [self canCheckAuthentication:policyToEvaluate error:&aerr ];
-    
-    if (aerr || !canBeProtected) {
-        return resolve(@(NO));
-    } else {
-        return resolve(@(YES));
-    }
+  LAPolicy policyToEvaluate = authPolicy(options);
+
+  NSError *aerr = nil;
+  BOOL canBeProtected = [self canCheckAuthentication:policyToEvaluate error:&aerr ];
+
+  if (aerr || !canBeProtected) {
+    return resolve(@(NO));
+  } else {
+    return resolve(@(YES));
+  }
 }
 
 RCT_EXPORT_METHOD(getSupportedBiometryType:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
@@ -187,131 +188,131 @@ RCT_EXPORT_METHOD(getSupportedBiometryType:(RCTPromiseResolveBlock)resolve rejec
   if (!aerr && canBeProtected) {
     if (@available(iOS 11, *)) {
       if (context.biometryType == LABiometryTypeFaceID) {
-        return resolve(@"FaceID");
+        return resolve(kBiometryTypeFaceID);
       }
     }
-    return resolve(@"TouchID");
+    return resolve(kBiometryTypeTouchID);
   }
   return resolve([NSNull null]);
 }
 
 - (BOOL) canCheckAuthentication:(LAPolicy)policyToEvaluate error:(NSError **)err {
-    return [[[ LAContext alloc] init ] canEvaluatePolicy:policyToEvaluate error:err ];
+  return [[[ LAContext alloc] init ] canEvaluatePolicy:policyToEvaluate error:err ];
 }
 
 RCT_EXPORT_METHOD(setSecurePasswordForService:(NSString *)service withUsername:(NSString *)username withPassword:(NSString *)password withOptions:(NSDictionary *)options resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
 {
-    // Delete old entry for that key if Available
-    NSError *aerr = nil;
-    BOOL canAuthenticate = [ self canCheckAuthentication:LAPolicyDeviceOwnerAuthentication error:&aerr ];
-    if (aerr || !canAuthenticate) {
-        return rejectWithError(reject, aerr);
-    }
-    
-    NSMutableDictionary *dict = @{ (__bridge NSString *)kSecClass : (__bridge id)(kSecClassGenericPassword),
-                                   (__bridge NSString *)kSecAttrService: service,
-                                   (__bridge NSString *)kSecReturnAttributes: (__bridge id)kCFBooleanTrue
-                                   }.mutableCopy;
-    
-    OSStatus osStatus = SecItemDelete((__bridge CFDictionaryRef) dict);
-    
-    // make new entry
-    dict = @{ (__bridge NSString *)kSecClass : (__bridge id)(kSecClassGenericPassword),
-              (__bridge NSString *)kSecAttrService : service,
-              (__bridge NSString *)kSecAttrAccount : username
-              }.mutableCopy;
-    
-    CFErrorRef error = NULL;
-    SecAccessControlRef sacRef = SecAccessControlCreateWithFlags(kCFAllocatorDefault,
-                                                                 kSecAttrAccessibleWhenUnlockedThisDeviceOnly, //kSecAttrAccessibleWhenPasscodeSetThisDeviceOnly,
-                                                                 secureAccessControl(options),
-                                                                 &error);
-    
-    if (error) {
-        // ok: failed
-        return rejectWithError(reject, aerr);
-    }
-    
-    NSData *passwordData = [password dataUsingEncoding:NSUTF8StringEncoding];
-    [ dict setObject:(__bridge id)sacRef forKey:kSecAttrAccessControl ];
-    
-    [ dict setObject:passwordData forKey:kSecValueData ];
-    
-    // Try to save to keychain
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        OSStatus osStatus = SecItemAdd((__bridge CFDictionaryRef) dict, NULL);
-        
-        dispatch_async(dispatch_get_main_queue(), ^{
-            if (osStatus != noErr && osStatus != errSecItemNotFound) {
-                NSError *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:osStatus userInfo:nil];
-                return rejectWithError(reject, error);
-            } else {
-                return resolve(@(YES));
-            }
-        });
-        
+  // Delete old entry for that key if Available
+  NSError *aerr = nil;
+  BOOL canAuthenticate = [ self canCheckAuthentication:LAPolicyDeviceOwnerAuthentication error:&aerr ];
+  if (aerr || !canAuthenticate) {
+    return rejectWithError(reject, aerr);
+  }
+
+  NSMutableDictionary *dict = @{ (__bridge NSString *)kSecClass : (__bridge id)(kSecClassGenericPassword),
+                                 (__bridge NSString *)kSecAttrService: service,
+                                 (__bridge NSString *)kSecReturnAttributes: (__bridge id)kCFBooleanTrue
+                                 }.mutableCopy;
+
+  OSStatus osStatus = SecItemDelete((__bridge CFDictionaryRef) dict);
+
+  // make new entry
+  dict = @{ (__bridge NSString *)kSecClass : (__bridge id)(kSecClassGenericPassword),
+            (__bridge NSString *)kSecAttrService : service,
+            (__bridge NSString *)kSecAttrAccount : username
+            }.mutableCopy;
+
+  CFErrorRef error = NULL;
+  SecAccessControlRef sacRef = SecAccessControlCreateWithFlags(kCFAllocatorDefault,
+                                                               kSecAttrAccessibleWhenUnlockedThisDeviceOnly, //kSecAttrAccessibleWhenPasscodeSetThisDeviceOnly,
+                                                               secureAccessControl(options),
+                                                               &error);
+
+  if (error) {
+    // ok: failed
+    return rejectWithError(reject, aerr);
+  }
+
+  NSData *passwordData = [password dataUsingEncoding:NSUTF8StringEncoding];
+  [dict setObject:(__bridge id)sacRef forKey:kSecAttrAccessControl];
+
+  [dict setObject:passwordData forKey:kSecValueData];
+
+  // Try to save to keychain
+  dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+    OSStatus osStatus = SecItemAdd((__bridge CFDictionaryRef) dict, NULL);
+
+    dispatch_async(dispatch_get_main_queue(), ^{
+      if (osStatus != noErr && osStatus != errSecItemNotFound) {
+        NSError *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:osStatus userInfo:nil];
+        return rejectWithError(reject, error);
+      } else {
+        return resolve(@(YES));
+      }
     });
+
+  });
 }
 
 RCT_EXPORT_METHOD(getSecurePasswordForService:(NSString *)service withOptions:(NSDictionary *)options resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
 {
-    NSString *promptMessage = @"Authenticate to retrieve secret!";
-    if (options && options[kCustomPromptMessage]) {
-        promptMessage = options[kCustomPromptMessage];
-    }
-    
-    NSMutableDictionary *dict = @{ (__bridge NSString *)kSecClass : (__bridge id)(kSecClassGenericPassword),
-                                   (__bridge NSString *)kSecAttrService : service,
-                                   (__bridge NSString *)kSecReturnAttributes : (__bridge id)kCFBooleanTrue,
-                                   (__bridge NSString *)kSecReturnData : (__bridge id)kCFBooleanTrue,
-                                   (__bridge NSString *)kSecMatchLimit : (__bridge NSString *)kSecMatchLimitOne,
-                                   (__bridge NSString *)kSecUseOperationPrompt : promptMessage
-                                   }.mutableCopy;
-    
-    // Notify AppDelegate
+  NSString *promptMessage = @"Authenticate to retrieve secret!";
+  if (options && options[kCustomPromptMessage]) {
+    promptMessage = options[kCustomPromptMessage];
+  }
+
+  NSMutableDictionary *dict = @{ (__bridge NSString *)kSecClass : (__bridge id)(kSecClassGenericPassword),
+                                 (__bridge NSString *)kSecAttrService : service,
+                                 (__bridge NSString *)kSecReturnAttributes : (__bridge id)kCFBooleanTrue,
+                                 (__bridge NSString *)kSecReturnData : (__bridge id)kCFBooleanTrue,
+                                 (__bridge NSString *)kSecMatchLimit : (__bridge NSString *)kSecMatchLimitOne,
+                                 (__bridge NSString *)kSecUseOperationPrompt : promptMessage
+                                 }.mutableCopy;
+
+  // Notify AppDelegate
+  dispatch_async(dispatch_get_main_queue(), ^{
+    [ self notifyAuthenticationListener: YES ];
+  });
+
+  // Look up password for service in the keychain
+  dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+    __block NSDictionary* found = nil;
+    CFTypeRef foundTypeRef = NULL;
+    OSStatus osStatus = SecItemCopyMatching((__bridge CFDictionaryRef) dict, (CFTypeRef*)&foundTypeRef);
+
     dispatch_async(dispatch_get_main_queue(), ^{
-        [ self notifyAuthenticationListener: YES ];
+      [ self notifyAuthenticationListener: NO ];
+
+      if (osStatus != noErr && osStatus != errSecItemNotFound) {
+        NSError *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:osStatus userInfo:nil];
+        return rejectWithError(reject, error);
+      }
+
+      found = (__bridge NSDictionary*)(foundTypeRef);
+      if (!found) {
+        return resolve(@(NO));
+      }
+
+      // Found
+      NSString* username = (NSString *) [found objectForKey:(__bridge id)(kSecAttrAccount)];
+      NSString* password = [[NSString alloc] initWithData:[found objectForKey:(__bridge id)(kSecValueData)] encoding:NSUTF8StringEncoding];
+
+      return resolve(@{
+                       @"service": service,
+                       @"username": username,
+                       @"password": password
+                       });
     });
-    
-    // Look up password for service in the keychain
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        __block NSDictionary* found = nil;
-        CFTypeRef foundTypeRef = NULL;
-        OSStatus osStatus = SecItemCopyMatching((__bridge CFDictionaryRef) dict, (CFTypeRef*)&foundTypeRef);
-        
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [ self notifyAuthenticationListener: NO ];
-            
-            if (osStatus != noErr && osStatus != errSecItemNotFound) {
-                NSError *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:osStatus userInfo:nil];
-                return rejectWithError(reject, error);
-            }
-            
-            found = (__bridge NSDictionary*)(foundTypeRef);
-            if (!found) {
-                return resolve(@(NO));
-            }
-            
-            // Found
-            NSString* username = (NSString *) [found objectForKey:(__bridge id)(kSecAttrAccount)];
-            NSString* password = [[NSString alloc] initWithData:[found objectForKey:(__bridge id)(kSecValueData)] encoding:NSUTF8StringEncoding];
-            
-            return resolve(@{
-                             @"service": service,
-                             @"username": username,
-                             @"password": password
-                             });
-        });
-        
-    });
+
+  });
 }
 
 - (void) notifyAuthenticationListener:(BOOL)willPresent {
-    id<UIApplicationDelegate> appDelegate = [ UIApplication sharedApplication ].delegate;
-    
-    if ([ appDelegate conformsToProtocol:@protocol(RNKeychainAuthenticationListener) ]) {
-        ((id<RNKeychainAuthenticationListener>)appDelegate).willPromptForAuthentication = willPresent;
-    }
+  id<UIApplicationDelegate> appDelegate = [ UIApplication sharedApplication ].delegate;
+
+  if ([ appDelegate conformsToProtocol:@protocol(RNKeychainAuthenticationListener) ]) {
+    ((id<RNKeychainAuthenticationListener>)appDelegate).willPromptForAuthentication = willPresent;
+  }
 }
 
 #pragma mark - RNKeychain
@@ -360,11 +361,11 @@ RCT_EXPORT_METHOD(getGenericPasswordForOptions:(NSDictionary *)options resolver:
   if (options && options[@"accessGroup"]) {
     [dict setObject:options[@"accessGroup"] forKey:kSecAttrAccessGroup];
   }
-    
-    // secure compatibility with TouchId / Passcode secured stored items
-    // http://stackoverflow.com/questions/42339000/ksecuseauthenticationuiskip-how-to-use-it
-    // Silently skip any items that require user authentication. Only use this value with the SecItemCopyMatching function.
-    [ dict setObject:kSecUseAuthenticationUISkip forKey:kSecUseAuthenticationUI ];
+
+  // secure compatibility with TouchId / Passcode secured stored items
+  // http://stackoverflow.com/questions/42339000/ksecuseauthenticationuiskip-how-to-use-it
+  // Silently skip any items that require user authentication. Only use this value with the SecItemCopyMatching function.
+  [dict setObject:kSecUseAuthenticationUISkip forKey:kSecUseAuthenticationUI];
 
   // Look up server in the keychain
   NSDictionary* found = nil;
@@ -454,11 +455,11 @@ RCT_EXPORT_METHOD(getInternetCredentialsForServer:(NSString *)server withOptions
   if (options && options[@"accessGroup"]) {
     [dict setObject:options[@"accessGroup"] forKey:kSecAttrAccessGroup];
   }
-    
-    // secure compatibility with TouchId / Passcode secured stored items
-    // http://stackoverflow.com/questions/42339000/ksecuseauthenticationuiskip-how-to-use-it
-    // Silently skip any items that require user authentication. Only use this value with the SecItemCopyMatching function.
-    [ dict setObject:kSecUseAuthenticationUISkip forKey:kSecUseAuthenticationUI ];
+
+  // secure compatibility with TouchId / Passcode secured stored items
+  // http://stackoverflow.com/questions/42339000/ksecuseauthenticationuiskip-how-to-use-it
+  // Silently skip any items that require user authentication. Only use this value with the SecItemCopyMatching function.
+  [dict setObject:kSecUseAuthenticationUISkip forKey:kSecUseAuthenticationUI];
 
   // Look up server in the keychain
   NSDictionary *found = nil;
@@ -517,7 +518,6 @@ RCT_EXPORT_METHOD(requestSharedWebCredentials:(RCTPromiseResolveBlock)resolve re
     }
 
     if (CFArrayGetCount(credentials) > 0) {
-
       CFDictionaryRef credentialDict = CFArrayGetValueAtIndex(credentials, 0);
       NSString *server = (__bridge NSString *)CFDictionaryGetValue(credentialDict, kSecAttrServer);
       NSString *username = (__bridge NSString *)CFDictionaryGetValue(credentialDict, kSecAttrAccount);
