@@ -41,12 +41,6 @@ type SecAccessible =
   | 'AccessibleAfterFirstUnlockThisDeviceOnly'
   | 'AccessibleAlwaysThisDeviceOnly';
 
-type Options = {
-  accessGroup?: string,
-  accessible?: SecAccessible,
-  service?: string,
-};
-
 type SecAccessControl =
   | 'UserPresence'
   | 'BiometryAny'
@@ -58,9 +52,10 @@ type SecAccessControl =
 
 type LAPolicy = 'Authentication' | 'AuthenticationWithBiometrics';
 
-type SecureOptions = {
+type Options = {
   accessControl?: SecAccessControl,
   accessGroup?: string,
+  accessible?: SecAccessible,
   authenticationPrompt?: string,
   authenticationType?: LAPolicy,
   service?: string,
@@ -72,7 +67,7 @@ type SecureOptions = {
  * @param {object} options LAPolicy option, iOS only
  * @return {Promise} Resolves to `true` when supported, otherwise `false`
  */
-export function canImplyAuthentication(options?: SecureOptions): Promise {
+export function canImplyAuthentication(options?: Options): Promise {
   if (RNKeychainManager.canCheckAuthentication) {
     return Promise.reject(
       new Error(`canImplyAuthentication() is not supported on this platform`)
@@ -91,50 +86,6 @@ export function getSupportedBiometryType(): Promise {
     return Promise.resolve(null);
   }
   return RNKeychainManager.getSupportedBiometryType();
-}
-
-/**
- * Saves the `username` and `password` combination securely - needs authentication to retrieve it.
- * @param {string} username Associated username or e-mail to be saved.
- * @param {string} password Associated password to be saved.
- * @param {object} options Keychain options, iOS only
- * @return {Promise} Resolves to `true` when successful
- */
-export function setPasswordWithAuthentication(
-  username: string,
-  password: string,
-  options?: SecureOptions
-): Promise {
-  if (Platform.OS !== 'ios') {
-    return Promise.reject(
-      new Error(
-        `setPasswordWithAuthentication() is not supported on ${Platform.OS} yet`
-      )
-    );
-  }
-  return RNKeychainManager.setPasswordWithAuthentication(
-    options,
-    username,
-    password
-  );
-}
-
-/**
- * Fetches login combination for `service` - demands for authentication if necessary.
- * @param {string|object} serviceOrOptions Reverse domain name qualifier for the service, defaults to `bundleId` or an options object.
- * @return {Promise} Resolves to `{ service, username, password }` when successful
- */
-export function getPasswordWithAuthentication(
-  options?: SecureOptions
-): Promise {
-  if (Platform.OS !== 'ios') {
-    return Promise.reject(
-      new Error(
-        `getPasswordWithAuthentication() is not supported on ${Platform.OS} yet`
-      )
-    );
-  }
-  return RNKeychainManager.getPasswordWithAuthentication(options);
 }
 
 /**
@@ -185,7 +136,7 @@ export function resetInternetCredentials(
   return RNKeychainManager.resetInternetCredentialsForServer(server, options);
 }
 
-function getOptionsArgument(serviceOrOptions?: string | KeychainOptions) {
+function getOptionsArgument(serviceOrOptions?: string | Options) {
   if (Platform.OS !== 'ios') {
     return typeof serviceOrOptions === 'object'
       ? serviceOrOptions.service
@@ -206,7 +157,7 @@ function getOptionsArgument(serviceOrOptions?: string | KeychainOptions) {
 export function setGenericPassword(
   username: string,
   password: string,
-  serviceOrOptions?: string | KeychainOptions
+  serviceOrOptions?: string | Options
 ): Promise {
   return RNKeychainManager.setGenericPasswordForOptions(
     getOptionsArgument(serviceOrOptions),
@@ -221,7 +172,7 @@ export function setGenericPassword(
  * @return {Promise} Resolves to `{ service, username, password }` when successful
  */
 export function getGenericPassword(
-  serviceOrOptions?: string | KeychainOptions
+  serviceOrOptions?: string | Options
 ): Promise {
   return RNKeychainManager.getGenericPasswordForOptions(
     getOptionsArgument(serviceOrOptions)
@@ -234,7 +185,7 @@ export function getGenericPassword(
  * @return {Promise} Resolves to `true` when successful
  */
 export function resetGenericPassword(
-  serviceOrOptions?: string | KeychainOptions
+  serviceOrOptions?: string | Options
 ): Promise {
   return RNKeychainManager.resetGenericPasswordForOptions(
     getOptionsArgument(serviceOrOptions)

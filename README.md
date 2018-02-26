@@ -127,12 +127,12 @@ Keychain
 
 | Key | Applies to | Description | Default |
 |---|---|---|---|
-|**`accessControl`**|`PasswordWithAuthentication`|This dictates how a keychain item may be used, see possible values in `Keychain.ACCESS_CONTROL`. |*`Keychain.ACCESS_CONTROL.TOUCH_ID_CURRENT_SET_OR_DEVICE_PASSCODE`*|
-|**`accessible`**|`GenericPassword`, `InternetCredentials`|This dictates when a keychain item is accessible, see possible values in `Keychain.ACCESSIBLE`. |*`Keychain.ACCESSIBLE.WHEN_UNLOCKED`*|
-|**`accessGroup`**|`GenericPassword`, `InternetCredentials`, `PasswordWithAuthentication`|In which App Group to share the keychain. Requires additional setup with entitlements. |*None*|
-|**`authenticationPrompt`**|`PasswordWithAuthentication`|What to prompt the user when unlocking the keychain with biometry or device password. |`Authenticate to retrieve secret!`|
+|**`accessControl`**|`setGenericPassword`, `setInternetCredentials`|This dictates how a keychain item may be used, see possible values in `Keychain.ACCESS_CONTROL`. |*None*|
+|**`accessible`**|`setGenericPassword`, `setInternetCredentials`|This dictates when a keychain item is accessible, see possible values in `Keychain.ACCESSIBLE`. |*`Keychain.ACCESSIBLE.WHEN_UNLOCKED`*|
+|**`accessGroup`**|`setGenericPassword`, `setInternetCredentials`|In which App Group to share the keychain. Requires additional setup with entitlements. |*None*|
+|**`authenticationPrompt`**|`getGenericPassword`, `getInternetCredentials`|What to prompt the user when unlocking the keychain with biometry or device password. |`Authenticate to retrieve secret`|
 |**`authenticationType`**|`canImplyAuthentication`|Policies specifying which forms of authentication are acceptable. |`Keychain.AUTHENTICATION_TYPE.DEVICE_PASSCODE_OR_BIOMETRICS`|
-|**`service`**|`GenericPassword`, `PasswordWithAuthentication`|Reverse domain name qualifier for the service associated with password. |*App bundle ID*|
+|**`service`**|`setGenericPassword`, `getGenericPassword`|Reverse domain name qualifier for the service associated with password. |*App bundle ID*|
 
 #### `Keychain.ACCESS_CONTROL` enum
 

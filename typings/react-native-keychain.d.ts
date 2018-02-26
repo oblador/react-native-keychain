@@ -11,7 +11,7 @@ declare module 'react-native-keychain' {
         password: string;
     }
 
-    export interface SecureOptions {
+    export interface Options {
         accessControl?: string;
         accessGroup?: string;
         authenticationPrompt?: string;
@@ -20,26 +20,17 @@ declare module 'react-native-keychain' {
     }
 
     function canImplyAuthentication(
-        options?: SecureOptions
+        options?: Options
     ): Promise<boolean>;
 
     function getSupportedBiometryType(
     ): Promise<string>;
 
-    function setSecurePassword(
-        username: string,
-        password: string,
-        options?: SecureOptions
-    ): Promise<boolean>;
-
-    function getSecurePassword(
-        options?: SecureOptions
-    ): Promise<boolean | {service: string, username: string, password: string}>;
-
     function setInternetCredentials(
         server: string,
         username: string,
-        password: string
+        password: string,
+        options?: Options
     ): Promise<void>;
 
     function getInternetCredentials(
@@ -53,15 +44,15 @@ declare module 'react-native-keychain' {
     function setGenericPassword(
         username: string,
         password: string,
-        service?: string
+        options?: Options
     ): Promise<boolean>;
 
     function getGenericPassword(
-        service?: string
+        options?: Options
     ): Promise<boolean | {service: string, username: string, password: string}>;
 
     function resetGenericPassword(
-        service?: string
+        options?: Options
     ): Promise<boolean>
 
     function requestSharedWebCredentials (

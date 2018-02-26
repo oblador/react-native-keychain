@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
+  SegmentedControlIOS,
   StyleSheet,
   Text,
   TextInput,
@@ -11,12 +12,16 @@ import {
 
 import * as Keychain from 'react-native-keychain';
 
+const ACCESS_CONTROL_OPTIONS = ['None', 'Passcode', 'Password'];
+const ACCESS_CONTROL_MAP = [null, Keychain.ACCESS_CONTROL.DEVICE_PASSCODE, Keychain.ACCESS_CONTROL.APPLICATION_PASSWORD, Keychain.ACCESS_CONTROL.BIOMETRY_CURRENT_SET]
+
 export default class KeychainExample extends Component {
   state = {
     username: '',
     password: '',
     status: '',
     biometryType: null,
+    accessControl: null,
   };
 
   componentDidMount() {
@@ -25,24 +30,13 @@ export default class KeychainExample extends Component {
     });
   }
 
-  async save() {
+  async save(accessControl) {
     try {
-      if (this.state.biometryType) {
-        await Keychain.setPasswordWithAuthentication(
-          this.state.username,
-          this.state.password,
-          {
-            accessControl:
-              Keychain.ACCESS_CONTROL.TOUCH_ID_ANY_OR_DEVICE_PASSCODE,
-            authenticationType: Keychain.AUTHENTICATION_TYPE.BIOMETRICS,
-          }
-        );
-      } else {
-        await Keychain.setGenericPassword(
-          this.state.username,
-          this.state.password
-        );
-      }
+      await Keychain.setGenericPassword(
+        this.state.username,
+        this.state.password,
+        { accessControl: this.state.accessControl }
+      );
       this.setState({ status: 'Credentials saved!' });
     } catch (err) {
       this.setState({ status: 'Could not save credentials, ' + err });
@@ -51,13 +45,7 @@ export default class KeychainExample extends Component {
 
   async load() {
     try {
-      const credentials = await (this.state.biometryType
-        ? Keychain.getPasswordWithAuthentication({
-            accessControl:
-              Keychain.ACCESS_CONTROL.TOUCH_ID_ANY_OR_DEVICE_PASSCODE,
-            authenticationType: Keychain.AUTHENTICATION_TYPE.BIOMETRICS,
-          })
-        : Keychain.getGenericPassword());
+      const credentials = await Keychain.getGenericPassword();
       if (credentials) {
         this.setState({ ...credentials, status: 'Credentials loaded!' });
       } else {
@@ -113,14 +101,24 @@ export default class KeychainExample extends Component {
               underlineColorAndroid="transparent"
             />
           </View>
+          {Platform.OS === 'ios' && (
+            <View style={styles.field}>
+              <Text style={styles.label}>Access Control</Text>
+              <SegmentedControlIOS
+                selectedIndex={0}
+                values={this.state.biometryType ? [...ACCESS_CONTROL_OPTIONS, this.state.biometryType] : ACCESS_CONTROL_OPTIONS}
+                onChange={({ nativeEvent }) => {
+                  this.setState({
+                    accessControl: ACCESS_CONTROL_MAP[nativeEvent.selectedSegmentIndex],
+                  });
+                }}
+              />
+            </View>
+          )}
           {!!this.state.status && (
             <Text style={styles.status}>{this.state.status}</Text>
           )}
-          {!!this.state.biometryType && (
-            <Text style={styles.biometryType}>
-              Supported biometry: {this.state.biometryType}
-            </Text>
-          )}
+
           <View style={styles.buttons}>
             <TouchableHighlight
               onPress={() => this.save()}
@@ -156,12 +154,11 @@ export default class KeychainExample extends Component {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#F5FCFF',
   },
   content: {
-    width: 250,
+    marginHorizontal: 20,
   },
   title: {
     fontSize: 28,
