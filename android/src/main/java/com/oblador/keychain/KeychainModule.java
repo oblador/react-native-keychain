@@ -30,6 +30,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     public static final String E_CRYPTO_FAILED = "E_CRYPTO_FAILED";
     public static final String E_KEYSTORE_ACCESS_ERROR = "E_KEYSTORE_ACCESS_ERROR";
     public static final String KEYCHAIN_MODULE = "RNKeychainManager";
+    public static final String SERVICE_KEY = "service";
     public static final String EMPTY_STRING = "";
 
     private final Map<String, CipherStorage> cipherStorageMap = new HashMap<>();
@@ -52,13 +53,11 @@ public class KeychainModule extends ReactContextBaseJavaModule {
         cipherStorageMap.put(cipherStorage.getCipherStorageName(), cipherStorage);
     }
 
-    @ReactMethod
-    public void setGenericPasswordForOptions(String service, String username, String password, Promise promise) {
+    private void setPassword(@NonNull String service, String username, String password, Promise promise) {
         try {
             if (username == null || username.isEmpty() || password == null || password.isEmpty()) {
                 throw new EmptyParameterException("you passed empty or null username/password");
             }
-            service = getDefaultServiceIfNull(service);
 
             CipherStorage currentCipherStorage = getCipherStorageForCurrentAPILevel();
 
@@ -75,11 +74,8 @@ public class KeychainModule extends ReactContextBaseJavaModule {
         }
     }
 
-    @ReactMethod
-    public void getGenericPasswordForOptions(String service, Promise promise) {
+    private void getPassword(@NonNull String service, Promise promise) {
         try {
-            service = getDefaultServiceIfNull(service);
-
             CipherStorage currentCipherStorage = getCipherStorageForCurrentAPILevel();
 
             final DecryptionResult decryptionResult;
@@ -123,11 +119,8 @@ public class KeychainModule extends ReactContextBaseJavaModule {
         }
     }
 
-    @ReactMethod
-    public void resetGenericPasswordForOptions(String service, Promise promise) {
+    private void resetPassword(@NonNull String service, Promise promise) {
         try {
-            service = getDefaultServiceIfNull(service);
-
             // First we clean up the cipher storage (using the cipher storage that was used to store the entry)
             ResultSet resultSet = prefsStorage.getEncryptedEntry(service);
             if (resultSet != null) {
@@ -146,19 +139,38 @@ public class KeychainModule extends ReactContextBaseJavaModule {
         }
     }
 
+
+    @ReactMethod
+    public void setGenericPasswordForOptions(ReadableMap options, String username, String password, Promise promise) {
+        String service = getServiceFromOptions(options);
+        setPassword(service, username, password, promise);
+    }
+
+    @ReactMethod
+    public void getGenericPasswordForOptions(ReadableMap options, Promise promise) {
+        String service = getServiceFromOptions(options);
+        getPassword(service, promise);
+    }
+
+    @ReactMethod
+    public void resetGenericPasswordForOptions(ReadableMap options, Promise promise) {
+        String service = getServiceFromOptions(options);
+        resetPassword(service, promise);
+    }
+
     @ReactMethod
     public void setInternetCredentialsForServer(@NonNull String server, String username, String password, ReadableMap unusedOptions, Promise promise) {
-        setGenericPasswordForOptions(server, username, password, promise);
+        setPassword(server, username, password, promise);
     }
 
     @ReactMethod
     public void getInternetCredentialsForServer(@NonNull String server, ReadableMap unusedOptions, Promise promise) {
-        getGenericPasswordForOptions(server, promise);
+        getPassword(server, promise);
     }
 
     @ReactMethod
     public void resetInternetCredentialsForServer(@NonNull String server, ReadableMap unusedOptions, Promise promise) {
-        resetGenericPasswordForOptions(server, promise);
+        resetPassword(server, promise);
     }
 
     // The "Current" CipherStorage is the cipherStorage with the highest API level that is lower than or equal to the current API level
@@ -185,7 +197,10 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     }
 
     @NonNull
-    private String getDefaultServiceIfNull(String service) {
-        return service == null ? EMPTY_STRING : service;
+    private String getServiceFromOptions(ReadableMap options) {
+        if (options != null && options.hasKey(SERVICE_KEY) && !options.isNull(SERVICE_KEY)) {
+            return options.getString(SERVICE_KEY);
+        }
+        return EMPTY_STRING;
     }
 }
