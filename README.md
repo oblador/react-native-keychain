@@ -142,6 +142,7 @@ Keychain
 |**`BIOMETRY_ANY`**|Constraint to access an item with Touch ID for any enrolled fingers.|
 |**`BIOMETRY_CURRENT_SET`**|Constraint to access an item with Touch ID for currently enrolled fingers.|
 |**`DEVICE_PASSCODE`**|Constraint to access an item with a passcode.|
+|**`APPLICATION_PASSWORD`**|Constraint to use an application-provided password for data encryption key generation.|
 |**`BIOMETRY_ANY_OR_DEVICE_PASSCODE`**|Constraint to access an item with Touch ID for any enrolled fingers or passcode.|
 |**`BIOMETRY_CURRENT_SET_OR_DEVICE_PASSCODE`**|Constraint to access an item with Touch ID for currently enrolled fingers or passcode.|
 

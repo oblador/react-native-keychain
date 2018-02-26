@@ -129,6 +129,7 @@ NSString *accessGroupValue(NSDictionary *options)
 #define kAccessControlBiometryAny @"BiometryAny"
 #define kAccessControlBiometryCurrentSet @"BiometryCurrentSet"
 #define kAccessControlDevicePasscode @"DevicePasscode"
+#define kAccessControlApplicationPassword @"ApplicationPassword"
 #define kAccessControlBiometryAnyOrDevicePasscode @"BiometryAnyOrDevicePasscode"
 #define kAccessControlBiometryCurrentSetOrDevicePasscode @"BiometryCurrentSetOrDevicePasscode"
 
@@ -167,6 +168,9 @@ SecAccessControlCreateFlags secureAccessControl(NSDictionary *options)
     }
     else if ([ options[kAccessControlType] isEqualToString: kAccessControlBiometryCurrentSetOrDevicePasscode ]) {
       return kSecAccessControlTouchIDCurrentSet|kSecAccessControlOr|kSecAccessControlDevicePasscode;
+    }
+    else if ([ options[kAccessControlType] isEqualToString: kAccessControlApplicationPassword ]) {
+      return kSecAccessControlApplicationPassword;
     }
   }
   return kSecAccessControlTouchIDCurrentSet|kSecAccessControlOr|kSecAccessControlDevicePasscode;

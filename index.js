@@ -17,6 +17,7 @@ export const ACCESS_CONTROL = {
   BIOMETRY_ANY: 'BiometryAny',
   BIOMETRY_CURRENT_SET: 'BiometryCurrentSet',
   DEVICE_PASSCODE: 'DevicePasscode',
+  APPLICATION_PASSWORD: 'ApplicationPassword',
   BIOMETRY_ANY_OR_DEVICE_PASSCODE: 'BiometryAnyOrDevicePasscode',
   BIOMETRY_CURRENT_SET_OR_DEVICE_PASSCODE: 'BiometryCurrentSetOrDevicePasscode',
 };
@@ -51,6 +52,7 @@ type SecAccessControl =
   | 'BiometryAny'
   | 'BiometryCurrentSet'
   | 'DevicePasscode'
+  | 'ApplicationPassword'
   | 'BiometryAnyOrDevicePasscode'
   | 'BiometryCurrentSetOrDevicePasscode';
 
