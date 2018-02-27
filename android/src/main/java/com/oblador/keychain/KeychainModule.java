@@ -20,6 +20,7 @@ import com.oblador.keychain.cipherStorage.CipherStorageKeystoreAESCBC;
 import com.oblador.keychain.exceptions.CryptoFailedException;
 import com.oblador.keychain.exceptions.EmptyParameterException;
 import com.oblador.keychain.exceptions.KeyStoreAccessException;
+import com.oblador.keychain.DeviceAvailability;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -29,7 +30,9 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     public static final String E_EMPTY_PARAMETERS = "E_EMPTY_PARAMETERS";
     public static final String E_CRYPTO_FAILED = "E_CRYPTO_FAILED";
     public static final String E_KEYSTORE_ACCESS_ERROR = "E_KEYSTORE_ACCESS_ERROR";
+    public static final String E_SUPPORTED_BIOMETRY_ERROR = "E_SUPPORTED_BIOMETRY_ERROR";
     public static final String KEYCHAIN_MODULE = "RNKeychainManager";
+    public static final String FINGERPRINT_SUPPORTED_NAME = "Fingerprint";
     public static final String EMPTY_STRING = "";
 
     private final Map<String, CipherStorage> cipherStorageMap = new HashMap<>();
@@ -161,6 +164,21 @@ public class KeychainModule extends ReactContextBaseJavaModule {
         resetGenericPasswordForOptions(server, promise);
     }
 
+    @ReactMethod
+    public void getSupportedBiometryType(Promise promise) {
+        try {
+            boolean fingerprintAuthAvailable = isFingerprintAuthAvailable();
+            if (fingerprintAuthAvailable) {
+                promise.resolve(FINGERPRINT_SUPPORTED_NAME);
+            } else {
+                promise.resolve(null);
+            }
+        } catch (Exception e) {
+            Log.e(KEYCHAIN_MODULE, e.getMessage());
+            promise.reject(E_SUPPORTED_BIOMETRY_ERROR, e);
+        }
+    }
+
     // The "Current" CipherStorage is the cipherStorage with the highest API level that is lower than or equal to the current API level
     private CipherStorage getCipherStorageForCurrentAPILevel() throws CryptoFailedException {
         int currentAPILevel = Build.VERSION.SDK_INT;
@@ -182,6 +200,10 @@ public class KeychainModule extends ReactContextBaseJavaModule {
 
     private CipherStorage getCipherStorageByName(String cipherStorageName) {
         return cipherStorageMap.get(cipherStorageName);
+    }
+
+    private boolean isFingerprintAuthAvailable() {
+        return DeviceAvailability.isFingerprintAuthAvailable(getCurrentActivity());
     }
 
     @NonNull

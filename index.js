@@ -30,6 +30,7 @@ export const AUTHENTICATION_TYPE = {
 export const BIOMETRY_TYPE = {
   TOUCH_ID: 'TouchID',
   FACE_ID: 'FaceID',
+  FINGERPRINT: 'Fingerprint',
 };
 
 type SecAccessible =

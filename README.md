@@ -133,6 +133,7 @@ Get what type of hardware biometry support the device has. Resolves to a `Keycha
 |-----|-------------|
 |**`TOUCH_ID`**|Device supports authentication with Touch ID.|
 |**`FACE_ID`**|Device supports authentication with Face ID.|
+|**`FINGERPRINT`**|Device supports authentication with Android Fingerprint.|
 
 ## Manual Installation
 
