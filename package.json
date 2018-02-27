@@ -1,6 +1,6 @@
 {
   "name": "react-native-keychain",
-  "version": "2.0.0",
+  "version": "3.0.0-rc.1",
   "description": "Keychain Access for React Native",
   "main": "index.js",
   "scripts": {
