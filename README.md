@@ -4,135 +4,97 @@
 
 [![Travis](https://img.shields.io/travis/oblador/react-native-keychain.svg)](https://travis-ci.org/oblador/react-native-keychain) [![npm](https://img.shields.io/npm/v/react-native-keychain.svg)](https://npmjs.com/package/react-native-keychain) [![npm](https://img.shields.io/npm/dm/react-native-keychain.svg)](https://npmjs.com/package/react-native-keychain)
 
-Keychain Access for React Native. Currently functionality is limited to just storing internet and generic passwords.
-
-### New 2.0.0 with improved android implementation
-
-The KeychainModule will now automatically use the appropriate CipherStorage implementation based on API level:
-
-* API level 16-22 will en/de crypt using Facebook Conceal
-* API level 23+ will en/de crypt using Android Keystore
-
-Encrypted data is stored in SharedPreferences.
+Keychain/Keystore Access for React Native. 
 
 ## Installation
 
-1 . `$ npm install --save react-native-keychain`
+1. `$ yarn add react-native-keychain`
+2. `$ react-native link react-native-keychain` and check `MainApplication.java` to verify the package was added.
+3. Rebuild your project with `react-native run-ios/android`
 
-or
-
-`$ yarn add react-native-keychain`
-
-
-2 . `$ react-native link react-native-keychain` and check `MainApplication.java` to verify the package was added.
-
-3 .  rebuild your project
-
-
-* on Android, the `setInternetCredentials(server, username, password)` call will be resolved as call to `setGenericPassword(username, password, server)`. Use the `server` argument to distinguish between multiple entries.
-
-Check out the "releases" tab for breaking changes and RN version compatibility. v1.0.0 is for RN >= 0.40
-
-## ❗ Enable `Keychain Sharing` entitlement for iOS 10
-
-For iOS 10 you'll need to enable the `Keychain Sharing` entitlement in the `Capabilities` section of your build target. (See screenshot). Otherwise you'll experience the error shown below.
-
-![screen shot 2016-09-16 at 20 56 33](https://cloud.githubusercontent.com/assets/512692/18597833/15316342-7c50-11e6-92e7-781651e61563.png)
-
-```
-Error: {
-    code = "-34018";
-    domain = NSOSStatusErrorDomain;
-    message = "The operation couldn\U2019t be completed. (OSStatus error -34018.)";
-}
-```
-
+See manual installation below if you have issues with `react-native link`.
 
 ## Usage
-
-See `KeychainExample` for fully working project example.
-
-Both `setGenericPassword` and `setInternetCredentials` allow to store strings only!
-
-Both `getInternetCredentials` and `getGenericPassword` will resolve to the stored value, or to false, in case there is no record stored. They will reject only if an unexpected error is encountered.
 
 ```js
 import * as Keychain from 'react-native-keychain';
 
-const username = 'zuck';
-const password = 'poniesRgr8';
+async () => {
+  const username = 'zuck';
+  const password = 'poniesRgr8';
 
-// Generic Password, service argument optional
-Keychain
-  .setGenericPassword(username, password)
-  .then(function() {
-    console.log('Credentials saved successfully!');
-  });
+  // Store the credentials
+  await Keychain.setGenericPassword(username, password);
 
-// service argument optional
-Keychain
-  .getGenericPassword()
-  .then(function(credentials) {
-    console.log('Credentials successfully loaded for user ' + credentials.username);
-  }).catch(function(error) {
-    console.log('Keychain couldn\'t be accessed!', error);
-  });
-
-// service argument optional
-Keychain
-  .resetGenericPassword()
-  .then(function() {
-    console.log('Credentials successfully deleted');
-  });
-
-// Internet Password, server argument required
-const server = 'http://facebook.com';
-Keychain
-  .setInternetCredentials(server, username, password)
-  .then(function() {
-    console.log('Credentials saved successfully!');
-  });
-
-Keychain
-  .getInternetCredentials(server)
-  .then(function(credentials) {
+  try {
+    // Retreive the credentials
+    const credentials = Keychain.getGenericPassword();
     if (credentials) {
       console.log('Credentials successfully loaded for user ' + credentials.username);
+    } else {
+      console.log('No credentials stored')
     }
-  });
-
-Keychain
-  .resetInternetCredentials(server)
-  .then(function() {
-    console.log('Credentials successfully deleted');
-  });
-
-Keychain
-  .requestSharedWebCredentials()
-  .then(function(credentials) {
-    if (credentials) {
-      console.log('Shared web credentials successfully loaded for user ' + credentials.username);
-    } 
-  })
-
-Keychain
-  .setSharedWebCredentials(server, username, password)
-  .then(function() {
-    console.log('Shared web credentials saved successfully!');
-  })
-
+  } catch (error) {
+    console.log('Keychain couldn\'t be accessed!', error);
+  }
+  await Keychain.resetGenericPassword()
+}
 ```
+
+See `KeychainExample` for fully working project example.
+
+Both `setGenericPassword` and `setInternetCredentials` are limited to strings only, so if you need to store objects etc, please use `JSON.stringify`/`JSON.parse` when you store/access it.
+
+### `setGenericPassword(username, password, [{ accessControl, accessible, accessGroup, service }])`
+
+Will store the username/password combination in the secure storage. Resolves to `{ username, password }` if an entry exists or `false` if it doesn't.
+
+### `getGenericPassword([{ authenticationPrompt, service }])`
+
+Will retreive the username/password combination from the secure storage. It will reject only if an unexpected error is encountered like lacking entitlements or permission.
+
+### `resetGenericPassword([{ service }])`
+
+Will remove the username/password combination from the secure storage.
+
+### `setInternetCredentials(server, username, password, [{ accessControl, accessible, accessGroup }])`
+
+Will store the server/username/password combination in the secure storage.
+
+### `getInternetCredentials(server, [{ authenticationPrompt }])`
+
+Will retreive the server/username/password combination from the secure storage. Resolves to `{ username, password }` if an entry exists or `false` if it doesn't. It will reject only if an unexpected error is encountered like lacking entitlements or permission.
+
+### `resetInternetCredentials(server)`
+
+Will remove the server/username/password combination from the secure storage.
+
+### `requestSharedWebCredentials()` (iOS only)
+
+Asks the user for a shared web credential. Requires additional setup both in the app and server side, see [Apple documentation](https://developer.apple.com/documentation/security/shared_web_credentials). Resolves to `{ server, username, password }` if approved and `false` if denied and throws an error if not supported on platform or there's no shared credentials.
+
+### `setSharedWebCredentials(server, username, password)` (iOS only)
+
+Sets a shared web credential. Resolves to `true` when successful.
+
+### `canImplyAuthentication([{ authenticationType }])`
+
+Inquire if the type of local authentication policy is supported on this device with the device settings the user chose. Should be used in combination with `accessControl` option in the setter functions. Resolves to `true` if supported.
+
+### `getSupportedBiometryType()`
+
+Get what type of hardware biometry support the device has. Resolves to a `Keychain.BIOMETRY_TYPE` value when supported, otherwise `null`.
 
 ### Options
 
-| Key | Applies to | Description | Default |
+| Key | Platform | Description | Default |
 |---|---|---|---|
-|**`accessControl`**|`setGenericPassword`, `setInternetCredentials`|This dictates how a keychain item may be used, see possible values in `Keychain.ACCESS_CONTROL`. |*None*|
-|**`accessible`**|`setGenericPassword`, `setInternetCredentials`|This dictates when a keychain item is accessible, see possible values in `Keychain.ACCESSIBLE`. |*`Keychain.ACCESSIBLE.WHEN_UNLOCKED`*|
-|**`accessGroup`**|`setGenericPassword`, `setInternetCredentials`|In which App Group to share the keychain. Requires additional setup with entitlements. |*None*|
-|**`authenticationPrompt`**|`getGenericPassword`, `getInternetCredentials`|What to prompt the user when unlocking the keychain with biometry or device password. |`Authenticate to retrieve secret`|
-|**`authenticationType`**|`canImplyAuthentication`|Policies specifying which forms of authentication are acceptable. |`Keychain.AUTHENTICATION_TYPE.DEVICE_PASSCODE_OR_BIOMETRICS`|
-|**`service`**|`setGenericPassword`, `getGenericPassword`|Reverse domain name qualifier for the service associated with password. |*App bundle ID*|
+|**`accessControl`**|iOS only|This dictates how a keychain item may be used, see possible values in `Keychain.ACCESS_CONTROL`. |*None*|
+|**`accessible`**|iOS only|This dictates when a keychain item is accessible, see possible values in `Keychain.ACCESSIBLE`. |*`Keychain.ACCESSIBLE.WHEN_UNLOCKED`*|
+|**`accessGroup`**|iOS only|In which App Group to share the keychain. Requires additional setup with entitlements. |*None*|
+|**`authenticationPrompt`**|iOS only|What to prompt the user when unlocking the keychain with biometry or device password. |`Authenticate to retrieve secret`|
+|**`authenticationType`**|iOS only|Policies specifying which forms of authentication are acceptable. |`Keychain.AUTHENTICATION_TYPE.DEVICE_PASSCODE_OR_BIOMETRICS`|
+|**`service`**|All|Reverse domain name qualifier for the service associated with password. |*App bundle ID*|
 
 #### `Keychain.ACCESS_CONTROL` enum
 
@@ -165,9 +127,12 @@ Keychain
 |**`DEVICE_PASSCODE_OR_BIOMETRICS`**|Device owner is going to be authenticated by biometry or device passcode.|
 |**`BIOMETRICS`**|Device owner is going to be authenticated using a biometric method (Touch ID or Face ID).|
 
-### Note on security
+#### `Keychain.BIOMETRY_TYPE` enum
 
-On API levels that do not support Android keystore, Facebook Conceal is used to en/decrypt stored data. The encrypted data is then stored in SharedPreferences. Since Conceal itself stores its encryption key in SharedPreferences, it follows that if the device is rooted (or if an attacker can somehow access the filesystem), the key can be obtained and the stored data can be decrypted. Therefore, on such a device, the conceal encryption is only an obscurity. On API level 23+ the key is stored in the Android Keystore, which makes the key non-exportable and therefore makes the entire process more secure. Follow best practices and do not store user credentials on a device. Instead use tokens or other forms of authentication and re-ask for user credentials before performing sensitive operations.
+| Key | Description |
+|-----|-------------|
+|**`TOUCH_ID`**|Device supports authentication with Touch ID.|
+|**`FACE_ID`**|Device supports authentication with Face ID.|
 
 ## Manual Installation
 
@@ -186,59 +151,73 @@ Add the following to your `Podfile` and run `pod update`:
 pod 'RNKeychain', :path => '../node_modules/react-native-keychain'
 ```
 
+#### Enable `Keychain Sharing` entitlement for iOS 10+
+
+For iOS 10 you'll need to enable the `Keychain Sharing` entitlement in the `Capabilities` section of your build target. (See screenshot). Otherwise you'll experience the error shown below.
+
+![screen shot 2016-09-16 at 20 56 33](https://cloud.githubusercontent.com/assets/512692/18597833/15316342-7c50-11e6-92e7-781651e61563.png)
+
+```
+Error: {
+  code = "-34018";
+  domain = NSOSStatusErrorDomain;
+  message = "The operation couldn\U2019t be completed. (OSStatus error -34018.)";
+}
+```
+
 ### Android
 
 #### Option: Manually
 
 * Edit `android/settings.gradle` to look like this (without the +):
 
-  ```diff
-  rootProject.name = 'MyApp'
+```diff
+rootProject.name = 'MyApp'
 
-  include ':app'
+include ':app'
 
-  + include ':react-native-keychain'
-  + project(':react-native-keychain').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-keychain/android')
-  ```
++ include ':react-native-keychain'
++ project(':react-native-keychain').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-keychain/android')
+```
 
 * Edit `android/app/build.gradle` (note: **app** folder) to look like this: 
 
-  ```diff
-  apply plugin: 'com.android.application'
+```diff
+apply plugin: 'com.android.application'
 
-  android {
-    ...
-  }
+android {
+  ...
+}
 
-  dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
-    compile 'com.android.support:appcompat-v7:23.0.1'
-    compile 'com.facebook.react:react-native:0.19.+'
-  + compile project(':react-native-keychain')
-  }
-  ```
+dependencies {
+  compile fileTree(dir: 'libs', include: ['*.jar'])
+  compile 'com.android.support:appcompat-v7:23.0.1'
+  compile 'com.facebook.react:react-native:0.19.+'
++ compile project(':react-native-keychain')
+}
+```
 
 * Edit your `MainApplication.java` (deep in `android/app/src/main/java/...`) to look like this (note **two** places to edit):
 
-  ```diff
-  package com.myapp;
+```diff
+package com.myapp;
 
-  + import com.oblador.keychain.KeychainPackage;
++ import com.oblador.keychain.KeychainPackage;
 
-  ....
+....
 
-  public class MainActivity extends extends ReactActivity {
+public class MainActivity extends extends ReactActivity {
 
-    @Override
-    protected List<ReactPackage> getPackages() {
-        return Arrays.<ReactPackage>asList(
-                new MainReactPackage(),
-  +             new KeychainPackage()
-        );
-    }
-    ...
+  @Override
+  protected List<ReactPackage> getPackages() {
+      return Arrays.<ReactPackage>asList(
+              new MainReactPackage(),
++             new KeychainPackage()
+      );
   }
-  ```
+  ...
+}
+```
   
 #### Proguard Rules
 
@@ -256,6 +235,23 @@ If so, add a proguard rule in `proguard-rules.pro`:
    *;
 }
 ```
+
+## Notes
+
+### Android 
+
+The module will automatically use the appropriate CipherStorage implementation based on API level:
+
+* API level 16-22 will en/de crypt using Facebook Conceal
+* API level 23+ will en/de crypt using Android Keystore
+
+Encrypted data is stored in SharedPreferences.
+
+The `setInternetCredentials(server, username, password)` call will be resolved as call to `setGenericPassword(username, password, server)`. Use the `server` argument to distinguish between multiple entries.
+
+### Security
+
+On API levels that do not support Android keystore, Facebook Conceal is used to en/decrypt stored data. The encrypted data is then stored in SharedPreferences. Since Conceal itself stores its encryption key in SharedPreferences, it follows that if the device is rooted (or if an attacker can somehow access the filesystem), the key can be obtained and the stored data can be decrypted. Therefore, on such a device, the conceal encryption is only an obscurity. On API level 23+ the key is stored in the Android Keystore, which makes the key non-exportable and therefore makes the entire process more secure. Follow best practices and do not store user credentials on a device. Instead use tokens or other forms of authentication and re-ask for user credentials before performing sensitive operations.
 
 ## Maintainers
 

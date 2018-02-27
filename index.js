@@ -75,8 +75,7 @@ export function canImplyAuthentication(options?: Options): Promise {
 }
 
 /**
- * Get what type of local authentication policy (LAPolicy) is supported
- * on this device with the device settings the user chose.
+ * Get what type of hardware biometry support the device has.
  * @return {Promise} Resolves to a `BIOMETRY_TYPE` when supported, otherwise `null`
  */
 export function getSupportedBiometryType(): Promise {
