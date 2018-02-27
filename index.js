@@ -68,10 +68,8 @@ type Options = {
  * @return {Promise} Resolves to `true` when supported, otherwise `false`
  */
 export function canImplyAuthentication(options?: Options): Promise {
-  if (RNKeychainManager.canCheckAuthentication) {
-    return Promise.reject(
-      new Error(`canImplyAuthentication() is not supported on this platform`)
-    );
+  if (!RNKeychainManager.canCheckAuthentication) {
+    return Promise.resolve(false);
   }
   return RNKeychainManager.canCheckAuthentication(options);
 }
