@@ -7,12 +7,13 @@ import android.hardware.fingerprint.FingerprintManager;
 
 public class DeviceAvailability {
     public static boolean isFingerprintAuthAvailable(Context context) {
-        FingerprintManager fingerprintManager =
+        if (android.os.Build.VERSION.SDK_INT >= 23) {
+            FingerprintManager fingerprintManager =
                 (FingerprintManager) context.getSystemService(Context.FINGERPRINT_SERVICE);
-
-        return android.os.Build.VERSION.SDK_INT >= 23 &&
-            fingerprintManager.isHardwareDetected() &&
-            fingerprintManager.hasEnrolledFingerprints();
+            return fingerprintManager.isHardwareDetected() &&
+                fingerprintManager.hasEnrolledFingerprints();
+        }
+        return false;
     }
 
     public static boolean isSecure(Context context) {
