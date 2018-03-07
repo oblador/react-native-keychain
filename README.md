@@ -28,7 +28,7 @@ async () => {
 
   try {
     // Retreive the credentials
-    const credentials = Keychain.getGenericPassword();
+    const credentials = await Keychain.getGenericPassword();
     if (credentials) {
       console.log('Credentials successfully loaded for user ' + credentials.username);
     } else {
