@@ -47,11 +47,11 @@ Both `setGenericPassword` and `setInternetCredentials` are limited to strings on
 
 ### `setGenericPassword(username, password, [{ accessControl, accessible, accessGroup, service }])`
 
-Will store the username/password combination in the secure storage. Resolves to `{ username, password }` if an entry exists or `false` if it doesn't.
+Will store the username/password combination in the secure storage. Resolves to `true` or rejects in case of an error.
 
 ### `getGenericPassword([{ authenticationPrompt, service }])`
 
-Will retreive the username/password combination from the secure storage. It will reject only if an unexpected error is encountered like lacking entitlements or permission.
+Will retreive the username/password combination from the secure storage. Resolves to `{ username, password }` if an entry exists or `false` if it doesn't. It will reject only if an unexpected error is encountered like lacking entitlements or permission.
 
 ### `resetGenericPassword([{ service }])`
 

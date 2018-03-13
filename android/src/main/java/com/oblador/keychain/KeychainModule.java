@@ -68,7 +68,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
             EncryptionResult result = currentCipherStorage.encrypt(service, username, password);
             prefsStorage.storeEncryptedEntry(service, result);
 
-            promise.resolve("KeychainModule saved the data");
+            promise.resolve(true);
         } catch (EmptyParameterException e) {
             Log.e(KEYCHAIN_MODULE, e.getMessage());
             promise.reject(E_EMPTY_PARAMETERS, e);
