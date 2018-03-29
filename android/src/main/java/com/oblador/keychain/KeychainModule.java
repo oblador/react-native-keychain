@@ -17,6 +17,7 @@ import com.oblador.keychain.cipherStorage.CipherStorage.DecryptionResult;
 import com.oblador.keychain.cipherStorage.CipherStorage.EncryptionResult;
 import com.oblador.keychain.cipherStorage.CipherStorageFacebookConceal;
 import com.oblador.keychain.cipherStorage.CipherStorageKeystoreAESCBC;
+import com.oblador.keychain.cipherStorage.CipherStorageKeystoreAESGCM;
 import com.oblador.keychain.exceptions.CryptoFailedException;
 import com.oblador.keychain.exceptions.EmptyParameterException;
 import com.oblador.keychain.exceptions.KeyStoreAccessException;
@@ -43,12 +44,26 @@ public class KeychainModule extends ReactContextBaseJavaModule {
         return KEYCHAIN_MODULE;
     }
 
+    @Override
+    public Map<String, Object> getConstants() {
+      final Map<String, Object> constants = new HashMap();
+      constants.put("CIPHER_OPTION_AESCBC", CipherStorageKeystoreAESCBC.CIPHER_OPTION_NAME);
+      constants.put("CIPHER_OPTION_AESGCM", CipherStorageKeystoreAESGCM.CIPHER_OPTION_NAME);
+      return constants;
+    }
+
     public KeychainModule(ReactApplicationContext reactContext) {
         super(reactContext);
         prefsStorage = new PrefsStorage(reactContext);
 
         addCipherStorageToMap(new CipherStorageFacebookConceal(reactContext));
         addCipherStorageToMap(new CipherStorageKeystoreAESCBC());
+        addCipherStorageToMap(new CipherStorageKeystoreAESGCM());
+    }
+
+    private String getPreferedCipherStorage(ReadableMap options) {
+        String preferedCipher = options.hasKey("preferedCipher") ? options.getString("preferedCipher") : CipherStorageKeystoreAESGCM.CIPHER_OPTION_NAME;
+        return preferedCipher;
     }
 
     private void addCipherStorageToMap(CipherStorage cipherStorage) {
@@ -56,15 +71,17 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void setGenericPasswordForOptions(String service, String username, String password, Promise promise) {
+    public void setGenericPasswordForOptions(ReadableMap options, String username, String password, Promise promise) {
         try {
             if (username == null || username.isEmpty() || password == null || password.isEmpty()) {
                 throw new EmptyParameterException("you passed empty or null username/password");
             }
-            service = getDefaultServiceIfNull(service);
+          Log.w("CIPHER","setting generic password");
+            String service = getDefaultServiceIfNull(options.getString("service"));
+            String preferedCipher = getPreferedCipherStorage(options);
 
-            CipherStorage currentCipherStorage = getCipherStorageForCurrentAPILevel();
-
+            CipherStorage currentCipherStorage = getCipherStorageForCurrentAPILevel(preferedCipher);
+          Log.w("CIPHER","using "+currentCipherStorage.getCipherStorageName()+" to encrypt...");
             EncryptionResult result = currentCipherStorage.encrypt(service, username, password);
             prefsStorage.storeEncryptedEntry(service, result);
 
@@ -79,11 +96,12 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void getGenericPasswordForOptions(String service, Promise promise) {
+    public void getGenericPasswordForOptions(ReadableMap options, Promise promise) {
         try {
-            service = getDefaultServiceIfNull(service);
-
-            CipherStorage currentCipherStorage = getCipherStorageForCurrentAPILevel();
+          Log.w("CIPHER","getting generic password");
+            String service = getDefaultServiceIfNull(options.getString("service"));
+            String preferedCipher = getPreferedCipherStorage(options);
+            CipherStorage currentCipherStorage = getCipherStorageForCurrentAPILevel(preferedCipher);
 
             final DecryptionResult decryptionResult;
             ResultSet resultSet = prefsStorage.getEncryptedEntry(service);
@@ -94,10 +112,12 @@ public class KeychainModule extends ReactContextBaseJavaModule {
             }
 
             if (resultSet.cipherStorageName.equals(currentCipherStorage.getCipherStorageName())) {
+              Log.w("CIPHER","used cipher for "+service+":"+resultSet.cipherStorageName+", looks good");
                 // The encrypted data is encrypted using the current CipherStorage, so we just decrypt and return
                 decryptionResult = currentCipherStorage.decrypt(service, resultSet.usernameBytes, resultSet.passwordBytes);
             }
-            else {
+            else if (resultSet.cipherStorageName.equals(CipherStorageFacebookConceal.CIPHER_STORAGE_NAME)) {
+              Log.w("CIPHER","used cipher for "+service+":"+resultSet.cipherStorageName+" is old, migrating to "+currentCipherStorage.getCipherStorageName());
                 // The encrypted data is encrypted using an older CipherStorage, so we need to decrypt the data first, then encrypt it using the current CipherStorage, then store it again and return
                 CipherStorage oldCipherStorage = getCipherStorageByName(resultSet.cipherStorageName);
                 // decrypt using the older cipher storage
@@ -108,6 +128,10 @@ public class KeychainModule extends ReactContextBaseJavaModule {
                 prefsStorage.storeEncryptedEntry(service, encryptionResult);
                 // clean up the old cipher storage
                 oldCipherStorage.removeKey(service);
+            } else { // stored encryption data is different from the format we want to use, but we should not auto-migrate
+              Log.w("CIPHER","used cipher for "+service+":"+resultSet.cipherStorageName+" is old, silently falling back to use it");
+                CipherStorage oldCipherStorage = getCipherStorageByName(resultSet.cipherStorageName);
+                decryptionResult = oldCipherStorage.decrypt(service, resultSet.usernameBytes, resultSet.passwordBytes);
             }
 
             WritableMap credentials = Arguments.createMap();
@@ -127,9 +151,9 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void resetGenericPasswordForOptions(String service, Promise promise) {
+    public void resetGenericPasswordForOptions(ReadableMap options, Promise promise) {
         try {
-            service = getDefaultServiceIfNull(service);
+            String service = getDefaultServiceIfNull(options.getString("service"));
 
             // First we clean up the cipher storage (using the cipher storage that was used to store the entry)
             ResultSet resultSet = prefsStorage.getEncryptedEntry(service);
@@ -151,17 +175,23 @@ public class KeychainModule extends ReactContextBaseJavaModule {
 
     @ReactMethod
     public void setInternetCredentialsForServer(@NonNull String server, String username, String password, ReadableMap unusedOptions, Promise promise) {
-        setGenericPasswordForOptions(server, username, password, promise);
+        WritableMap optionsMap = Arguments.createMap();
+        optionsMap.putString("service",server);
+        setGenericPasswordForOptions(optionsMap, username, password, promise);
     }
 
     @ReactMethod
     public void getInternetCredentialsForServer(@NonNull String server, ReadableMap unusedOptions, Promise promise) {
-        getGenericPasswordForOptions(server, promise);
+        WritableMap optionsMap = Arguments.createMap();
+        optionsMap.putString("service",server);
+        getGenericPasswordForOptions(optionsMap, promise);
     }
 
     @ReactMethod
     public void resetInternetCredentialsForServer(@NonNull String server, ReadableMap unusedOptions, Promise promise) {
-        resetGenericPasswordForOptions(server, promise);
+        WritableMap optionsMap = Arguments.createMap();
+        optionsMap.putString("service",server);
+        resetGenericPasswordForOptions(optionsMap, promise);
     }
 
     @ReactMethod
@@ -180,21 +210,41 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     }
 
     // The "Current" CipherStorage is the cipherStorage with the highest API level that is lower than or equal to the current API level
-    private CipherStorage getCipherStorageForCurrentAPILevel() throws CryptoFailedException {
+    // or, the user requested cipher (if supported)
+    private CipherStorage getCipherStorageForCurrentAPILevel(String preferedCipher) throws CryptoFailedException {
         int currentAPILevel = Build.VERSION.SDK_INT;
         CipherStorage currentCipherStorage = null;
+        Map<String, CipherStorage> validMap = new HashMap();
         for (CipherStorage cipherStorage : cipherStorageMap.values()) {
             int cipherStorageAPILevel = cipherStorage.getMinSupportedApiLevel();
             // Is the cipherStorage supported on the current API level?
             boolean isSupported = (cipherStorageAPILevel <= currentAPILevel);
-            // Is the API level better than the one we previously selected (if any)?
-            if (isSupported && (currentCipherStorage == null || cipherStorageAPILevel > currentCipherStorage.getMinSupportedApiLevel())) {
-                currentCipherStorage = cipherStorage;
+            if (isSupported) {
+                // cipher is supported, save for later selection based on preferedCipher param
+                validMap.put(cipherStorage.getCipherOptionName(), cipherStorage);
+
+                // Is the API level better than the one we previously selected (if any)?
+                // we use this as a fallback if user's preferedCipher is not available
+                if (currentCipherStorage == null || cipherStorageAPILevel > currentCipherStorage.getMinSupportedApiLevel()) {
+                    currentCipherStorage = cipherStorage;
+                }
+            }
+        }
+
+        // currentCipherStorage now contains cipher with highest API-level, check if user prefer something else
+        if (preferedCipher != null && preferedCipher.length() > 0) {
+          Log.w("CIPHER","user wants "+preferedCipher);
+            if (validMap.containsKey(preferedCipher)) {
+              Log.w("CIPHER", preferedCipher+" is supported");
+                currentCipherStorage = validMap.get(preferedCipher);
+            } else { // else we requested something not supported (for example we default to aesgcm which may be unsupported as well)
+              Log.w("CIPHER","but cipher "+preferedCipher+" is not supported");
             }
         }
         if (currentCipherStorage == null) {
             throw new CryptoFailedException("Unsupported Android SDK " + Build.VERSION.SDK_INT);
         }
+        Log.w("CIPHER","final cipher to use "+currentCipherStorage.getCipherStorageName());
         return currentCipherStorage;
     }
 

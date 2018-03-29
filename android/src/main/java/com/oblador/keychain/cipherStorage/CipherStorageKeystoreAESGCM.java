@@ -29,14 +29,14 @@ import javax.crypto.CipherOutputStream;
 import javax.crypto.KeyGenerator;
 import javax.crypto.spec.IvParameterSpec;
 
-public class CipherStorageKeystoreAESCBC implements CipherStorage {
-    public static final String CIPHER_OPTION_NAME = "AESCBC";
-    public static final String CIPHER_STORAGE_NAME = "KeystoreAESCBC";
+public class CipherStorageKeystoreAESGCM implements CipherStorage {
+    public static final String CIPHER_OPTION_NAME = "AESGCM";
+    public static final String CIPHER_STORAGE_NAME = "KeystoreAESGCM";
     public static final String DEFAULT_SERVICE = "RN_KEYCHAIN_DEFAULT_ALIAS";
     public static final String KEYSTORE_TYPE = "AndroidKeyStore";
     public static final String ENCRYPTION_ALGORITHM = KeyProperties.KEY_ALGORITHM_AES;
-    public static final String ENCRYPTION_BLOCK_MODE = KeyProperties.BLOCK_MODE_CBC;
-    public static final String ENCRYPTION_PADDING = KeyProperties.ENCRYPTION_PADDING_PKCS7;
+    public static final String ENCRYPTION_BLOCK_MODE = KeyProperties.BLOCK_MODE_GCM;
+    public static final String ENCRYPTION_PADDING = KeyProperties.ENCRYPTION_PADDING_NONE;
     public static final String ENCRYPTION_TRANSFORMATION =
             ENCRYPTION_ALGORITHM + "/" +
                     ENCRYPTION_BLOCK_MODE + "/" +
@@ -72,7 +72,6 @@ public class CipherStorageKeystoreAESCBC implements CipherStorage {
                         service,
                         KeyProperties.PURPOSE_DECRYPT | KeyProperties.PURPOSE_ENCRYPT)
                         .setBlockModes(ENCRYPTION_BLOCK_MODE)
-                        .setEncryptionPaddings(ENCRYPTION_PADDING)
                         .setRandomizedEncryptionRequired(true)
                         //.setUserAuthenticationRequired(true) // Will throw InvalidAlgorithmParameterException if there is no fingerprint enrolled on the device
                         .setKeySize(ENCRYPTION_KEY_SIZE)

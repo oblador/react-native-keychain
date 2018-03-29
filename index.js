@@ -33,6 +33,11 @@ export const BIOMETRY_TYPE = {
   FINGERPRINT: 'Fingerprint',
 };
 
+export const PREFERED_CIPHER = {
+  AES_CBC: RNKeychainManager.CIPHER_OPTION_AESCBC,
+  AES_GCM: RNKeychainManager.CIPHER_OPTION_AESGCM,
+};
+
 type SecAccessible =
   | 'AccessibleWhenUnlocked'
   | 'AccessibleAfterFirstUnlock'
@@ -135,11 +140,11 @@ export function resetInternetCredentials(
 }
 
 function getOptionsArgument(serviceOrOptions?: string | Options) {
-  if (Platform.OS !== 'ios') {
+  /*if (Platform.OS !== 'ios') {
     return typeof serviceOrOptions === 'object'
       ? serviceOrOptions.service
       : serviceOrOptions;
-  }
+  }*/
   return typeof serviceOrOptions === 'string'
     ? { service: serviceOrOptions }
     : serviceOrOptions;
