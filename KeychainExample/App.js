@@ -37,7 +37,7 @@ export default class KeychainExample extends Component {
         this.state.password,
         { accessControl: this.state.accessControl }
       );
-      this.setState({ status: 'Credentials saved!' });
+      this.setState({ username: '', password: '', status: 'Credentials saved!' });
     } catch (err) {
       this.setState({ status: 'Could not save credentials, ' + err });
     }
