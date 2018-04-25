@@ -1,9 +1,14 @@
 package com.oblador.keychain;
 
+import android.app.KeyguardManager;
+import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
 import android.os.Build;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
+import com.facebook.react.bridge.ActivityEventListener;
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
@@ -20,12 +25,14 @@ import com.oblador.keychain.cipherStorage.CipherStorageKeystoreAESCBC;
 import com.oblador.keychain.exceptions.CryptoFailedException;
 import com.oblador.keychain.exceptions.EmptyParameterException;
 import com.oblador.keychain.exceptions.KeyStoreAccessException;
-import com.oblador.keychain.DeviceAvailability;
+import com.oblador.keychain.exceptions.RequiresAuthenticationException;
 
 import java.util.HashMap;
 import java.util.Map;
 
-public class KeychainModule extends ReactContextBaseJavaModule {
+import static android.app.Activity.RESULT_OK;
+
+public class KeychainModule extends ReactContextBaseJavaModule implements ActivityEventListener {
 
     public static final String E_EMPTY_PARAMETERS = "E_EMPTY_PARAMETERS";
     public static final String E_CRYPTO_FAILED = "E_CRYPTO_FAILED";
@@ -34,9 +41,17 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     public static final String KEYCHAIN_MODULE = "RNKeychainManager";
     public static final String FINGERPRINT_SUPPORTED_NAME = "Fingerprint";
     public static final String EMPTY_STRING = "";
+    public static final int REQUEST_CODE_CONFIRM_DEVICE_CREDENTIALS_SET = 1;
+    public static final int REQUEST_CODE_CONFIRM_DEVICE_CREDENTIALS_GET = 2;
 
     private final Map<String, CipherStorage> cipherStorageMap = new HashMap<>();
     private final PrefsStorage prefsStorage;
+    private KeyguardManager mKeyguardManager;
+
+    private String currentService;
+    private String currentUsername;
+    private String currentPassword;
+    private Promise currentPromise;
 
     @Override
     public String getName() {
@@ -46,6 +61,9 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     public KeychainModule(ReactApplicationContext reactContext) {
         super(reactContext);
         prefsStorage = new PrefsStorage(reactContext);
+
+        mKeyguardManager = (KeyguardManager) reactContext.getSystemService(Context.KEYGUARD_SERVICE);
+        reactContext.addActivityEventListener(this);
 
         addCipherStorageToMap(new CipherStorageFacebookConceal(reactContext));
         addCipherStorageToMap(new CipherStorageKeystoreAESCBC());
@@ -69,6 +87,13 @@ public class KeychainModule extends ReactContextBaseJavaModule {
             prefsStorage.storeEncryptedEntry(service, result);
 
             promise.resolve(true);
+        } catch (RequiresAuthenticationException e) {
+            Log.e(KEYCHAIN_MODULE, e.getMessage());
+            currentService = service;
+            currentUsername = username;
+            currentPassword = password;
+            currentPromise = promise;
+            showAuthenticationScreen(REQUEST_CODE_CONFIRM_DEVICE_CREDENTIALS_SET);
         } catch (EmptyParameterException e) {
             Log.e(KEYCHAIN_MODULE, e.getMessage());
             promise.reject(E_EMPTY_PARAMETERS, e);
@@ -76,6 +101,41 @@ public class KeychainModule extends ReactContextBaseJavaModule {
             Log.e(KEYCHAIN_MODULE, e.getMessage());
             promise.reject(E_CRYPTO_FAILED, e);
         }
+    }
+
+    private void showAuthenticationScreen(int code) {
+      // Create the Confirm Credentials screen. You can customize the title and description. Or
+      // we will provide a generic one for you if you leave it null
+      Intent intent = mKeyguardManager.createConfirmDeviceCredentialIntent(null, null);
+      if (intent != null) {
+        getCurrentActivity().startActivityForResult(intent, code);
+      }
+    }
+
+    
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+      if (resultCode != RESULT_OK) {
+        // The user canceled or didn’t complete the lock screen
+        // operation. Go to error/cancellation flow.
+        currentPromise.reject(E_SUPPORTED_BIOMETRY_ERROR);
+        return;
+      }
+      if (requestCode == REQUEST_CODE_CONFIRM_DEVICE_CREDENTIALS_SET) {
+        // Challenge completed, proceed with using cipher
+        setGenericPasswordForOptions(currentService, currentUsername, currentPassword, currentPromise);
+      } else if (requestCode == REQUEST_CODE_CONFIRM_DEVICE_CREDENTIALS_GET) {
+        getGenericPasswordForOptions(currentService, currentPromise);
+      }
+    }
+
+    @Override
+    public void onActivityResult(Activity activity, int requestCode, int resultCode, Intent data) {
+        onActivityResult(requestCode, resultCode, data);
+    }
+
+    @Override
+    public void onNewIntent(Intent intent) {
+      Log.d(getName(), "onNewIntent");
     }
 
     @ReactMethod
@@ -117,6 +177,11 @@ public class KeychainModule extends ReactContextBaseJavaModule {
             credentials.putString("password", decryptionResult.password);
 
             promise.resolve(credentials);
+        } catch (RequiresAuthenticationException e) {
+          Log.e(KEYCHAIN_MODULE, e.getMessage());
+          currentService = service;
+          currentPromise = promise;
+          showAuthenticationScreen(REQUEST_CODE_CONFIRM_DEVICE_CREDENTIALS_GET);
         } catch (KeyStoreAccessException e) {
             Log.e(KEYCHAIN_MODULE, e.getMessage());
             promise.reject(E_KEYSTORE_ACCESS_ERROR, e);
@@ -210,4 +275,5 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     private String getDefaultServiceIfNull(String service) {
         return service == null ? EMPTY_STRING : service;
     }
+
 }

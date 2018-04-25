@@ -4,10 +4,12 @@ import android.annotation.TargetApi;
 import android.os.Build;
 import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyProperties;
+import android.security.keystore.UserNotAuthenticatedException;
 import android.support.annotation.NonNull;
 
 import com.oblador.keychain.exceptions.CryptoFailedException;
 import com.oblador.keychain.exceptions.KeyStoreAccessException;
+import com.oblador.keychain.exceptions.RequiresAuthenticationException;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -41,6 +43,11 @@ public class CipherStorageKeystoreAESCBC implements CipherStorage {
                     ENCRYPTION_BLOCK_MODE + "/" +
                     ENCRYPTION_PADDING;
     public static final int ENCRYPTION_KEY_SIZE = 256;
+    /**
+     * If the user has unlocked the device Within the last this number of seconds,
+     * it can be considered as an authenticator.
+     */
+    private static final int AUTHENTICATION_DURATION_SECONDS = 30;
 
     @Override
     public String getCipherStorageName() {
@@ -68,7 +75,8 @@ public class CipherStorageKeystoreAESCBC implements CipherStorage {
                         .setBlockModes(ENCRYPTION_BLOCK_MODE)
                         .setEncryptionPaddings(ENCRYPTION_PADDING)
                         .setRandomizedEncryptionRequired(true)
-                        //.setUserAuthenticationRequired(true) // Will throw InvalidAlgorithmParameterException if there is no fingerprint enrolled on the device
+                        .setUserAuthenticationRequired(true) // Will throw InvalidAlgorithmParameterException if there is no fingerprint enrolled on the device
+                        .setUserAuthenticationValidityDurationSeconds(AUTHENTICATION_DURATION_SECONDS)
                         .setKeySize(ENCRYPTION_KEY_SIZE)
                         .build();
 
@@ -139,6 +147,8 @@ public class CipherStorageKeystoreAESCBC implements CipherStorage {
             cipherOutputStream.write(value.getBytes("UTF-8"));
             cipherOutputStream.close();
             return outputStream.toByteArray();
+        } catch (UserNotAuthenticatedException e) {
+          throw new RequiresAuthenticationException("Show authentication screen", e);
         } catch (Exception e) {
             throw new CryptoFailedException("Could not encrypt value for service " + service, e);
         }
@@ -164,6 +174,8 @@ public class CipherStorageKeystoreAESCBC implements CipherStorage {
                 output.write(buffer, 0, n);
             }
             return new String(output.toByteArray(), Charset.forName("UTF-8"));
+        } catch (UserNotAuthenticatedException e) {
+          throw new RequiresAuthenticationException("Show authentication screen", e);
         } catch (Exception e) {
             throw new CryptoFailedException("Could not decrypt bytes", e);
         }
