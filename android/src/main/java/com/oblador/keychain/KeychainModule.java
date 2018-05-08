@@ -25,6 +25,7 @@ import com.oblador.keychain.cipherStorage.CipherStorageKeystoreAESCBC;
 import com.oblador.keychain.exceptions.CryptoFailedException;
 import com.oblador.keychain.exceptions.EmptyParameterException;
 import com.oblador.keychain.exceptions.KeyStoreAccessException;
+import com.oblador.keychain.exceptions.NotSecureException;
 import com.oblador.keychain.exceptions.RequiresAuthenticationException;
 
 import java.util.HashMap;
@@ -38,6 +39,7 @@ public class KeychainModule extends ReactContextBaseJavaModule implements Activi
     public static final String E_CRYPTO_FAILED = "E_CRYPTO_FAILED";
     public static final String E_KEYSTORE_ACCESS_ERROR = "E_KEYSTORE_ACCESS_ERROR";
     public static final String E_SUPPORTED_BIOMETRY_ERROR = "E_SUPPORTED_BIOMETRY_ERROR";
+    public static final String E_KEYGUARD_IS_NOT_SECURE = "E_KEYGUARD_IS_NOT_SECURE";
     public static final String KEYCHAIN_MODULE = "RNKeychainManager";
     public static final String FINGERPRINT_SUPPORTED_NAME = "Fingerprint";
     public static final String EMPTY_STRING = "";
@@ -79,6 +81,9 @@ public class KeychainModule extends ReactContextBaseJavaModule implements Activi
             if (username == null || username.isEmpty() || password == null || password.isEmpty()) {
                 throw new EmptyParameterException("you passed empty or null username/password");
             }
+            if (!isSecure()) {
+              throw new NotSecureException("Secure lock screen hasn't set up");
+            }
             service = getDefaultServiceIfNull(service);
 
             CipherStorage currentCipherStorage = getCipherStorageForCurrentAPILevel();
@@ -87,6 +92,9 @@ public class KeychainModule extends ReactContextBaseJavaModule implements Activi
             prefsStorage.storeEncryptedEntry(service, result);
 
             promise.resolve(true);
+        } catch (NotSecureException e) {
+            Log.e(KEYCHAIN_MODULE, e.getMessage());
+            promise.reject(E_KEYGUARD_IS_NOT_SECURE, e);
         } catch (RequiresAuthenticationException e) {
             Log.e(KEYCHAIN_MODULE, e.getMessage());
             currentService = service;
@@ -112,7 +120,6 @@ public class KeychainModule extends ReactContextBaseJavaModule implements Activi
       }
     }
 
-    
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
       if (resultCode != RESULT_OK) {
         // The user canceled or didn’t complete the lock screen
@@ -271,7 +278,11 @@ public class KeychainModule extends ReactContextBaseJavaModule implements Activi
         return DeviceAvailability.isFingerprintAuthAvailable(getCurrentActivity());
     }
 
-    @NonNull
+    private boolean isSecure() {
+      return DeviceAvailability.isSecure(getCurrentActivity());
+    }
+
+  @NonNull
     private String getDefaultServiceIfNull(String service) {
         return service == null ? EMPTY_STRING : service;
     }
