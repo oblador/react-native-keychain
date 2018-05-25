@@ -54,6 +54,7 @@ public class KeychainModule extends ReactContextBaseJavaModule implements Activi
     private String currentUsername;
     private String currentPassword;
     private Promise currentPromise;
+    private Intent currentIntent;
 
     @Override
     public String getName() {
@@ -116,15 +117,22 @@ public class KeychainModule extends ReactContextBaseJavaModule implements Activi
       // we will provide a generic one for you if you leave it null
       Intent intent = mKeyguardManager.createConfirmDeviceCredentialIntent(null, null);
       if (intent != null) {
+        currentIntent = intent;
         getCurrentActivity().startActivityForResult(intent, code);
       }
     }
 
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+    public void onActivityResult(int requestCode, int resultCode, Intent intent) {
+      if (!intent.equals(currentIntent)) {
+        return;
+      }
+
       if (resultCode != RESULT_OK) {
         // The user canceled or didn’t complete the lock screen
         // operation. Go to error/cancellation flow.
-        currentPromise.reject(E_SUPPORTED_BIOMETRY_ERROR);
+        if (currentPromise != null) {
+          currentPromise.reject(E_SUPPORTED_BIOMETRY_ERROR);
+        }
         return;
       }
       if (requestCode == REQUEST_CODE_CONFIRM_DEVICE_CREDENTIALS_SET) {
