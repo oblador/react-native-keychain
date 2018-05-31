@@ -9,7 +9,7 @@
   "dependencies": {
     "react": "16.2.0",
     "react-native": "0.53.3",
-    "react-native-keychain": "^2.0.0"
+    "react-native-keychain": "^3.0.0-rc.3"
   },
   "devDependencies": {
     "babel-jest": "22.4.1",
