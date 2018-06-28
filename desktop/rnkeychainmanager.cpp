@@ -77,7 +77,7 @@ void RNKeychainManager::getGenericPasswordForOptions(QVariantList options,
        return;
     }
     qDebug() << "RNKeychainManager::getGenericPasswordForOptions success";
-    resolve(d->bridge, QVariantList{QVariantMap{{"password", pw}}});
+    resolve(d->bridge, QVariantList{QVariantMap{{"password", pw.toUtf8().data()}}});
 }
 
 void RNKeychainManager::setGenericPasswordForOptions(QVariantList options,
