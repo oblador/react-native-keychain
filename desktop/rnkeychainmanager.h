@@ -44,12 +44,12 @@ public:
     Q_INVOKABLE REACT_PROMISE void resetGenericPasswordForOptions(QVariantList options,
                                                                 const ModuleInterface::ListArgumentBlock& resolve,
                                                                 const ModuleInterface::ListArgumentBlock& reject);
+    Q_INVOKABLE REACT_PROMISE void setUsername(const QString& username,
+                                               const ModuleInterface::ListArgumentBlock& resolve,
+                                               const ModuleInterface::ListArgumentBlock& reject);
 
 private:
     QScopedPointer<RNKeychainManagerPrivate> d_ptr;
-
-    bool copyRecursively(const QString& src, const QString& dst);
-    bool removeRecursively(const QString& path);
 };
 
 #endif // RNKEYCHAINMANAGER_H

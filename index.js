@@ -165,6 +165,19 @@ export function setGenericPassword(
 }
 
 /**
+ * Saves the `username` for further use on get requests.
+ * @param {string} username Associated username or e-mail to be saved.
+ * @return {Promise} Resolves to `true` when successful
+ */
+export function setUsername(
+  username: string
+): Promise {
+  return RNKeychainManager.setUsername(
+    username
+  );
+}
+
+/**
  * Fetches login combination for `service`.
  * @param {string|object} serviceOrOptions Reverse domain name qualifier for the service, defaults to `bundleId` or an options object.
  * @return {Promise} Resolves to `{ service, username, password }` when successful

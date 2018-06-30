@@ -34,6 +34,7 @@ struct RegisterQMLMetaType {
 class RNKeychainManagerPrivate {
 public:
     Bridge* bridge = nullptr;
+    QString username;
 };
 
 RNKeychainManager::RNKeychainManager(QObject* parent) : QObject(parent), d_ptr(new RNKeychainManagerPrivate) {}
@@ -65,6 +66,7 @@ void RNKeychainManager::getGenericPasswordForOptions(QVariantList options,
 
     ReadPasswordJob rjob( keychainJobName );
     rjob.setAutoDelete( false );
+    rjob.setKey( d->username );
     QEventLoop loop;
     rjob.connect( &rjob, SIGNAL(finished(QKeychain::Job*)), &loop, SLOT(quit()) );
     rjob.start();
@@ -87,6 +89,8 @@ void RNKeychainManager::setGenericPasswordForOptions(QVariantList options,
                                                      const ModuleInterface::ListArgumentBlock &reject) {
     Q_D(RNKeychainManager);
     qDebug()<<"invoked RNKeychainManager::setGenericPasswordForOptions";
+
+    d->username = username;
 
     WritePasswordJob wjob( keychainJobName);
     wjob.setAutoDelete( false );
@@ -111,6 +115,8 @@ void RNKeychainManager::resetGenericPasswordForOptions(QVariantList options,
     Q_D(RNKeychainManager);
     qDebug()<<"invoked RNKeychainManager::resetGenericPasswordForOptions";
 
+    d->username = "";
+
     DeletePasswordJob wjob( keychainJobName);
     wjob.setAutoDelete( false );
     QEventLoop loop;
@@ -126,6 +132,14 @@ void RNKeychainManager::resetGenericPasswordForOptions(QVariantList options,
     resolve(d->bridge, QVariantList{});
 }
 
+void RNKeychainManager::setUsername(const QString &username,
+                                    const ModuleInterface::ListArgumentBlock &resolve,
+                                    const ModuleInterface::ListArgumentBlock &reject) {
+    Q_D(RNKeychainManager);
+    qDebug()<<"invoked RNKeychainManager::setUsername with username = " << username;
+    d->username = username;
 
+    resolve(d->bridge, QVariantList{QVariant(true)});
+}
 
 
