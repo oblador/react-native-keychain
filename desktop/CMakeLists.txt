@@ -19,7 +19,7 @@ set(qtkeychain_INCLUDE_DIR ${qtkeychain_BUILDDIR}/include/qt5keychain)
 
 
 ExternalProject_Add(qtkeychain
-  GIT_REPOSITORY https://github.com/frankosterfeld/qtkeychain.git
+  GIT_REPOSITORY https://github.com/status-im/qtkeychain.git
   CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${qtkeychain_BUILDDIR} -DQTKEYCHAIN_STATIC=ON -DBUILD_TRANSLATIONS=OFF
   BUILD_BYPRODUCTS ${qtkeychain_STATIC_LIB}
   LOG_BUILD 1
