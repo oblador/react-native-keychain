@@ -2,6 +2,13 @@
 logs
 *.log
 
+#Android
+android/.gradle/
+android/.idea/
+android/android.iml
+android/local.properties
+android/react-native-keychain.iml
+
 # Runtime data
 pids
 *.pid
