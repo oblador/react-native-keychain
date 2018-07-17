@@ -31,9 +31,17 @@ public interface CipherStorage {
         }
     }
 
-    EncryptionResult encrypt(@NonNull String service, @NonNull String username, @NonNull String password) throws CryptoFailedException;
+    interface EncryptionResultHandler {
+        public void onEncryptionResult(EncryptionResult encryptionResult, String info, String error);
+    }
 
-    DecryptionResult decrypt(@NonNull String service, @NonNull byte[] username, @NonNull byte[] password) throws CryptoFailedException;
+    interface DecryptionResultHandler {
+        public void onDecryptionResult(DecryptionResult decryptionResult, String info, String error);
+    }
+
+    void encrypt(@NonNull EncryptionResultHandler encryptionResultHandler, @NonNull String service, @NonNull String username, @NonNull String password, @NonNull boolean useFingerprint) throws CryptoFailedException;
+
+    void decrypt(@NonNull DecryptionResultHandler decryptionResultHandler, @NonNull String service, @NonNull byte[] username, @NonNull byte[] password, @NonNull boolean useFingerprint) throws CryptoFailedException;
 
     void removeKey(@NonNull String service) throws KeyStoreAccessException;
 
