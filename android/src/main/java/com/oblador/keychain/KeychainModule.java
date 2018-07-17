@@ -136,28 +136,9 @@ public class KeychainModule extends ReactContextBaseJavaModule {
         try {
             final String defaultService = getDefaultServiceIfNull(service);
             String accessControl = null;
-            if (options.hasKey(ACCESS_CONTROL_KEY)) {
+            if (options != null && options.hasKey(ACCESS_CONTROL_KEY)) {
                 accessControl = options.getString(ACCESS_CONTROL_KEY);
             }
-
-            DecryptionResultHandler handler = new DecryptionResultHandler() {
-                @Override
-                public void onDecryptionResult(DecryptionResult decryptionResult, String info, String error) {
-                if (decryptionResult != null) {
-                    WritableMap credentials = Arguments.createMap();
-
-                    credentials.putString("service", defaultService);
-                    credentials.putString("username", decryptionResult.username);
-                    credentials.putString("password", decryptionResult.password);
-
-                    promise.resolve(credentials);
-                } else if (info != null) {
-                    KeychainModule.this.sendFingerprintEvent(info);
-                } else {
-                    promise.reject(E_CRYPTO_FAILED, error);
-                }
-                }
-            };
 
             ResultSet resultSet = prefsStorage.getEncryptedEntry(defaultService);
             if (resultSet == null) {
@@ -165,30 +146,84 @@ public class KeychainModule extends ReactContextBaseJavaModule {
                 promise.resolve(false);
                 return;
             }
-            CipherStorage currentCipherStorage = getCipherStorageForCurrentAPILevel();
-            boolean useBiometry = (accessControl == ACCESS_CONTROL_BIOMETRY_ANY || accessControl == ACCESS_CONTROL_BIOMETRY_CURRENT_SET);
 
-//            if (resultSet.cipherStorageName.equals(currentCipherStorage.getCipherStorageName())) {
+            final CipherStorage currentCipherStorage = getCipherStorageForCurrentAPILevel();
+            final boolean useBiometry = (accessControl == ACCESS_CONTROL_BIOMETRY_ANY || accessControl == ACCESS_CONTROL_BIOMETRY_CURRENT_SET);
+
+            if (resultSet.cipherStorageName.equals(currentCipherStorage.getCipherStorageName())) {
+                DecryptionResultHandler decryptionHandler = new DecryptionResultHandler() {
+                    @Override
+                    public void onDecryptionResult(DecryptionResult decryptionResult, String info, String error) {
+                        if (decryptionResult != null) {
+                            WritableMap credentials = Arguments.createMap();
+
+                            credentials.putString("service", defaultService);
+                            credentials.putString("username", decryptionResult.username);
+                            credentials.putString("password", decryptionResult.password);
+
+                            promise.resolve(credentials);
+                        } else if (info != null) {
+                            KeychainModule.this.sendFingerprintEvent(info);
+                        } else {
+                            promise.reject(E_CRYPTO_FAILED, error);
+                        }
+                    }
+                };
                 // The encrypted data is encrypted using the current CipherStorage, so we just decrypt and return
-                currentCipherStorage.decrypt(handler, defaultService, resultSet.usernameBytes, resultSet.passwordBytes, useBiometry);
-//            }
-//            else {
-//                // The encrypted data is encrypted using an older CipherStorage, so we need to decrypt the data first, then encrypt it using the current CipherStorage, then store it again and return
-//                CipherStorage oldCipherStorage = getCipherStorageByName(resultSet.cipherStorageName);
-//                // decrypt using the older cipher storage
-//                oldCipherStorage.decrypt(service, resultSet.usernameBytes, resultSet.passwordBytes);
-//                // encrypt using the current cipher storage
-//                currentCipherStorage.encrypt(service, decryptionResult.username, decryptionResult.password);
-//                // store the encryption result
-//                prefsStorage.storeEncryptedEntry(service, encryptionResult);
-//                // clean up the old cipher storage
-//                oldCipherStorage.removeKey(service);
-//            }
+                currentCipherStorage.decrypt(decryptionHandler, defaultService, resultSet.usernameBytes, resultSet.passwordBytes, useBiometry);
+            }
+            else {
+                // The encrypted data is encrypted using an older CipherStorage, so we need to decrypt the data first, then encrypt it using the current CipherStorage, then store it again and return
+                final CipherStorage oldCipherStorage = getCipherStorageByName(resultSet.cipherStorageName);
+
+                DecryptionResultHandler decryptionHandler = new DecryptionResultHandler() {
+                    @Override
+                    public void onDecryptionResult(DecryptionResult decryptionResult, String info, String error) {
+                        if (decryptionResult != null) {
+                            final WritableMap credentials = Arguments.createMap();
+                            credentials.putString("service", defaultService);
+                            credentials.putString("username", decryptionResult.username);
+                            credentials.putString("password", decryptionResult.password);
+
+                            EncryptionResultHandler encryptionHandler = new EncryptionResultHandler() {
+                                @Override
+                                public void onEncryptionResult(EncryptionResult encryptionResult, String info, String error) {
+                                    if (encryptionResult != null) {
+                                        try {
+                                            // store the encryption result
+                                            prefsStorage.storeEncryptedEntry(defaultService, encryptionResult);
+                                            // clean up the old cipher storage
+                                            oldCipherStorage.removeKey(defaultService);
+
+                                            promise.resolve(credentials);
+                                        } catch (KeyStoreAccessException e) {
+                                            Log.e(KEYCHAIN_MODULE, e.getMessage());
+                                            promise.reject(E_KEYSTORE_ACCESS_ERROR, e);
+                                        }
+                                    } else if (error != null) {
+                                        promise.reject(E_CRYPTO_FAILED, error);
+                                    }
+                                }
+                            };
+
+                            try {
+                                // encrypt using the current cipher storage
+                                currentCipherStorage.encrypt(encryptionHandler, defaultService, decryptionResult.username, decryptionResult.password, useBiometry);
+                            } catch (CryptoFailedException e) {
+                                promise.reject(E_CRYPTO_FAILED, error);
+                            }
+                        } else if (info != null) {
+                            KeychainModule.this.sendFingerprintEvent(info);
+                        } else {
+                            promise.reject(E_CRYPTO_FAILED, error);
+                        }
+                    }
+                };
+                // decrypt using the older cipher storage
+                oldCipherStorage.decrypt(decryptionHandler, defaultService, resultSet.usernameBytes, resultSet.passwordBytes, useBiometry);
+            }
 
             final DecryptionResult decryptionResult;
-        // } catch (KeyStoreAccessException e) {
-        //     Log.e(KEYCHAIN_MODULE, e.getMessage());
-        //     promise.reject(E_KEYSTORE_ACCESS_ERROR, e);
         } catch (CryptoFailedException e) {
             Log.e(KEYCHAIN_MODULE, e.getMessage());
             promise.reject(E_CRYPTO_FAILED, e);
@@ -243,7 +278,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     @ReactMethod
     public void canCheckAuthentication(ReadableMap options, Promise promise) {
         String authenticationType = null;
-        if (options.hasKey(AUTHENTICATION_TYPE_KEY)) {
+        if (options != null && options.hasKey(AUTHENTICATION_TYPE_KEY)) {
             authenticationType = options.getString(AUTHENTICATION_TYPE_KEY);
         }
 
