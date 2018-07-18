@@ -126,11 +126,10 @@ public class CipherStorageKeystoreAESCBC extends FingerprintManager.Authenticati
 
     @Override
     public void onAuthenticationSucceeded(FingerprintManager.AuthenticationResult result) {
-        Cipher cipher = result.getCryptoObject().getCipher();
         if (mEncryptionResultHandler != null) {
             try {
-                byte[] encryptedUsername = encryptString(null, mEncryptParams.username);
-                byte[] encryptedPassword = encryptString(cipher, mEncryptParams.password);
+                byte[] encryptedUsername = encryptString(mEncryptParams.username);
+                byte[] encryptedPassword = encryptString(mEncryptParams.password);
                 mEncryptionResultHandler.onEncryptionResult(new EncryptionResult(encryptedUsername, encryptedPassword, this), null, null);
             } catch (Exception e) {
                 mEncryptionResultHandler.onEncryptionResult(null, null, e.getMessage());
@@ -140,8 +139,8 @@ public class CipherStorageKeystoreAESCBC extends FingerprintManager.Authenticati
 
         if (mDecryptionResultHandler != null) {
             try {
-                String decryptedUsername = decryptBytes(null, mDecryptParams.username);
-                String decryptedPassword = decryptBytes(cipher, mDecryptParams.password);
+                String decryptedUsername = decryptBytes(mDecryptParams.username);
+                String decryptedPassword = decryptBytes(mDecryptParams.password);
                 mDecryptionResultHandler.onDecryptionResult(new DecryptionResult(decryptedUsername, decryptedPassword), null, null);
             } catch (Exception e) {
                 mDecryptionResultHandler.onDecryptionResult(null, null, e.getMessage());
@@ -157,7 +156,6 @@ public class CipherStorageKeystoreAESCBC extends FingerprintManager.Authenticati
     }
 
     public void genKey(String service, boolean useBiometry) {
-
         KeyGenParameterSpec.Builder specBuilder = new KeyGenParameterSpec.Builder(
                 service,
                 KeyProperties.PURPOSE_DECRYPT | KeyProperties.PURPOSE_ENCRYPT)
@@ -167,8 +165,8 @@ public class CipherStorageKeystoreAESCBC extends FingerprintManager.Authenticati
                 .setKeySize(ENCRYPTION_KEY_SIZE);
         if (useBiometry) {
             specBuilder
-                    .setUserAuthenticationRequired(true); // Will throw InvalidAlgorithmParameterException if there is no fingerprint enrolled on the device
-            //.setUserAuthenticationValidityDurationSeconds(30);
+                    .setUserAuthenticationRequired(true) // Will throw InvalidAlgorithmParameterException if there is no fingerprint enrolled on the device
+                .setUserAuthenticationValidityDurationSeconds(30);
         }
 
         AlgorithmParameterSpec spec = specBuilder.build();
@@ -211,25 +209,10 @@ public class CipherStorageKeystoreAESCBC extends FingerprintManager.Authenticati
 
             mEncryptParams = new CipherParams<>(key, username, password);
             Cipher cipher = Cipher.getInstance(ENCRYPTION_TRANSFORMATION);
-
-
             cipher.init(Cipher.ENCRYPT_MODE, key);
-//            if (useBiometry && !this.startFingerprintAuthentication(cipher)) {
-//                throw new CryptoFailedException("Could not start fingerprint Authentication");
-//            }
 
-//            try {
-//                // We test if a cipher could be unlocked straight away.
-//                cipher.init(Cipher.ENCRYPT_MODE, key);
-//            } catch (UserNotAuthenticatedException e) {
-////                if (useBiometry && !this.startFingerprintAuthentication()) {
-//                    throw new CryptoFailedException("Could not start fingerprint Authentication", e);
-////                }
-////                return;
-//            }
-
-            byte[] encryptedUsername = encryptString(null, username);
-            byte[] encryptedPassword = encryptString(cipher, password);
+            byte[] encryptedUsername = encryptString(username);
+            byte[] encryptedPassword = encryptString(password);
             mEncryptionResultHandler.onEncryptionResult(new EncryptionResult(encryptedUsername, encryptedPassword, this), null, null);
             mEncryptionResultHandler = null;
         } catch (NoSuchAlgorithmException | UnrecoverableKeyException | InvalidKeyException | NoSuchPaddingException e) {
@@ -239,11 +222,11 @@ public class CipherStorageKeystoreAESCBC extends FingerprintManager.Authenticati
         }
     }
 
-    private boolean startFingerprintAuthentication(Cipher cipher) {
+    private boolean startFingerprintAuthentication() {
         if (mKeyguardManager.isKeyguardSecure() &&
             ActivityCompat.checkSelfPermission(mContext, Manifest.permission.USE_FINGERPRINT) == PackageManager.PERMISSION_GRANTED) {
             mFingerprintCancellationSignal = new CancellationSignal();
-            mFingerprintManager.authenticate(new FingerprintManager.CryptoObject(cipher),
+            mFingerprintManager.authenticate(null,
                     mFingerprintCancellationSignal,
                     0,     // flags
                     this,  // authentication callback
@@ -276,23 +259,23 @@ public class CipherStorageKeystoreAESCBC extends FingerprintManager.Authenticati
             ByteArrayInputStream inputStream = new ByteArrayInputStream(password);
             // read the initialization vector from the beginning of the stream
             IvParameterSpec ivParams = readIvFromStream(inputStream);
+
             try {
+                // We test if a cipher could be unlocked straight away.
                 cipher.init(Cipher.DECRYPT_MODE, key, ivParams);
-                this.startFingerprintAuthentication(cipher);
-                return;
             } catch (UserNotAuthenticatedException e) {
-                if (useBiometry && !this.startFingerprintAuthentication(cipher)) {
+                if (useBiometry && !this.startFingerprintAuthentication()) {
                     throw new CryptoFailedException("Could not start fingerprint Authentication", e);
                 }
                 return;
             } catch (InvalidAlgorithmParameterException e) {
-                e.printStackTrace();
+                throw new CryptoFailedException("Could not create crypto", e);
             }
 
-//            String decryptedUsername = decryptBytes(null, username);
-//            String decryptedPassword = decryptBytes(null, password);
-//            mDecryptionResultHandler.onDecryptionResult(new DecryptionResult(decryptedUsername, decryptedPassword), null, null);
-//            mDecryptionResultHandler = null;
+            String decryptedUsername = decryptBytes(username);
+            String decryptedPassword = decryptBytes(password);
+            mDecryptionResultHandler.onDecryptionResult(new DecryptionResult(decryptedUsername, decryptedPassword), null, null);
+            mDecryptionResultHandler = null;
         } catch (KeyStoreException | UnrecoverableKeyException | NoSuchAlgorithmException | InvalidKeyException | NoSuchPaddingException e) {
             e.printStackTrace();
             throw new CryptoFailedException("Could not get key from Keystore", e);
@@ -317,29 +300,33 @@ public class CipherStorageKeystoreAESCBC extends FingerprintManager.Authenticati
         }
     }
 
-    private byte[] encryptString(Cipher cipher, String value) throws CryptoFailedException {
+
+
+    private byte[] encryptString(String value) throws CryptoFailedException {
         try {
-//            Cipher cipher = Cipher.getInstance(ENCRYPTION_TRANSFORMATION);
-//            cipher.init(Cipher.ENCRYPT_MODE, mEncryptParams.key);
-            if (cipher == null) {
-                return value.getBytes();
-            }
-            byte[] encryptedBytes = cipher.doFinal(value.getBytes("UTF-8"));
-            return encryptedBytes;
+            Cipher cipher = Cipher.getInstance(ENCRYPTION_TRANSFORMATION);
+            cipher.init(Cipher.ENCRYPT_MODE, mEncryptParams.key);
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            // write initialization vector to the beginning of the stream
+            byte[] iv = cipher.getIV();
+            outputStream.write(iv, 0, iv.length);
+            // encrypt the value using a CipherOutputStream
+            CipherOutputStream cipherOutputStream = new CipherOutputStream(outputStream, cipher);
+            cipherOutputStream.write(value.getBytes("UTF-8"));
+            cipherOutputStream.close();
+            return outputStream.toByteArray();
         } catch (Exception e) {
             throw new CryptoFailedException("Could not encrypt value for service", e);
         }
     }
 
-    private String decryptBytes(Cipher cipher, byte[] bytes) throws CryptoFailedException {
+    private String decryptBytes(byte[] bytes) throws CryptoFailedException {
         try {
-//            Cipher cipher = Cipher.getInstance(ENCRYPTION_TRANSFORMATION);
-//            cipher.init(Cipher.DECRYPT_MODE, mDecryptParams.key);
-            if (cipher == null) {
-                return new String(bytes, Charset.forName("UTF-8"));
-            }
-
+            Cipher cipher = Cipher.getInstance(ENCRYPTION_TRANSFORMATION);
             ByteArrayInputStream inputStream = new ByteArrayInputStream(bytes);
+            // read the initialization vector from the beginning of the stream
+            IvParameterSpec ivParams = readIvFromStream(inputStream);
+            cipher.init(Cipher.DECRYPT_MODE, mDecryptParams.key, ivParams);
             // decrypt the bytes using a CipherInputStream
             CipherInputStream cipherInputStream = new CipherInputStream(
                     inputStream, cipher);
@@ -353,11 +340,7 @@ public class CipherStorageKeystoreAESCBC extends FingerprintManager.Authenticati
                 output.write(buffer, 0, n);
             }
             return new String(output.toByteArray(), Charset.forName("UTF-8"));
-
-//            byte[] decryptedBytes = cipher.doFinal(bytes);
-//            return new String(decryptedBytes, Charset.forName("UTF-8"));
         } catch (Exception e) {
-            e.printStackTrace();;
             throw new CryptoFailedException("Could not decrypt bytes", e);
         }
     }
