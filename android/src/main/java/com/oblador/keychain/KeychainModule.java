@@ -203,7 +203,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     }
 
     private boolean isFingerprintAuthAvailable() {
-        return DeviceAvailability.isFingerprintAuthAvailable(getCurrentActivity());
+        return DeviceAvailability.isFingerprintAuthAvailable(getReactApplicationContext());
     }
 
     @NonNull
