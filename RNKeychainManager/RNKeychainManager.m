@@ -466,4 +466,20 @@ RCT_EXPORT_METHOD(setSharedWebCredentialsForServer:(NSString *)server withUserna
 }
 #endif
 
+RCT_EXPORT_METHOD(deleteAll:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
+{
+  NSArray *secItemClasses = @[(__bridge id)kSecClassGenericPassword,
+                              (__bridge id)kSecClassInternetPassword,
+                              (__bridge id)kSecClassCertificate,
+                              (__bridge id)kSecClassKey,
+                              (__bridge id)kSecClassIdentity];
+
+  for (id secItemClass in secItemClasses) {
+    NSDictionary *spec = @{(__bridge id)kSecClass: secItemClass};
+    SecItemDelete((__bridge CFDictionaryRef)spec);
+  }
+
+  return resolve(@(YES));
+}
+
 @end

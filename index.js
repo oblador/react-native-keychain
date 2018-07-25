@@ -231,3 +231,19 @@ export function setSharedWebCredentials(
     password
   );
 }
+
+/**
+ * Deletes all available keychain data for your app
+ * @return {Promise} Resolves to `true` when successful
+ */
+export function deleteAll() : Promise {
+  if (Platform.OS !== 'ios') {
+    return Promise.reject(
+      new Error(
+        `deleteAll() is not supported on ${Platform.OS} yet`
+      )
+    );
+  }
+
+  return RNKeychainManager.deleteAll();
+}

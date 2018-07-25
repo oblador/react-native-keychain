@@ -85,6 +85,10 @@ Inquire if the type of local authentication policy is supported on this device w
 
 Get what type of hardware biometry support the device has. Resolves to a `Keychain.BIOMETRY_TYPE` value when supported, otherwise `null`.
 
+### `deleteAll()`
+
+Removes all keychain items associated with your app. iOS only.
+
 ### Options
 
 | Key | Platform | Description | Default |
