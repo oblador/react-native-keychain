@@ -69,6 +69,19 @@ export default class KeychainExample extends Component {
     }
   }
 
+  async deleteAll() {
+    try {
+      await Keychain.deleteAll();
+      this.setState({
+        status: 'All Credentials Reset!',
+        username: '',
+        password: '',
+      });
+    } catch (err) {
+      this.setState({ status: 'Could not reset keychain, ' + err });
+    }
+  }
+
   render() {
     return (
       <KeyboardAvoidingView
@@ -144,6 +157,16 @@ export default class KeychainExample extends Component {
                 <Text style={styles.buttonText}>Reset</Text>
               </View>
             </TouchableHighlight>
+            </View>
+            <View style={[styles.buttons, styles.centerButtons]}>
+              <TouchableHighlight
+                onPress={() => this.deleteAll()}
+                style={styles.button}
+              >
+              <View style={styles.reset}>
+                <Text style={styles.buttonText}>Delete All Keychain Data</Text>
+              </View>
+            </TouchableHighlight>
           </View>
         </View>
       </KeyboardAvoidingView>
@@ -196,6 +219,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginTop: 20,
+  },
+  centerButtons: {
+    justifyContent: 'center',
   },
   button: {
     borderRadius: 3,
