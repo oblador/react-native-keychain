@@ -61,7 +61,7 @@ public class CipherStorageKeystoreAESCBC implements CipherStorage {
             KeyStore keyStore = getKeyStoreAndLoad();
 
             if (!keyStore.containsAlias(service)) {
-                addAliasToKeystore(service);
+                generateKeyAndStoreUnderAlias(service);
             }
 
             Key key = keyStore.getKey(service, null);
@@ -79,7 +79,7 @@ public class CipherStorageKeystoreAESCBC implements CipherStorage {
         }
     }
 
-    private void addAliasToKeystore(@NonNull String service) throws NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException {
+    private void generateKeyAndStoreUnderAlias(@NonNull String service) throws NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException {
         AlgorithmParameterSpec spec = new KeyGenParameterSpec.Builder(
                 service,
                 KeyProperties.PURPOSE_DECRYPT | KeyProperties.PURPOSE_ENCRYPT)
