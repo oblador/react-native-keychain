@@ -155,13 +155,13 @@ function getOptionsArgument(serviceOrOptions?: string | Options) {
 export function setGenericPassword(
   username: string,
   password: string,
-  serviceOrOptions?: string | Options,
+  serviceOrOptions?: string | Options
 ): Promise {
   return RNKeychainManager.setGenericPasswordForOptions(
     getOptionsArgument(serviceOrOptions),
-    serviceOrOptions,
     username,
     password,
+    serviceOrOptions,
   );
 }
 
@@ -174,7 +174,8 @@ export function getGenericPassword(
   serviceOrOptions?: string | Options
 ): Promise {
   return RNKeychainManager.getGenericPasswordForOptions(
-    getOptionsArgument(serviceOrOptions), serviceOrOptions
+    getOptionsArgument(serviceOrOptions),
+    serviceOrOptions,
   );
 }
 
