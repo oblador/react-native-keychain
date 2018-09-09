@@ -6,16 +6,16 @@ import android.os.Build;
 import android.content.Context;
 import android.app.KeyguardManager;
 import android.hardware.fingerprint.FingerprintManager;
-import android.support.v4.app.ActivityCompat;
 
 public class DeviceAvailability {
     public static boolean isFingerprintAuthAvailable(Context context) {
         if (android.os.Build.VERSION.SDK_INT >= 23) {
             FingerprintManager fingerprintManager =
                 (FingerprintManager) context.getSystemService(Context.FINGERPRINT_SERVICE);
-            return fingerprintManager != null && fingerprintManager.isHardwareDetected() &&
-                fingerprintManager.hasEnrolledFingerprints() &&
-                ActivityCompat.checkSelfPermission(context, Manifest.permission.USE_FINGERPRINT) == PackageManager.PERMISSION_GRANTED;
+            return fingerprintManager != null &&
+                context.checkSelfPermission(Manifest.permission.USE_FINGERPRINT) == PackageManager.PERMISSION_GRANTED &&
+                fingerprintManager.isHardwareDetected() &&
+                fingerprintManager.hasEnrolledFingerprints();
         }
         return false;
     }
