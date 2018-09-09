@@ -88,6 +88,7 @@ public class CipherStorageKeystoreRSAECB extends FingerprintManager.Authenticati
                                       CharSequence errString) {
         if (mDecryptParams != null && mDecryptParams.resultHandler != null) {
             mDecryptParams.resultHandler.onDecrypt(null, null, errString.toString());
+            mFingerprintCancellationSignal.cancel();
             mDecryptParams = null;
         }
     }
@@ -104,6 +105,7 @@ public class CipherStorageKeystoreRSAECB extends FingerprintManager.Authenticati
     public void onAuthenticationFailed() {
         if (mDecryptParams != null && mDecryptParams.resultHandler != null) {
             mDecryptParams.resultHandler.onDecrypt(null, null, "Authentication failed.");
+            mFingerprintCancellationSignal.cancel();
             mDecryptParams = null;
         }
     }
@@ -126,6 +128,10 @@ public class CipherStorageKeystoreRSAECB extends FingerprintManager.Authenticati
     private boolean startFingerprintAuthentication() {
         if (mKeyguardManager.isKeyguardSecure() &&
                 mContext.checkSelfPermission(Manifest.permission.USE_FINGERPRINT) == PackageManager.PERMISSION_GRANTED) {
+            // If we have a previous cancellationSignal, cancel it.
+            if (mFingerprintCancellationSignal != null) {
+                mFingerprintCancellationSignal.cancel();
+            }
             mFingerprintCancellationSignal = new CancellationSignal();
             mFingerprintManager.authenticate(null,
                     mFingerprintCancellationSignal,
