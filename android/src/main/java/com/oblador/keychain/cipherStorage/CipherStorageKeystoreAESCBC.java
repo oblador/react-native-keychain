@@ -98,20 +98,6 @@ public class CipherStorageKeystoreAESCBC implements CipherStorage {
         KeyGenerator generator = KeyGenerator.getInstance(ENCRYPTION_ALGORITHM, KEYSTORE_TYPE);
         generator.init(spec);
 
-    private void generateKeyAndStoreUnderAlias(@NonNull String service) throws NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException {
-        AlgorithmParameterSpec spec = new KeyGenParameterSpec.Builder(
-                service,
-                KeyProperties.PURPOSE_DECRYPT | KeyProperties.PURPOSE_ENCRYPT)
-                .setBlockModes(ENCRYPTION_BLOCK_MODE)
-                .setEncryptionPaddings(ENCRYPTION_PADDING)
-                .setRandomizedEncryptionRequired(true)
-                //.setUserAuthenticationRequired(true) // Will throw InvalidAlgorithmParameterException if there is no fingerprint enrolled on the device
-                .setKeySize(ENCRYPTION_KEY_SIZE)
-                .build();
-
-        KeyGenerator generator = KeyGenerator.getInstance(ENCRYPTION_ALGORITHM, KEYSTORE_TYPE);
-        generator.init(spec);
-
         generator.generateKey();
     }
 

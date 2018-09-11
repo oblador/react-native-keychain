@@ -54,7 +54,7 @@ public class CipherStorageKeystoreRSAECB extends FingerprintManager.Authenticati
             ENCRYPTION_ALGORITHM + "/" +
                     ENCRYPTION_BLOCK_MODE + "/" +
                     ENCRYPTION_PADDING;
-    public static final int ENCRYPTION_KEY_SIZE = 512;
+    public static final int ENCRYPTION_KEY_SIZE = 1024;
 
     private CancellationSignal mFingerprintCancellationSignal;
     private FingerprintManager mFingerprintManager;
