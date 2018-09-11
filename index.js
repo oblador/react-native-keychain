@@ -109,6 +109,17 @@ export function setInternetCredentials(
 }
 
 /**
+ * Checks if we have a login combination for `server`.
+ * @param {string} server URL to server.
+ * @return {Promise} Resolves to `true` when successful
+ */
+export function hasInternetCredentials(
+  server: string,
+): Promise {
+  return RNKeychainManager.hasInternetCredentialsForServer(server);
+}
+
+/**
  * Fetches login combination for `server`.
  * @param {string} server URL to server.
  * @param {object} options Keychain options, iOS only
