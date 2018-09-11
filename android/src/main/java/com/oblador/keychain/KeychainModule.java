@@ -1,6 +1,7 @@
 package com.oblador.keychain;
 
 import android.annotation.TargetApi;
+import android.app.Activity;
 import android.os.Build;
 import android.support.annotation.NonNull;
 import android.util.Log;
@@ -292,11 +293,22 @@ public class KeychainModule extends ReactContextBaseJavaModule {
         if (currentCipherStorage == null) {
             throw new CryptoFailedException("Unsupported Android SDK " + Build.VERSION.SDK_INT);
         }
+
+        if (currentCipherStorage.getRequiresCurentActivity()) {
+            currentCipherStorage.setCurrentActivity(getCurrentActivity());
+        }
+
         return currentCipherStorage;
     }
 
     private CipherStorage getCipherStorageByName(String cipherStorageName) {
-        return cipherStorageMap.get(cipherStorageName);
+        CipherStorage storage = cipherStorageMap.get(cipherStorageName);
+
+        if (storage.getRequiresCurentActivity()) {
+            storage.setCurrentActivity(getCurrentActivity());
+        }
+
+        return storage;
     }
 
     private boolean isFingerprintAuthAvailable() {

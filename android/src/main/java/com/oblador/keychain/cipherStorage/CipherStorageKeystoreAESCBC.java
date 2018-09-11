@@ -1,6 +1,7 @@
 package com.oblador.keychain.cipherStorage;
 
 import android.annotation.TargetApi;
+import android.app.Activity;
 import android.os.Build;
 import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyProperties;
@@ -202,5 +203,16 @@ public class CipherStorageKeystoreAESCBC implements CipherStorage {
     @NonNull
     private String getDefaultServiceIfEmpty(@NonNull String service) {
         return service.isEmpty() ? DEFAULT_SERVICE : service;
+    }
+
+    @Override
+    public boolean getRequiresCurentActivity() {
+        // AESCBC does not need the current activity
+        return false;
+    }
+
+    @Override
+    public void setCurrentActivity(Activity activity) {
+        // AESCBC does not need the current activity
     }
 }

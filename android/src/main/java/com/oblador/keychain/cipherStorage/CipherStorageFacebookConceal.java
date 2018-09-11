@@ -1,5 +1,6 @@
 package com.oblador.keychain.cipherStorage;
 
+import android.app.Activity;
 import android.os.Build;
 import android.support.annotation.NonNull;
 
@@ -97,5 +98,16 @@ public class CipherStorageFacebookConceal implements CipherStorage {
 
     private String getEntityPrefix(String service) {
         return KEYCHAIN_DATA + ":" + service;
+    }
+
+    @Override
+    public boolean getRequiresCurentActivity() {
+        // Facebook conceal does not need the current activity
+        return false;
+    }
+
+    @Override
+    public void setCurrentActivity(Activity activity) {
+        // Facebook conceal does not need the current activity
     }
 }

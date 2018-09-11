@@ -1,5 +1,6 @@
 package com.oblador.keychain.cipherStorage;
 
+import android.app.Activity;
 import android.support.annotation.NonNull;
 
 import com.oblador.keychain.exceptions.CryptoFailedException;
@@ -46,4 +47,7 @@ public interface CipherStorage {
     boolean getCipherBiometrySupported();
 
     int getMinSupportedApiLevel();
+
+    boolean getRequiresCurentActivity();
+    void setCurrentActivity(Activity activity);
 }
