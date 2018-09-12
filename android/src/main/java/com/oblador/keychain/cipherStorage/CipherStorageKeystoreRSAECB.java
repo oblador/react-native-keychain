@@ -130,36 +130,28 @@ public class CipherStorageKeystoreRSAECB implements CipherStorage, BiometricProm
         }
     }
 
+    private boolean canStartFingerprintAuthentication() {
+        return (mKeyguardManager.isKeyguardSecure() && mContext.checkSelfPermission(Manifest.permission.USE_FINGERPRINT) == PackageManager.PERMISSION_GRANTED)
+    }
 
-    private boolean startFingerprintAuthentication() throws Exception {
-        if (mKeyguardManager.isKeyguardSecure() &&
-                mContext.checkSelfPermission(Manifest.permission.USE_FINGERPRINT) == PackageManager.PERMISSION_GRANTED) {
-            // If we have a previous cancellationSignal, cancel it.
-            if (mBiometricPromptCompatCancellationSignal != null) {
-                mBiometricPromptCompatCancellationSignal.cancel();
-            }
-
-            mBiometricPromptCompatCancellationSignal = new CancellationSignal();
-
-            if (mActivity == null) {
-                throw new Exception("mActivity is null (make sure to call setCurrentActivity)");
-            }
-
-            try {
-                mBiometricPromptCompat = new BiometricPromptCompat.Builder(mActivity)
-                    .setTitle("Authentication required")
-                    .setSubtitle("Please use biometric authentication to unlock the app")
-                    .build();
-                mBiometricPromptCompat.authenticate(mBiometricPromptCompatCancellationSignal, this);
-            } catch (Exception e) {
-                e.printStackTrace();
-                return false;
-            }
-
-            return true;
+    private void startFingerprintAuthentication() throws Exception {
+        // If we have a previous cancellationSignal, cancel it.
+        if (mBiometricPromptCompatCancellationSignal != null) {
+            mBiometricPromptCompatCancellationSignal.cancel();
         }
 
-        return false;
+        if (mActivity == null) {
+            throw new Exception("mActivity is null (make sure to call setCurrentActivity)");
+        }
+
+        mBiometricPromptCompatCancellationSignal = new CancellationSignal();
+
+        mBiometricPromptCompat = new BiometricPromptCompat.Builder(mActivity)
+            .setTitle("Authentication required")
+            .setSubtitle("Please use biometric authentication to unlock the app")
+            .build();
+
+        mBiometricPromptCompat.authenticate(mBiometricPromptCompatCancellationSignal, this);
     }
 
     @Override
@@ -202,7 +194,6 @@ public class CipherStorageKeystoreRSAECB implements CipherStorage, BiometricProm
         } catch (KeyStoreException | KeyStoreAccessException e) {
             throw new CryptoFailedException("Could not access Keystore for service " + service, e);
         } catch (Exception e) {
-            e.printStackTrace();
             throw new CryptoFailedException("Unknown error: " + e.getMessage(), e);
         }
     }
@@ -229,33 +220,38 @@ public class CipherStorageKeystoreRSAECB implements CipherStorage, BiometricProm
     public void decrypt(@NonNull DecryptionResultHandler decryptionResultHandler, @NonNull String service, @NonNull byte[] username, @NonNull byte[] password) throws CryptoFailedException {
         service = getDefaultServiceIfEmpty(service);
 
+        KeyStore keyStore;
+        Key key;
+
         try {
             KeyStore keyStore = getKeyStoreAndLoad();
-
             Key key = keyStore.getKey(service, null);
-
-            String decryptedUsername = null;
-            String decryptedPassword = null;
-            try {
-                decryptedUsername = decryptBytes(key, username);
-                decryptedPassword = decryptBytes(key, password);
-            } catch (UserNotAuthenticatedException e) {
-                mDecryptParams = new CipherDecryptionParams(decryptionResultHandler, key, username, password);
-                if (!this.startFingerprintAuthentication()) {
-                    throw new CryptoFailedException("Could not start fingerprint Authentication", e);
-                }
-                return;
-            }
-
-            decryptionResultHandler.onDecrypt(new DecryptionResult(decryptedUsername, decryptedPassword), null, null);
         } catch (KeyStoreException | UnrecoverableKeyException | NoSuchAlgorithmException e) {
             throw new CryptoFailedException("Could not get key from Keystore", e);
         } catch (KeyStoreAccessException e) {
             throw new CryptoFailedException("Could not access Keystore", e);
         } catch (Exception e) {
-            e.printStackTrace();
             throw new CryptoFailedException("Unknown error: " + e.getMessage(), e);
         }
+
+        String decryptedUsername;
+        String decryptedPassword;
+
+        try {
+            decryptedUsername = decryptBytes(key, username);
+            decryptedPassword = decryptBytes(key, password);
+        } catch (UserNotAuthenticatedException e) {
+            mDecryptParams = new CipherDecryptionParams(decryptionResultHandler, key, username, password);
+
+            if (!canStartFingerprintAuthentication()) {
+                throw new CryptoFailedException("Could not start fingerprint Authentication", e);
+            }
+
+            startFingerprintAuthentication();
+            return;
+        }
+
+        decryptionResultHandler.onDecrypt(new DecryptionResult(decryptedUsername, decryptedPassword), null, null);
     }
 
     @Override
@@ -271,7 +267,6 @@ public class CipherStorageKeystoreRSAECB implements CipherStorage, BiometricProm
         } catch (KeyStoreException e) {
             throw new KeyStoreAccessException("Failed to access Keystore", e);
         } catch (Exception e) {
-            e.printStackTrace();
             throw new KeyStoreAccessException("Unknown error " + e.getMessage(), e);
         }
     }
@@ -313,7 +308,6 @@ public class CipherStorageKeystoreRSAECB implements CipherStorage, BiometricProm
         } catch (UserNotAuthenticatedException e) {
             throw e;
         } catch (Exception e) {
-            e.printStackTrace();
             throw new CryptoFailedException("Could not decrypt bytes", e);
         }
     }
