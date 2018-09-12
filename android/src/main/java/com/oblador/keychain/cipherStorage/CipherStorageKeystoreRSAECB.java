@@ -215,7 +215,7 @@ public class CipherStorageKeystoreRSAECB implements CipherStorage, BiometricProm
                 .setEncryptionPaddings(ENCRYPTION_PADDING)
                 .setRandomizedEncryptionRequired(true)
                 .setUserAuthenticationRequired(true)
-                .setUserAuthenticationValidityDurationSeconds(30)
+                .setUserAuthenticationValidityDurationSeconds(-1)
                 .setKeySize(ENCRYPTION_KEY_SIZE)
                 .build();
 
