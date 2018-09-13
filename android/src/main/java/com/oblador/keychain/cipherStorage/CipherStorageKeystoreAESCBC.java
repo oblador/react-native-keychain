@@ -206,7 +206,7 @@ public class CipherStorageKeystoreAESCBC implements CipherStorage {
     }
 
     @Override
-    public boolean getRequiresCurentActivity() {
+    public boolean getRequiresCurrentActivity() {
         // AESCBC does not need the current activity
         return false;
     }

@@ -328,7 +328,7 @@ public class CipherStorageKeystoreRSAECB implements CipherStorage, BiometricProm
     }
 
     @Override
-    public boolean getRequiresCurentActivity() {
+    public boolean getRequiresCurrentActivity() {
         return true;
     }
 

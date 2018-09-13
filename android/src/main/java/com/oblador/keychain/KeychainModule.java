@@ -294,7 +294,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
             throw new CryptoFailedException("Unsupported Android SDK " + Build.VERSION.SDK_INT);
         }
 
-        if (currentCipherStorage.getRequiresCurentActivity()) {
+        if (currentCipherStorage.getRequiresCurrentActivity()) {
             currentCipherStorage.setCurrentActivity(getCurrentActivity());
         }
 
@@ -304,7 +304,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     private CipherStorage getCipherStorageByName(String cipherStorageName) {
         CipherStorage storage = cipherStorageMap.get(cipherStorageName);
 
-        if (storage.getRequiresCurentActivity()) {
+        if (storage.getRequiresCurrentActivity()) {
             storage.setCurrentActivity(getCurrentActivity());
         }
 
