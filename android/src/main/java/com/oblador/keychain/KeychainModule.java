@@ -195,11 +195,8 @@ public class KeychainModule extends ReactContextBaseJavaModule {
 
             try {
                 CipherStorage cipherStorage = getCipherStorageForCurrentAPILevel(getUseBiometry(accessControl));
-                if (cipherStorage != null) {
-                        cipherStorage.removeKey(defaultService);
-                }
+                cipherStorage.removeKey(defaultService);
             } catch (Exception error) {
-                error.printStackTrace();
                 Log.e(KEYCHAIN_MODULE, "Failed removing invalidated key: " + error.getMessage());
             }
 
