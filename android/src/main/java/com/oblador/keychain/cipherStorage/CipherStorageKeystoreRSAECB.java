@@ -2,6 +2,7 @@ package com.oblador.keychain.cipherStorage;
 
 import android.Manifest;
 import android.annotation.TargetApi;
+import android.app.Activity;
 import android.app.KeyguardManager;
 import android.content.Context;
 import android.content.pm.PackageManager;
@@ -12,6 +13,7 @@ import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyProperties;
 import android.security.keystore.UserNotAuthenticatedException;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import com.facebook.react.bridge.ReactApplicationContext;
 
 import com.oblador.keychain.exceptions.CryptoFailedException;
@@ -41,9 +43,10 @@ import javax.crypto.CipherInputStream;
 import javax.crypto.CipherOutputStream;
 import javax.crypto.KeyGenerator;
 import javax.crypto.spec.IvParameterSpec;
+import androidx.biometrics.BiometricPrompt;
 
 @TargetApi(Build.VERSION_CODES.M)
-public class CipherStorageKeystoreRSAECB extends FingerprintManager.AuthenticationCallback implements CipherStorage {
+public class CipherStorageKeystoreRSAECB extends BiometricPrompt.AuthenticationCallback implements CipherStorage {
     public static final String CIPHER_STORAGE_NAME = "KeystoreAESCBC";
     public static final String DEFAULT_SERVICE = "RN_KEYCHAIN_DEFAULT_ALIAS";
     public static final String KEYSTORE_TYPE = "AndroidKeyStore";
@@ -54,12 +57,13 @@ public class CipherStorageKeystoreRSAECB extends FingerprintManager.Authenticati
             ENCRYPTION_ALGORITHM + "/" +
                     ENCRYPTION_BLOCK_MODE + "/" +
                     ENCRYPTION_PADDING;
-    public static final int ENCRYPTION_KEY_SIZE = 512;
+    public static final int ENCRYPTION_KEY_SIZE = 1024;
 
-    private CancellationSignal mFingerprintCancellationSignal;
-    private FingerprintManager mFingerprintManager;
+    private CancellationSignal mBiometricPromptCancellationSignal;
+    private BiometricPrompt mBiometricPrompt;
     private KeyguardManager mKeyguardManager;
     private Context mContext;
+    private Activity mActivity;
 
     class CipherDecryptionParams {
         public final DecryptionResultHandler resultHandler;
@@ -79,70 +83,64 @@ public class CipherStorageKeystoreRSAECB extends FingerprintManager.Authenticati
 
     public CipherStorageKeystoreRSAECB(ReactApplicationContext reactContext) {
         mContext = (Context) reactContext;
-        mFingerprintManager = (FingerprintManager) reactContext.getSystemService(Context.FINGERPRINT_SERVICE);
+
         mKeyguardManager = (KeyguardManager) reactContext.getSystemService(Context.KEYGUARD_SERVICE);
     }
 
     @Override
-    public void onAuthenticationError(int errMsgId,
-                                      CharSequence errString) {
+    public void onAuthenticationError(int errorCode, @Nullable CharSequence errString) {
         if (mDecryptParams != null && mDecryptParams.resultHandler != null) {
-            mDecryptParams.resultHandler.onDecrypt(null, null, errString.toString());
-            mFingerprintCancellationSignal.cancel();
+            mDecryptParams.resultHandler.onDecrypt(null, errString.toString());
+            mBiometricPromptCancellationSignal.cancel();
             mDecryptParams = null;
-        }
-    }
-
-    @Override
-    public void onAuthenticationHelp(int helpMsgId,
-                                     CharSequence helpString) {
-        if (mDecryptParams != null && mDecryptParams.resultHandler != null) {
-            mDecryptParams.resultHandler.onDecrypt(null, helpString.toString(), null);
         }
     }
 
     @Override
     public void onAuthenticationFailed() {
         if (mDecryptParams != null && mDecryptParams.resultHandler != null) {
-            mDecryptParams.resultHandler.onDecrypt(null, null, "Authentication failed.");
-            mFingerprintCancellationSignal.cancel();
+            mDecryptParams.resultHandler.onDecrypt(null, "Authentication failed.");
+            mBiometricPromptCancellationSignal.cancel();
             mDecryptParams = null;
         }
     }
 
     @Override
-    public void onAuthenticationSucceeded(FingerprintManager.AuthenticationResult result) {
+    public void onAuthenticationSucceeded(@NonNull BiometricPrompt.AuthenticationResult result) {
         if (mDecryptParams != null && mDecryptParams.resultHandler != null) {
             try {
                 String decryptedUsername = decryptBytes(mDecryptParams.key, mDecryptParams.username);
                 String decryptedPassword = decryptBytes(mDecryptParams.key, mDecryptParams.password);
-                mDecryptParams.resultHandler.onDecrypt(new DecryptionResult(decryptedUsername, decryptedPassword), null, null);
+                mDecryptParams.resultHandler.onDecrypt(new DecryptionResult(decryptedUsername, decryptedPassword), null);
             } catch (Exception e) {
-                mDecryptParams.resultHandler.onDecrypt(null, null, e.getMessage());
+                mDecryptParams.resultHandler.onDecrypt(null, e.getMessage());
             }
             mDecryptParams = null;
         }
     }
 
+    private boolean canStartFingerprintAuthentication() {
+        return (mKeyguardManager.isKeyguardSecure() && mContext.checkSelfPermission(Manifest.permission.USE_FINGERPRINT) == PackageManager.PERMISSION_GRANTED);
+    }
 
-    private boolean startFingerprintAuthentication() {
-        if (mKeyguardManager.isKeyguardSecure() &&
-                mContext.checkSelfPermission(Manifest.permission.USE_FINGERPRINT) == PackageManager.PERMISSION_GRANTED) {
-            // If we have a previous cancellationSignal, cancel it.
-            if (mFingerprintCancellationSignal != null) {
-                mFingerprintCancellationSignal.cancel();
-            }
-            mFingerprintCancellationSignal = new CancellationSignal();
-            mFingerprintManager.authenticate(null,
-                    mFingerprintCancellationSignal,
-                    0,     // flags
-                    this,  // authentication callback
-                    null); // handler
-
-            return true;
+    private void startFingerprintAuthentication() throws Exception {
+        // If we have a previous cancellationSignal, cancel it.
+        if (mBiometricPromptCancellationSignal != null) {
+            mBiometricPromptCancellationSignal.cancel();
         }
 
-        return false;
+        if (mActivity == null) {
+            throw new Exception("mActivity is null (make sure to call setCurrentActivity)");
+        }
+
+        mBiometricPromptCancellationSignal = new CancellationSignal();
+
+        BiometricPrompt.PromptInfo prompInfo = new BiometricPrompt.PromptInfo.Builder()
+                .setTitle("Authentication required")
+            .setSubtitle("Please use biometric authentication to unlock the app")
+            .build();
+
+        mBiometricPrompt.authenticate(prompInfo);
     }
 
     @Override
@@ -197,7 +195,7 @@ public class CipherStorageKeystoreRSAECB extends FingerprintManager.Authenticati
                 .setEncryptionPaddings(ENCRYPTION_PADDING)
                 .setRandomizedEncryptionRequired(true)
                 .setUserAuthenticationRequired(true)
-                .setUserAuthenticationValidityDurationSeconds(30)
+                .setUserAuthenticationValidityDurationSeconds(-1)
                 .setKeySize(ENCRYPTION_KEY_SIZE)
                 .build();
 
@@ -211,25 +209,12 @@ public class CipherStorageKeystoreRSAECB extends FingerprintManager.Authenticati
     public void decrypt(@NonNull DecryptionResultHandler decryptionResultHandler, @NonNull String service, @NonNull byte[] username, @NonNull byte[] password) throws CryptoFailedException {
         service = getDefaultServiceIfEmpty(service);
 
+        KeyStore keyStore;
+        Key key;
+
         try {
-            KeyStore keyStore = getKeyStoreAndLoad();
-
-            Key key = keyStore.getKey(service, null);
-
-            String decryptedUsername = null;
-            String decryptedPassword = null;
-            try {
-                decryptedUsername = decryptBytes(key, username);
-                decryptedPassword = decryptBytes(key, password);
-            } catch (UserNotAuthenticatedException e) {
-                mDecryptParams = new CipherDecryptionParams(decryptionResultHandler, key, username, password);
-                if (!this.startFingerprintAuthentication()) {
-                    throw new CryptoFailedException("Could not start fingerprint Authentication", e);
-                }
-                return;
-            }
-
-            decryptionResultHandler.onDecrypt(new DecryptionResult(decryptedUsername, decryptedPassword), null, null);
+            keyStore = getKeyStoreAndLoad();
+            key = keyStore.getKey(service, null);
         } catch (KeyStoreException | UnrecoverableKeyException | NoSuchAlgorithmException e) {
             throw new CryptoFailedException("Could not get key from Keystore", e);
         } catch (KeyStoreAccessException e) {
@@ -237,6 +222,29 @@ public class CipherStorageKeystoreRSAECB extends FingerprintManager.Authenticati
         } catch (Exception e) {
             throw new CryptoFailedException("Unknown error: " + e.getMessage(), e);
         }
+
+        String decryptedUsername;
+        String decryptedPassword;
+
+        try {
+            decryptedUsername = decryptBytes(key, username);
+            decryptedPassword = decryptBytes(key, password);
+        } catch (UserNotAuthenticatedException e) {
+            mDecryptParams = new CipherDecryptionParams(decryptionResultHandler, key, username, password);
+
+            if (!canStartFingerprintAuthentication()) {
+                throw new CryptoFailedException("Could not start fingerprint Authentication", e);
+            }
+
+            try {
+                this.startFingerprintAuthentication();
+            } catch (Exception e1) {
+                e1.printStackTrace();
+            }
+            return;
+        }
+
+        decryptionResultHandler.onDecrypt(new DecryptionResult(decryptedUsername, decryptedPassword), null);
     }
 
     @Override
@@ -293,7 +301,6 @@ public class CipherStorageKeystoreRSAECB extends FingerprintManager.Authenticati
         } catch (UserNotAuthenticatedException e) {
             throw e;
         } catch (Exception e) {
-            e.printStackTrace();
             throw new CryptoFailedException("Could not decrypt bytes", e);
         }
     }
@@ -311,5 +318,15 @@ public class CipherStorageKeystoreRSAECB extends FingerprintManager.Authenticati
     @NonNull
     private String getDefaultServiceIfEmpty(@NonNull String service) {
         return service.isEmpty() ? DEFAULT_SERVICE : service;
+    }
+
+    @Override
+    public boolean getRequiresCurentActivity() {
+        return true;
+    }
+
+    @Override
+    public void setCurrentActivity(Activity activity) {
+      mActivity = activity;
     }
 }

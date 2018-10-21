@@ -1,6 +1,7 @@
 package com.oblador.keychain.cipherStorage;
 
 import android.annotation.TargetApi;
+import android.app.Activity;
 import android.os.Build;
 import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyProperties;
@@ -30,7 +31,8 @@ import javax.crypto.KeyGenerator;
 import javax.crypto.spec.IvParameterSpec;
 
 @TargetApi(Build.VERSION_CODES.M)
-public class CipherStorageKeystoreAESCBC implements CipherStorage {
+public class
+CipherStorageKeystoreAESCBC implements CipherStorage {
     public static final String CIPHER_STORAGE_NAME = "KeystoreAESCBC";
     public static final String DEFAULT_SERVICE = "RN_KEYCHAIN_DEFAULT_ALIAS";
     public static final String KEYSTORE_TYPE = "AndroidKeyStore";
@@ -113,7 +115,7 @@ public class CipherStorageKeystoreAESCBC implements CipherStorage {
             String decryptedUsername = decryptBytes(key, username);
             String decryptedPassword = decryptBytes(key, password);
 
-            decryptionResultHandler.onDecrypt(new DecryptionResult(decryptedUsername, decryptedPassword), null, null);
+            decryptionResultHandler.onDecrypt(new DecryptionResult(decryptedUsername, decryptedPassword), null);
         } catch (KeyStoreException | UnrecoverableKeyException | NoSuchAlgorithmException e) {
             throw new CryptoFailedException("Could not get key from Keystore", e);
         } catch (KeyStoreAccessException e) {
@@ -202,5 +204,16 @@ public class CipherStorageKeystoreAESCBC implements CipherStorage {
     @NonNull
     private String getDefaultServiceIfEmpty(@NonNull String service) {
         return service.isEmpty() ? DEFAULT_SERVICE : service;
+    }
+
+    @Override
+    public boolean getRequiresCurentActivity() {
+        // AESCBC does not need the current activity
+        return false;
+    }
+
+    @Override
+    public void setCurrentActivity(Activity activity) {
+        // AESCBC does not need the current activity
     }
 }

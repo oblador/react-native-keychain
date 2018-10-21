@@ -1,5 +1,6 @@
 package com.oblador.keychain.cipherStorage;
 
+import android.app.Activity;
 import android.support.annotation.NonNull;
 
 import com.oblador.keychain.exceptions.CryptoFailedException;
@@ -32,7 +33,7 @@ public interface CipherStorage {
     }
 
     interface DecryptionResultHandler {
-        public void onDecrypt(DecryptionResult decryptionResult, String info, String error);
+        public void onDecrypt(DecryptionResult decryptionResult, String error);
     }
 
     EncryptionResult encrypt(@NonNull String service, @NonNull String username, @NonNull String password) throws CryptoFailedException;
@@ -46,4 +47,7 @@ public interface CipherStorage {
     boolean getCipherBiometrySupported();
 
     int getMinSupportedApiLevel();
+
+    boolean getRequiresCurentActivity();
+    void setCurrentActivity(Activity activity);
 }

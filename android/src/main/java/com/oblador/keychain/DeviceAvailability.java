@@ -12,16 +12,17 @@ public class DeviceAvailability {
         if (android.os.Build.VERSION.SDK_INT >= 23) {
             FingerprintManager fingerprintManager =
                 (FingerprintManager) context.getSystemService(Context.FINGERPRINT_SERVICE);
-            return context.checkSelfPermission(Manifest.permission.USE_FINGERPRINT) == PackageManager.PERMISSION_GRANTED &&
+            return fingerprintManager != null &&
+                context.checkSelfPermission(Manifest.permission.USE_FINGERPRINT) == PackageManager.PERMISSION_GRANTED &&
                 fingerprintManager.isHardwareDetected() &&
                 fingerprintManager.hasEnrolledFingerprints();
         }
         return false;
     }
 
-    public static boolean isSecure(Context context) {
+    public static boolean isDeviceSecure(Context context) {
         KeyguardManager keyguardManager =
                 (KeyguardManager) context.getSystemService(Context.KEYGUARD_SERVICE);
-        return android.os.Build.VERSION.SDK_INT >= 23 && keyguardManager.isDeviceSecure();
+        return Build.VERSION.SDK_INT >= 23 && keyguardManager != null && keyguardManager.isDeviceSecure();
     }
 }

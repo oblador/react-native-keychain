@@ -1,6 +1,7 @@
 package com.oblador.keychain;
 
 import android.annotation.TargetApi;
+import android.app.Activity;
 import android.os.Build;
 import android.support.annotation.NonNull;
 import android.util.Log;
@@ -72,12 +73,6 @@ public class KeychainModule extends ReactContextBaseJavaModule {
         cipherStorageMap.put(cipherStorage.getCipherStorageName(), cipherStorage);
     }
 
-    private void sendFingerprintEvent(String message) {
-        mReactContext
-                .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
-                .emit("keychainFingerprintInfo", message);
-    }
-
     @ReactMethod
     public void setGenericPasswordForOptions(String service, String username, String password, ReadableMap options, Promise promise) {
         try {
@@ -128,7 +123,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
             if (resultSet.cipherStorageName.equals(currentCipherStorage.getCipherStorageName())) {
                 DecryptionResultHandler decryptionHandler = new DecryptionResultHandler() {
                     @Override
-                    public void onDecrypt(DecryptionResult decryptionResult, String info, String error) {
+                    public void onDecrypt(DecryptionResult decryptionResult, String error) {
                         if (decryptionResult != null) {
                             WritableMap credentials = Arguments.createMap();
 
@@ -137,8 +132,6 @@ public class KeychainModule extends ReactContextBaseJavaModule {
                             credentials.putString("password", decryptionResult.password);
 
                             promise.resolve(credentials);
-                        } else if (info != null) {
-                            KeychainModule.this.sendFingerprintEvent(info);
                         } else {
                             promise.reject(E_CRYPTO_FAILED, error);
                         }
@@ -153,7 +146,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
 
                 DecryptionResultHandler decryptionHandler = new DecryptionResultHandler() {
                     @Override
-                    public void onDecrypt(DecryptionResult decryptionResult, String info, String error) {
+                    public void onDecrypt(DecryptionResult decryptionResult, String error) {
                         if (decryptionResult != null) {
                             WritableMap credentials = Arguments.createMap();
 
@@ -177,8 +170,6 @@ public class KeychainModule extends ReactContextBaseJavaModule {
                             }
 
                             promise.resolve(credentials);
-                        } else if (info != null) {
-                            KeychainModule.this.sendFingerprintEvent(info);
                         } else {
                             promise.reject(E_CRYPTO_FAILED, error);
                         }
@@ -292,15 +283,26 @@ public class KeychainModule extends ReactContextBaseJavaModule {
         if (currentCipherStorage == null) {
             throw new CryptoFailedException("Unsupported Android SDK " + Build.VERSION.SDK_INT);
         }
+
+        if (currentCipherStorage.getRequiresCurentActivity()) {
+            currentCipherStorage.setCurrentActivity(getCurrentActivity());
+        }
+
         return currentCipherStorage;
     }
 
     private CipherStorage getCipherStorageByName(String cipherStorageName) {
-        return cipherStorageMap.get(cipherStorageName);
+        CipherStorage storage = cipherStorageMap.get(cipherStorageName);
+
+        if (storage.getRequiresCurentActivity()) {
+            storage.setCurrentActivity(getCurrentActivity());
+        }
+
+        return storage;
     }
 
     private boolean isFingerprintAuthAvailable() {
-        return DeviceAvailability.isFingerprintAuthAvailable(getCurrentActivity());
+        return DeviceAvailability.isFingerprintAuthAvailable(getReactApplicationContext());
     }
 
     @NonNull
