@@ -3,6 +3,7 @@ package com.oblador.keychain;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.support.annotation.NonNull;
+import android.text.TextUtils;
 import android.util.Base64;
 
 import com.facebook.react.bridge.ReactApplicationContext;
@@ -26,8 +27,9 @@ public class PrefsStorage {
 
     private final SharedPreferences prefs;
 
-    public PrefsStorage(ReactApplicationContext reactContext) {
-        this.prefs = reactContext.getSharedPreferences(KEYCHAIN_DATA, Context.MODE_PRIVATE);
+    public PrefsStorage(ReactApplicationContext reactContext, String namespace) {
+        String filename = TextUtils.isEmpty(namespace) ? KEYCHAIN_DATA : namespace;
+        this.prefs = reactContext.getSharedPreferences(filename, Context.MODE_PRIVATE);
     }
 
     public ResultSet getEncryptedEntry(@NonNull String service) {

@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		33690F292181190800388832 /* RNKeychainManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 5D82368B1B0CE2A6005A9EF3 /* RNKeychainManager.h */; };
+		33690F2A2181190A00388832 /* RNKeychainManager.h in Copy Headers */ = {isa = PBXBuildFile; fileRef = 5D82368B1B0CE2A6005A9EF3 /* RNKeychainManager.h */; };
 		5D82368F1B0CE3CB005A9EF3 /* RNKeychainManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 5D82368C1B0CE2A6005A9EF3 /* RNKeychainManager.m */; };
 		5D8236911B0CE3D6005A9EF3 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5D8236901B0CE3D6005A9EF3 /* Security.framework */; };
 		5DE632D52043423E004F9598 /* LocalAuthentication.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5DE632D42043423E004F9598 /* LocalAuthentication.framework */; };
@@ -21,6 +23,7 @@
 			dstPath = "include/$(PRODUCT_NAME)";
 			dstSubfolderSpec = 16;
 			files = (
+				33690F2A2181190A00388832 /* RNKeychainManager.h in Copy Headers */,
 			);
 			name = "Copy Headers";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -113,6 +116,7 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				33690F292181190800388832 /* RNKeychainManager.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -15,10 +15,31 @@
 #import <LocalAuthentication/LAContext.h>
 #import <UIKit/UIKit.h>
 
+NSString *const DEFAULT_NAME_SPACE = @"RNKeychain";
+
+@interface RNKeychainManager()
+
+@property (nonatomic, strong) NSString *namespace;
+
+@end
+
+
+
+
 @implementation RNKeychainManager
 
 @synthesize bridge = _bridge;
 RCT_EXPORT_MODULE();
+
+- (instancetype)initWithNamespace:(NSString *)namespace{
+    if (self = [super init]) {
+        if (!namespace) {
+            namespace = DEFAULT_NAME_SPACE;
+        }
+        self.namespace = namespace;
+    }
+    return self;
+}
 
 // Messages from the comments in <Security/SecBase.h>
 NSString *messageForError(NSError *error)
@@ -101,12 +122,19 @@ CFStringRef accessibleValue(NSDictionary *options)
   return kSecAttrAccessibleAfterFirstUnlock;
 }
 
-NSString *serviceValue(NSDictionary *options)
+//original service defined by user, used when return service back to user
+NSString *originalServiceValue(NSDictionary *options)
 {
   if (options && options[@"service"] != nil) {
     return options[@"service"];
   }
   return [[NSBundle mainBundle] bundleIdentifier];
+}
+
+//final service with namespace prefix, used in keychain
+- (NSString *)finalServiceValue:(NSDictionary *)options{
+  NSString *service = originalServiceValue(options);
+  return [NSString stringWithFormat:@"%@_%@", self.namespace, service];
 }
 
 NSString *accessGroupValue(NSDictionary *options)
@@ -287,7 +315,7 @@ RCT_EXPORT_METHOD(getSupportedBiometryType:(RCTPromiseResolveBlock)resolve rejec
 
 RCT_EXPORT_METHOD(setGenericPasswordForOptions:(NSDictionary *)options withUsername:(NSString *)username withPassword:(NSString *)password resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
 {
-  NSString *service = serviceValue(options);
+  NSString *service = [self finalServiceValue:options];
   NSDictionary *attributes = attributes = @{
     (__bridge NSString *)kSecClass: (__bridge id)(kSecClassGenericPassword),
     (__bridge NSString *)kSecAttrService: service,
@@ -302,7 +330,8 @@ RCT_EXPORT_METHOD(setGenericPasswordForOptions:(NSDictionary *)options withUsern
 
 RCT_EXPORT_METHOD(getGenericPasswordForOptions:(NSDictionary *)options resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
 {
-  NSString *service = serviceValue(options);
+  NSString *originalService = originalServiceValue(options);
+  NSString *service = [self finalServiceValue:options];
   NSString *authenticationPrompt = @"Authenticate to retrieve secret";
   if (options && options[kAuthenticationPromptMessage]) {
     authenticationPrompt = options[kAuthenticationPromptMessage];
@@ -337,7 +366,7 @@ RCT_EXPORT_METHOD(getGenericPasswordForOptions:(NSDictionary *)options resolver:
   NSString *password = [[NSString alloc] initWithData:[found objectForKey:(__bridge id)(kSecValueData)] encoding:NSUTF8StringEncoding];
 
   return resolve(@{
-    @"service": service,
+    @"service": originalService,
     @"username": username,
     @"password": password
   });
@@ -346,7 +375,7 @@ RCT_EXPORT_METHOD(getGenericPasswordForOptions:(NSDictionary *)options resolver:
 
 RCT_EXPORT_METHOD(resetGenericPasswordForOptions:(NSDictionary *)options resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
 {
-  NSString *service = serviceValue(options);
+  NSString *service = [self finalServiceValue:options];
 
   OSStatus osStatus = [self deletePasswordsForService:service];
 

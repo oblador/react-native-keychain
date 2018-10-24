@@ -12,15 +12,19 @@ import java.util.List;
 
 public class KeychainPackage implements ReactPackage {
 
-    public KeychainPackage() {
+    private String namespace;
 
+    private KeychainPackage() { }
+
+    public KeychainPackage(String namespace) {
+        this.namespace = namespace;
     }
 
     @Override
     public List<NativeModule> createNativeModules(
             ReactApplicationContext reactContext) {
         List<NativeModule> modules = new ArrayList<>();
-        modules.add(new KeychainModule(reactContext));
+        modules.add(new KeychainModule(reactContext, namespace));
         return modules;
     }
 

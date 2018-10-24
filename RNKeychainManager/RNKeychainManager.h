@@ -11,4 +11,6 @@
 
 @interface RNKeychainManager : NSObject <RCTBridgeModule>
 
+- (instancetype)initWithNamespace:(NSString *)namespace;
+
 @end

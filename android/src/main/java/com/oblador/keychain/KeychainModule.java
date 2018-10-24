@@ -35,6 +35,8 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     public static final String FINGERPRINT_SUPPORTED_NAME = "Fingerprint";
     public static final String EMPTY_STRING = "";
 
+    private String namespace;
+
     private final Map<String, CipherStorage> cipherStorageMap = new HashMap<>();
     private final PrefsStorage prefsStorage;
 
@@ -43,9 +45,10 @@ public class KeychainModule extends ReactContextBaseJavaModule {
         return KEYCHAIN_MODULE;
     }
 
-    public KeychainModule(ReactApplicationContext reactContext) {
+    public KeychainModule(ReactApplicationContext reactContext, String namespace) {
         super(reactContext);
-        prefsStorage = new PrefsStorage(reactContext);
+        this.namespace = namespace;
+        prefsStorage = new PrefsStorage(reactContext, namespace);
 
         addCipherStorageToMap(new CipherStorageFacebookConceal(reactContext));
         addCipherStorageToMap(new CipherStorageKeystoreAESCBC());
