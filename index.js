@@ -1,3 +1,4 @@
+// @flow
 import { NativeModules, Platform } from 'react-native';
 const { RNKeychainManager } = NativeModules;
 
