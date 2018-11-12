@@ -14,7 +14,7 @@ public class KeychainPackage implements ReactPackage {
 
     private String namespace;
 
-    private KeychainPackage() { }
+    public KeychainPackage() { }
 
     public KeychainPackage(String namespace) {
         this.namespace = namespace;

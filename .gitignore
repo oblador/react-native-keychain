@@ -26,6 +26,10 @@ node_modules
 # OSX
 .DS_Store
 
+# Android
+.idea/
+*.iml
+
 # Xcode
 build/
 *.pbxuser

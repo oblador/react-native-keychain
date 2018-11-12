@@ -33,7 +33,7 @@ RCT_EXPORT_MODULE();
 
 - (instancetype)initWithNamespace:(NSString *)namespace{
     if (self = [super init]) {
-        if (!namespace) {
+        if (!namespace.length) {
             namespace = DEFAULT_NAME_SPACE;
         }
         self.namespace = namespace;
