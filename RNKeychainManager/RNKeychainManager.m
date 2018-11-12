@@ -41,6 +41,10 @@ RCT_EXPORT_MODULE();
     return self;
 }
 
+- (NSString *)getNamespace{
+  return _namespace.length ? _namespace : DEFAULT_NAME_SPACE;
+}
+
 // Messages from the comments in <Security/SecBase.h>
 NSString *messageForError(NSError *error)
 {
@@ -134,7 +138,7 @@ NSString *originalServiceValue(NSDictionary *options)
 //final service with namespace prefix, used in keychain
 - (NSString *)finalServiceValue:(NSDictionary *)options{
   NSString *service = originalServiceValue(options);
-  return [NSString stringWithFormat:@"%@_%@", self.namespace, service];
+  return [NSString stringWithFormat:@"%@_%@", [self getNamespace], service];
 }
 
 NSString *accessGroupValue(NSDictionary *options)
