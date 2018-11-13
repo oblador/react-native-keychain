@@ -149,6 +149,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
         }
     }
 
+    @ReactMethod
     public void hasInternetCredentialsForServer(@NonNull String server, Promise promise) {
         final String defaultService = getDefaultServiceIfNull(server);
 
