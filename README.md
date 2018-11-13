@@ -61,6 +61,10 @@ Will remove the username/password combination from the secure storage.
 
 Will store the server/username/password combination in the secure storage.
 
+### `hasInternetCredentials(server, [{ authenticationPrompt }])`
+
+Will check if the username/password combination for server is available in the secure storage. Resolves to `true` if an entry exists or `false` if it doesn't.
+
 ### `getInternetCredentials(server, [{ authenticationPrompt }])`
 
 Will retreive the server/username/password combination from the secure storage. Resolves to `{ username, password }` if an entry exists or `false` if it doesn't. It will reject only if an unexpected error is encountered like lacking entitlements or permission.
