@@ -2,7 +2,7 @@
 import { NativeModules, Platform } from 'react-native';
 const { RNKeychainManager } = NativeModules;
 
-export const ACCESSIBLE = {
+export const ACCESSIBLE = Object.freeze({
   WHEN_UNLOCKED: 'AccessibleWhenUnlocked',
   AFTER_FIRST_UNLOCK: 'AccessibleAfterFirstUnlock',
   ALWAYS: 'AccessibleAlways',
@@ -11,9 +11,9 @@ export const ACCESSIBLE = {
   AFTER_FIRST_UNLOCK_THIS_DEVICE_ONLY:
     'AccessibleAfterFirstUnlockThisDeviceOnly',
   ALWAYS_THIS_DEVICE_ONLY: 'AccessibleAlwaysThisDeviceOnly',
-};
+});
 
-export const ACCESS_CONTROL = {
+export const ACCESS_CONTROL = Object.freeze({
   USER_PRESENCE: 'UserPresence',
   BIOMETRY_ANY: 'BiometryAny',
   BIOMETRY_CURRENT_SET: 'BiometryCurrentSet',
@@ -21,39 +21,24 @@ export const ACCESS_CONTROL = {
   APPLICATION_PASSWORD: 'ApplicationPassword',
   BIOMETRY_ANY_OR_DEVICE_PASSCODE: 'BiometryAnyOrDevicePasscode',
   BIOMETRY_CURRENT_SET_OR_DEVICE_PASSCODE: 'BiometryCurrentSetOrDevicePasscode',
-};
+});
 
-export const AUTHENTICATION_TYPE = {
+export const AUTHENTICATION_TYPE = Object.freeze({
   DEVICE_PASSCODE_OR_BIOMETRICS: 'AuthenticationWithBiometricsDevicePasscode',
   BIOMETRICS: 'AuthenticationWithBiometrics',
-};
+});
 
-export const BIOMETRY_TYPE = {
+export const BIOMETRY_TYPE = Object.freeze({
   TOUCH_ID: 'TouchID',
   FACE_ID: 'FaceID',
   FINGERPRINT: 'Fingerprint',
-};
+});
 
-export type SecAccessible =
-  | 'AccessibleWhenUnlocked'
-  | 'AccessibleAfterFirstUnlock'
-  | 'AccessibleAlways'
-  | 'AccessibleWhenPasscodeSetThisDeviceOnly'
-  | 'AccessibleWhenUnlockedThisDeviceOnly'
-  | 'AccessibleAlwaysThisDeviceOnly';
+export type SecAccessible = $Values<typeof ACCESSIBLE>;
 
-export type SecAccessControl =
-  | 'UserPresence'
-  | 'BiometryAny'
-  | 'BiometryCurrentSet'
-  | 'DevicePasscode'
-  | 'ApplicationPassword'
-  | 'BiometryAnyOrDevicePasscode'
-  | 'BiometryCurrentSetOrDevicePasscode';
+export type SecAccessControl = $Values<typeof ACCESS_CONTROL>;
 
-export type LAPolicy =
-  | 'AuthenticationWithBiometricsDevicePasscode'
-  | 'AuthenticationWithBiometrics';
+export type LAPolicy = $Values<typeof AUTHENTICATION_TYPE>;
 
 export type Options = {
   accessControl?: SecAccessControl,
@@ -81,11 +66,7 @@ export function canImplyAuthentication(options?: Options): Promise<boolean> {
  * Get what type of hardware biometry support the device has.
  * @return {Promise} Resolves to a `BIOMETRY_TYPE` when supported, otherwise `null`
  */
-export function getSupportedBiometryType(): Promise<?(
-  | 'TouchID'
-  | 'FaceID'
-  | 'Fingerprint'
-)> {
+export function getSupportedBiometryType(): Promise<?($Values<typeof BIOMETRY_TYPE>)> {
   if (!RNKeychainManager.getSupportedBiometryType) {
     return Promise.resolve(null);
   }
