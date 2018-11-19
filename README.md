@@ -147,6 +147,7 @@ Get what type of hardware biometry support the device has. Resolves to a `Keycha
 
 * Right click on Libraries, select **Add files to "…"** and select `node_modules/react-native-keychain/RNKeychain.xcodeproj`
 * Select your project and under **Build Phases** -> **Link Binary With Libraries**, press the + and select `libRNKeychain.a`.
+* make sure `pod 'RNKeychain'` is not in your `Podfile`
 
 #### Option: With [CocoaPods](https://cocoapods.org/)
 
