@@ -18,6 +18,7 @@ import com.facebook.react.bridge.ReactApplicationContext;
 
 import com.oblador.keychain.exceptions.CryptoFailedException;
 import com.oblador.keychain.exceptions.KeyStoreAccessException;
+import com.oblador.keychain.supportBiometric.BiometricPrompt;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -43,10 +44,11 @@ import javax.crypto.CipherInputStream;
 import javax.crypto.CipherOutputStream;
 import javax.crypto.KeyGenerator;
 import javax.crypto.spec.IvParameterSpec;
-import androidx.biometrics.BiometricPrompt;
+
+import static com.oblador.keychain.supportBiometric.BiometricPrompt.*;
 
 @TargetApi(Build.VERSION_CODES.M)
-public class CipherStorageKeystoreRSAECB extends BiometricPrompt.AuthenticationCallback implements CipherStorage {
+public class CipherStorageKeystoreRSAECB extends AuthenticationCallback implements CipherStorage {
     public static final String CIPHER_STORAGE_NAME = "KeystoreAESCBC";
     public static final String DEFAULT_SERVICE = "RN_KEYCHAIN_DEFAULT_ALIAS";
     public static final String KEYSTORE_TYPE = "AndroidKeyStore";
@@ -106,7 +108,7 @@ public class CipherStorageKeystoreRSAECB extends BiometricPrompt.AuthenticationC
     }
 
     @Override
-    public void onAuthenticationSucceeded(@NonNull BiometricPrompt.AuthenticationResult result) {
+    public void onAuthenticationSucceeded(@NonNull AuthenticationResult result) {
         if (mDecryptParams != null && mDecryptParams.resultHandler != null) {
             try {
                 String decryptedUsername = decryptBytes(mDecryptParams.key, mDecryptParams.username);
@@ -135,7 +137,7 @@ public class CipherStorageKeystoreRSAECB extends BiometricPrompt.AuthenticationC
 
         mBiometricPromptCancellationSignal = new CancellationSignal();
 
-        BiometricPrompt.PromptInfo prompInfo = new BiometricPrompt.PromptInfo.Builder()
+        PromptInfo prompInfo = new PromptInfo.Builder()
                 .setTitle("Authentication required")
             .setSubtitle("Please use biometric authentication to unlock the app")
             .build();
