@@ -32,7 +32,7 @@ import com.oblador.keychain.DeviceAvailability;
 import java.util.HashMap;
 import java.util.Map;
 
-public class KeychainModule extends ReactContextBaseJavaModule {
+public class KeychainModule extends ReactContextBasgetCipherStorageForCurrentAPILeveleJavaModule {
     public static final String E_EMPTY_PARAMETERS = "E_EMPTY_PARAMETERS";
     public static final String E_CRYPTO_FAILED = "E_CRYPTO_FAILED";
     public static final String E_KEYSTORE_ACCESS_ERROR = "E_KEYSTORE_ACCESS_ERROR";
@@ -155,12 +155,12 @@ public class KeychainModule extends ReactContextBaseJavaModule {
                             credentials.putString("password", decryptionResult.password);
 
                             try {
+                                // clean up the old cipher storage
+                                oldCipherStorage.removeKey(defaultService);
                                 // encrypt using the current cipher storage
                                 EncryptionResult encryptionResult = currentCipherStorage.encrypt(defaultService, decryptionResult.username, decryptionResult.password);
                                 // store the encryption result
                                 prefsStorage.storeEncryptedEntry(defaultService, encryptionResult);
-                                // clean up the old cipher storage
-                                oldCipherStorage.removeKey(defaultService);
                             } catch (CryptoFailedException e) {
                                 Log.e(KEYCHAIN_MODULE, e.getMessage());
                                 promise.reject(E_CRYPTO_FAILED, e);
