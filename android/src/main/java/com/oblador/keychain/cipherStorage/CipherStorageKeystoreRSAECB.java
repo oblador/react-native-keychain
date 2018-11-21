@@ -14,6 +14,8 @@ import android.security.keystore.KeyProperties;
 import android.security.keystore.UserNotAuthenticatedException;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.app.FragmentActivity;
+
 import com.facebook.react.bridge.ReactApplicationContext;
 
 import com.oblador.keychain.exceptions.CryptoFailedException;
@@ -38,6 +40,7 @@ import java.security.cert.CertificateException;
 import java.security.spec.AlgorithmParameterSpec;
 import java.security.spec.KeySpec;
 import java.security.spec.X509EncodedKeySpec;
+import java.util.concurrent.Executors;
 
 import javax.crypto.Cipher;
 import javax.crypto.CipherInputStream;
@@ -122,7 +125,9 @@ public class CipherStorageKeystoreRSAECB extends AuthenticationCallback implemen
     }
 
     private boolean canStartFingerprintAuthentication() {
-        return (mKeyguardManager.isKeyguardSecure() && mContext.checkSelfPermission(Manifest.permission.USE_FINGERPRINT) == PackageManager.PERMISSION_GRANTED);
+        return (mKeyguardManager.isKeyguardSecure() &&
+                (mContext.checkSelfPermission(Manifest.permission.USE_BIOMETRIC) == PackageManager.PERMISSION_GRANTED
+                || mContext.checkSelfPermission(Manifest.permission.USE_FINGERPRINT) == PackageManager.PERMISSION_GRANTED));
     }
 
     private void startFingerprintAuthentication() throws Exception {
@@ -135,12 +140,14 @@ public class CipherStorageKeystoreRSAECB extends AuthenticationCallback implemen
             throw new Exception("mActivity is null (make sure to call setCurrentActivity)");
         }
 
+        mBiometricPrompt = new BiometricPrompt((FragmentActivity) mActivity, Executors.newSingleThreadExecutor(), this);
         mBiometricPromptCancellationSignal = new CancellationSignal();
 
         PromptInfo prompInfo = new PromptInfo.Builder()
                 .setTitle("Authentication required")
-            .setSubtitle("Please use biometric authentication to unlock the app")
-            .build();
+                .setNegativeButtonText("Cancel")
+                .setSubtitle("Please use biometric authentication to unlock the app")
+                .build();
 
         mBiometricPrompt.authenticate(prompInfo);
     }
@@ -197,7 +204,7 @@ public class CipherStorageKeystoreRSAECB extends AuthenticationCallback implemen
                 .setEncryptionPaddings(ENCRYPTION_PADDING)
                 .setRandomizedEncryptionRequired(true)
                 .setUserAuthenticationRequired(true)
-                .setUserAuthenticationValidityDurationSeconds(-1)
+                .setUserAuthenticationValidityDurationSeconds(10)
                 .setKeySize(ENCRYPTION_KEY_SIZE)
                 .build();
 
@@ -231,9 +238,9 @@ public class CipherStorageKeystoreRSAECB extends AuthenticationCallback implemen
         try {
             decryptedUsername = decryptBytes(key, username);
             decryptedPassword = decryptBytes(key, password);
+
         } catch (UserNotAuthenticatedException e) {
             mDecryptParams = new CipherDecryptionParams(decryptionResultHandler, key, username, password);
-
             if (!canStartFingerprintAuthentication()) {
                 throw new CryptoFailedException("Could not start fingerprint Authentication", e);
             }
