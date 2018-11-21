@@ -32,7 +32,7 @@ import com.oblador.keychain.DeviceAvailability;
 import java.util.HashMap;
 import java.util.Map;
 
-public class KeychainModule extends ReactContextBasgetCipherStorageForCurrentAPILeveleJavaModule {
+public class KeychainModule extends ReactContextBaseJavaModule {
     public static final String E_EMPTY_PARAMETERS = "E_EMPTY_PARAMETERS";
     public static final String E_CRYPTO_FAILED = "E_CRYPTO_FAILED";
     public static final String E_KEYSTORE_ACCESS_ERROR = "E_KEYSTORE_ACCESS_ERROR";
