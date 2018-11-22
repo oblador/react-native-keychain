@@ -10,6 +10,7 @@ import android.hardware.fingerprint.FingerprintManager;
 import android.os.Build;
 import android.os.CancellationSignal;
 import android.security.keystore.KeyGenParameterSpec;
+import android.security.keystore.KeyPermanentlyInvalidatedException;
 import android.security.keystore.KeyProperties;
 import android.security.keystore.UserNotAuthenticatedException;
 import android.support.annotation.NonNull;
@@ -215,7 +216,7 @@ public class CipherStorageKeystoreRSAECB extends AuthenticationCallback implemen
     }
 
     @Override
-    public void decrypt(@NonNull DecryptionResultHandler decryptionResultHandler, @NonNull String service, @NonNull byte[] username, @NonNull byte[] password) throws CryptoFailedException {
+    public void decrypt(@NonNull DecryptionResultHandler decryptionResultHandler, @NonNull String service, @NonNull byte[] username, @NonNull byte[] password) throws CryptoFailedException, KeyPermanentlyInvalidatedException {
         service = getDefaultServiceIfEmpty(service);
 
         KeyStore keyStore;
@@ -238,7 +239,8 @@ public class CipherStorageKeystoreRSAECB extends AuthenticationCallback implemen
         try {
             decryptedUsername = decryptBytes(key, username);
             decryptedPassword = decryptBytes(key, password);
-
+        } catch (KeyPermanentlyInvalidatedException e) {
+            throw e;
         } catch (UserNotAuthenticatedException e) {
             mDecryptParams = new CipherDecryptionParams(decryptionResultHandler, key, username, password);
             if (!canStartFingerprintAuthentication()) {
@@ -288,7 +290,7 @@ public class CipherStorageKeystoreRSAECB extends AuthenticationCallback implemen
         }
     }
 
-    private String decryptBytes(Key key, byte[] bytes) throws CryptoFailedException, UserNotAuthenticatedException {
+    private String decryptBytes(Key key, byte[] bytes) throws CryptoFailedException, UserNotAuthenticatedException, KeyPermanentlyInvalidatedException {
         try {
             Cipher cipher = Cipher.getInstance(ENCRYPTION_TRANSFORMATION);
             ByteArrayInputStream inputStream = new ByteArrayInputStream(bytes);
@@ -308,6 +310,8 @@ public class CipherStorageKeystoreRSAECB extends AuthenticationCallback implemen
             }
             return new String(output.toByteArray(), Charset.forName("UTF-8"));
         } catch (UserNotAuthenticatedException e) {
+            throw e;
+        } catch (KeyPermanentlyInvalidatedException e) {
             throw e;
         } catch (Exception e) {
             throw new CryptoFailedException("Could not decrypt bytes", e);
@@ -330,7 +334,7 @@ public class CipherStorageKeystoreRSAECB extends AuthenticationCallback implemen
     }
 
     @Override
-    public boolean getRequiresCurentActivity() {
+    public boolean getRequiresCurrentActivity() {
         return true;
     }
 

@@ -2,6 +2,7 @@ package com.oblador.keychain.cipherStorage;
 
 import android.app.Activity;
 import android.os.Build;
+import android.security.keystore.KeyPermanentlyInvalidatedException;
 import android.support.annotation.NonNull;
 
 import com.facebook.android.crypto.keychain.AndroidConceal;
@@ -62,7 +63,7 @@ public class CipherStorageFacebookConceal implements CipherStorage {
     }
 
     @Override
-    public void decrypt(@NonNull DecryptionResultHandler decryptionResultHandler, @NonNull String service, @NonNull byte[] username, @NonNull byte[] password) throws CryptoFailedException {
+    public void decrypt(@NonNull DecryptionResultHandler decryptionResultHandler, @NonNull String service, @NonNull byte[] username, @NonNull byte[] password) throws CryptoFailedException, KeyPermanentlyInvalidatedException {
         if (!crypto.isAvailable()) {
             throw new CryptoFailedException("Crypto is missing");
         }
@@ -101,7 +102,7 @@ public class CipherStorageFacebookConceal implements CipherStorage {
     }
 
     @Override
-    public boolean getRequiresCurentActivity() {
+    public boolean getRequiresCurrentActivity() {
         // Facebook conceal does not need the current activity
         return false;
     }

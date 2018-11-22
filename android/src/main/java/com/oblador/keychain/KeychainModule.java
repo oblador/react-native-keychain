@@ -3,6 +3,7 @@ package com.oblador.keychain;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.os.Build;
+import android.security.keystore.KeyPermanentlyInvalidatedException;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
@@ -104,9 +105,9 @@ public class KeychainModule extends ReactContextBaseJavaModule {
 
     @ReactMethod
     public void getGenericPasswordForOptions(String service, ReadableMap options, final Promise promise) {
+        final String defaultService = getDefaultServiceIfNull(service);
+        String accessControl = null;
         try {
-            final String defaultService = getDefaultServiceIfNull(service);
-            String accessControl = null;
             if (options != null && options.hasKey(ACCESS_CONTROL_KEY)) {
                 accessControl = options.getString(ACCESS_CONTROL_KEY);
             }
@@ -178,6 +179,18 @@ public class KeychainModule extends ReactContextBaseJavaModule {
                 // decrypt using the older cipher storage
                 oldCipherStorage.decrypt(decryptionHandler, defaultService, resultSet.usernameBytes, resultSet.passwordBytes);
             }
+          } catch (KeyPermanentlyInvalidatedException e) {
+              Log.e(KEYCHAIN_MODULE, String.format("Key for service %s permanently invalidated", defaultService));
+               try {
+                  CipherStorage cipherStorage = getCipherStorageForCurrentAPILevel(getUseBiometry(accessControl));
+                  if (cipherStorage != null) {
+                          cipherStorage.removeKey(defaultService);
+                  }
+              } catch (Exception error) {
+                  error.printStackTrace();
+                  Log.e(KEYCHAIN_MODULE, "Failed removing invalidated key: " + error.getMessage());
+              }
+              promise.resolve(false);
         } catch (CryptoFailedException e) {
             Log.e(KEYCHAIN_MODULE, e.getMessage());
             promise.reject(E_CRYPTO_FAILED, e);
@@ -284,7 +297,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
             throw new CryptoFailedException("Unsupported Android SDK " + Build.VERSION.SDK_INT);
         }
 
-        if (currentCipherStorage.getRequiresCurentActivity()) {
+        if (currentCipherStorage.getRequiresCurrentActivity()) {
             currentCipherStorage.setCurrentActivity(getCurrentActivity());
         }
 
@@ -294,7 +307,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     private CipherStorage getCipherStorageByName(String cipherStorageName) {
         CipherStorage storage = cipherStorageMap.get(cipherStorageName);
 
-        if (storage.getRequiresCurentActivity()) {
+        if (storage.getRequiresCurrentActivity()) {
             storage.setCurrentActivity(getCurrentActivity());
         }
 

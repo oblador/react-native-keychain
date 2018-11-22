@@ -1,6 +1,7 @@
 package com.oblador.keychain.cipherStorage;
 
 import android.app.Activity;
+import android.security.keystore.KeyPermanentlyInvalidatedException;
 import android.support.annotation.NonNull;
 
 import com.oblador.keychain.exceptions.CryptoFailedException;
@@ -38,7 +39,7 @@ public interface CipherStorage {
 
     EncryptionResult encrypt(@NonNull String service, @NonNull String username, @NonNull String password) throws CryptoFailedException;
 
-    void decrypt(@NonNull DecryptionResultHandler decryptionResultHandler, @NonNull String service, @NonNull byte[] username, @NonNull byte[] password) throws CryptoFailedException;
+    void decrypt(@NonNull DecryptionResultHandler decryptionResultHandler, @NonNull String service, @NonNull byte[] username, @NonNull byte[] password) throws CryptoFailedException, KeyPermanentlyInvalidatedException;
 
     void removeKey(@NonNull String service) throws KeyStoreAccessException;
 
@@ -48,6 +49,6 @@ public interface CipherStorage {
 
     int getMinSupportedApiLevel();
 
-    boolean getRequiresCurentActivity();
+    boolean getRequiresCurrentActivity();
     void setCurrentActivity(Activity activity);
 }
