@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.os.Build;
 import android.security.keystore.KeyPermanentlyInvalidatedException;
 import android.support.annotation.NonNull;
+import android.support.annotation.RequiresApi;
 import android.util.Log;
 
 import com.facebook.react.bridge.Callback;
@@ -103,6 +104,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
         }
     }
 
+    @TargetApi(Build.VERSION_CODES.M)
     @ReactMethod
     public void getGenericPasswordForOptions(String service, ReadableMap options, final Promise promise) {
         final String defaultService = getDefaultServiceIfNull(service);
@@ -183,11 +185,8 @@ public class KeychainModule extends ReactContextBaseJavaModule {
               Log.e(KEYCHAIN_MODULE, String.format("Key for service %s permanently invalidated", defaultService));
                try {
                   CipherStorage cipherStorage = getCipherStorageForCurrentAPILevel(getUseBiometry(accessControl));
-                  if (cipherStorage != null) {
-                          cipherStorage.removeKey(defaultService);
-                  }
+                  cipherStorage.removeKey(defaultService);
               } catch (Exception error) {
-                  error.printStackTrace();
                   Log.e(KEYCHAIN_MODULE, "Failed removing invalidated key: " + error.getMessage());
               }
               promise.resolve(false);

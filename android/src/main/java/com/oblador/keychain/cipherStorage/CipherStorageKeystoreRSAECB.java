@@ -63,7 +63,7 @@ public class CipherStorageKeystoreRSAECB extends AuthenticationCallback implemen
             ENCRYPTION_ALGORITHM + "/" +
                     ENCRYPTION_BLOCK_MODE + "/" +
                     ENCRYPTION_PADDING;
-    public static final int ENCRYPTION_KEY_SIZE = 1024;
+    public static final int ENCRYPTION_KEY_SIZE = 3072;
 
     private CancellationSignal mBiometricPromptCancellationSignal;
     private BiometricPrompt mBiometricPrompt;
@@ -205,7 +205,7 @@ public class CipherStorageKeystoreRSAECB extends AuthenticationCallback implemen
                 .setEncryptionPaddings(ENCRYPTION_PADDING)
                 .setRandomizedEncryptionRequired(true)
                 .setUserAuthenticationRequired(true)
-                .setUserAuthenticationValidityDurationSeconds(10)
+                .setUserAuthenticationValidityDurationSeconds(3)
                 .setKeySize(ENCRYPTION_KEY_SIZE)
                 .build();
 
@@ -233,28 +233,26 @@ public class CipherStorageKeystoreRSAECB extends AuthenticationCallback implemen
             throw new CryptoFailedException("Unknown error: " + e.getMessage(), e);
         }
 
-        String decryptedUsername;
-        String decryptedPassword;
-
         try {
-            decryptedUsername = decryptBytes(key, username);
-            decryptedPassword = decryptBytes(key, password);
+            // try to get a Cipher, if exception is thrown, authentication is needed
+            getDecryptionCipher(key);
         } catch (KeyPermanentlyInvalidatedException e) {
             throw e;
         } catch (UserNotAuthenticatedException e) {
             mDecryptParams = new CipherDecryptionParams(decryptionResultHandler, key, username, password);
             if (!canStartFingerprintAuthentication()) {
-                throw new CryptoFailedException("Could not start fingerprint Authentication", e);
+                throw new CryptoFailedException("Could not start fingerprint Authentication");
             }
-
             try {
-                this.startFingerprintAuthentication();
+                startFingerprintAuthentication();
             } catch (Exception e1) {
-                e1.printStackTrace();
+                throw new CryptoFailedException("Could not start fingerprint Authentication", e1);
             }
             return;
         }
 
+        String decryptedUsername = decryptBytes(key, username);
+        String decryptedPassword = decryptBytes(key, password);
         decryptionResultHandler.onDecrypt(new DecryptionResult(decryptedUsername, decryptedPassword), null);
     }
 
@@ -264,7 +262,6 @@ public class CipherStorageKeystoreRSAECB extends AuthenticationCallback implemen
 
         try {
             KeyStore keyStore = getKeyStoreAndLoad();
-
             if (keyStore.containsAlias(service)) {
                 keyStore.deleteEntry(service);
             }
@@ -290,12 +287,24 @@ public class CipherStorageKeystoreRSAECB extends AuthenticationCallback implemen
         }
     }
 
-    private String decryptBytes(Key key, byte[] bytes) throws CryptoFailedException, UserNotAuthenticatedException, KeyPermanentlyInvalidatedException {
+    private Cipher getDecryptionCipher(Key key) throws CryptoFailedException, UserNotAuthenticatedException, KeyPermanentlyInvalidatedException {
         try {
             Cipher cipher = Cipher.getInstance(ENCRYPTION_TRANSFORMATION);
-            ByteArrayInputStream inputStream = new ByteArrayInputStream(bytes);
             // read the initialization vector from the beginning of the stream
             cipher.init(Cipher.DECRYPT_MODE, key);
+
+            return cipher;
+        } catch (UserNotAuthenticatedException | KeyPermanentlyInvalidatedException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new CryptoFailedException("Could not generate cipher", e);
+        }
+    }
+
+    private String decryptBytes(Key key, byte[] bytes) throws CryptoFailedException {
+        try {
+            Cipher cipher = getDecryptionCipher(key);
+            ByteArrayInputStream inputStream = new ByteArrayInputStream(bytes);
             // decrypt the bytes using a CipherInputStream
             CipherInputStream cipherInputStream = new CipherInputStream(
                     inputStream, cipher);
@@ -309,10 +318,6 @@ public class CipherStorageKeystoreRSAECB extends AuthenticationCallback implemen
                 output.write(buffer, 0, n);
             }
             return new String(output.toByteArray(), Charset.forName("UTF-8"));
-        } catch (UserNotAuthenticatedException e) {
-            throw e;
-        } catch (KeyPermanentlyInvalidatedException e) {
-            throw e;
         } catch (Exception e) {
             throw new CryptoFailedException("Could not decrypt bytes", e);
         }
