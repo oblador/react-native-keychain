@@ -121,9 +121,17 @@ public class KeychainModule extends ReactContextBaseJavaModule {
                 return;
             }
 
-            final CipherStorage currentCipherStorage = getCipherStorageForCurrentAPILevel(getUseBiometry(accessControl));
+            CipherStorage biometryCipherStorage = getCipherStorageForCurrentAPILevel(true);
+            final CipherStorage nonBiometryCipherStorage = getCipherStorageForCurrentAPILevel(false);
+            CipherStorage cipherStorage = null;
+            if (biometryCipherStorage != null && resultSet.cipherStorageName.equals(biometryCipherStorage.getCipherStorageName())) {
+                cipherStorage = biometryCipherStorage;
+            } else if (nonBiometryCipherStorage != null && resultSet.cipherStorageName.equals(nonBiometryCipherStorage.getCipherStorageName())) {
+                cipherStorage = nonBiometryCipherStorage;
+            }
 
-            if (resultSet.cipherStorageName.equals(currentCipherStorage.getCipherStorageName())) {
+            final CipherStorage currentCipherStorage = cipherStorage;
+            if (currentCipherStorage != null) {
                 DecryptionResultHandler decryptionHandler = new DecryptionResultHandler() {
                     @Override
                     public void onDecrypt(DecryptionResult decryptionResult, String error) {
@@ -161,7 +169,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
                                 // clean up the old cipher storage
                                 oldCipherStorage.removeKey(defaultService);
                                 // encrypt using the current cipher storage
-                                EncryptionResult encryptionResult = currentCipherStorage.encrypt(defaultService, decryptionResult.username, decryptionResult.password);
+                                EncryptionResult encryptionResult = nonBiometryCipherStorage.encrypt(defaultService, decryptionResult.username, decryptionResult.password);
                                 // store the encryption result
                                 prefsStorage.storeEncryptedEntry(defaultService, encryptionResult);
                             } catch (CryptoFailedException e) {
