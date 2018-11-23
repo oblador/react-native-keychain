@@ -285,7 +285,7 @@ RCT_EXPORT_METHOD(getSupportedBiometryType:(RCTPromiseResolveBlock)resolve rejec
 }
 #endif
 
-RCT_EXPORT_METHOD(setGenericPasswordForOptions:(NSDictionary *)options withUsername:(NSString *)username withPassword:(NSString *)password resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
+RCT_EXPORT_METHOD(setGenericPasswordForOptions:(NSDictionary *)options withUsername:(NSString *)username withPassword:(NSString *)password withOtherOptions:(NSDictionary *)otherOptions resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
 {
   NSString *service = serviceValue(options);
   NSDictionary *attributes = attributes = @{
@@ -300,7 +300,7 @@ RCT_EXPORT_METHOD(setGenericPasswordForOptions:(NSDictionary *)options withUsern
   [self insertKeychainEntry:attributes withOptions:options resolver:resolve rejecter:reject];
 }
 
-RCT_EXPORT_METHOD(getGenericPasswordForOptions:(NSDictionary *)options resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
+RCT_EXPORT_METHOD(getGenericPasswordForOptions:(NSDictionary *)options withOtherOptions:(NSDictionary *)otherOptions resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
 {
   NSString *service = serviceValue(options);
   NSString *authenticationPrompt = @"Authenticate to retrieve secret";
