@@ -106,14 +106,10 @@ public class KeychainModule extends ReactContextBaseJavaModule {
 
     @TargetApi(Build.VERSION_CODES.M)
     @ReactMethod
-    public void getGenericPasswordForOptions(String service, ReadableMap options, final Promise promise) {
+    public void getGenericPasswordForOptions(String service, final Promise promise) {
         final String defaultService = getDefaultServiceIfNull(service);
-        String accessControl = null;
+        CipherStorage cipherStorage = null;
         try {
-            if (options != null && options.hasKey(ACCESS_CONTROL_KEY)) {
-                accessControl = options.getString(ACCESS_CONTROL_KEY);
-            }
-
             ResultSet resultSet = prefsStorage.getEncryptedEntry(defaultService);
             if (resultSet == null) {
                 Log.e(KEYCHAIN_MODULE, "No entry found for service: " + defaultService);
@@ -123,7 +119,6 @@ public class KeychainModule extends ReactContextBaseJavaModule {
 
             CipherStorage biometryCipherStorage = getCipherStorageForCurrentAPILevel(true);
             final CipherStorage nonBiometryCipherStorage = getCipherStorageForCurrentAPILevel(false);
-            CipherStorage cipherStorage = null;
             if (biometryCipherStorage != null && resultSet.cipherStorageName.equals(biometryCipherStorage.getCipherStorageName())) {
                 cipherStorage = biometryCipherStorage;
             } else if (nonBiometryCipherStorage != null && resultSet.cipherStorageName.equals(nonBiometryCipherStorage.getCipherStorageName())) {
@@ -192,8 +187,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
           } catch (KeyPermanentlyInvalidatedException e) {
               Log.e(KEYCHAIN_MODULE, String.format("Key for service %s permanently invalidated", defaultService));
                try {
-                  CipherStorage cipherStorage = getCipherStorageForCurrentAPILevel(getUseBiometry(accessControl));
-                  cipherStorage.removeKey(defaultService);
+                   cipherStorage.removeKey(defaultService);
               } catch (Exception error) {
                   Log.e(KEYCHAIN_MODULE, "Failed removing invalidated key: " + error.getMessage());
               }
@@ -233,8 +227,8 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void getInternetCredentialsForServer(@NonNull String server, ReadableMap options, Promise promise) {
-        getGenericPasswordForOptions(server, options, promise);
+    public void getInternetCredentialsForServer(@NonNull String server, ReadableMap unusedOptions, Promise promise) {
+        getGenericPasswordForOptions(server, promise);
     }
 
     @ReactMethod
