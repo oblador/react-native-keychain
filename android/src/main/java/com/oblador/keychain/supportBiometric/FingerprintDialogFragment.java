@@ -308,21 +308,31 @@ public class FingerprintDialogFragment extends DialogFragment {
         }
     }
 
-    void handleShowHelp(CharSequence msg) {
-        updateFingerprintIcon(STATE_FINGERPRINT_ERROR);
-        mHandler.removeMessages(MSG_RESET_MESSAGE);
-        mErrorText.setTextColor(mErrorColor);
-        mErrorText.setText(msg);
+    void handleShowHelp(final CharSequence msg) {
+        getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+            updateFingerprintIcon(STATE_FINGERPRINT_ERROR);
+            mHandler.removeMessages(MSG_RESET_MESSAGE);
+            mErrorText.setTextColor(mErrorColor);
+            mErrorText.setText(msg);
+            }
+        });
 
         // Reset the text after a delay
         mHandler.sendMessageDelayed(mHandler.obtainMessage(MSG_RESET_MESSAGE), HIDE_DIALOG_DELAY);
     }
 
-    void handleShowError(int errMsgId, CharSequence msg) {
-        updateFingerprintIcon(STATE_FINGERPRINT_ERROR);
-        mHandler.removeMessages(MSG_RESET_MESSAGE);
-        mErrorText.setTextColor(mErrorColor);
-        mErrorText.setText(msg);
+    void handleShowError(int errMsgId, final CharSequence msg) {
+        getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+            updateFingerprintIcon(STATE_FINGERPRINT_ERROR);
+            mHandler.removeMessages(MSG_RESET_MESSAGE);
+            mErrorText.setTextColor(mErrorColor);
+            mErrorText.setText(msg);
+            }
+        });
 
         // Dismiss the dialog after a delay
         mHandler.sendMessageDelayed(mHandler.obtainMessage(MSG_DISMISS_DIALOG), HIDE_DIALOG_DELAY);
@@ -333,8 +343,13 @@ public class FingerprintDialogFragment extends DialogFragment {
     }
 
     void handleResetMessage() {
-        updateFingerprintIcon(STATE_FINGERPRINT);
-        mErrorText.setTextColor(mTextColor);
-        mErrorText.setText(mContext.getString(R.string.fingerprint_dialog_touch_sensor));
+        getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+            updateFingerprintIcon(STATE_FINGERPRINT);
+            mErrorText.setTextColor(mTextColor);
+            mErrorText.setText(mContext.getString(R.string.fingerprint_dialog_touch_sensor));
+            }
+        });
     }
 }
