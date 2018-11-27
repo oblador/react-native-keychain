@@ -3,7 +3,6 @@ package com.oblador.keychain;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.os.Build;
-import android.security.keystore.KeyPermanentlyInvalidatedException;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
 import android.util.Log;
@@ -16,7 +15,6 @@ import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.WritableMap;
-import com.facebook.react.modules.core.DeviceEventManagerModule;
 
 import com.oblador.keychain.PrefsStorage.ResultSet;
 import com.oblador.keychain.cipherStorage.CipherStorage;
@@ -29,7 +27,6 @@ import com.oblador.keychain.cipherStorage.CipherStorageKeystoreRSAECB;
 import com.oblador.keychain.exceptions.CryptoFailedException;
 import com.oblador.keychain.exceptions.EmptyParameterException;
 import com.oblador.keychain.exceptions.KeyStoreAccessException;
-import com.oblador.keychain.DeviceAvailability;
 
 import java.security.InvalidKeyException;
 import java.util.HashMap;
@@ -69,7 +66,9 @@ public class KeychainModule extends ReactContextBaseJavaModule {
 
         addCipherStorageToMap(new CipherStorageFacebookConceal(reactContext));
         addCipherStorageToMap(new CipherStorageKeystoreAESCBC());
-        addCipherStorageToMap(new CipherStorageKeystoreRSAECB(reactContext));
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            addCipherStorageToMap(new CipherStorageKeystoreRSAECB(reactContext));
+        }
     }
 
     private void addCipherStorageToMap(CipherStorage cipherStorage) {

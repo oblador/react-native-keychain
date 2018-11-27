@@ -14,6 +14,7 @@ import android.security.keystore.KeyProperties;
 import android.security.keystore.UserNotAuthenticatedException;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.RequiresApi;
 import android.support.v4.app.FragmentActivity;
 
 import com.facebook.react.bridge.ReactApplicationContext;
@@ -48,7 +49,7 @@ import javax.crypto.CipherOutputStream;
 
 import static com.oblador.keychain.supportBiometric.BiometricPrompt.*;
 
-@TargetApi(Build.VERSION_CODES.M)
+@RequiresApi(Build.VERSION_CODES.M)
 public class CipherStorageKeystoreRSAECB extends AuthenticationCallback implements CipherStorage {
     public static final String CIPHER_STORAGE_NAME = "KeystoreRSAECB";
     public static final String DEFAULT_SERVICE = "RN_KEYCHAIN_DEFAULT_ALIAS";
