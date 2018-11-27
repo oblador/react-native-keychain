@@ -31,6 +31,7 @@ import com.oblador.keychain.exceptions.EmptyParameterException;
 import com.oblador.keychain.exceptions.KeyStoreAccessException;
 import com.oblador.keychain.DeviceAvailability;
 
+import java.security.InvalidKeyException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -104,7 +105,6 @@ public class KeychainModule extends ReactContextBaseJavaModule {
         }
     }
 
-    @TargetApi(Build.VERSION_CODES.M)
     @ReactMethod
     public void getGenericPasswordForOptions(String service, final Promise promise) {
         final String defaultService = getDefaultServiceIfNull(service);
@@ -184,7 +184,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
                 // decrypt using the older cipher storage
                 oldCipherStorage.decrypt(decryptionHandler, defaultService, resultSet.usernameBytes, resultSet.passwordBytes);
             }
-          } catch (KeyPermanentlyInvalidatedException e) {
+          } catch (InvalidKeyException e) {
               Log.e(KEYCHAIN_MODULE, String.format("Key for service %s permanently invalidated", defaultService));
                try {
                    cipherStorage.removeKey(defaultService);
