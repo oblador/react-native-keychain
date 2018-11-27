@@ -116,7 +116,11 @@ public class KeychainModule extends ReactContextBaseJavaModule {
                 return;
             }
 
-            CipherStorage biometryCipherStorage = getCipherStorageForCurrentAPILevel(true);
+            // Android < M will throw an exception as biometry is not supported.
+            CipherStorage biometryCipherStorage = null;
+            try {
+                biometryCipherStorage = getCipherStorageForCurrentAPILevel(true);
+            } catch(Exception e) { }
             final CipherStorage nonBiometryCipherStorage = getCipherStorageForCurrentAPILevel(false);
             if (biometryCipherStorage != null && resultSet.cipherStorageName.equals(biometryCipherStorage.getCipherStorageName())) {
                 cipherStorage = biometryCipherStorage;
