@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		33690F292181190800388832 /* RNKeychainManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 5D82368B1B0CE2A6005A9EF3 /* RNKeychainManager.h */; };
+		33690F292181190800388832 /* RNKeychainManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 5D82368B1B0CE2A6005A9EF3 /* RNKeychainManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		33690F2A2181190A00388832 /* RNKeychainManager.h in Copy Headers */ = {isa = PBXBuildFile; fileRef = 5D82368B1B0CE2A6005A9EF3 /* RNKeychainManager.h */; };
 		5D82368F1B0CE3CB005A9EF3 /* RNKeychainManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 5D82368C1B0CE2A6005A9EF3 /* RNKeychainManager.m */; };
 		5D8236911B0CE3D6005A9EF3 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5D8236901B0CE3D6005A9EF3 /* Security.framework */; };
