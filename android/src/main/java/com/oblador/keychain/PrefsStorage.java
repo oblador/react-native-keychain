@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.support.annotation.NonNull;
 import android.util.Base64;
+import android.util.Log;
 
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.oblador.keychain.cipherStorage.CipherStorage.EncryptionResult;
@@ -59,7 +60,7 @@ public class PrefsStorage {
         String keyForUsername = getKeyForUsername(service);
         String keyForPassword = getKeyForPassword(service);
         String keyForCipherStorage = getKeyForCipherStorage(service);
-
+Log.w("CIPHER","storing "+keyForUsername+","+keyForPassword+""+keyForCipherStorage);
         prefs.edit()
                 .putString(keyForUsername, Base64.encodeToString(encryptionResult.username, Base64.DEFAULT))
                 .putString(keyForPassword, Base64.encodeToString(encryptionResult.password, Base64.DEFAULT))

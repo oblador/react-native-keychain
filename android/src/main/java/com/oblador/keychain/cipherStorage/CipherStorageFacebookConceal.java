@@ -15,6 +15,7 @@ import com.oblador.keychain.exceptions.CryptoFailedException;
 import java.nio.charset.Charset;
 
 public class CipherStorageFacebookConceal implements CipherStorage {
+    public static final String CIPHER_OPTION_NAME = "FBCON"; // not exposed as an official option to react
     public static final String CIPHER_STORAGE_NAME = "FacebookConceal";
     public static final String KEYCHAIN_DATA = "RN_KEYCHAIN";
     private final Crypto crypto;
@@ -22,6 +23,11 @@ public class CipherStorageFacebookConceal implements CipherStorage {
     public CipherStorageFacebookConceal(ReactApplicationContext reactContext) {
         KeyChain keyChain = new SharedPrefsBackedKeyChain(reactContext, CryptoConfig.KEY_256);
         this.crypto = AndroidConceal.get().createDefaultCrypto(keyChain);
+    }
+
+    @Override
+    public String getCipherOptionName() {
+        return CIPHER_OPTION_NAME;
     }
 
     @Override

@@ -37,6 +37,8 @@ public interface CipherStorage {
 
     void removeKey(@NonNull String service) throws KeyStoreAccessException;
 
+    String getCipherOptionName();
+
     String getCipherStorageName();
 
     int getMinSupportedApiLevel();
