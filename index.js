@@ -2,6 +2,12 @@
 import { NativeModules, Platform } from 'react-native';
 const { RNKeychainManager } = NativeModules;
 
+export const SECURITY_LEVEL = Object.freeze({
+  ANY: 'ANY',
+  SECURE_SOFTWARE: 'SECURE_SOFTWARE',
+  SECURE_HARDWARE: 'SECURE_HARDWARE',
+});
+
 export const ACCESSIBLE = Object.freeze({
   WHEN_UNLOCKED: 'AccessibleWhenUnlocked',
   AFTER_FIRST_UNLOCK: 'AccessibleAfterFirstUnlock',
@@ -40,6 +46,8 @@ export type SecAccessControl = $Values<typeof ACCESS_CONTROL>;
 
 export type LAPolicy = $Values<typeof AUTHENTICATION_TYPE>;
 
+export type SecMinimumLevel = $Values<typeof SECURITY_LEVEL>;
+
 export type Options = {
   accessControl?: SecAccessControl,
   accessGroup?: string,
@@ -48,6 +56,18 @@ export type Options = {
   authenticationType?: LAPolicy,
   service?: string,
 };
+
+/**
+ * (Android only) Returns guaranteed security level supported by this library
+ * on the current device.
+ * @return {Promise} Resolves to `SECURITY_LEVEL` when supported, otherwise `null`.
+ */
+export function getSecurityLevel(): Promise {
+    if (!RNKeychainManager.getSecurityLevel){
+        return Promise.resolve(null);
+    }
+    return RNKeychainManager.getSecurityLevel();
+}
 
 /**
  * Inquire if the type of local authentication policy (LAPolicy) is supported
@@ -78,6 +98,8 @@ export function getSupportedBiometryType(): Promise<?($Values<typeof BIOMETRY_TY
  * @param {string} server URL to server.
  * @param {string} username Associated username or e-mail to be saved.
  * @param {string} password Associated password to be saved.
+ * @param {string} minimumSecurityLevel `SECURITY_LEVEL` defines which security
+ *                 level is minimally acceptable for this password.
  * @param {object} options Keychain options, iOS only
  * @return {Promise} Resolves to `true` when successful
  */
@@ -85,12 +107,14 @@ export function setInternetCredentials(
   server: string,
   username: string,
   password: string,
+  minimumSecurityLevel?: SecMinimumLevel,
   options?: Options
 ): Promise<void> {
   return RNKeychainManager.setInternetCredentialsForServer(
     server,
     username,
     password,
+    getMinimumSecurityLevel(minimumSecurityLevel),
     options
   );
 }
@@ -146,22 +170,34 @@ function getOptionsArgument(serviceOrOptions?: string | Options) {
     : serviceOrOptions;
 }
 
+function getMinimumSecurityLevel(minimumSecurityLevel?: SecMinimumLevel) {
+    if (minimumSecurityLevel === undefined) {
+        return SECURITY_LEVEL.ANY;
+    } else {
+        return minimumSecurityLevel
+    }
+}
+
 /**
  * Saves the `username` and `password` combination for `service`.
  * @param {string} username Associated username or e-mail to be saved.
  * @param {string} password Associated password to be saved.
+ * @param {string} minimumSecurityLevel `SECURITY_LEVEL` defines which security
+ *                 level is minimally acceptable for this password.
  * @param {string|object} serviceOrOptions Reverse domain name qualifier for the service, defaults to `bundleId` or an options object.
  * @return {Promise} Resolves to `true` when successful
  */
 export function setGenericPassword(
   username: string,
   password: string,
+  minimumSecurityLevel?: SecMinimumLevel,
   serviceOrOptions?: string | Options
 ): Promise<boolean> {
   return RNKeychainManager.setGenericPasswordForOptions(
     getOptionsArgument(serviceOrOptions),
     username,
-    password
+    password,
+    getMinimumSecurityLevel(minimumSecurityLevel)
   );
 }
 

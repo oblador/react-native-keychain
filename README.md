@@ -45,7 +45,7 @@ See `KeychainExample` for fully working project example.
 
 Both `setGenericPassword` and `setInternetCredentials` are limited to strings only, so if you need to store objects etc, please use `JSON.stringify`/`JSON.parse` when you store/access it.
 
-### `setGenericPassword(username, password, [{ accessControl, accessible, accessGroup, service }])`
+### `setGenericPassword(username, password, securityLevel, [{ accessControl, accessible, accessGroup, service }])`
 
 Will store the username/password combination in the secure storage. Resolves to `true` or rejects in case of an error.
 
@@ -57,7 +57,7 @@ Will retreive the username/password combination from the secure storage. Resolve
 
 Will remove the username/password combination from the secure storage.
 
-### `setInternetCredentials(server, username, password, [{ accessControl, accessible, accessGroup }])`
+### `setInternetCredentials(server, username, password, securityLevel, [{ accessControl, accessible, accessGroup }])`
 
 Will store the server/username/password combination in the secure storage.
 
@@ -88,6 +88,18 @@ Inquire if the type of local authentication policy is supported on this device w
 ### `getSupportedBiometryType()`
 
 Get what type of hardware biometry support the device has. Resolves to a `Keychain.BIOMETRY_TYPE` value when supported, otherwise `null`.
+
+### `getSecurityLevel()`
+
+Get security level that is supported on the current device with the current OS.
+
+### Security Levels (Android only)
+
+If set, `securityLevel` parameter specifies minimum security level that the encryption key storage should guarantee for storing credentials to succeed.
+
+* `ANY` - no security guarantees needed (default value); Credentials can be stored in FB Secure Storage;
+* `SECURE_SOFTWARE` - requires for the key to be stored in the Android Keystore, separate from the encrypted data;
+* `SECURE_HARDWARE` - requires for the key to be stored on a secure hardware (Trusted Execution Environment or Secure Environment). Read [this article](https://developer.android.com/training/articles/keystore#ExtractionPrevention) for more information.
 
 ### Options
 
