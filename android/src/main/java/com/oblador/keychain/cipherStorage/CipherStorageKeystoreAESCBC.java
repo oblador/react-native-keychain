@@ -3,9 +3,12 @@ package com.oblador.keychain.cipherStorage;
 import android.annotation.TargetApi;
 import android.os.Build;
 import android.security.keystore.KeyGenParameterSpec;
+import android.security.keystore.KeyInfo;
 import android.security.keystore.KeyProperties;
 import android.support.annotation.NonNull;
+import android.util.Log;
 
+import com.oblador.keychain.SecurityLevel;
 import com.oblador.keychain.exceptions.CryptoFailedException;
 import com.oblador.keychain.exceptions.KeyStoreAccessException;
 
@@ -21,15 +24,19 @@ import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
-import java.security.spec.AlgorithmParameterSpec;
+import java.security.spec.InvalidKeySpecException;
+import android.security.keystore.StrongBoxUnavailableException;
 
 import javax.crypto.Cipher;
 import javax.crypto.CipherInputStream;
 import javax.crypto.CipherOutputStream;
 import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
+import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.IvParameterSpec;
 
 public class CipherStorageKeystoreAESCBC implements CipherStorage {
+    public static final String TAG = "KeystoreAESCBC";
     public static final String CIPHER_STORAGE_NAME = "KeystoreAESCBC";
     public static final String DEFAULT_SERVICE = "RN_KEYCHAIN_DEFAULT_ALIAS";
     public static final String KEYSTORE_TYPE = "AndroidKeyStore";
@@ -52,30 +59,51 @@ public class CipherStorageKeystoreAESCBC implements CipherStorage {
         return Build.VERSION_CODES.M;
     }
 
+    @Override
+    public SecurityLevel securityLevel() {
+        // it can guarantee security levels up to SECURE_HARDWARE/SE/StrongBox
+        return SecurityLevel.SECURE_HARDWARE;
+    }
+
+    @Override
+    public boolean supportsSecureHardware() {
+        final String testKeyAlias = "AndroidKeyStore#supportsSecureHardware";
+
+        try {
+            SecretKey key = tryGenerateRegularSecurityKey(testKeyAlias);
+            return validateKeySecurityLevel(SecurityLevel.SECURE_HARDWARE, key);
+        } catch (NoSuchAlgorithmException | InvalidAlgorithmParameterException | NoSuchProviderException e) {
+            return false;
+        } finally {
+            try {
+                removeKey(testKeyAlias);
+            } catch (KeyStoreAccessException e) {
+                Log.e(TAG, "Unable to remove temp key from keychain", e);
+            }
+        }
+    }
+
     @TargetApi(Build.VERSION_CODES.M)
     @Override
-    public EncryptionResult encrypt(@NonNull String service, @NonNull String username, @NonNull String password) throws CryptoFailedException {
+    public EncryptionResult encrypt(@NonNull String service, @NonNull String username, @NonNull String password, SecurityLevel level) throws CryptoFailedException {
         service = getDefaultServiceIfEmpty(service);
 
         try {
             KeyStore keyStore = getKeyStoreAndLoad();
 
             if (!keyStore.containsAlias(service)) {
-                AlgorithmParameterSpec spec;
-                spec = new KeyGenParameterSpec.Builder(
-                        service,
-                        KeyProperties.PURPOSE_DECRYPT | KeyProperties.PURPOSE_ENCRYPT)
-                        .setBlockModes(ENCRYPTION_BLOCK_MODE)
-                        .setEncryptionPaddings(ENCRYPTION_PADDING)
-                        .setRandomizedEncryptionRequired(true)
-                        //.setUserAuthenticationRequired(true) // Will throw InvalidAlgorithmParameterException if there is no fingerprint enrolled on the device
-                        .setKeySize(ENCRYPTION_KEY_SIZE)
-                        .build();
+              // Firstly, try to generate the key as safe as possible (strongbox).
+              // see https://developer.android.com/training/articles/keystore#HardwareSecurityModule
+              SecretKey secretKey = tryGenerateStrongBoxSecurityKey(service);
+              if (secretKey == null) {
+                  // If that is not possible, we generate the key in a regular way
+                  // (it still might be generated in hardware, but not in StrongBox)
+                  secretKey = tryGenerateRegularSecurityKey(service);
+              }
 
-                KeyGenerator generator = KeyGenerator.getInstance(ENCRYPTION_ALGORITHM, KEYSTORE_TYPE);
-                generator.init(spec);
-
-                generator.generateKey();
+              if (!validateKeySecurityLevel(level, secretKey)) {
+                  throw new CryptoFailedException("Cannot generate keys with required security guarantees");
+              }
             }
 
             Key key = keyStore.getKey(service, null);
@@ -88,6 +116,25 @@ public class CipherStorageKeystoreAESCBC implements CipherStorage {
             throw new CryptoFailedException("Could not encrypt data for service " + service, e);
         } catch (KeyStoreException | KeyStoreAccessException e) {
             throw new CryptoFailedException("Could not access Keystore for service " + service, e);
+        } catch (Exception e) {
+            throw new CryptoFailedException("Unknown error: " + e.getMessage(), e);
+        }
+    }
+
+    @TargetApi(Build.VERSION_CODES.M)
+    private boolean validateKeySecurityLevel(SecurityLevel level, SecretKey generatedKey) {
+        return getSecurityLevel(generatedKey).satisfiesSafetyThreshold(level);
+    }
+
+    @TargetApi(Build.VERSION_CODES.M)
+    private SecurityLevel getSecurityLevel(SecretKey key) {
+        try {
+            SecretKeyFactory factory = SecretKeyFactory.getInstance(key.getAlgorithm(), KEYSTORE_TYPE);
+            KeyInfo keyInfo;
+            keyInfo = (KeyInfo) factory.getKeySpec(key, KeyInfo.class);
+            return keyInfo.isInsideSecureHardware() ? SecurityLevel.SECURE_HARDWARE : SecurityLevel.SECURE_SOFTWARE;
+        } catch (NoSuchAlgorithmException | NoSuchProviderException | InvalidKeySpecException e) {
+            return SecurityLevel.ANY;
         }
     }
 
@@ -103,11 +150,13 @@ public class CipherStorageKeystoreAESCBC implements CipherStorage {
             String decryptedUsername = decryptBytes(key, username);
             String decryptedPassword = decryptBytes(key, password);
 
-            return new DecryptionResult(decryptedUsername, decryptedPassword);
+            return new DecryptionResult(decryptedUsername, decryptedPassword, getSecurityLevel((SecretKey) key));
         } catch (KeyStoreException | UnrecoverableKeyException | NoSuchAlgorithmException e) {
             throw new CryptoFailedException("Could not get key from Keystore", e);
         } catch (KeyStoreAccessException e) {
             throw new CryptoFailedException("Could not access Keystore", e);
+        } catch (Exception e) {
+            throw new CryptoFailedException("Unknown error: " + e.getMessage(), e);
         }
     }
 
@@ -123,6 +172,8 @@ public class CipherStorageKeystoreAESCBC implements CipherStorage {
             }
         } catch (KeyStoreException e) {
             throw new KeyStoreAccessException("Failed to access Keystore", e);
+        } catch (Exception e) {
+            throw new KeyStoreAccessException("Unknown error " + e.getMessage(), e);
         }
     }
 
@@ -188,5 +239,47 @@ public class CipherStorageKeystoreAESCBC implements CipherStorage {
     @NonNull
     private String getDefaultServiceIfEmpty(@NonNull String service) {
         return service.isEmpty() ? DEFAULT_SERVICE : service;
+    }
+
+    @TargetApi(Build.VERSION_CODES.P)
+    private SecretKey tryGenerateStrongBoxSecurityKey(String service) throws NoSuchAlgorithmException,
+      InvalidAlgorithmParameterException, NoSuchProviderException {
+        // StrongBox is only supported on Android P and higher
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
+            return null;
+        }
+        try {
+            return generateKey(getKeyGenSpecBuilder(service).setIsStrongBoxBacked(true).build());
+        } catch (StrongBoxUnavailableException e) {
+            Log.i(TAG, "StrongBox is unavailable on this device");
+            return null;
+        }
+    }
+
+    @TargetApi(Build.VERSION_CODES.M)
+    private SecretKey tryGenerateRegularSecurityKey(String service) throws NoSuchAlgorithmException,
+      InvalidAlgorithmParameterException, NoSuchProviderException {
+        return generateKey(getKeyGenSpecBuilder(service).build());
+    }
+
+    // returns true if the key was generated successfully
+    @TargetApi(Build.VERSION_CODES.M)
+    private SecretKey generateKey(KeyGenParameterSpec spec) throws NoSuchProviderException,
+      NoSuchAlgorithmException, InvalidAlgorithmParameterException {
+        KeyGenerator generator = KeyGenerator.getInstance(ENCRYPTION_ALGORITHM, KEYSTORE_TYPE);
+        generator.init(spec);
+        return generator.generateKey();
+    }
+
+    @TargetApi(Build.VERSION_CODES.M)
+    private KeyGenParameterSpec.Builder getKeyGenSpecBuilder(String service) {
+        return new KeyGenParameterSpec.Builder(
+                service,
+                KeyProperties.PURPOSE_DECRYPT | KeyProperties.PURPOSE_ENCRYPT)
+            .setBlockModes(ENCRYPTION_BLOCK_MODE)
+            .setEncryptionPaddings(ENCRYPTION_PADDING)
+            .setRandomizedEncryptionRequired(true)
+            //.setUserAuthenticationRequired(true) // Will throw InvalidAlgorithmParameterException if there is no fingerprint enrolled on the device
+            .setKeySize(ENCRYPTION_KEY_SIZE);
     }
 }
