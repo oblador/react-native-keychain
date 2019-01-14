@@ -61,6 +61,10 @@ Will remove the username/password combination from the secure storage.
 
 Will store the server/username/password combination in the secure storage.
 
+### `hasInternetCredentials(server, [{ authenticationPrompt }])`
+
+Will check if the username/password combination for server is available in the secure storage. Resolves to `true` if an entry exists or `false` if it doesn't.
+
 ### `getInternetCredentials(server, [{ authenticationPrompt }])`
 
 Will retreive the server/username/password combination from the secure storage. Resolves to `{ username, password }` if an entry exists or `false` if it doesn't. It will reject only if an unexpected error is encountered like lacking entitlements or permission.
@@ -143,6 +147,7 @@ Get what type of hardware biometry support the device has. Resolves to a `Keycha
 
 * Right click on Libraries, select **Add files to "…"** and select `node_modules/react-native-keychain/RNKeychain.xcodeproj`
 * Select your project and under **Build Phases** -> **Link Binary With Libraries**, press the + and select `libRNKeychain.a`.
+* make sure `pod 'RNKeychain'` is not in your `Podfile`
 
 #### Option: With [CocoaPods](https://cocoapods.org/)
 

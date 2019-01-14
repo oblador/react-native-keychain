@@ -31,6 +31,7 @@ import javax.crypto.CipherOutputStream;
 import javax.crypto.KeyGenerator;
 import javax.crypto.spec.IvParameterSpec;
 
+@TargetApi(Build.VERSION_CODES.M)
 public class CipherStorageKeystoreAESCBC implements CipherStorage {
     public static final String CIPHER_STORAGE_NAME = "KeystoreAESCBC";
     public static final String DEFAULT_SERVICE = "RN_KEYCHAIN_DEFAULT_ALIAS";
@@ -59,7 +60,6 @@ public class CipherStorageKeystoreAESCBC implements CipherStorage {
         return Build.VERSION_CODES.M;
     }
 
-    @TargetApi(Build.VERSION_CODES.M)
     @Override
     public EncryptionResult encrypt(@NonNull String service, @NonNull String username, @NonNull String password) throws CryptoFailedException {
         service = getDefaultServiceIfEmpty(service);
@@ -68,22 +68,7 @@ public class CipherStorageKeystoreAESCBC implements CipherStorage {
             KeyStore keyStore = getKeyStoreAndLoad();
 
             if (!keyStore.containsAlias(service)) {
-                AlgorithmParameterSpec spec;
-                spec = new KeyGenParameterSpec.Builder(
-                        service,
-                        KeyProperties.PURPOSE_DECRYPT | KeyProperties.PURPOSE_ENCRYPT)
-                        .setBlockModes(ENCRYPTION_BLOCK_MODE)
-                        .setEncryptionPaddings(ENCRYPTION_PADDING)
-                        .setRandomizedEncryptionRequired(true)
-                        .setUserAuthenticationRequired(true) // Will throw InvalidAlgorithmParameterException if there is no fingerprint enrolled on the device
-                        .setUserAuthenticationValidityDurationSeconds(AUTHENTICATION_DURATION_SECONDS)
-                        .setKeySize(ENCRYPTION_KEY_SIZE)
-                        .build();
-
-                KeyGenerator generator = KeyGenerator.getInstance(ENCRYPTION_ALGORITHM, KEYSTORE_TYPE);
-                generator.init(spec);
-
-                generator.generateKey();
+                generateKeyAndStoreUnderAlias(service);
             }
 
             Key key = keyStore.getKey(service, null);
@@ -96,7 +81,27 @@ public class CipherStorageKeystoreAESCBC implements CipherStorage {
             throw new CryptoFailedException("Could not encrypt data for service " + service, e);
         } catch (KeyStoreException | KeyStoreAccessException e) {
             throw new CryptoFailedException("Could not access Keystore for service " + service, e);
+        } catch (Exception e) {
+            throw new CryptoFailedException("Unknown error: " + e.getMessage(), e);
         }
+    }
+
+    private void generateKeyAndStoreUnderAlias(@NonNull String service) throws NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException {
+        AlgorithmParameterSpec spec = new KeyGenParameterSpec.Builder(
+                service,
+                KeyProperties.PURPOSE_DECRYPT | KeyProperties.PURPOSE_ENCRYPT)
+                .setBlockModes(ENCRYPTION_BLOCK_MODE)
+                .setEncryptionPaddings(ENCRYPTION_PADDING)
+                .setRandomizedEncryptionRequired(true)
+                .setUserAuthenticationRequired(true) // Will throw InvalidAlgorithmParameterException if there is no fingerprint enrolled on the device
+                .setUserAuthenticationValidityDurationSeconds(AUTHENTICATION_DURATION_SECONDS)
+                .setKeySize(ENCRYPTION_KEY_SIZE)
+                .build();
+
+        KeyGenerator generator = KeyGenerator.getInstance(ENCRYPTION_ALGORITHM, KEYSTORE_TYPE);
+        generator.init(spec);
+
+        generator.generateKey();
     }
 
     @Override
@@ -116,6 +121,8 @@ public class CipherStorageKeystoreAESCBC implements CipherStorage {
             throw new CryptoFailedException("Could not get key from Keystore", e);
         } catch (KeyStoreAccessException e) {
             throw new CryptoFailedException("Could not access Keystore", e);
+        } catch (Exception e) {
+            throw new CryptoFailedException("Unknown error: " + e.getMessage(), e);
         }
     }
 
@@ -131,6 +138,8 @@ public class CipherStorageKeystoreAESCBC implements CipherStorage {
             }
         } catch (KeyStoreException e) {
             throw new KeyStoreAccessException("Failed to access Keystore", e);
+        } catch (Exception e) {
+            throw new KeyStoreAccessException("Unknown error " + e.getMessage(), e);
         }
     }
 

@@ -11,11 +11,37 @@ declare module 'react-native-keychain' {
         password: string;
     }
 
+    export enum SecAccessible {
+        WHEN_UNLOCKED = "AccessibleWhenUnlocked",
+        AFTER_FIRST_UNLOCK = "AccessibleAfterFirstUnlock",
+        ALWAYS = "AccessibleAlways",
+        WHEN_PASSCODE_SET_THIS_DEVICE_ONLY = "AccessibleWhenPasscodeSetThisDeviceOnly",
+        WHEN_UNLOCKED_THIS_DEVICE_ONLY = "AccessibleWhenUnlockedThisDeviceOnly",
+        AFTER_FIRST_UNLOCK_THIS_DEVICE_ONLY = "AccessibleAfterFirstUnlockThisDeviceOnly",
+        ALWAYS_THIS_DEVICE_ONLY = "AccessibleAlwaysThisDeviceOnly"
+    }
+
+    export enum SecAccessControl {
+        USER_PRESENCE = "UserPresence",
+        BIOMETRY_ANY = "BiometryAny",
+        BIOMETRY_CURRENT_SET = "BiometryCurrentSet",
+        DEVICE_PASSCODE = "DevicePasscode",
+        APPLICATION_PASSWORD = "ApplicationPassword",
+        BIOMETRY_ANY_OR_DEVICE_PASSCODE = "BiometryAnyOrDevicePasscode",
+        BIOMETRY_CURRENT_SET_OR_DEVICE_PASSCODE = "BiometryCurrentSetOrDevicePasscode"
+    }
+
+    export enum LAPolicy {
+        DEVICE_PASSCODE_OR_BIOMETRICS = "AuthenticationWithBiometricsDevicePasscode",
+        BIOMETRICS = "AuthenticationWithBiometrics"
+    }
+
     export interface Options {
-        accessControl?: string;
+        accessControl?: SecAccessControl;
         accessGroup?: string;
+        accessible?: SecAccessible;
         authenticationPrompt?: string;
-        authenticationType?: string;
+        authenticationType?: LAPolicy;
         service?: string;
     }
 
@@ -36,6 +62,10 @@ declare module 'react-native-keychain' {
     function getInternetCredentials(
         server: string
     ): Promise<UserCredentials>;
+
+    function hasInternetCredentials(
+        server: string
+    ): Promise<boolean>;
 
     function resetInternetCredentials(
         server: string
