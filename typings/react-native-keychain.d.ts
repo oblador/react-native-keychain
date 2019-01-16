@@ -11,7 +11,7 @@ declare module 'react-native-keychain' {
         password: string;
     }
 
-    export enum SecAccessible {
+    export enum ACCESSIBLE   {
         WHEN_UNLOCKED = "AccessibleWhenUnlocked",
         AFTER_FIRST_UNLOCK = "AccessibleAfterFirstUnlock",
         ALWAYS = "AccessibleAlways",
@@ -21,7 +21,7 @@ declare module 'react-native-keychain' {
         ALWAYS_THIS_DEVICE_ONLY = "AccessibleAlwaysThisDeviceOnly"
     }
 
-    export enum SecAccessControl {
+    export enum ACCESS_CONTROL {
         USER_PRESENCE = "UserPresence",
         BIOMETRY_ANY = "BiometryAny",
         BIOMETRY_CURRENT_SET = "BiometryCurrentSet",
@@ -37,9 +37,9 @@ declare module 'react-native-keychain' {
     }
 
     export interface Options {
-        accessControl?: SecAccessControl;
+        accessControl?: ACCESS_CONTROL;
         accessGroup?: string;
-        accessible?: SecAccessible;
+        accessible?: ACCESSIBLE;
         authenticationPrompt?: string;
         authenticationType?: LAPolicy;
         service?: string;
