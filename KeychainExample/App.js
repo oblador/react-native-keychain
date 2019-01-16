@@ -13,7 +13,12 @@ import {
 import * as Keychain from 'react-native-keychain';
 
 const ACCESS_CONTROL_OPTIONS = ['None', 'Passcode', 'Password'];
-const ACCESS_CONTROL_MAP = [null, Keychain.ACCESS_CONTROL.DEVICE_PASSCODE, Keychain.ACCESS_CONTROL.APPLICATION_PASSWORD, Keychain.ACCESS_CONTROL.BIOMETRY_CURRENT_SET]
+const ACCESS_CONTROL_MAP = [
+  null, 
+  Keychain.ACCESS_CONTROL.DEVICE_PASSCODE, 
+  Keychain.ACCESS_CONTROL.APPLICATION_PASSWORD, 
+  Keychain.ACCESS_CONTROL.BIOMETRY_CURRENT_SET
+]
 
 export default class KeychainExample extends Component {
   state = {
@@ -106,7 +111,11 @@ export default class KeychainExample extends Component {
               <Text style={styles.label}>Access Control</Text>
               <SegmentedControlIOS
                 selectedIndex={0}
-                values={this.state.biometryType ? [...ACCESS_CONTROL_OPTIONS, this.state.biometryType] : ACCESS_CONTROL_OPTIONS}
+                values={
+                  this.state.biometryType
+                    ? [...ACCESS_CONTROL_OPTIONS, this.state.biometryType]
+                    : ACCESS_CONTROL_OPTIONS
+                }
                 onChange={({ nativeEvent }) => {
                   this.setState({
                     accessControl: ACCESS_CONTROL_MAP[nativeEvent.selectedSegmentIndex],
