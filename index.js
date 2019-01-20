@@ -63,7 +63,7 @@ export type Options = {
  * on the current device.
  * @return {Promise} Resolves to `SECURITY_LEVEL` when supported, otherwise `null`.
  */
-export function getSecurityLevel(): Promise<SecMinimumLevel> {
+export function getSecurityLevel(): Promise<SecMinimumLevel?> {
     if (!RNKeychainManager.getSecurityLevel){
         return Promise.resolve(null);
     }
