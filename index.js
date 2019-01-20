@@ -3,9 +3,9 @@ import { NativeModules, Platform } from 'react-native';
 const { RNKeychainManager } = NativeModules;
 
 export const SECURITY_LEVEL = Object.freeze({
-  ANY: SECURITY_LEVEL_ANY,
-  SECURE_SOFTWARE: SECURITY_LEVEL_SECURE_SOFTWARE,
-  SECURE_HARDWARE: SECURITY_LEVEL_SECURE_HARDWARE,
+  ANY: NativeModules.SECURITY_LEVEL_ANY,
+  SECURE_SOFTWARE: NativeModules.SECURITY_LEVEL_SECURE_SOFTWARE,
+  SECURE_HARDWARE: NativeModules.SECURITY_LEVEL_SECURE_HARDWARE,
 });
 
 export const ACCESSIBLE = Object.freeze({
@@ -63,7 +63,7 @@ export type Options = {
  * on the current device.
  * @return {Promise} Resolves to `SECURITY_LEVEL` when supported, otherwise `null`.
  */
-export function getSecurityLevel(): Promise {
+export function getSecurityLevel(): Promise<SecMinimumLevel> {
     if (!RNKeychainManager.getSecurityLevel){
         return Promise.resolve(null);
     }
