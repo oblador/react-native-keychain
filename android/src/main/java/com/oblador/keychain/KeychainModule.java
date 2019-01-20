@@ -24,6 +24,8 @@ import com.oblador.keychain.exceptions.KeyStoreAccessException;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.annotation.Nullable;
+
 public class KeychainModule extends ReactContextBaseJavaModule {
 
     public static final String E_EMPTY_PARAMETERS = "E_EMPTY_PARAMETERS";
@@ -52,6 +54,16 @@ public class KeychainModule extends ReactContextBaseJavaModule {
 
     private void addCipherStorageToMap(CipherStorage cipherStorage) {
         cipherStorageMap.put(cipherStorage.getCipherStorageName(), cipherStorage);
+    }
+
+    @Nullable
+    @Override
+    public Map<String, Object> getConstants() {
+        final Map<String, Object> constants = new HashMap<>();
+        constants.put(SecurityLevel.ANY.jsName(), SecurityLevel.ANY.name());
+        constants.put(SecurityLevel.SECURE_SOFTWARE.jsName(), SecurityLevel.SECURE_SOFTWARE.name());
+        constants.put(SecurityLevel.SECURE_HARDWARE.jsName(), SecurityLevel.SECURE_SOFTWARE.name());
+        return constants;
     }
 
     @ReactMethod
@@ -91,7 +103,6 @@ public class KeychainModule extends ReactContextBaseJavaModule {
 
             CipherStorage currentCipherStorage = getCipherStorageForCurrentAPILevel();
 
-            final DecryptionResult decryptionResult;
             ResultSet resultSet = prefsStorage.getEncryptedEntry(service);
             if (resultSet == null) {
                 Log.e(KEYCHAIN_MODULE, "No entry found for service: " + service);
@@ -99,28 +110,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
                 return;
             }
 
-            if (resultSet.cipherStorageName.equals(currentCipherStorage.getCipherStorageName())) {
-                // The encrypted data is encrypted using the current CipherStorage, so we just decrypt and return
-                decryptionResult = currentCipherStorage.decrypt(service, resultSet.usernameBytes, resultSet.passwordBytes);
-            }
-            else {
-                // The encrypted data is encrypted using an older CipherStorage, so we need to decrypt the data first, then encrypt it using the current CipherStorage, then store it again and return
-                CipherStorage oldCipherStorage = getCipherStorageByName(resultSet.cipherStorageName);
-                // decrypt using the older cipher storage
-                decryptionResult = oldCipherStorage.decrypt(service, resultSet.usernameBytes, resultSet.passwordBytes);
-                // encrypt using the current cipher storage
-
-                try {
-                    // don't allow to degrade security level when transferring, the new storage should be as safe as the old one.
-                    EncryptionResult encryptionResult = currentCipherStorage.encrypt(service, decryptionResult.username, decryptionResult.password, decryptionResult.getSecurityLevel());
-                    // store the encryption result
-                    prefsStorage.storeEncryptedEntry(service, encryptionResult);
-                    // clean up the old cipher storage
-                    oldCipherStorage.removeKey(service);
-                } catch (CryptoFailedException e) {
-                    Log.e(KEYCHAIN_MODULE, "Migrating to a less safe storage is not allowed. Keeping the old one");
-                }
-            }
+            final DecryptionResult decryptionResult = decryptCredentials(service, currentCipherStorage, resultSet);
 
             WritableMap credentials = Arguments.createMap();
 
@@ -136,6 +126,37 @@ public class KeychainModule extends ReactContextBaseJavaModule {
             Log.e(KEYCHAIN_MODULE, e.getMessage());
             promise.reject(E_CRYPTO_FAILED, e);
         }
+    }
+
+    private DecryptionResult decryptCredentials(String service, CipherStorage currentCipherStorage, ResultSet resultSet) throws CryptoFailedException, KeyStoreAccessException {
+        if (resultSet.cipherStorageName.equals(currentCipherStorage.getCipherStorageName())) {
+            // The encrypted data is encrypted using the current CipherStorage, so we just decrypt and return
+            return currentCipherStorage.decrypt(service, resultSet.usernameBytes, resultSet.passwordBytes);
+        }
+
+        // The encrypted data is encrypted using an older CipherStorage, so we need to decrypt the data first, then encrypt it using the current CipherStorage, then store it again and return
+        CipherStorage oldCipherStorage = getCipherStorageByName(resultSet.cipherStorageName);
+        // decrypt using the older cipher storage
+
+        DecryptionResult decryptionResult = oldCipherStorage.decrypt(service, resultSet.usernameBytes, resultSet.passwordBytes);
+        // encrypt using the current cipher storage
+
+        try {
+            migrateCipherStorage(service, currentCipherStorage, oldCipherStorage, decryptionResult);
+        } catch (CryptoFailedException e) {
+            Log.e(KEYCHAIN_MODULE, "Migrating to a less safe storage is not allowed. Keeping the old one");
+        }
+
+        return decryptionResult;
+    }
+
+    private void migrateCipherStorage(String service, CipherStorage newCipherStorage, CipherStorage oldCipherStorage, DecryptionResult decryptionResult) throws KeyStoreAccessException, CryptoFailedException {
+        // don't allow to degrade security level when transferring, the new storage should be as safe as the old one.
+        EncryptionResult encryptionResult = newCipherStorage.encrypt(service, decryptionResult.username, decryptionResult.password, decryptionResult.getSecurityLevel());
+        // store the encryption result
+        prefsStorage.storeEncryptedEntry(service, encryptionResult);
+        // clean up the old cipher storage
+        oldCipherStorage.removeKey(service);
     }
 
     @ReactMethod

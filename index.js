@@ -3,9 +3,9 @@ import { NativeModules, Platform } from 'react-native';
 const { RNKeychainManager } = NativeModules;
 
 export const SECURITY_LEVEL = Object.freeze({
-  ANY: 'ANY',
-  SECURE_SOFTWARE: 'SECURE_SOFTWARE',
-  SECURE_HARDWARE: 'SECURE_HARDWARE',
+  ANY: SECURITY_LEVEL_ANY,
+  SECURE_SOFTWARE: SECURITY_LEVEL_SECURE_SOFTWARE,
+  SECURE_HARDWARE: SECURITY_LEVEL_SECURE_HARDWARE,
 });
 
 export const ACCESSIBLE = Object.freeze({
