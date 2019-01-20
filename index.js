@@ -55,6 +55,7 @@ export type Options = {
   authenticationPrompt?: string,
   authenticationType?: LAPolicy,
   service?: string,
+  securityLevel?: SecMinimumLevel,
 };
 
 /**
@@ -98,8 +99,6 @@ export function getSupportedBiometryType(): Promise<?($Values<typeof BIOMETRY_TY
  * @param {string} server URL to server.
  * @param {string} username Associated username or e-mail to be saved.
  * @param {string} password Associated password to be saved.
- * @param {string} minimumSecurityLevel `SECURITY_LEVEL` defines which security
- *                 level is minimally acceptable for this password.
  * @param {object} options Keychain options, iOS only
  * @return {Promise} Resolves to `true` when successful
  */
@@ -107,14 +106,13 @@ export function setInternetCredentials(
   server: string,
   username: string,
   password: string,
-  minimumSecurityLevel?: SecMinimumLevel,
   options?: Options
 ): Promise<void> {
   return RNKeychainManager.setInternetCredentialsForServer(
     server,
     username,
     password,
-    getMinimumSecurityLevel(minimumSecurityLevel),
+    getMinimumSecurityLevel(options),
     options
   );
 }
@@ -170,34 +168,29 @@ function getOptionsArgument(serviceOrOptions?: string | Options) {
     : serviceOrOptions;
 }
 
-function getMinimumSecurityLevel(minimumSecurityLevel?: SecMinimumLevel) {
-    if (minimumSecurityLevel === undefined) {
-        return SECURITY_LEVEL.ANY;
-    } else {
-        return minimumSecurityLevel
-    }
+function getMinimumSecurityLevel(serviceOrOptions?: string | Options) {
+  return typeof serviceOrOptions === 'object'
+    ? serviceOrOptions.securityLevel
+    : SECURITY_LEVEL.ANY;
 }
 
 /**
  * Saves the `username` and `password` combination for `service`.
  * @param {string} username Associated username or e-mail to be saved.
  * @param {string} password Associated password to be saved.
- * @param {string} minimumSecurityLevel `SECURITY_LEVEL` defines which security
- *                 level is minimally acceptable for this password.
  * @param {string|object} serviceOrOptions Reverse domain name qualifier for the service, defaults to `bundleId` or an options object.
  * @return {Promise} Resolves to `true` when successful
  */
 export function setGenericPassword(
   username: string,
   password: string,
-  minimumSecurityLevel?: SecMinimumLevel,
   serviceOrOptions?: string | Options
 ): Promise<boolean> {
   return RNKeychainManager.setGenericPasswordForOptions(
     getOptionsArgument(serviceOrOptions),
     username,
     password,
-    getMinimumSecurityLevel(minimumSecurityLevel)
+    getMinimumSecurityLevel(serviceOrOptions)
   );
 }
 
