@@ -3,9 +3,9 @@ import { NativeModules, Platform } from 'react-native';
 const { RNKeychainManager } = NativeModules;
 
 export const SECURITY_LEVEL = Object.freeze({
-  ANY: NativeModules.SECURITY_LEVEL_ANY,
-  SECURE_SOFTWARE: NativeModules.SECURITY_LEVEL_SECURE_SOFTWARE,
-  SECURE_HARDWARE: NativeModules.SECURITY_LEVEL_SECURE_HARDWARE,
+  ANY: RNKeychainManager.SECURITY_LEVEL_ANY,
+  SECURE_SOFTWARE: RNKeychainManager.SECURITY_LEVEL_SECURE_SOFTWARE,
+  SECURE_HARDWARE: RNKeychainManager.SECURITY_LEVEL_SECURE_HARDWARE,
 });
 
 export const ACCESSIBLE = Object.freeze({
@@ -63,7 +63,7 @@ export type Options = {
  * on the current device.
  * @return {Promise} Resolves to `SECURITY_LEVEL` when supported, otherwise `null`.
  */
-export function getSecurityLevel(): Promise<SecMinimumLevel?> {
+export function getSecurityLevel(): Promise<?($Values<typeof SECURITY_LEVEL>)> {
     if (!RNKeychainManager.getSecurityLevel){
         return Promise.resolve(null);
     }
@@ -169,9 +169,13 @@ function getOptionsArgument(serviceOrOptions?: string | Options) {
 }
 
 function getMinimumSecurityLevel(serviceOrOptions?: string | Options) {
-  return typeof serviceOrOptions === 'object'
-    ? serviceOrOptions.securityLevel
-    : SECURITY_LEVEL.ANY;
+  var specifiedLevel = undefined;
+
+  if (typeof serviceOrOptions === 'object') {
+    specifiedLevel = serviceOrOptions.securityLevel;
+  }
+
+  return specifiedLevel || SECURITY_LEVEL.ANY;
 }
 
 /**
