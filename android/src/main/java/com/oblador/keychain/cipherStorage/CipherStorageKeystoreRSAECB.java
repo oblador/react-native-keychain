@@ -100,14 +100,11 @@ public class CipherStorageKeystoreRSAECB extends AuthenticationCallback implemen
         }
     }
 
+    // We don't really want to do anything here
+    // the error message is handled by the info view.
+    // And we don't want to throw an error, as the user can still retry.
     @Override
-    public void onAuthenticationFailed() {
-        if (mDecryptParams != null && mDecryptParams.resultHandler != null) {
-            mDecryptParams.resultHandler.onDecrypt(null, "Authentication failed.");
-            mBiometricPromptCancellationSignal.cancel();
-            mDecryptParams = null;
-        }
-    }
+    public void onAuthenticationFailed() {}
 
     @Override
     public void onAuthenticationSucceeded(@NonNull AuthenticationResult result) {
