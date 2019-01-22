@@ -43,8 +43,8 @@ public class KeychainModule extends ReactContextBaseJavaModule implements Activi
     public static final String KEYCHAIN_MODULE = "RNKeychainManager";
     public static final String FINGERPRINT_SUPPORTED_NAME = "Fingerprint";
     public static final String EMPTY_STRING = "";
-    public static final int REQUEST_CODE_CONFIRM_DEVICE_CREDENTIALS_SET = 9999931;
-    public static final int REQUEST_CODE_CONFIRM_DEVICE_CREDENTIALS_GET = 9999932;
+    public static final int REQUEST_CODE_CONFIRM_DEVICE_CREDENTIALS_SET = 9931;
+    public static final int REQUEST_CODE_CONFIRM_DEVICE_CREDENTIALS_GET = 9932;
 
     private final Map<String, CipherStorage> cipherStorageMap = new HashMap<>();
     private final PrefsStorage prefsStorage;
