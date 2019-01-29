@@ -19,6 +19,7 @@ package com.oblador.keychain.supportBiometric;
 import android.annotation.TargetApi;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.res.Resources;
@@ -309,7 +310,9 @@ public class FingerprintDialogFragment extends DialogFragment {
     }
 
     void handleShowHelp(final CharSequence msg) {
-        getActivity().runOnUiThread(new Runnable() {
+      Activity activity = getActivity();
+      if (activity != null) {
+        activity.runOnUiThread(new Runnable() {
             @Override
             public void run() {
             updateFingerprintIcon(STATE_FINGERPRINT_ERROR);
@@ -318,13 +321,16 @@ public class FingerprintDialogFragment extends DialogFragment {
             mErrorText.setText(msg);
             }
         });
+      }
 
         // Reset the text after a delay
         mHandler.sendMessageDelayed(mHandler.obtainMessage(MSG_RESET_MESSAGE), HIDE_DIALOG_DELAY);
     }
 
     void handleShowError(int errMsgId, final CharSequence msg) {
-        getActivity().runOnUiThread(new Runnable() {
+      Activity activity = getActivity();
+      if (activity != null) {
+        activity.runOnUiThread(new Runnable() {
             @Override
             public void run() {
             updateFingerprintIcon(STATE_FINGERPRINT_ERROR);
@@ -333,6 +339,7 @@ public class FingerprintDialogFragment extends DialogFragment {
             mErrorText.setText(msg);
             }
         });
+      }
 
         // Dismiss the dialog after a delay
         mHandler.sendMessageDelayed(mHandler.obtainMessage(MSG_DISMISS_DIALOG), HIDE_DIALOG_DELAY);
@@ -343,7 +350,9 @@ public class FingerprintDialogFragment extends DialogFragment {
     }
 
     void handleResetMessage() {
-        getActivity().runOnUiThread(new Runnable() {
+      Activity activity = getActivity();
+      if (activity != null) {
+        activity.runOnUiThread(new Runnable() {
             @Override
             public void run() {
             updateFingerprintIcon(STATE_FINGERPRINT);
@@ -351,5 +360,6 @@ public class FingerprintDialogFragment extends DialogFragment {
             mErrorText.setText(mContext.getString(R.string.fingerprint_dialog_touch_sensor));
             }
         });
+      }
     }
 }

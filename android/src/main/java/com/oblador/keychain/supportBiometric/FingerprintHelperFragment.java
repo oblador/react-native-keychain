@@ -73,13 +73,15 @@ public class FingerprintHelperFragment extends Fragment {
                         if (mCanceledFrom == USER_CANCELED_FROM_NONE) {
                             mHandler.obtainMessage(FingerprintDialogFragment.MSG_DISMISS_DIALOG)
                                     .sendToTarget();
-                            mExecutor.execute(new Runnable() {
-                                @Override
-                                public void run() {
-                                    mClientAuthenticationCallback
-                                            .onAuthenticationError(errMsgId, errString);
-                                }
-                            });
+                            if (mExecutor != null) {
+                              mExecutor.execute(new Runnable() {
+                                  @Override
+                                  public void run() {
+                                      mClientAuthenticationCallback
+                                              .onAuthenticationError(errMsgId, errString);
+                                  }
+                              });
+                          }
                         }
                     } else {
                         mHandler.obtainMessage(FingerprintDialogFragment.MSG_SHOW_ERROR, errMsgId,
@@ -88,6 +90,7 @@ public class FingerprintHelperFragment extends Fragment {
                         mHandler.postDelayed(new Runnable() {
                             @Override
                             public void run() {
+                              if (mExecutor != null) {
                                 mExecutor.execute(new Runnable() {
                                     @Override
                                     public void run() {
@@ -96,6 +99,7 @@ public class FingerprintHelperFragment extends Fragment {
                                                 errString);
                                     }
                                 });
+                              }
                             }
                         }, FingerprintDialogFragment.HIDE_DIALOG_DELAY);
                     }
@@ -115,14 +119,16 @@ public class FingerprintHelperFragment extends Fragment {
                         final FingerprintManagerCompat.AuthenticationResult result) {
                     mHandler.obtainMessage(
                             FingerprintDialogFragment.MSG_DISMISS_DIALOG).sendToTarget();
-                    mExecutor.execute(new Runnable() {
-                        @Override
-                        public void run() {
-                            mClientAuthenticationCallback.onAuthenticationSucceeded(
-                                    new BiometricPrompt.AuthenticationResult(
-                                            unwrapCryptoObject(result.getCryptoObject())));
-                        }
-                    });
+                    if (mExecutor != null) {
+                      mExecutor.execute(new Runnable() {
+                          @Override
+                          public void run() {
+                              mClientAuthenticationCallback.onAuthenticationSucceeded(
+                                      new BiometricPrompt.AuthenticationResult(
+                                              unwrapCryptoObject(result.getCryptoObject())));
+                          }
+                      });
+                    }
                     cleanup();
                 }
 
@@ -131,12 +137,14 @@ public class FingerprintHelperFragment extends Fragment {
                     mHandler.obtainMessage(FingerprintDialogFragment.MSG_SHOW_HELP,
                             mContext.getResources().getString(R.string.fingerprint_not_recognized))
                             .sendToTarget();
-                    mExecutor.execute(new Runnable() {
-                        @Override
-                        public void run() {
-                            mClientAuthenticationCallback.onAuthenticationFailed();
-                        }
-                    });
+                    if (mExecutor != null) {
+                      mExecutor.execute(new Runnable() {
+                          @Override
+                          public void run() {
+                              mClientAuthenticationCallback.onAuthenticationFailed();
+                          }
+                      });
+                  }
                 }
             };
 
