@@ -39,6 +39,7 @@ public:
     Q_INVOKABLE REACT_PROMISE void setGenericPasswordForOptions(QVariantList options,
                                                                 const QString& username,
                                                                 const QString& password,
+                                                                const QString& minSecLevel,
                                                                 const ModuleInterface::ListArgumentBlock& resolve,
                                                                 const ModuleInterface::ListArgumentBlock& reject);
     Q_INVOKABLE REACT_PROMISE void resetGenericPasswordForOptions(QVariantList options,

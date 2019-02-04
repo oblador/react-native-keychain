@@ -85,6 +85,7 @@ void RNKeychainManager::getGenericPasswordForOptions(QVariantList options,
 void RNKeychainManager::setGenericPasswordForOptions(QVariantList options,
                                                      const QString &username,
                                                      const QString &password,
+                                                     const QString& minSecLevel,
                                                      const ModuleInterface::ListArgumentBlock &resolve,
                                                      const ModuleInterface::ListArgumentBlock &reject) {
     Q_D(RNKeychainManager);
@@ -141,5 +142,3 @@ void RNKeychainManager::setUsername(const QString &username,
 
     resolve(d->bridge, QVariantList{QVariant(true)});
 }
-
-
