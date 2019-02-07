@@ -83,6 +83,13 @@ public class KeychainModule extends ReactContextBaseJavaModule {
                 .emit("keychainFingerprintInfo", message);
     }
 
+
+    @ReactMethod
+    public void configBiometricPrompt(String title, String subtitle) {
+        CipherStorageKeystoreRSAECB.biometricPromptTitle = title;
+        CipherStorageKeystoreRSAECB.biometricPromptSubtitle = subtitle;
+    }
+
     @ReactMethod
     public void setGenericPasswordForOptions(String service, String username, String password, ReadableMap options, Promise promise) {
         try {

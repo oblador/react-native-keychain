@@ -65,6 +65,9 @@ public class CipherStorageKeystoreRSAECB implements CipherStorage, BiometricProm
     private Context mContext;
     private Activity mActivity;
 
+    public static String biometricPromptTitle = "Authentication required";
+    public static String biometricPromptSubtitle = "Please use biometric authentication to unlock the app";
+
     class CipherDecryptionParams {
         public final DecryptionResultHandler resultHandler;
         public final Key key;
@@ -143,8 +146,8 @@ public class CipherStorageKeystoreRSAECB implements CipherStorage, BiometricProm
         mBiometricPromptCompatCancellationSignal = new CancellationSignal();
 
         mBiometricPromptCompat = new BiometricPromptCompat.Builder(mActivity)
-            .setTitle("Authentication required")
-            .setSubtitle("Please use biometric authentication to unlock the app")
+            .setTitle(biometricPromptTitle)
+            .setSubtitle(biometricPromptSubtitle)
             .build();
 
         mBiometricPromptCompat.authenticate(mBiometricPromptCompatCancellationSignal, this);
