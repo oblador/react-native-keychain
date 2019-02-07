@@ -1,6 +1,8 @@
 package com.oblador.keychain.cipherStorage;
 
+import android.app.Activity;
 import android.os.Build;
+import android.security.keystore.KeyPermanentlyInvalidatedException;
 import android.support.annotation.NonNull;
 
 import com.facebook.android.crypto.keychain.AndroidConceal;
@@ -13,6 +15,8 @@ import com.facebook.react.bridge.ReactApplicationContext;
 import com.oblador.keychain.exceptions.CryptoFailedException;
 
 import java.nio.charset.Charset;
+
+import static android.R.attr.password;
 
 public class CipherStorageFacebookConceal implements CipherStorage {
     public static final String CIPHER_STORAGE_NAME = "FacebookConceal";
@@ -30,9 +34,15 @@ public class CipherStorageFacebookConceal implements CipherStorage {
     }
 
     @Override
+    public boolean getCipherBiometrySupported() {
+        return false;
+    }
+
+    @Override
     public int getMinSupportedApiLevel() {
         return Build.VERSION_CODES.JELLY_BEAN;
     }
+
 
     @Override
     public EncryptionResult encrypt(@NonNull String service, @NonNull String username, @NonNull String password) throws CryptoFailedException {
@@ -53,7 +63,7 @@ public class CipherStorageFacebookConceal implements CipherStorage {
     }
 
     @Override
-    public DecryptionResult decrypt(@NonNull String service, @NonNull byte[] username, @NonNull byte[] password) throws CryptoFailedException {
+    public void decrypt(@NonNull DecryptionResultHandler decryptionResultHandler, @NonNull String service, @NonNull byte[] username, @NonNull byte[] password) throws CryptoFailedException, KeyPermanentlyInvalidatedException {
         if (!crypto.isAvailable()) {
             throw new CryptoFailedException("Crypto is missing");
         }
@@ -64,9 +74,9 @@ public class CipherStorageFacebookConceal implements CipherStorage {
             byte[] decryptedUsername = crypto.decrypt(username, usernameEntity);
             byte[] decryptedPassword = crypto.decrypt(password, passwordEntity);
 
-            return new DecryptionResult(
+            decryptionResultHandler.onDecrypt(new DecryptionResult(
                     new String(decryptedUsername, Charset.forName("UTF-8")),
-                    new String(decryptedPassword, Charset.forName("UTF-8")));
+                    new String(decryptedPassword, Charset.forName("UTF-8"))), null, null);
         } catch (Exception e) {
             throw new CryptoFailedException("Decryption failed for service " + service, e);
         }
@@ -89,5 +99,16 @@ public class CipherStorageFacebookConceal implements CipherStorage {
 
     private String getEntityPrefix(String service) {
         return KEYCHAIN_DATA + ":" + service;
+    }
+
+    @Override
+    public boolean getRequiresCurrentActivity() {
+        // Facebook conceal does not need the current activity
+        return false;
+    }
+
+    @Override
+    public void setCurrentActivity(Activity activity) {
+        // Facebook conceal does not need the current activity
     }
 }
