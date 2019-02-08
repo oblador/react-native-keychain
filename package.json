@@ -1,42 +1,11 @@
 {
-  "_args": [
-    [
-      "github:dn3010/react-native-keychain#d030ab05c1e34f44f5f43cb2bece75eec2aebb24",
-      "/Users/johnniecheng/Documents/Project/sylo-mobile"
-    ]
-  ],
-  "_from": "github:dn3010/react-native-keychain#d030ab05c1e34f44f5f43cb2bece75eec2aebb24",
-  "_id": "react-native-keychain@github:dn3010/react-native-keychain#d030ab05c1e34f44f5f43cb2bece75eec2aebb24",
-  "_inBundle": false,
-  "_integrity": "",
-  "_location": "/react-native-keychain",
-  "_phantomChildren": {},
-  "_requested": {
-    "type": "git",
-    "raw": "github:dn3010/react-native-keychain#d030ab05c1e34f44f5f43cb2bece75eec2aebb24",
-    "rawSpec": "github:dn3010/react-native-keychain#d030ab05c1e34f44f5f43cb2bece75eec2aebb24",
-    "saveSpec": "github:dn3010/react-native-keychain#d030ab05c1e34f44f5f43cb2bece75eec2aebb24",
-    "fetchSpec": null,
-    "gitCommittish": "d030ab05c1e34f44f5f43cb2bece75eec2aebb24"
-  },
-  "_requiredBy": [
-    "/"
-  ],
-  "_resolved": "github:dn3010/react-native-keychain#d030ab05c1e34f44f5f43cb2bece75eec2aebb24",
-  "_spec": "github:dn3010/react-native-keychain#d030ab05c1e34f44f5f43cb2bece75eec2aebb24",
-  "_where": "/Users/johnniecheng/Documents/Project/sylo-mobile",
-  "author": {
-    "name": "Joel Arvidsson",
-    "email": "joel@oblador.se"
-  },
-  "bugs": {
-    "url": "https://github.com/oblador/react-native-keychain/issues"
-  },
+  "name": "react-native-keychain",
+  "version": "3.0.0",
   "description": "Keychain Access for React Native",
-  "devDependencies": {
-    "flow-bin": "0.61.0"
+  "main": "index.js",
+  "scripts": {
+    "test": "flow"
   },
-  "homepage": "https://github.com/oblador/react-native-keychain",
   "keywords": [
     "react-native",
     "react-component",
@@ -47,71 +16,24 @@
     "android",
     "keychain"
   ],
-  "license": "MIT",
-  "main": "index.js",
-  "name": "react-native-keychain",
+  "author": {
+    "name": "Joel Arvidsson",
+    "email": "joel@oblador.se"
+  },
+  "homepage": "https://github.com/oblador/react-native-keychain",
+  "bugs": {
+    "url": "https://github.com/oblador/react-native-keychain/issues"
+  },
+  "typescript": {
+    "definition": "typings/react-native-keychain.d.ts"
+  },
+  "types": "typings/react-native-keychain.d.ts",
   "repository": {
     "type": "git",
     "url": "git://github.com/oblador/react-native-keychain.git"
   },
-  "scripts": {
-    "test": "flow"
-  },
-  "types": "typings/react-native-keychain.d.ts",
-  "typescript": {
-    "definition": "typings/react-native-keychain.d.ts"
-  },
-  "version": "3.0.0",
-  "react-native": {
-    "zlib": "browserify-zlib",
-    "console": "console-browserify",
-    "constants": "constants-browserify",
-    "crypto": "react-native-crypto",
-    "dns": "dns.js",
-    "net": "react-native-tcp",
-    "domain": "domain-browser",
-    "http": "@tradle/react-native-http",
-    "https": "https-browserify",
-    "os": "react-native-os",
-    "path": "path-browserify",
-    "querystring": "querystring-es3",
-    "fs": "react-native-level-fs",
-    "_stream_transform": "readable-stream/transform",
-    "_stream_readable": "readable-stream/readable",
-    "_stream_writable": "readable-stream/writable",
-    "_stream_duplex": "readable-stream/duplex",
-    "_stream_passthrough": "readable-stream/passthrough",
-    "dgram": "react-native-udp",
-    "stream": "stream-browserify",
-    "timers": "timers-browserify",
-    "tty": "tty-browserify",
-    "vm": "vm-browserify",
-    "tls": false
-  },
-  "browser": {
-    "zlib": "browserify-zlib",
-    "console": "console-browserify",
-    "constants": "constants-browserify",
-    "crypto": "react-native-crypto",
-    "dns": "dns.js",
-    "net": "react-native-tcp",
-    "domain": "domain-browser",
-    "http": "@tradle/react-native-http",
-    "https": "https-browserify",
-    "os": "react-native-os",
-    "path": "path-browserify",
-    "querystring": "querystring-es3",
-    "fs": "react-native-level-fs",
-    "_stream_transform": "readable-stream/transform",
-    "_stream_readable": "readable-stream/readable",
-    "_stream_writable": "readable-stream/writable",
-    "_stream_duplex": "readable-stream/duplex",
-    "_stream_passthrough": "readable-stream/passthrough",
-    "dgram": "react-native-udp",
-    "stream": "stream-browserify",
-    "timers": "timers-browserify",
-    "tty": "tty-browserify",
-    "vm": "vm-browserify",
-    "tls": false
+  "license": "MIT",
+  "devDependencies": {
+    "flow-bin": "0.61.0"
   }
 }
