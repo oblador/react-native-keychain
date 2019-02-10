@@ -1,5 +1,7 @@
 package com.oblador.keychain;
 
+import android.Manifest;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import android.content.Context;
 import android.app.KeyguardManager;
@@ -10,7 +12,9 @@ public class DeviceAvailability {
         if (android.os.Build.VERSION.SDK_INT >= 23) {
             FingerprintManager fingerprintManager =
                 (FingerprintManager) context.getSystemService(Context.FINGERPRINT_SERVICE);
-            return fingerprintManager != null && fingerprintManager.isHardwareDetected() &&
+            return fingerprintManager != null &&
+                context.checkSelfPermission(Manifest.permission.USE_FINGERPRINT) == PackageManager.PERMISSION_GRANTED &&
+                fingerprintManager.isHardwareDetected() &&
                 fingerprintManager.hasEnrolledFingerprints();
         }
         return false;
