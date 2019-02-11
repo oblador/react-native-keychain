@@ -60,7 +60,8 @@ declare module 'react-native-keychain' {
     ): Promise<void>;
 
     function getInternetCredentials(
-        server: string
+        server: string,
+        options?: Options
     ): Promise<UserCredentials>;
 
     function hasInternetCredentials(

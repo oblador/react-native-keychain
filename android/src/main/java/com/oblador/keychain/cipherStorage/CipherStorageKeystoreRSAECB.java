@@ -175,7 +175,7 @@ public class CipherStorageKeystoreRSAECB implements CipherStorage, BiometricProm
         try {
             KeyStore keyStore = getKeyStoreAndLoad();
 
-            if (!keyStore.containsAlias(service)) {
+            if (!keyStore.containsAlias(service) || keyStore.getCertificate(service) == null) {
                 generateKeyAndStoreUnderAlias(service);
             }
 

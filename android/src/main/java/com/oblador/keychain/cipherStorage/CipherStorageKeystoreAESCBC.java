@@ -95,6 +95,7 @@ public class CipherStorageKeystoreAESCBC implements CipherStorage {
                 .setRandomizedEncryptionRequired(true)
                 //.setUserAuthenticationRequired(true) // Will throw InvalidAlgorithmParameterException if there is no fingerprint enrolled on the device
                 .setKeySize(ENCRYPTION_KEY_SIZE)
+                .setUserAuthenticationValidityDurationSeconds(2)
                 .build();
 
         KeyGenerator generator = KeyGenerator.getInstance(ENCRYPTION_ALGORITHM, KEYSTORE_TYPE);
