@@ -5,6 +5,7 @@ import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.KeyguardManager;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.CancellationSignal;
@@ -67,6 +68,7 @@ public class CipherStorageKeystoreRSAECB implements CipherStorage, BiometricProm
 
     public static String biometricPromptTitle = "Authentication required";
     public static String biometricPromptSubtitle = "Please use biometric authentication to unlock the app";
+    public static String biometricPromptNegativeText = "Cancel";
 
     class CipherDecryptionParams {
         public final DecryptionResultHandler resultHandler;
@@ -148,6 +150,12 @@ public class CipherStorageKeystoreRSAECB implements CipherStorage, BiometricProm
         mBiometricPromptCompat = new BiometricPromptCompat.Builder(mActivity)
             .setTitle(biometricPromptTitle)
             .setSubtitle(biometricPromptSubtitle)
+            .setNegativeButton(biometricPromptNegativeText, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+
+                }
+            })
             .build();
 
         mBiometricPromptCompat.authenticate(mBiometricPromptCompatCancellationSignal, this);

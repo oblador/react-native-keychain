@@ -85,9 +85,10 @@ public class KeychainModule extends ReactContextBaseJavaModule {
 
 
     @ReactMethod
-    public void configBiometricPrompt(String title, String subtitle) {
+    public void configBiometricPrompt(String title, String subtitle, String negativeText) {
         CipherStorageKeystoreRSAECB.biometricPromptTitle = title;
         CipherStorageKeystoreRSAECB.biometricPromptSubtitle = subtitle;
+        CipherStorageKeystoreRSAECB.biometricPromptNegativeText = negativeText;
     }
 
     @ReactMethod
