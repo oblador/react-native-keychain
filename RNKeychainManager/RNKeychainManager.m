@@ -336,6 +336,7 @@ RCT_EXPORT_METHOD(getGenericPasswordForOptions:(NSDictionary *)options resolver:
   NSString *username = (NSString *) [found objectForKey:(__bridge id)(kSecAttrAccount)];
   NSString *password = [[NSString alloc] initWithData:[found objectForKey:(__bridge id)(kSecValueData)] encoding:NSUTF8StringEncoding];
 
+  CFRelease(foundTypeRef);
   return resolve(@{
     @"service": service,
     @"username": username,
@@ -430,6 +431,7 @@ RCT_EXPORT_METHOD(getInternetCredentialsForServer:(NSString *)server withOptions
   NSString *username = (NSString *) [found objectForKey:(__bridge id)(kSecAttrAccount)];
   NSString *password = [[NSString alloc] initWithData:[found objectForKey:(__bridge id)(kSecValueData)] encoding:NSUTF8StringEncoding];
 
+  CFRelease(foundTypeRef);
   return resolve(@{
     @"server": server,
     @"username": username,
