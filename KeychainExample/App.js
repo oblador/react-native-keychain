@@ -128,6 +128,7 @@ export default class KeychainExample extends Component {
                 <Text style={styles.buttonText}>Save</Text>
               </View>
             </TouchableHighlight>
+
             <TouchableHighlight
               onPress={() => this.load()}
               style={styles.button}
@@ -136,12 +137,29 @@ export default class KeychainExample extends Component {
                 <Text style={styles.buttonText}>Load</Text>
               </View>
             </TouchableHighlight>
+
             <TouchableHighlight
               onPress={() => this.reset()}
               style={styles.button}
             >
               <View style={styles.reset}>
                 <Text style={styles.buttonText}>Reset</Text>
+              </View>
+            </TouchableHighlight>
+
+            <TouchableHighlight
+              onPress={async() => {
+                if (Platform.OS !== 'android') {
+                  alert('android-only feature');
+                  return;
+                }
+                const level = await Keychain.getSecurityLevel();
+                alert(level)
+              }}
+              style={styles.button}
+            >
+              <View style={styles.load}>
+                <Text style={styles.buttonText}>Get security level</Text>
               </View>
             </TouchableHighlight>
           </View>

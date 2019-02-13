@@ -2,6 +2,12 @@
 import { NativeModules, Platform } from 'react-native';
 const { RNKeychainManager } = NativeModules;
 
+export const SECURITY_LEVEL = Object.freeze({
+  ANY: RNKeychainManager.SECURITY_LEVEL_ANY,
+  SECURE_SOFTWARE: RNKeychainManager.SECURITY_LEVEL_SECURE_SOFTWARE,
+  SECURE_HARDWARE: RNKeychainManager.SECURITY_LEVEL_SECURE_HARDWARE,
+});
+
 export const ACCESSIBLE = Object.freeze({
   WHEN_UNLOCKED: 'AccessibleWhenUnlocked',
   AFTER_FIRST_UNLOCK: 'AccessibleAfterFirstUnlock',
@@ -40,6 +46,8 @@ export type SecAccessControl = $Values<typeof ACCESS_CONTROL>;
 
 export type LAPolicy = $Values<typeof AUTHENTICATION_TYPE>;
 
+export type SecMinimumLevel = $Values<typeof SECURITY_LEVEL>;
+
 export type Options = {
   accessControl?: SecAccessControl,
   accessGroup?: string,
@@ -47,7 +55,20 @@ export type Options = {
   authenticationPrompt?: string,
   authenticationType?: LAPolicy,
   service?: string,
+  securityLevel?: SecMinimumLevel,
 };
+
+/**
+ * (Android only) Returns guaranteed security level supported by this library
+ * on the current device.
+ * @return {Promise} Resolves to `SECURITY_LEVEL` when supported, otherwise `null`.
+ */
+export function getSecurityLevel(): Promise<?($Values<typeof SECURITY_LEVEL>)> {
+    if (!RNKeychainManager.getSecurityLevel){
+        return Promise.resolve(null);
+    }
+    return RNKeychainManager.getSecurityLevel();
+}
 
 /**
  * Inquire if the type of local authentication policy (LAPolicy) is supported
@@ -91,6 +112,7 @@ export function setInternetCredentials(
     server,
     username,
     password,
+    getMinimumSecurityLevel(options),
     options
   );
 }
@@ -146,6 +168,16 @@ function getOptionsArgument(serviceOrOptions?: string | Options) {
     : serviceOrOptions;
 }
 
+function getMinimumSecurityLevel(serviceOrOptions?: string | Options) {
+  var specifiedLevel = undefined;
+
+  if (typeof serviceOrOptions === 'object') {
+    specifiedLevel = serviceOrOptions.securityLevel;
+  }
+
+  return specifiedLevel || SECURITY_LEVEL.ANY;
+}
+
 /**
  * Saves the `username` and `password` combination for `service`.
  * @param {string} username Associated username or e-mail to be saved.
@@ -161,7 +193,8 @@ export function setGenericPassword(
   return RNKeychainManager.setGenericPasswordForOptions(
     getOptionsArgument(serviceOrOptions),
     username,
-    password
+    password,
+    getMinimumSecurityLevel(serviceOrOptions)
   );
 }
 
