@@ -108,7 +108,7 @@ public class CipherStorageKeystoreAESCBC implements CipherStorage {
                 if (retry) {
                     retry = false;
                     keyStore.deleteEntry(service);
-                    return encrypt(service, username, password);
+                    return encrypt(service, username, password, level);
                 } else {
                     throw ex;
                 }
