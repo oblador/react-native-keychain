@@ -49,6 +49,8 @@ public class CipherStorageKeystoreAESCBC implements CipherStorage {
                     ENCRYPTION_BLOCK_MODE + "/" +
                     ENCRYPTION_PADDING;
     public static final int ENCRYPTION_KEY_SIZE = 256;
+    private boolean retry = true;
+
 
     @Override
     public String getCipherStorageName() {
@@ -96,11 +98,26 @@ public class CipherStorageKeystoreAESCBC implements CipherStorage {
                 generateKeyAndStoreUnderAlias(service, level);
             }
 
-            Key key = keyStore.getKey(service, null);
-
+            Key key = null;
+            try {
+                key = keyStore.getKey(service, null);
+            } catch (UnrecoverableKeyException ex) {
+                ex.printStackTrace();
+                // Fix for android.security.KeyStoreException: Invalid key blob
+                // more info: https://stackoverflow.com/questions/36488219/android-security-keystoreexception-invalid-key-blob/36846085#36846085
+                if (retry) {
+                    retry = false;
+                    keyStore.deleteEntry(service);
+                    return encrypt(service, username, password);
+                } else {
+                    throw ex;
+                }
+            }
+          
             byte[] encryptedUsername = encryptString(key, service, username);
             byte[] encryptedPassword = encryptString(key, service, password);
-
+          
+            retry = true;
             return new EncryptionResult(encryptedUsername, encryptedPassword, this);
         } catch (NoSuchAlgorithmException | InvalidAlgorithmParameterException | NoSuchProviderException | UnrecoverableKeyException e) {
             throw new CryptoFailedException("Could not encrypt data for service " + service, e);
