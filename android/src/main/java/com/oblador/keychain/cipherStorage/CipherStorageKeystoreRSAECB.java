@@ -110,11 +110,7 @@ public class CipherStorageKeystoreRSAECB implements CipherStorage, BiometricProm
 
     @Override
     public void onAuthenticationFailed() {
-        if (mDecryptParams != null && mDecryptParams.resultHandler != null) {
-            mDecryptParams.resultHandler.onDecrypt(null, null, "Authentication failed.");
-            mBiometricPromptCompatCancellationSignal.cancel();
-            mDecryptParams = null;
-        }
+
     }
 
     @Override
@@ -153,7 +149,7 @@ public class CipherStorageKeystoreRSAECB implements CipherStorage, BiometricProm
             .setNegativeButton(biometricPromptNegativeText, new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
-
+                    mBiometricPromptCompatCancellationSignal.cancel();
                 }
             })
             .build();
