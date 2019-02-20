@@ -9,12 +9,12 @@ set(REACT_NATIVE_DESKTOP_EXTERNAL_MODULES_SRC ${REACT_NATIVE_DESKTOP_EXTERNAL_MO
 include(${CMAKE_ROOT}/Modules/ExternalProject.cmake)
 
 if (UNIX AND NOT APPLE)
-  set(qtkeychain_LIBPATHSUFFIX /x86_64-linux-gnu)
+  set(qtkeychain_BUILDPATHSUFFIX /x86_64-linux-gnu)
 endif()
 
 set(qtkeychain_ROOT ${CMAKE_CURRENT_BINARY_DIR}/qtkeychain)
-set(qtkeychain_BUILDDIR ${qtkeychain_ROOT}/build)
-set(qtkeychain_STATIC_LIB ${qtkeychain_BUILDDIR}/lib${qtkeychain_LIBPATHSUFFIX}/${CMAKE_STATIC_LIBRARY_PREFIX}qt5keychain${CMAKE_STATIC_LIBRARY_SUFFIX})
+set(qtkeychain_BUILDDIR ${qtkeychain_ROOT}/build${qtkeychain_BUILDPATHSUFFIX})
+set(qtkeychain_STATIC_LIB ${qtkeychain_BUILDDIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}qt5keychain${CMAKE_STATIC_LIBRARY_SUFFIX})
 set(qtkeychain_INCLUDE_DIR ${qtkeychain_BUILDDIR}/include/qt5keychain)
 if (CMAKE_CROSSCOMPILING)
   set(BUILD_CMAKE_ARGS "-DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}"
