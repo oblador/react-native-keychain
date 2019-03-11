@@ -269,7 +269,7 @@ The `setInternetCredentials(server, username, password)` call will be resolved a
 
 ### iOS
 
-If you need Keychain Sharing in your iOS extension, make sure you use the same App Group and Keychain Sharing group names in your Main App and your Share Extension. To then share the keychain between the Main App and Share Extension, use the `service` option on `setGenericPassword` and `getGenericPassword`, like so: `getGenericPassword({ accessGroup: 'group.appname', service: 'com.example.appname' })`
+If you need Keychain Sharing in your iOS extension, make sure you use the same App Group and Keychain Sharing group names in your Main App and your Share Extension. To then share the keychain between the Main App and Share Extension, use the `accessGroup` ánd `service` option on `setGenericPassword` and `getGenericPassword`, like so: `getGenericPassword({ accessGroup: 'group.appname', service: 'com.example.appname' })`
 
 ### Security
 
