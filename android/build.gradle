@@ -30,6 +30,7 @@ android {
 }
 
 repositories {
+  google()
   mavenCentral()
 }
 
