@@ -238,7 +238,7 @@ public class CipherStorageKeystoreAESCBC implements CipherStorage {
             }
             return new String(output.toByteArray(), Charset.forName("UTF-8"));
         } catch (Exception e) {
-            throw new CryptoFailedException("Could not decrypt bytes", e);
+            throw new CryptoFailedException("Could not decrypt bytes: " + e.getMessage(), e);
         }
     }
 
