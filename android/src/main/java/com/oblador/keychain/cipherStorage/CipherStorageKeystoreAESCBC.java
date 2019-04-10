@@ -113,10 +113,10 @@ public class CipherStorageKeystoreAESCBC implements CipherStorage {
                     throw ex;
                 }
             }
-          
+
             byte[] encryptedUsername = encryptString(key, service, username);
             byte[] encryptedPassword = encryptString(key, service, password);
-          
+
             retry = true;
             return new EncryptionResult(encryptedUsername, encryptedPassword, this);
         } catch (NoSuchAlgorithmException | InvalidAlgorithmParameterException | NoSuchProviderException | UnrecoverableKeyException e) {
@@ -168,6 +168,9 @@ public class CipherStorageKeystoreAESCBC implements CipherStorage {
             KeyStore keyStore = getKeyStoreAndLoad();
 
             Key key = keyStore.getKey(service, null);
+            if (key == null) {
+              throw new CryptoFailedException("The provided service/key could not be found in the Keystore");
+            }
 
             String decryptedUsername = decryptBytes(key, username);
             String decryptedPassword = decryptBytes(key, password);
@@ -213,7 +216,7 @@ public class CipherStorageKeystoreAESCBC implements CipherStorage {
             cipherOutputStream.close();
             return outputStream.toByteArray();
         } catch (Exception e) {
-            throw new CryptoFailedException("Could not encrypt value for service " + service, e);
+            throw new CryptoFailedException("Could not encrypt value for service " + service + ", message: " + e.getMessage(), e);
         }
     }
 
