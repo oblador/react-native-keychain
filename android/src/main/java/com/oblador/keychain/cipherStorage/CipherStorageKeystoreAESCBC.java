@@ -275,9 +275,13 @@ public class CipherStorageKeystoreAESCBC implements CipherStorage {
         }
         try {
             return generateKey(getKeyGenSpecBuilder(service).setIsStrongBoxBacked(true).build());
-        } catch (StrongBoxUnavailableException e) {
+        } catch (Exception e) {
+          if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && e instanceof StrongBoxUnavailableException) {
             Log.i(TAG, "StrongBox is unavailable on this device");
-            return null;
+          } else {
+            Log.e(TAG, "An error occurred when trying to generate a StrongBoxSecurityKey: " + e.getMessage());
+          }
+          return null;
         }
     }
 
