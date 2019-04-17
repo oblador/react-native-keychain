@@ -16,11 +16,15 @@
 
 package com.oblador.keychain.supportBiometric;
 
+
+import android.support.annotation.RestrictTo;
+
 /**
  * Interface containing all of the biometric modality agnostic constants. These constants must
  * be kept in sync with the platform BiometricConstants.java
  * @hide
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY)
 public interface BiometricConstants {
     /**
      * The hardware is unavailable. Try again later.
@@ -55,6 +59,7 @@ public interface BiometricConstants {
     /**
      * @hide
      */
+    @RestrictTo(RestrictTo.Scope.LIBRARY)
     int ERROR_UNABLE_TO_REMOVE = 6;
 
     /**
@@ -105,5 +110,6 @@ public interface BiometricConstants {
     /**
      * @hide
      */
+    @RestrictTo(RestrictTo.Scope.LIBRARY)
     int ERROR_VENDOR_BASE = 1000;
 }

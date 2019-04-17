@@ -16,17 +16,20 @@
 
 package com.oblador.keychain.supportBiometric;
 
-import android.annotation.TargetApi;
+import android.annotation.SuppressLint;
+import android.app.Fragment;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.os.CancellationSignal;
 import android.os.Handler;
 import android.os.Looper;
-import android.support.v4.app.Fragment;
+import android.support.annotation.RequiresApi;
+import android.support.annotation.RestrictTo;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.oblador.keychain.R;
 import java.util.concurrent.Executor;
 
 /**
@@ -36,10 +39,15 @@ import java.util.concurrent.Executor;
  * activity is no longer in the foreground.
  * @hide
  */
-@TargetApi(28)
+@RestrictTo(RestrictTo.Scope.LIBRARY)
+@RequiresApi(28)
+@SuppressLint("SyntheticAccessor")
 public class BiometricFragment extends Fragment {
 
     private static final String TAG = "BiometricFragment";
+
+    // Set whenever the support library's authenticate is called.
+    private Bundle mBundle;
 
     // Re-set by the application, through BiometricPromptCompat upon orientation changes.
     Executor mClientExecutor;
@@ -73,8 +81,13 @@ public class BiometricFragment extends Fragment {
                     mClientExecutor.execute(new Runnable() {
                         @Override
                         public void run() {
+                            CharSequence error = errString;
+                            if (error == null) {
+                                error = getContext().getString(R.string.default_error_msg) + " "
+                                        + errorCode;
+                            }
                             mClientAuthenticationCallback
-                                    .onAuthenticationError(errorCode, errString);
+                                    .onAuthenticationError(errorCode, error);
                         }
                     });
                     cleanup();
@@ -123,12 +136,10 @@ public class BiometricFragment extends Fragment {
 
     /**
      * Creates a new instance of the {@link BiometricFragment}.
-     * @param bundle
      * @return
      */
-    public static BiometricFragment newInstance(Bundle bundle) {
+    public static BiometricFragment newInstance() {
         BiometricFragment biometricFragment = new BiometricFragment();
-        biometricFragment.setArguments(bundle);
         return biometricFragment;
     }
 
@@ -171,7 +182,7 @@ public class BiometricFragment extends Fragment {
     void cleanup() {
         mShowing = false;
         if (getActivity() != null) {
-            getActivity().getSupportFragmentManager().beginTransaction().detach(this)
+            getActivity().getFragmentManager().beginTransaction().detach(this)
                     .commitAllowingStateLoss();
         }
     }
@@ -184,18 +195,10 @@ public class BiometricFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
+    }
 
-        Bundle bundle = getArguments();
-
-        mNegativeButtonText = bundle.getCharSequence(BiometricPrompt.KEY_NEGATIVE_TEXT);
-
-        mBiometricPrompt = new android.hardware.biometrics.BiometricPrompt.Builder(getContext())
-                .setTitle(bundle.getCharSequence(BiometricPrompt.KEY_TITLE))
-                .setSubtitle(bundle.getCharSequence(BiometricPrompt.KEY_SUBTITLE))
-                .setDescription(bundle.getCharSequence(BiometricPrompt.KEY_DESCRIPTION))
-                .setNegativeButton(bundle.getCharSequence(BiometricPrompt.KEY_NEGATIVE_TEXT),
-                        mClientExecutor, mNegativeButtonListener)
-                .build();
+    public void setBundle(Bundle bundle) {
+        mBundle = bundle;
     }
 
     @Override
@@ -203,6 +206,14 @@ public class BiometricFragment extends Fragment {
             Bundle savedInstanceState) {
         // Start the actual authentication when the fragment is attached.
         if (!mShowing) {
+            mNegativeButtonText = mBundle.getCharSequence(BiometricPrompt.KEY_NEGATIVE_TEXT);
+            mBiometricPrompt = new android.hardware.biometrics.BiometricPrompt.Builder(getContext())
+                    .setTitle(mBundle.getCharSequence(BiometricPrompt.KEY_TITLE))
+                    .setSubtitle(mBundle.getCharSequence(BiometricPrompt.KEY_SUBTITLE))
+                    .setDescription(mBundle.getCharSequence(BiometricPrompt.KEY_DESCRIPTION))
+                    .setNegativeButton(mBundle.getCharSequence(BiometricPrompt.KEY_NEGATIVE_TEXT),
+                            mClientExecutor, mNegativeButtonListener)
+                    .build();
             mCancellationSignal = new CancellationSignal();
             if (mCryptoObject == null) {
                 mBiometricPrompt.authenticate(mCancellationSignal, mExecutor,

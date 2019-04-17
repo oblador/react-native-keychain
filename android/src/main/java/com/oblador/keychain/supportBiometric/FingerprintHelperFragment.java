@@ -16,11 +16,12 @@
 
 package com.oblador.keychain.supportBiometric;
 
+import android.app.Fragment;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.v4.app.Fragment;
+import android.support.annotation.RestrictTo;
 import android.support.v4.hardware.fingerprint.FingerprintManagerCompat;
 import android.support.v4.os.CancellationSignal;
 import android.view.LayoutInflater;
@@ -38,6 +39,7 @@ import java.util.concurrent.Executor;
  * activity is no longer in the foreground.
  * @hide
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY)
 public class FingerprintHelperFragment extends Fragment {
 
     private static final String TAG = "FingerprintHelperFragment";
@@ -66,21 +68,30 @@ public class FingerprintHelperFragment extends Fragment {
     // Also created once and retained.
     private final FingerprintManagerCompat.AuthenticationCallback mAuthenticationCallback =
             new FingerprintManagerCompat.AuthenticationCallback() {
+
+                private void dismissAndForwardResult(final int errMsgId,
+                        final CharSequence errString) {
+                    mHandler.obtainMessage(FingerprintDialogFragment.MSG_DISMISS_DIALOG_ERROR)
+                            .sendToTarget();
+                    mExecutor.execute(new Runnable() {
+                        @Override
+                        public void run() {
+                            mClientAuthenticationCallback
+                                    .onAuthenticationError(errMsgId, errString);
+                        }
+                    });
+                }
+
                 @Override
                 public void onAuthenticationError(final int errMsgId,
                         final CharSequence errString) {
                     if (errMsgId == BiometricPrompt.ERROR_CANCELED) {
                         if (mCanceledFrom == USER_CANCELED_FROM_NONE) {
-                            mHandler.obtainMessage(FingerprintDialogFragment.MSG_DISMISS_DIALOG)
-                                    .sendToTarget();
-                            mExecutor.execute(new Runnable() {
-                                @Override
-                                public void run() {
-                                    mClientAuthenticationCallback
-                                            .onAuthenticationError(errMsgId, errString);
-                                }
-                            });
+                            dismissAndForwardResult(errMsgId, errString);
                         }
+                    } else if (errMsgId == BiometricPrompt.ERROR_LOCKOUT
+                            || errMsgId == BiometricPrompt.ERROR_LOCKOUT_PERMANENT) {
+                        dismissAndForwardResult(errMsgId, errString);
                     } else {
                         mHandler.obtainMessage(FingerprintDialogFragment.MSG_SHOW_ERROR, errMsgId,
                                 0,
@@ -114,7 +125,8 @@ public class FingerprintHelperFragment extends Fragment {
                 public void onAuthenticationSucceeded(
                         final FingerprintManagerCompat.AuthenticationResult result) {
                     mHandler.obtainMessage(
-                            FingerprintDialogFragment.MSG_DISMISS_DIALOG).sendToTarget();
+                            FingerprintDialogFragment.MSG_DISMISS_DIALOG_AUTHENTICATED)
+                            .sendToTarget();
                     mExecutor.execute(new Runnable() {
                         @Override
                         public void run() {
@@ -159,7 +171,7 @@ public class FingerprintHelperFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
-        mContext = getContext();
+        mContext = getActivity();
 
     }
 
@@ -172,7 +184,8 @@ public class FingerprintHelperFragment extends Fragment {
             FingerprintManagerCompat fingerprintManagerCompat = FingerprintManagerCompat.from(
                     mContext);
             if (handlePreAuthenticationErrors(fingerprintManagerCompat)) {
-                mHandler.obtainMessage(FingerprintDialogFragment.MSG_DISMISS_DIALOG).sendToTarget();
+                mHandler.obtainMessage(
+                        FingerprintDialogFragment.MSG_DISMISS_DIALOG_ERROR).sendToTarget();
                 cleanup();
             } else {
                 fingerprintManagerCompat.authenticate(
@@ -226,7 +239,7 @@ public class FingerprintHelperFragment extends Fragment {
     void cleanup() {
         mShowing = false;
         if (getActivity() != null) {
-            getActivity().getSupportFragmentManager().beginTransaction().detach(this)
+            getActivity().getFragmentManager().beginTransaction().detach(this)
                     .commitAllowingStateLoss();
         }
     }

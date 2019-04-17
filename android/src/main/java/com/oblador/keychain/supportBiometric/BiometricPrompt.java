@@ -18,19 +18,22 @@ package com.oblador.keychain.supportBiometric;
 
 import static java.lang.annotation.RetentionPolicy.SOURCE;
 
+import android.app.Activity;
+import android.app.FragmentManager;
 import android.arch.lifecycle.Lifecycle;
 import android.arch.lifecycle.LifecycleObserver;
 import android.arch.lifecycle.OnLifecycleEvent;
 import android.content.DialogInterface;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.v4.app.FragmentActivity;
-import android.support.v4.app.FragmentManager;
 import android.text.TextUtils;
 import android.util.Log;
+
+import com.facebook.react.bridge.LifecycleEventListener;
 
 import java.lang.annotation.Retention;
 import java.security.Signature;
@@ -38,7 +41,6 @@ import java.util.concurrent.Executor;
 
 import javax.crypto.Cipher;
 import javax.crypto.Mac;
-
 
 /**
  * A class that manages a system-provided biometric prompt. On devices running P and above, this
@@ -48,10 +50,13 @@ import javax.crypto.Mac;
  * canceled by the client. For security reasons, the prompt will automatically dismiss when the
  * activity is no longer in the foreground.
  */
-public class BiometricPrompt implements BiometricConstants {
+public class BiometricPrompt implements BiometricConstants, LifecycleEventListener {
 
     private static final String TAG = "BiometricPromptCompat";
     private static final boolean DEBUG = false;
+    // In order to keep consistent behavior between versions, we need to send
+    // FingerprintDialogFragment a message indicating whether or not to dismiss the UI instantly.
+    private static final int DELAY_MILLIS = 500;
 
     static final String DIALOG_FRAGMENT_TAG = "FingerprintDialogFragment";
     static final String FINGERPRINT_HELPER_FRAGMENT_TAG = "FingerprintHelperFragment";
@@ -60,6 +65,60 @@ public class BiometricPrompt implements BiometricConstants {
     static final String KEY_SUBTITLE = "subtitle";
     static final String KEY_DESCRIPTION = "description";
     static final String KEY_NEGATIVE_TEXT = "negative_text";
+
+    /**
+     * Observe the client's lifecycle. Keep authenticating across configuration changes, but
+     * dismiss the prompt if the client goes into the background.
+     */
+    @Override
+    public void onHostResume() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            mBiometricFragment = (BiometricFragment) mActivity
+                    .getFragmentManager().findFragmentByTag(BIOMETRIC_FRAGMENT_TAG);
+            if (DEBUG) Log.v(TAG, "BiometricFragment: " + mBiometricFragment);
+            if (mBiometricFragment != null) {
+                mBiometricFragment.setCallbacks(mExecutor, mNegativeButtonListener,
+                        mAuthenticationCallback);
+            }
+        } else {
+            mFingerprintDialogFragment = (FingerprintDialogFragment) mActivity
+                    .getFragmentManager().findFragmentByTag(DIALOG_FRAGMENT_TAG);
+            mFingerprintHelperFragment = (FingerprintHelperFragment) mActivity
+                    .getFragmentManager().findFragmentByTag(
+                            FINGERPRINT_HELPER_FRAGMENT_TAG);
+
+            if (DEBUG) Log.v(TAG, "FingerprintDialogFragment: " + mFingerprintDialogFragment);
+            if (DEBUG) Log.v(TAG, "FingerprintHelperFragment: " + mFingerprintHelperFragment);
+            if (mFingerprintDialogFragment != null && mFingerprintHelperFragment != null) {
+                mFingerprintDialogFragment.setNegativeButtonListener(mNegativeButtonListener);
+                mFingerprintHelperFragment.setCallback(mExecutor, mAuthenticationCallback);
+                mFingerprintHelperFragment.setHandler(mFingerprintDialogFragment.getHandler());
+            }
+        }
+    }
+
+    @Override
+    public void onHostPause() {
+        if (!mActivity.isChangingConfigurations()) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                if (mBiometricFragment != null) {
+                    mBiometricFragment.cancel();
+                }
+            } else {
+                // May be null if no authentication is occurring.
+                if (mFingerprintDialogFragment != null) {
+                    mFingerprintDialogFragment.dismiss();
+                }
+                if (mFingerprintHelperFragment != null) {
+                    mFingerprintHelperFragment.cancel(
+                            FingerprintHelperFragment.USER_CANCELED_FROM_NONE);
+                }
+            }
+        }
+    }
+
+    @Override
+    public void onHostDestroy() {}
 
     @Retention(SOURCE)
     @IntDef({BiometricConstants.ERROR_HW_UNAVAILABLE,
@@ -300,7 +359,7 @@ public class BiometricPrompt implements BiometricConstants {
     }
 
     // Passed in from the client.
-    final FragmentActivity mFragmentActivity;
+    final Activity mActivity;
     final Executor mExecutor;
     final AuthenticationCallback mAuthenticationCallback;
 
@@ -347,59 +406,6 @@ public class BiometricPrompt implements BiometricConstants {
             };
 
     /**
-     * Observe the client's lifecycle. Keep authenticating across configuration changes, but
-     * dismiss the prompt if the client goes into the background.
-     */
-    private final LifecycleObserver mLifecycleObserver = new LifecycleObserver() {
-        @OnLifecycleEvent(Lifecycle.Event.ON_PAUSE)
-        void onPause() {
-            if (!mFragmentActivity.isChangingConfigurations()) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                    if (mBiometricFragment != null) {
-                        mBiometricFragment.cancel();
-                    }
-                } else {
-                    // May be null if no authentication is occurring.
-                    if (mFingerprintDialogFragment != null) {
-                        mFingerprintDialogFragment.dismiss();
-                    }
-                    if (mFingerprintHelperFragment != null) {
-                        mFingerprintHelperFragment.cancel(
-                                FingerprintHelperFragment.USER_CANCELED_FROM_NONE);
-                    }
-                }
-            }
-        }
-
-        @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
-        void onResume() {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                mBiometricFragment = (BiometricFragment) mFragmentActivity
-                        .getSupportFragmentManager().findFragmentByTag(BIOMETRIC_FRAGMENT_TAG);
-                if (DEBUG) Log.v(TAG, "BiometricFragment: " + mBiometricFragment);
-                if (mBiometricFragment != null) {
-                    mBiometricFragment.setCallbacks(mExecutor, mNegativeButtonListener,
-                            mAuthenticationCallback);
-                }
-            } else {
-                mFingerprintDialogFragment = (FingerprintDialogFragment) mFragmentActivity
-                        .getSupportFragmentManager().findFragmentByTag(DIALOG_FRAGMENT_TAG);
-                mFingerprintHelperFragment = (FingerprintHelperFragment) mFragmentActivity
-                        .getSupportFragmentManager().findFragmentByTag(
-                                FINGERPRINT_HELPER_FRAGMENT_TAG);
-
-                if (DEBUG) Log.v(TAG, "FingerprintDialogFragment: " + mFingerprintDialogFragment);
-                if (DEBUG) Log.v(TAG, "FingerprintHelperFragment: " + mFingerprintHelperFragment);
-                if (mFingerprintDialogFragment != null && mFingerprintHelperFragment != null) {
-                    mFingerprintDialogFragment.setNegativeButtonListener(mNegativeButtonListener);
-                    mFingerprintHelperFragment.setCallback(mExecutor, mAuthenticationCallback);
-                    mFingerprintHelperFragment.setHandler(mFingerprintDialogFragment.getHandler());
-                }
-            }
-        }
-    };
-
-    /**
      * Constructs a {@link BiometricPrompt} which can be used to prompt the user for
      * authentication. The authenticaton prompt created by
      * {@link BiometricPrompt#authenticate(PromptInfo, CryptoObject)} and
@@ -408,16 +414,16 @@ public class BiometricPrompt implements BiometricConstants {
      * the {@link BiometricPrompt} can be used to update the {@link Executor} and
      * {@link AuthenticationCallback}. This should be used to update the
      * {@link AuthenticationCallback} after configuration changes.
-     * such as {@link FragmentActivity#onCreate(Bundle)}.
+     * such as {@link Activity#onCreate(Bundle)}.
      *
-     * @param fragmentActivity A reference to the client's activity.
+     * @param Activity A reference to the client's activity.
      * @param executor An executor to handle callback events.
      * @param callback An object to receive authentication events.
      */
-    public BiometricPrompt(@NonNull FragmentActivity fragmentActivity,
+    public BiometricPrompt(@NonNull Activity Activity,
             @NonNull Executor executor, @NonNull AuthenticationCallback callback) {
-        if (fragmentActivity == null) {
-            throw new IllegalArgumentException("FragmentActivity must not be null");
+        if (Activity == null) {
+            throw new IllegalArgumentException("Activity must not be null");
         }
         if (executor == null) {
             throw new IllegalArgumentException("Executor must not be null");
@@ -425,11 +431,9 @@ public class BiometricPrompt implements BiometricConstants {
         if (callback == null) {
             throw new IllegalArgumentException("AuthenticationCallback must not be null");
         }
-        mFragmentActivity = fragmentActivity;
+        mActivity = Activity;
         mExecutor = executor;
         mAuthenticationCallback = callback;
-
-        mFragmentActivity.getLifecycle().addObserver(mLifecycleObserver);
     }
 
     /**
@@ -463,17 +467,18 @@ public class BiometricPrompt implements BiometricConstants {
 
     private void authenticateInternal(@NonNull PromptInfo info, @Nullable CryptoObject crypto) {
         final Bundle bundle = info.getBundle();
-        final FragmentManager fragmentManager = mFragmentActivity.getSupportFragmentManager();
+        final FragmentManager fragmentManager = mActivity.getFragmentManager();
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             // Create the fragment that wraps BiometricPrompt once.
             if (mBiometricFragment == null) {
-                mBiometricFragment = BiometricFragment.newInstance(bundle);
-                mBiometricFragment.setCallbacks(mExecutor, mNegativeButtonListener,
-                        mAuthenticationCallback);
+                mBiometricFragment = BiometricFragment.newInstance();
             }
+            mBiometricFragment.setCallbacks(mExecutor, mNegativeButtonListener,
+                    mAuthenticationCallback);
             // Set the crypto object.
             mBiometricFragment.setCryptoObject(crypto);
+            mBiometricFragment.setBundle(bundle);
 
             if (fragmentManager.findFragmentByTag(BIOMETRIC_FRAGMENT_TAG) == null) {
                 // If the fragment hasn't been added before, add it. It will also start the
@@ -487,18 +492,23 @@ public class BiometricPrompt implements BiometricConstants {
         } else {
             // Create the UI
             if (mFingerprintDialogFragment == null) {
-                mFingerprintDialogFragment = FingerprintDialogFragment.newInstance(bundle);
-                mFingerprintDialogFragment.setNegativeButtonListener(mNegativeButtonListener);
+                mFingerprintDialogFragment = FingerprintDialogFragment.newInstance();
             }
+            mFingerprintDialogFragment.setNegativeButtonListener(mNegativeButtonListener);
+            mFingerprintDialogFragment.setBundle(bundle);
             mFingerprintDialogFragment.show(fragmentManager, DIALOG_FRAGMENT_TAG);
 
             // Create the connection to FingerprintManager
             if (mFingerprintHelperFragment == null) {
                 mFingerprintHelperFragment = FingerprintHelperFragment.newInstance();
-                mFingerprintHelperFragment.setCallback(mExecutor, mAuthenticationCallback);
             }
-            mFingerprintHelperFragment.setHandler(mFingerprintDialogFragment.getHandler());
+            mFingerprintHelperFragment.setCallback(mExecutor, mAuthenticationCallback);
+            final Handler fingerprintDialogHandler = mFingerprintDialogFragment.getHandler();
+            mFingerprintHelperFragment.setHandler(fingerprintDialogHandler);
             mFingerprintHelperFragment.setCryptoObject(crypto);
+            fingerprintDialogHandler.sendMessageDelayed(
+                    fingerprintDialogHandler.obtainMessage(
+                            FingerprintDialogFragment.DISPLAYED_FOR_500_MS), DELAY_MILLIS);
 
             if (fragmentManager.findFragmentByTag(FINGERPRINT_HELPER_FRAGMENT_TAG) == null) {
                 // If the fragment hasn't been added before, add it. It will also start the
@@ -510,6 +520,9 @@ public class BiometricPrompt implements BiometricConstants {
                 fragmentManager.beginTransaction().attach(mFingerprintHelperFragment).commit();
             }
         }
+        // For the case when onResume() is being called right after authenticate,
+        // we need to make sure that all fragment transactions have been committed.
+        fragmentManager.executePendingTransactions();
     }
 
     /**

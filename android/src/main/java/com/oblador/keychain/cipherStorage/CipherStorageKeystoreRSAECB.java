@@ -6,7 +6,6 @@ import android.app.Activity;
 import android.app.KeyguardManager;
 import android.content.Context;
 import android.content.pm.PackageManager;
-import android.hardware.fingerprint.FingerprintManager;
 import android.os.Build;
 import android.os.CancellationSignal;
 import android.security.keystore.KeyGenParameterSpec;
@@ -15,10 +14,12 @@ import android.security.keystore.KeyProperties;
 import android.security.keystore.UserNotAuthenticatedException;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.RequiresApi;
 import android.support.v4.app.FragmentActivity;
 
 import com.facebook.react.bridge.ReactApplicationContext;
 
+import com.facebook.react.bridge.ReactContext;
 import com.oblador.keychain.exceptions.CryptoFailedException;
 import com.oblador.keychain.exceptions.KeyStoreAccessException;
 import com.oblador.keychain.supportBiometric.BiometricPrompt;
@@ -46,12 +47,10 @@ import java.util.concurrent.Executors;
 import javax.crypto.Cipher;
 import javax.crypto.CipherInputStream;
 import javax.crypto.CipherOutputStream;
-import javax.crypto.KeyGenerator;
-import javax.crypto.spec.IvParameterSpec;
 
 import static com.oblador.keychain.supportBiometric.BiometricPrompt.*;
 
-@TargetApi(Build.VERSION_CODES.M)
+@RequiresApi(Build.VERSION_CODES.M)
 public class CipherStorageKeystoreRSAECB extends AuthenticationCallback implements CipherStorage {
     public static final String CIPHER_STORAGE_NAME = "KeystoreRSAECB";
     public static final String DEFAULT_SERVICE = "RN_KEYCHAIN_DEFAULT_ALIAS";
@@ -68,7 +67,7 @@ public class CipherStorageKeystoreRSAECB extends AuthenticationCallback implemen
     private CancellationSignal mBiometricPromptCancellationSignal;
     private BiometricPrompt mBiometricPrompt;
     private KeyguardManager mKeyguardManager;
-    private Context mContext;
+    private ReactContext mReactContext;
     private Activity mActivity;
 
     class CipherDecryptionParams {
@@ -88,7 +87,7 @@ public class CipherStorageKeystoreRSAECB extends AuthenticationCallback implemen
     private CipherDecryptionParams mDecryptParams;
 
     public CipherStorageKeystoreRSAECB(ReactApplicationContext reactContext) {
-        mContext = (Context) reactContext;
+        mReactContext = reactContext;
 
         mKeyguardManager = (KeyguardManager) reactContext.getSystemService(Context.KEYGUARD_SERVICE);
     }
@@ -102,14 +101,11 @@ public class CipherStorageKeystoreRSAECB extends AuthenticationCallback implemen
         }
     }
 
+    // We don't really want to do anything here
+    // the error message is handled by the info view.
+    // And we don't want to throw an error, as the user can still retry.
     @Override
-    public void onAuthenticationFailed() {
-        if (mDecryptParams != null && mDecryptParams.resultHandler != null) {
-            mDecryptParams.resultHandler.onDecrypt(null, "Authentication failed.");
-            mBiometricPromptCancellationSignal.cancel();
-            mDecryptParams = null;
-        }
-    }
+    public void onAuthenticationFailed() {}
 
     @Override
     public void onAuthenticationSucceeded(@NonNull AuthenticationResult result) {
@@ -127,8 +123,8 @@ public class CipherStorageKeystoreRSAECB extends AuthenticationCallback implemen
 
     private boolean canStartFingerprintAuthentication() {
         return (mKeyguardManager.isKeyguardSecure() &&
-                (mContext.checkSelfPermission(Manifest.permission.USE_BIOMETRIC) == PackageManager.PERMISSION_GRANTED
-                || mContext.checkSelfPermission(Manifest.permission.USE_FINGERPRINT) == PackageManager.PERMISSION_GRANTED));
+                (mReactContext.checkSelfPermission(Manifest.permission.USE_BIOMETRIC) == PackageManager.PERMISSION_GRANTED
+                || mReactContext.checkSelfPermission(Manifest.permission.USE_FINGERPRINT) == PackageManager.PERMISSION_GRANTED));
     }
 
     private void startFingerprintAuthentication() throws Exception {
@@ -141,16 +137,17 @@ public class CipherStorageKeystoreRSAECB extends AuthenticationCallback implemen
             throw new Exception("mActivity is null (make sure to call setCurrentActivity)");
         }
 
-        mBiometricPrompt = new BiometricPrompt((FragmentActivity) mActivity, Executors.newSingleThreadExecutor(), this);
+        mBiometricPrompt = new BiometricPrompt(mActivity, Executors.newSingleThreadExecutor(), this);
         mBiometricPromptCancellationSignal = new CancellationSignal();
 
-        PromptInfo prompInfo = new PromptInfo.Builder()
+        PromptInfo promptInfo = new PromptInfo.Builder()
                 .setTitle("Authentication required")
                 .setNegativeButtonText("Cancel")
                 .setSubtitle("Please use biometric authentication to unlock the app")
                 .build();
 
-        mBiometricPrompt.authenticate(prompInfo);
+        mBiometricPrompt.authenticate(promptInfo);
+        mReactContext.addLifecycleEventListener(mBiometricPrompt);
     }
 
     @Override
@@ -242,11 +239,13 @@ public class CipherStorageKeystoreRSAECB extends AuthenticationCallback implemen
         } catch (UserNotAuthenticatedException e) {
             mDecryptParams = new CipherDecryptionParams(decryptionResultHandler, key, username, password);
             if (!canStartFingerprintAuthentication()) {
+                e.printStackTrace();
                 throw new CryptoFailedException("Could not start fingerprint Authentication");
             }
             try {
                 startFingerprintAuthentication();
             } catch (Exception e1) {
+                e1.printStackTrace();
                 throw new CryptoFailedException("Could not start fingerprint Authentication", e1);
             }
             return;

@@ -3,7 +3,6 @@ package com.oblador.keychain;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.os.Build;
-import android.security.keystore.KeyPermanentlyInvalidatedException;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
 import android.util.Log;
@@ -16,7 +15,6 @@ import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.WritableMap;
-import com.facebook.react.modules.core.DeviceEventManagerModule;
 
 import com.oblador.keychain.PrefsStorage.ResultSet;
 import com.oblador.keychain.cipherStorage.CipherStorage;
@@ -29,8 +27,8 @@ import com.oblador.keychain.cipherStorage.CipherStorageKeystoreRSAECB;
 import com.oblador.keychain.exceptions.CryptoFailedException;
 import com.oblador.keychain.exceptions.EmptyParameterException;
 import com.oblador.keychain.exceptions.KeyStoreAccessException;
-import com.oblador.keychain.DeviceAvailability;
 
+import java.security.InvalidKeyException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -68,7 +66,9 @@ public class KeychainModule extends ReactContextBaseJavaModule {
 
         addCipherStorageToMap(new CipherStorageFacebookConceal(reactContext));
         addCipherStorageToMap(new CipherStorageKeystoreAESCBC());
-        addCipherStorageToMap(new CipherStorageKeystoreRSAECB(reactContext));
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            addCipherStorageToMap(new CipherStorageKeystoreRSAECB(reactContext));
+        }
     }
 
     private void addCipherStorageToMap(CipherStorage cipherStorage) {
@@ -104,7 +104,6 @@ public class KeychainModule extends ReactContextBaseJavaModule {
         }
     }
 
-    @TargetApi(Build.VERSION_CODES.M)
     @ReactMethod
     public void getGenericPasswordForOptions(String service, final Promise promise) {
         final String defaultService = getDefaultServiceIfNull(service);
@@ -117,7 +116,11 @@ public class KeychainModule extends ReactContextBaseJavaModule {
                 return;
             }
 
-            CipherStorage biometryCipherStorage = getCipherStorageForCurrentAPILevel(true);
+            // Android < M will throw an exception as biometry is not supported.
+            CipherStorage biometryCipherStorage = null;
+            try {
+                biometryCipherStorage = getCipherStorageForCurrentAPILevel(true);
+            } catch(Exception e) { }
             final CipherStorage nonBiometryCipherStorage = getCipherStorageForCurrentAPILevel(false);
             if (biometryCipherStorage != null && resultSet.cipherStorageName.equals(biometryCipherStorage.getCipherStorageName())) {
                 cipherStorage = biometryCipherStorage;
@@ -184,7 +187,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
                 // decrypt using the older cipher storage
                 oldCipherStorage.decrypt(decryptionHandler, defaultService, resultSet.usernameBytes, resultSet.passwordBytes);
             }
-          } catch (KeyPermanentlyInvalidatedException e) {
+          } catch (InvalidKeyException e) {
               Log.e(KEYCHAIN_MODULE, String.format("Key for service %s permanently invalidated", defaultService));
                try {
                    cipherStorage.removeKey(defaultService);
