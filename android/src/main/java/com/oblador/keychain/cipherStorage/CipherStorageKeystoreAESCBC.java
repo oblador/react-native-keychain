@@ -113,10 +113,10 @@ public class CipherStorageKeystoreAESCBC implements CipherStorage {
                     throw ex;
                 }
             }
-          
+
             byte[] encryptedUsername = encryptString(key, service, username);
             byte[] encryptedPassword = encryptString(key, service, password);
-          
+
             retry = true;
             return new EncryptionResult(encryptedUsername, encryptedPassword, this);
         } catch (NoSuchAlgorithmException | InvalidAlgorithmParameterException | NoSuchProviderException | UnrecoverableKeyException e) {
@@ -168,6 +168,9 @@ public class CipherStorageKeystoreAESCBC implements CipherStorage {
             KeyStore keyStore = getKeyStoreAndLoad();
 
             Key key = keyStore.getKey(service, null);
+            if (key == null) {
+              throw new CryptoFailedException("The provided service/key could not be found in the Keystore");
+            }
 
             String decryptedUsername = decryptBytes(key, username);
             String decryptedPassword = decryptBytes(key, password);
@@ -213,7 +216,7 @@ public class CipherStorageKeystoreAESCBC implements CipherStorage {
             cipherOutputStream.close();
             return outputStream.toByteArray();
         } catch (Exception e) {
-            throw new CryptoFailedException("Could not encrypt value for service " + service, e);
+            throw new CryptoFailedException("Could not encrypt value for service " + service + ", message: " + e.getMessage(), e);
         }
     }
 
@@ -238,7 +241,7 @@ public class CipherStorageKeystoreAESCBC implements CipherStorage {
             }
             return new String(output.toByteArray(), Charset.forName("UTF-8"));
         } catch (Exception e) {
-            throw new CryptoFailedException("Could not decrypt bytes", e);
+            throw new CryptoFailedException("Could not decrypt bytes: " + e.getMessage(), e);
         }
     }
 
@@ -272,9 +275,13 @@ public class CipherStorageKeystoreAESCBC implements CipherStorage {
         }
         try {
             return generateKey(getKeyGenSpecBuilder(service).setIsStrongBoxBacked(true).build());
-        } catch (StrongBoxUnavailableException e) {
+        } catch (Exception e) {
+          if (e instanceof StrongBoxUnavailableException) {
             Log.i(TAG, "StrongBox is unavailable on this device");
-            return null;
+          } else {
+            Log.e(TAG, "An error occurred when trying to generate a StrongBoxSecurityKey: " + e.getMessage());
+          }
+          return null;
         }
     }
 
