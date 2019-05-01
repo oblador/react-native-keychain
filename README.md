@@ -45,7 +45,7 @@ See `KeychainExample` for fully working project example.
 
 Both `setGenericPassword` and `setInternetCredentials` are limited to strings only, so if you need to store objects etc, please use `JSON.stringify`/`JSON.parse` when you store/access it.
 
-### `setGenericPassword(username, password, [{ accessControl, accessible, accessGroup, service }])`
+### `setGenericPassword(username, password, [{ accessControl, accessible, accessGroup, service, securityLevel }])`
 
 Will store the username/password combination in the secure storage. Resolves to `true` or rejects in case of an error.
 
@@ -57,7 +57,7 @@ Will retreive the username/password combination from the secure storage. Resolve
 
 Will remove the username/password combination from the secure storage.
 
-### `setInternetCredentials(server, username, password, [{ accessControl, accessible, accessGroup }])`
+### `setInternetCredentials(server, username, password, [{ accessControl, accessible, accessGroup, securityLevel }])`
 
 Will store the server/username/password combination in the secure storage.
 
@@ -88,6 +88,18 @@ Inquire if the type of local authentication policy is supported on this device w
 ### `getSupportedBiometryType()`
 
 Get what type of hardware biometry support the device has. Resolves to a `Keychain.BIOMETRY_TYPE` value when supported, otherwise `null`.
+
+### `getSecurityLevel()` (Android only)
+
+Get security level that is supported on the current device with the current OS.
+
+### Security Levels (Android only)
+
+If set, `securityLevel` parameter specifies minimum security level that the encryption key storage should guarantee for storing credentials to succeed.
+
+* `ANY` - no security guarantees needed (default value); Credentials can be stored in FB Secure Storage;
+* `SECURE_SOFTWARE` - requires for the key to be stored in the Android Keystore, separate from the encrypted data;
+* `SECURE_HARDWARE` - requires for the key to be stored on a secure hardware (Trusted Execution Environment or Secure Environment). Read [this article](https://developer.android.com/training/articles/keystore#ExtractionPrevention) for more information.
 
 ### Options
 
@@ -254,6 +266,10 @@ The module will automatically use the appropriate CipherStorage implementation b
 Encrypted data is stored in SharedPreferences.
 
 The `setInternetCredentials(server, username, password)` call will be resolved as call to `setGenericPassword(username, password, server)`. Use the `server` argument to distinguish between multiple entries.
+
+### iOS
+
+If you need Keychain Sharing in your iOS extension, make sure you use the same App Group and Keychain Sharing group names in your Main App and your Share Extension. To then share the keychain between the Main App and Share Extension, use the `accessGroup` ánd `service` option on `setGenericPassword` and `getGenericPassword`, like so: `getGenericPassword({ accessGroup: 'group.appname', service: 'com.example.appname' })`
 
 ### Security
 
