@@ -62,7 +62,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
         final Map<String, Object> constants = new HashMap<>();
         constants.put(SecurityLevel.ANY.jsName(), SecurityLevel.ANY.name());
         constants.put(SecurityLevel.SECURE_SOFTWARE.jsName(), SecurityLevel.SECURE_SOFTWARE.name());
-        constants.put(SecurityLevel.SECURE_HARDWARE.jsName(), SecurityLevel.SECURE_SOFTWARE.name());
+        constants.put(SecurityLevel.SECURE_HARDWARE.jsName(), SecurityLevel.SECURE_HARDWARE.name());
         return constants;
     }
 
