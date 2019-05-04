@@ -20,9 +20,6 @@ import static java.lang.annotation.RetentionPolicy.SOURCE;
 
 import android.app.Activity;
 import android.app.FragmentManager;
-import android.arch.lifecycle.Lifecycle;
-import android.arch.lifecycle.LifecycleObserver;
-import android.arch.lifecycle.OnLifecycleEvent;
 import android.content.DialogInterface;
 import android.os.Build;
 import android.os.Bundle;
@@ -443,13 +440,17 @@ public class BiometricPrompt implements BiometricConstants, LifecycleEventListen
      *             {@link BiometricPrompt.PromptInfo.Builder}.
      * @param crypto The crypto object associated with the authentication.
      */
-    public void authenticate(@NonNull PromptInfo info, @NonNull CryptoObject crypto) {
+    public void authenticate(@NonNull final PromptInfo info, @NonNull final CryptoObject crypto) {
         if (info == null) {
             throw new IllegalArgumentException("PromptInfo can not be null");
         } else if (crypto == null) {
             throw new IllegalArgumentException("CryptoObject can not be null");
         }
-        authenticateInternal(info, crypto);
+        mActivity.runOnUiThread(new Runnable() {
+            public void run() {
+                authenticateInternal(info, crypto);
+            }
+        });
     }
 
     /**
@@ -458,11 +459,15 @@ public class BiometricPrompt implements BiometricConstants, LifecycleEventListen
      * @param info The information that will be displayed on the prompt. Create this object using
      *             {@link BiometricPrompt.PromptInfo.Builder}.
      */
-    public void authenticate(@NonNull PromptInfo info) {
+    public void authenticate(@NonNull final PromptInfo info) {
         if (info == null) {
             throw new IllegalArgumentException("PromptInfo can not be null");
         }
-        authenticateInternal(info, null /* crypto */);
+        mActivity.runOnUiThread(new Runnable() {
+            public void run() {
+                authenticateInternal(info, null /* crypto */);
+            }
+        });
     }
 
     private void authenticateInternal(@NonNull PromptInfo info, @Nullable CryptoObject crypto) {
@@ -487,7 +492,8 @@ public class BiometricPrompt implements BiometricConstants, LifecycleEventListen
                         .commit();
             } else {
                 // If it's been added before, just re-attach it.
-                fragmentManager.beginTransaction().attach(mBiometricFragment).commit();
+                // call detach then attach in order for onCreateView to be called.
+                fragmentManager.beginTransaction().detach(mBiometricFragment).attach(mBiometricFragment).commit();
             }
         } else {
             // Create the UI
@@ -517,7 +523,8 @@ public class BiometricPrompt implements BiometricConstants, LifecycleEventListen
                         .add(mFingerprintHelperFragment, FINGERPRINT_HELPER_FRAGMENT_TAG).commit();
             } else {
                 // If it's been added before, just re-attach it.
-                fragmentManager.beginTransaction().attach(mFingerprintHelperFragment).commit();
+                // call detach then attach in order for onCreateView to be called.
+                fragmentManager.beginTransaction().detach(mFingerprintHelperFragment).attach(mFingerprintHelperFragment).commit();
             }
         }
         // For the case when onResume() is being called right after authenticate,
