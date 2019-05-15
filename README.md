@@ -27,17 +27,17 @@ async () => {
   await Keychain.setGenericPassword(username, password);
 
   try {
-    // Retreive the credentials
+    // Retrieve the credentials
     const credentials = await Keychain.getGenericPassword();
     if (credentials) {
       console.log('Credentials successfully loaded for user ' + credentials.username);
     } else {
-      console.log('No credentials stored')
+      console.log('No credentials stored');
     }
   } catch (error) {
     console.log('Keychain couldn\'t be accessed!', error);
   }
-  await Keychain.resetGenericPassword()
+  await Keychain.resetGenericPassword();
 }
 ```
 
@@ -51,7 +51,7 @@ Will store the username/password combination in the secure storage. Resolves to 
 
 ### `getGenericPassword([{ authenticationPrompt, service }])`
 
-Will retreive the username/password combination from the secure storage. Resolves to `{ username, password }` if an entry exists or `false` if it doesn't. It will reject only if an unexpected error is encountered like lacking entitlements or permission.
+Will retrieve the username/password combination from the secure storage. Resolves to `{ username, password }` if an entry exists or `false` if it doesn't. It will reject only if an unexpected error is encountered like lacking entitlements or permission.
 
 ### `resetGenericPassword([{ service }])`
 
@@ -67,7 +67,7 @@ Will check if the username/password combination for server is available in the s
 
 ### `getInternetCredentials(server, [{ authenticationPrompt }])`
 
-Will retreive the server/username/password combination from the secure storage. Resolves to `{ username, password }` if an entry exists or `false` if it doesn't. It will reject only if an unexpected error is encountered like lacking entitlements or permission.
+Will retrieve the server/username/password combination from the secure storage. Resolves to `{ username, password }` if an entry exists or `false` if it doesn't. It will reject only if an unexpected error is encountered like lacking entitlements or permission.
 
 ### `resetInternetCredentials(server)`
 
