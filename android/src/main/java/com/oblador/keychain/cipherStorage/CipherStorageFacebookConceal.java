@@ -102,12 +102,6 @@ public class CipherStorageFacebookConceal implements CipherStorage {
     }
 
     @Override
-    public boolean getRequiresCurrentActivity() {
-        // Facebook conceal does not need the current activity
-        return false;
-    }
-
-    @Override
     public void setCurrentActivity(Activity activity) {
         // Facebook conceal does not need the current activity
     }

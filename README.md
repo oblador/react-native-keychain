@@ -4,7 +4,7 @@
 
 [![Travis](https://img.shields.io/travis/oblador/react-native-keychain.svg)](https://travis-ci.org/oblador/react-native-keychain) [![npm](https://img.shields.io/npm/v/react-native-keychain.svg)](https://npmjs.com/package/react-native-keychain) [![npm](https://img.shields.io/npm/dm/react-native-keychain.svg)](https://npmjs.com/package/react-native-keychain)
 
-Keychain/Keystore Access for React Native. 
+Keychain/Keystore Access for React Native.
 
 ## Installation
 
@@ -93,7 +93,7 @@ Get what type of hardware biometry support the device has. Resolves to a `Keycha
 |**`accessible`**|iOS only|This dictates when a keychain item is accessible, see possible values in `Keychain.ACCESSIBLE`. |*`Keychain.ACCESSIBLE.WHEN_UNLOCKED`*|
 |**`accessGroup`**|iOS only|In which App Group to share the keychain. Requires additional setup with entitlements. |*None*|
 |**`authenticationPrompt`**|iOS only|What to prompt the user when unlocking the keychain with biometry or device password. |`Authenticate to retrieve secret`|
-|**`authenticationType`**|iOS only|Policies specifying which forms of authentication are acceptable. |`Keychain.AUTHENTICATION_TYPE.DEVICE_PASSCODE_OR_BIOMETRICS`|
+|**`authenticationType`**|All|Policies specifying which forms of authentication are acceptable. |`Keychain.AUTHENTICATION_TYPE.DEVICE_PASSCODE_OR_BIOMETRICS`|
 |**`service`**|All|Reverse domain name qualifier for the service associated with password. |*App bundle ID*|
 
 #### `Keychain.ACCESS_CONTROL` enum
@@ -181,7 +181,7 @@ include ':app'
 + project(':react-native-keychain').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-keychain/android')
 ```
 
-* Edit `android/app/build.gradle` (note: **app** folder) to look like this: 
+* Edit `android/app/build.gradle` (note: **app** folder) to look like this:
 
 ```diff
 apply plugin: 'com.android.application'
@@ -219,7 +219,7 @@ public class MainActivity extends extends ReactActivity {
   ...
 }
 ```
-  
+
 #### Proguard Rules
 
 On Android builds that use proguard (like release), you may see the following error:
@@ -239,7 +239,7 @@ If so, add a proguard rule in `proguard-rules.pro`:
 
 ## Notes
 
-### Android 
+### Android
 
 The module will automatically use the appropriate CipherStorage implementation based on API level:
 

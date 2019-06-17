@@ -65,13 +65,10 @@ type Options = {
 /**
  * Inquire if the type of local authentication policy (LAPolicy) is supported
  * on this device with the device settings the user chose.
- * @param {object} options LAPolicy option, iOS only
+ * @param {object} options LAPolicy option on iOS, authenticationType on Android
  * @return {Promise} Resolves to `true` when supported, otherwise `false`
  */
 export function canImplyAuthentication(options?: Options): Promise {
-  if (!RNKeychainManager.canCheckAuthentication) {
-    return Promise.resolve(false);
-  }
   return RNKeychainManager.canCheckAuthentication(options);
 }
 
@@ -91,7 +88,6 @@ export function getSupportedBiometryType(): Promise {
  * @param {string} server URL to server.
  * @param {string} username Associated username or e-mail to be saved.
  * @param {string} password Associated password to be saved.
- * @param {object} options Keychain options, iOS only
  * @return {Promise} Resolves to `true` when successful
  */
 export function setInternetCredentials(

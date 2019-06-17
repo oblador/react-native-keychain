@@ -52,7 +52,6 @@ public class KeychainModule extends ReactContextBaseJavaModule {
 
     private final Map<String, CipherStorage> cipherStorageMap = new HashMap<>();
     private final PrefsStorage prefsStorage;
-    final ReactApplicationContext mReactContext;
 
     @Override
     public String getName() {
@@ -62,7 +61,6 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     public KeychainModule(ReactApplicationContext reactContext) {
         super(reactContext);
         prefsStorage = new PrefsStorage(reactContext);
-        mReactContext = reactContext;
 
         addCipherStorageToMap(new CipherStorageFacebookConceal(reactContext));
         addCipherStorageToMap(new CipherStorageKeystoreAESCBC());
@@ -106,12 +104,12 @@ public class KeychainModule extends ReactContextBaseJavaModule {
 
     @ReactMethod
     public void getGenericPasswordForOptions(String service, final Promise promise) {
-        final String defaultService = getDefaultServiceIfNull(service);
+        final String serviceOrDefault = getDefaultServiceIfNull(service);
         CipherStorage cipherStorage = null;
         try {
-            ResultSet resultSet = prefsStorage.getEncryptedEntry(defaultService);
+            ResultSet resultSet = prefsStorage.getEncryptedEntry(serviceOrDefault);
             if (resultSet == null) {
-                Log.e(KEYCHAIN_MODULE, "No entry found for service: " + defaultService);
+                Log.e(KEYCHAIN_MODULE, "No entry found for service: " + serviceOrDefault);
                 promise.resolve(false);
                 return;
             }
@@ -136,7 +134,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
                         if (decryptionResult != null) {
                             WritableMap credentials = Arguments.createMap();
 
-                            credentials.putString("service", defaultService);
+                            credentials.putString("service", serviceOrDefault);
                             credentials.putString("username", decryptionResult.username);
                             credentials.putString("password", decryptionResult.password);
 
@@ -147,7 +145,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
                     }
                 };
                 // The encrypted data is encrypted using the current CipherStorage, so we just decrypt and return
-                currentCipherStorage.decrypt(decryptionHandler, defaultService, resultSet.usernameBytes, resultSet.passwordBytes);
+                currentCipherStorage.decrypt(decryptionHandler, serviceOrDefault, resultSet.usernameBytes, resultSet.passwordBytes);
             }
             else {
                 // The encrypted data is encrypted using an older CipherStorage, so we need to decrypt the data first, then encrypt it using the current CipherStorage, then store it again and return
@@ -159,17 +157,17 @@ public class KeychainModule extends ReactContextBaseJavaModule {
                         if (decryptionResult != null) {
                             WritableMap credentials = Arguments.createMap();
 
-                            credentials.putString("service", defaultService);
+                            credentials.putString("service", serviceOrDefault);
                             credentials.putString("username", decryptionResult.username);
                             credentials.putString("password", decryptionResult.password);
 
                             try {
                                 // clean up the old cipher storage
-                                oldCipherStorage.removeKey(defaultService);
+                                oldCipherStorage.removeKey(serviceOrDefault);
                                 // encrypt using the current cipher storage
-                                EncryptionResult encryptionResult = nonBiometryCipherStorage.encrypt(defaultService, decryptionResult.username, decryptionResult.password);
+                                EncryptionResult encryptionResult = nonBiometryCipherStorage.encrypt(serviceOrDefault, decryptionResult.username, decryptionResult.password);
                                 // store the encryption result
-                                prefsStorage.storeEncryptedEntry(defaultService, encryptionResult);
+                                prefsStorage.storeEncryptedEntry(serviceOrDefault, encryptionResult);
                             } catch (CryptoFailedException e) {
                                 Log.e(KEYCHAIN_MODULE, e.getMessage());
                                 promise.reject(E_CRYPTO_FAILED, e);
@@ -185,12 +183,12 @@ public class KeychainModule extends ReactContextBaseJavaModule {
                     }
                 };
                 // decrypt using the older cipher storage
-                oldCipherStorage.decrypt(decryptionHandler, defaultService, resultSet.usernameBytes, resultSet.passwordBytes);
+                oldCipherStorage.decrypt(decryptionHandler, serviceOrDefault, resultSet.usernameBytes, resultSet.passwordBytes);
             }
           } catch (InvalidKeyException e) {
-              Log.e(KEYCHAIN_MODULE, String.format("Key for service %s permanently invalidated", defaultService));
+              Log.e(KEYCHAIN_MODULE, String.format("Key for service %s permanently invalidated", serviceOrDefault));
                try {
-                   cipherStorage.removeKey(defaultService);
+                   cipherStorage.removeKey(serviceOrDefault);
               } catch (Exception error) {
                   Log.e(KEYCHAIN_MODULE, "Failed removing invalidated key: " + error.getMessage());
               }
@@ -301,9 +299,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
             throw new CryptoFailedException("Unsupported Android SDK " + Build.VERSION.SDK_INT);
         }
 
-        if (currentCipherStorage.getRequiresCurrentActivity()) {
-            currentCipherStorage.setCurrentActivity(getCurrentActivity());
-        }
+        currentCipherStorage.setCurrentActivity(getCurrentActivity());
 
         return currentCipherStorage;
     }
@@ -311,9 +307,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     private CipherStorage getCipherStorageByName(String cipherStorageName) {
         CipherStorage storage = cipherStorageMap.get(cipherStorageName);
 
-        if (storage.getRequiresCurrentActivity()) {
-            storage.setCurrentActivity(getCurrentActivity());
-        }
+        storage.setCurrentActivity(getCurrentActivity());
 
         return storage;
     }

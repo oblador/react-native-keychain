@@ -49,6 +49,5 @@ public interface CipherStorage {
 
     int getMinSupportedApiLevel();
 
-    boolean getRequiresCurrentActivity();
     void setCurrentActivity(Activity activity);
 }

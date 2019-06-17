@@ -337,11 +337,6 @@ public class CipherStorageKeystoreRSAECB extends AuthenticationCallback implemen
     }
 
     @Override
-    public boolean getRequiresCurrentActivity() {
-        return true;
-    }
-
-    @Override
     public void setCurrentActivity(Activity activity) {
       mActivity = activity;
     }
