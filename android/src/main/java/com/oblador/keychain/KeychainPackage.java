@@ -12,10 +12,6 @@ import java.util.List;
 
 public class KeychainPackage implements ReactPackage {
 
-    public KeychainPackage() {
-
-    }
-
     @Override
     public List<NativeModule> createNativeModules(
             ReactApplicationContext reactContext) {

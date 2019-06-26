@@ -1,5 +1,6 @@
 package com.oblador.keychain.cipherStorage;
 
+import android.content.Context;
 import android.os.Build;
 import androidx.annotation.NonNull;
 
@@ -9,7 +10,6 @@ import com.facebook.crypto.Crypto;
 import com.facebook.crypto.CryptoConfig;
 import com.facebook.crypto.Entity;
 import com.facebook.crypto.keychain.KeyChain;
-import com.facebook.react.bridge.ReactApplicationContext;
 import com.oblador.keychain.SecurityLevel;
 import com.oblador.keychain.exceptions.CryptoFailedException;
 
@@ -20,8 +20,8 @@ public class CipherStorageFacebookConceal implements CipherStorage {
     public static final String KEYCHAIN_DATA = "RN_KEYCHAIN";
     private final Crypto crypto;
 
-    public CipherStorageFacebookConceal(ReactApplicationContext reactContext) {
-        KeyChain keyChain = new SharedPrefsBackedKeyChain(reactContext, CryptoConfig.KEY_256);
+    public CipherStorageFacebookConceal(Context context) {
+        KeyChain keyChain = new SharedPrefsBackedKeyChain(context, CryptoConfig.KEY_256);
         this.crypto = AndroidConceal.get().createDefaultCrypto(keyChain);
     }
 
