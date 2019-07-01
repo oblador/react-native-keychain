@@ -211,7 +211,7 @@ export type SharedWebCredentials = {|
  */
 export function getGenericPassword(
   serviceOrOptions?: string | Options
-): Promise<boolean | SharedWebCredentials> {
+): Promise<false | SharedWebCredentials> {
   return RNKeychainManager.getGenericPasswordForOptions(
     getOptionsArgument(serviceOrOptions)
   );
