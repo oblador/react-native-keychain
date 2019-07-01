@@ -285,7 +285,7 @@ RCT_EXPORT_METHOD(getSupportedBiometryType:(RCTPromiseResolveBlock)resolve rejec
 }
 #endif
 
-RCT_EXPORT_METHOD(setGenericPasswordForOptions:(NSDictionary *)options withUsername:(NSString *)username withPassword:(NSString *)password withOtherOptions:(NSDictionary *)otherOptions resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
+RCT_EXPORT_METHOD(setGenericPasswordForOptions:(NSDictionary *)options withUsername:(NSString *)username withPassword:(NSString *)password withOtherOptions:(NSDictionary *)otherOptions withSecurityLevel:(__unused NSString *)level resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
 {
   NSString *service = serviceValue(options);
   NSDictionary *attributes = attributes = @{
@@ -336,6 +336,7 @@ RCT_EXPORT_METHOD(getGenericPasswordForOptions:(NSDictionary *)options resolver:
   NSString *username = (NSString *) [found objectForKey:(__bridge id)(kSecAttrAccount)];
   NSString *password = [[NSString alloc] initWithData:[found objectForKey:(__bridge id)(kSecValueData)] encoding:NSUTF8StringEncoding];
 
+  CFRelease(foundTypeRef);
   return resolve(@{
     @"service": service,
     @"username": username,
@@ -358,7 +359,7 @@ RCT_EXPORT_METHOD(resetGenericPasswordForOptions:(NSDictionary *)options resolve
   return resolve(@(YES));
 }
 
-RCT_EXPORT_METHOD(setInternetCredentialsForServer:(NSString *)server withUsername:(NSString*)username withPassword:(NSString*)password withOptions:(NSDictionary *)options resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
+RCT_EXPORT_METHOD(setInternetCredentialsForServer:(NSString *)server withUsername:(NSString*)username withPassword:(NSString*)password withSecurityLevel:(__unused NSString *)level withOptions:(NSDictionary *)options resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
 {
   [self deleteCredentialsForServer:server];
 
@@ -370,6 +371,35 @@ RCT_EXPORT_METHOD(setInternetCredentialsForServer:(NSString *)server withUsernam
   };
 
   [self insertKeychainEntry:attributes withOptions:options resolver:resolve rejecter:reject];
+}
+
+RCT_EXPORT_METHOD(hasInternetCredentialsForServer:(NSString *)server resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
+{
+  NSMutableDictionary *queryParts = [[NSMutableDictionary alloc] init];
+  queryParts[(__bridge NSString *)kSecClass] = (__bridge id)(kSecClassInternetPassword);
+  queryParts[(__bridge NSString *)kSecAttrServer] = server;
+  queryParts[(__bridge NSString *)kSecMatchLimit] = (__bridge NSString *)kSecMatchLimitOne;
+
+  if (@available(iOS 9, *)) {
+    queryParts[(__bridge NSString *)kSecUseAuthenticationUI] = (__bridge NSString *)kSecUseAuthenticationUIFail;
+  }
+
+  NSDictionary *query = [queryParts copy];
+
+  // Look up server in the keychain
+  OSStatus osStatus = SecItemCopyMatching((__bridge CFDictionaryRef) query, nil);
+
+  switch (osStatus) {
+    case noErr:
+    case errSecInteractionNotAllowed:
+      return resolve(@(YES));
+
+    case errSecItemNotFound:
+      return resolve(@(NO));
+  }
+
+  NSError *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:osStatus userInfo:nil];
+  return rejectWithError(reject, error);
 }
 
 RCT_EXPORT_METHOD(getInternetCredentialsForServer:(NSString *)server withOptions:(NSDictionary *)options resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
@@ -401,6 +431,7 @@ RCT_EXPORT_METHOD(getInternetCredentialsForServer:(NSString *)server withOptions
   NSString *username = (NSString *) [found objectForKey:(__bridge id)(kSecAttrAccount)];
   NSString *password = [[NSString alloc] initWithData:[found objectForKey:(__bridge id)(kSecValueData)] encoding:NSUTF8StringEncoding];
 
+  CFRelease(foundTypeRef);
   return resolve(@{
     @"server": server,
     @"username": username,

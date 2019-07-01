@@ -27,17 +27,17 @@ async () => {
   await Keychain.setGenericPassword(username, password);
 
   try {
-    // Retreive the credentials
+    // Retrieve the credentials
     const credentials = await Keychain.getGenericPassword();
     if (credentials) {
       console.log('Credentials successfully loaded for user ' + credentials.username);
     } else {
-      console.log('No credentials stored')
+      console.log('No credentials stored');
     }
   } catch (error) {
     console.log('Keychain couldn\'t be accessed!', error);
   }
-  await Keychain.resetGenericPassword()
+  await Keychain.resetGenericPassword();
 }
 ```
 
@@ -45,25 +45,29 @@ See `KeychainExample` for fully working project example.
 
 Both `setGenericPassword` and `setInternetCredentials` are limited to strings only, so if you need to store objects etc, please use `JSON.stringify`/`JSON.parse` when you store/access it.
 
-### `setGenericPassword(username, password, [{ accessControl, accessible, accessGroup, service }])`
+### `setGenericPassword(username, password, [{ accessControl, accessible, accessGroup, service, securityLevel }])`
 
 Will store the username/password combination in the secure storage. Resolves to `true` or rejects in case of an error.
 
 ### `getGenericPassword([{ authenticationPrompt, service }])`
 
-Will retreive the username/password combination from the secure storage. Resolves to `{ username, password }` if an entry exists or `false` if it doesn't. It will reject only if an unexpected error is encountered like lacking entitlements or permission.
+Will retrieve the username/password combination from the secure storage. Resolves to `{ username, password }` if an entry exists or `false` if it doesn't. It will reject only if an unexpected error is encountered like lacking entitlements or permission.
 
 ### `resetGenericPassword([{ service }])`
 
 Will remove the username/password combination from the secure storage.
 
-### `setInternetCredentials(server, username, password, [{ accessControl, accessible, accessGroup }])`
+### `setInternetCredentials(server, username, password, [{ accessControl, accessible, accessGroup, securityLevel }])`
 
 Will store the server/username/password combination in the secure storage.
 
+### `hasInternetCredentials(server, [{ authenticationPrompt }])`
+
+Will check if the username/password combination for server is available in the secure storage. Resolves to `true` if an entry exists or `false` if it doesn't.
+
 ### `getInternetCredentials(server, [{ authenticationPrompt }])`
 
-Will retreive the server/username/password combination from the secure storage. Resolves to `{ username, password }` if an entry exists or `false` if it doesn't. It will reject only if an unexpected error is encountered like lacking entitlements or permission.
+Will retrieve the server/username/password combination from the secure storage. Resolves to `{ username, password }` if an entry exists or `false` if it doesn't. It will reject only if an unexpected error is encountered like lacking entitlements or permission.
 
 ### `resetInternetCredentials(server)`
 
@@ -84,6 +88,18 @@ Inquire if the type of local authentication policy is supported on this device w
 ### `getSupportedBiometryType()`
 
 Get what type of hardware biometry support the device has. Resolves to a `Keychain.BIOMETRY_TYPE` value when supported, otherwise `null`.
+
+### `getSecurityLevel()` (Android only)
+
+Get security level that is supported on the current device with the current OS.
+
+### Security Levels (Android only)
+
+If set, `securityLevel` parameter specifies minimum security level that the encryption key storage should guarantee for storing credentials to succeed.
+
+* `ANY` - no security guarantees needed (default value); Credentials can be stored in FB Secure Storage;
+* `SECURE_SOFTWARE` - requires for the key to be stored in the Android Keystore, separate from the encrypted data;
+* `SECURE_HARDWARE` - requires for the key to be stored on a secure hardware (Trusted Execution Environment or Secure Environment). Read [this article](https://developer.android.com/training/articles/keystore#ExtractionPrevention) for more information.
 
 ### Options
 
@@ -143,6 +159,7 @@ Get what type of hardware biometry support the device has. Resolves to a `Keycha
 
 * Right click on Libraries, select **Add files to "…"** and select `node_modules/react-native-keychain/RNKeychain.xcodeproj`
 * Select your project and under **Build Phases** -> **Link Binary With Libraries**, press the + and select `libRNKeychain.a`.
+* make sure `pod 'RNKeychain'` is not in your `Podfile`
 
 #### Option: With [CocoaPods](https://cocoapods.org/)
 
@@ -249,6 +266,10 @@ The module will automatically use the appropriate CipherStorage implementation b
 Encrypted data is stored in SharedPreferences.
 
 The `setInternetCredentials(server, username, password)` call will be resolved as call to `setGenericPassword(username, password, server)`. Use the `server` argument to distinguish between multiple entries.
+
+### iOS
+
+If you need Keychain Sharing in your iOS extension, make sure you use the same App Group and Keychain Sharing group names in your Main App and your Share Extension. To then share the keychain between the Main App and Share Extension, use the `accessGroup` ánd `service` option on `setGenericPassword` and `getGenericPassword`, like so: `getGenericPassword({ accessGroup: 'group.appname', service: 'com.example.appname' })`
 
 ### Security
 
