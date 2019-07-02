@@ -254,6 +254,28 @@ If so, add a proguard rule in `proguard-rules.pro`:
 }
 ```
 
+## Testing with Jest
+
+The keychain manager relies on upstream libraries and interfacing with the native application itself. As such, it does not successfully compile and run in the context of a Jest Test, where there is no underlying app to communicate with. To compile your app for testing with Jest, you should mock the keychain manager in a Jest setup file like this:
+
+1. In your Jest config (probably in package.json) add a reference to a setup file:
+```json
+"jest": {
+  "setupFiles": ["./__tests__/jestSetupFile.js"]
+}
+```
+
+2. Inside your setup file, set up mocking for this package:
+```javascript
+jest.mock("react-native-keychain", () => ({
+  setGenericPassword: jest.fn(),
+  getGenericPassword: jest.fn(),
+  resetGenericPassword: jest.fn()
+}));
+```
+
+Now your tests should compile and run successfully, though writing and reading to the keychain will be effectively a no-op.
+
 ## Notes
 
 ### Android 
