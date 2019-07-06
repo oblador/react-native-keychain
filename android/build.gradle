@@ -2,6 +2,8 @@ def safeExtGet(prop, fallback) {
     rootProject.ext.has(prop) ? rootProject.ext.get(prop) : fallback
 }
 
+def gradlePluginVersion = safeExtGet('gradlePluginVersion', '3.4.0')
+
 buildscript {
   repositories {
     google()
@@ -9,7 +11,7 @@ buildscript {
   }
 
   dependencies {
-    classpath safeExtGet('gradleBuildTools', 'com.android.tools.build:gradle:3.4.0')
+    classpath("com.android.tools.build:gradle:$gradlePluginVersion")
   }
 }
 
@@ -35,6 +37,6 @@ repositories {
 }
 
 dependencies {
-  implementation 'com.facebook.react:react-native:+'
+  implementation "com.facebook.react:react-native:${safeExtGet('reactnativeVersion', '+')}"
   implementation 'com.facebook.conceal:conceal:1.1.3@aar'
 }
