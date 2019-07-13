@@ -63,11 +63,11 @@ export type Options = {
  * on the current device.
  * @return {Promise} Resolves to `SECURITY_LEVEL` when supported, otherwise `null`.
  */
-export function getSecurityLevel(): Promise<?($Values<typeof SECURITY_LEVEL>)> {
+export function getSecurityLevel(options?: Options): Promise<?($Values<typeof SECURITY_LEVEL>)> {
     if (!RNKeychainManager.getSecurityLevel){
         return Promise.resolve(null);
     }
-    return RNKeychainManager.getSecurityLevel();
+    return RNKeychainManager.getSecurityLevel(options?: Options);
 }
 
 /**

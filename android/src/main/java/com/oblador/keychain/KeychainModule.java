@@ -86,8 +86,15 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void getSecurityLevel(Promise promise) {
-        promise.resolve(getSecurityLevel().name());
+    public void getSecurityLevel(ReadableMap options, Promise promise) {
+        String accessControl = null;
+        if (options != null && options.hasKey(ACCESS_CONTROL_KEY)) {
+            accessControl = options.getString(ACCESS_CONTROL_KEY);
+        }
+
+        boolean useBiometry = getUseBiometry(accessControl);
+
+        promise.resolve(getSecurityLevel(useBiometry).name());
     }
 
     @ReactMethod
@@ -181,15 +188,9 @@ public class KeychainModule extends ReactContextBaseJavaModule {
                             credentials.putString("password", decryptionResult.password);
 
                             try {
-                                // clean up the old cipher storage
-                                oldCipherStorage.removeKey(serviceOrDefault);
-                                // encrypt using the current cipher storage
-                                EncryptionResult encryptionResult = nonBiometryCipherStorage.encrypt(serviceOrDefault, decryptionResult.username, decryptionResult.password);
-                                // store the encryption result
-                                prefsStorage.storeEncryptedEntry(serviceOrDefault, encryptionResult);
+                                migrateCipherStorage(serviceOrDefault, nonBiometryCipherStorage, oldCipherStorage, decryptionResult);
                             } catch (CryptoFailedException e) {
-                                Log.e(KEYCHAIN_MODULE, e.getMessage());
-                                promise.reject(E_CRYPTO_FAILED, e);
+                                Log.e(KEYCHAIN_MODULE, "Migrating to a less safe storage is not allowed. Keeping the old one");
                             } catch (KeyStoreAccessException e) {
                                 Log.e(KEYCHAIN_MODULE, e.getMessage());
                                 promise.reject(E_KEYSTORE_ACCESS_ERROR, e);
@@ -216,28 +217,6 @@ public class KeychainModule extends ReactContextBaseJavaModule {
             Log.e(KEYCHAIN_MODULE, e.getMessage());
             promise.reject(E_CRYPTO_FAILED, e);
         }
-    }
-
-    private DecryptionResult decryptCredentials(String service, CipherStorage currentCipherStorage, ResultSet resultSet) throws CryptoFailedException, KeyStoreAccessException {
-        if (resultSet.cipherStorageName.equals(currentCipherStorage.getCipherStorageName())) {
-            // The encrypted data is encrypted using the current CipherStorage, so we just decrypt and return
-            return currentCipherStorage.decrypt(service, resultSet.usernameBytes, resultSet.passwordBytes);
-        }
-
-        // The encrypted data is encrypted using an older CipherStorage, so we need to decrypt the data first, then encrypt it using the current CipherStorage, then store it again and return
-        CipherStorage oldCipherStorage = getCipherStorageByName(resultSet.cipherStorageName);
-        // decrypt using the older cipher storage
-
-        DecryptionResult decryptionResult = oldCipherStorage.decrypt(service, resultSet.usernameBytes, resultSet.passwordBytes);
-        // encrypt using the current cipher storage
-
-        try {
-            migrateCipherStorage(service, currentCipherStorage, oldCipherStorage, decryptionResult);
-        } catch (CryptoFailedException e) {
-            Log.e(KEYCHAIN_MODULE, "Migrating to a less safe storage is not allowed. Keeping the old one");
-        }
-
-        return decryptionResult;
     }
 
     private void migrateCipherStorage(String service, CipherStorage newCipherStorage, CipherStorage oldCipherStorage, DecryptionResult decryptionResult) throws KeyStoreAccessException, CryptoFailedException {
@@ -396,22 +375,22 @@ public class KeychainModule extends ReactContextBaseJavaModule {
         return DeviceAvailability.isFingerprintAuthAvailable(getReactApplicationContext());
     }
 
-    private boolean isSecureHardwareAvailable() {
+    private boolean isSecureHardwareAvailable(boolean useBiometry) {
         try {
-            return getCipherStorageForCurrentAPILevel().supportsSecureHardware();
+            return getCipherStorageForCurrentAPILevel(useBiometry).supportsSecureHardware();
         } catch (CryptoFailedException e) {
             return false;
         }
     }
 
-    private SecurityLevel getSecurityLevel() {
+    private SecurityLevel getSecurityLevel(boolean useBiometry) {
         try {
-            CipherStorage storage = getCipherStorageForCurrentAPILevel();
+            CipherStorage storage = getCipherStorageForCurrentAPILevel(useBiometry);
             if (!storage.securityLevel().satisfiesSafetyThreshold(SecurityLevel.SECURE_SOFTWARE)) {
                 return SecurityLevel.ANY;
             }
 
-            if (isSecureHardwareAvailable()) {
+            if (isSecureHardwareAvailable(useBiometry)) {
                 return SecurityLevel.SECURE_HARDWARE;
             } else {
                 return SecurityLevel.SECURE_SOFTWARE;

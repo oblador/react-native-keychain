@@ -42,10 +42,9 @@ public interface CipherStorage {
     }
 
     interface DecryptionResultHandler {
-        public void onDecrypt(DecryptionResult decryptionResult, String error, SecurityLevel level);
+        void onDecrypt(DecryptionResult decryptionResult, String error);
     }
 
-    EncryptionResult encrypt(@NonNull String service, @NonNull String username, @NonNull String password) throws CryptoFailedException;
     EncryptionResult encrypt(@NonNull String service, @NonNull String username, @NonNull String password, SecurityLevel level) throws CryptoFailedException;
 
     void decrypt(@NonNull DecryptionResultHandler decryptionResultHandler, @NonNull String service, @NonNull byte[] username, @NonNull byte[] password) throws CryptoFailedException, KeyPermanentlyInvalidatedException;

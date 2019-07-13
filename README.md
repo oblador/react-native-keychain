@@ -89,9 +89,9 @@ Inquire if the type of local authentication policy is supported on this device w
 
 Get what type of hardware biometry support the device has. Resolves to a `Keychain.BIOMETRY_TYPE` value when supported, otherwise `null`.
 
-### `getSecurityLevel()` (Android only)
+### `getSecurityLevel({ accessControl })` (Android only)
 
-Get security level that is supported on the current device with the current OS.
+Get security level that is supported on the current device with the current OS for the `accessControl` option.
 
 ### Security Levels (Android only)
 
@@ -105,7 +105,7 @@ If set, `securityLevel` parameter specifies minimum security level that the encr
 
 | Key | Platform | Description | Default |
 |---|---|---|---|
-|**`accessControl`**|iOS only|This dictates how a keychain item may be used, see possible values in `Keychain.ACCESS_CONTROL`. |*None*|
+|**`accessControl`**|All|This dictates how a keychain item may be used, see possible values in `Keychain.ACCESS_CONTROL`. |*None*|
 |**`accessible`**|iOS only|This dictates when a keychain item is accessible, see possible values in `Keychain.ACCESSIBLE`. |*`Keychain.ACCESSIBLE.WHEN_UNLOCKED`*|
 |**`accessGroup`**|iOS only|In which App Group to share the keychain. Requires additional setup with entitlements. |*None*|
 |**`authenticationPrompt`**|iOS only|What to prompt the user when unlocking the keychain with biometry or device password. |`Authenticate to retrieve secret`|

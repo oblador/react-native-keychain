@@ -20,6 +20,7 @@ import android.support.v4.app.FragmentActivity;
 import com.facebook.react.bridge.ReactApplicationContext;
 
 import com.facebook.react.bridge.ReactContext;
+import com.oblador.keychain.SecurityLevel;
 import com.oblador.keychain.exceptions.CryptoFailedException;
 import com.oblador.keychain.exceptions.KeyStoreAccessException;
 import com.oblador.keychain.supportBiometric.BiometricPrompt;
@@ -47,13 +48,14 @@ import java.util.concurrent.Executors;
 import javax.crypto.Cipher;
 import javax.crypto.CipherInputStream;
 import javax.crypto.CipherOutputStream;
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
 
 import static com.oblador.keychain.supportBiometric.BiometricPrompt.*;
 
 @RequiresApi(Build.VERSION_CODES.M)
-public class CipherStorageKeystoreRSAECB extends AuthenticationCallback implements CipherStorage {
+public class CipherStorageKeystoreRSAECB extends CipherStorageKeystoreBase implements AuthenticationCallback {
     public static final String CIPHER_STORAGE_NAME = "KeystoreRSAECB";
-    public static final String DEFAULT_SERVICE = "RN_KEYCHAIN_DEFAULT_ALIAS";
     public static final String KEYSTORE_TYPE = "AndroidKeyStore";
     public static final String ENCRYPTION_ALGORITHM = KeyProperties.KEY_ALGORITHM_RSA;
     public static final String ENCRYPTION_BLOCK_MODE = KeyProperties.BLOCK_MODE_ECB;
@@ -113,7 +115,7 @@ public class CipherStorageKeystoreRSAECB extends AuthenticationCallback implemen
             try {
                 String decryptedUsername = decryptBytes(mDecryptParams.key, mDecryptParams.username);
                 String decryptedPassword = decryptBytes(mDecryptParams.key, mDecryptParams.password);
-                mDecryptParams.resultHandler.onDecrypt(new DecryptionResult(decryptedUsername, decryptedPassword), null);
+                mDecryptParams.resultHandler.onDecrypt(new DecryptionResult(decryptedUsername, decryptedPassword, SecurityLevel.ANY), null);
             } catch (Exception e) {
                 mDecryptParams.resultHandler.onDecrypt(null, e.getMessage());
             }
@@ -150,6 +152,15 @@ public class CipherStorageKeystoreRSAECB extends AuthenticationCallback implemen
         mReactContext.addLifecycleEventListener(mBiometricPrompt);
     }
 
+    // returns true if the key was generated successfully
+    @TargetApi(Build.VERSION_CODES.M)
+    protected SecretKey generateKey(KeyGenParameterSpec spec) throws NoSuchProviderException,
+            NoSuchAlgorithmException, InvalidAlgorithmParameterException {
+        KeyGenerator generator = KeyGenerator.getInstance(ENCRYPTION_ALGORITHM, KEYSTORE_TYPE);
+        generator.init(spec);
+        return generator.generateKey();
+    }
+
     @Override
     public String getCipherStorageName() {
         return CIPHER_STORAGE_NAME;
@@ -166,14 +177,14 @@ public class CipherStorageKeystoreRSAECB extends AuthenticationCallback implemen
     }
 
     @Override
-    public EncryptionResult encrypt(@NonNull String service, @NonNull String username, @NonNull String password) throws CryptoFailedException {
+    public EncryptionResult encrypt(@NonNull String service, @NonNull String username, @NonNull String password, SecurityLevel level) throws CryptoFailedException {
         service = getDefaultServiceIfEmpty(service);
 
         try {
             KeyStore keyStore = getKeyStoreAndLoad();
 
             if (!keyStore.containsAlias(service)) {
-                generateKeyAndStoreUnderAlias(service);
+                generateKeyAndStoreUnderAlias(service, level);
             }
 
             KeyFactory keyFactory = KeyFactory.getInstance(ENCRYPTION_ALGORITHM);
@@ -194,8 +205,9 @@ public class CipherStorageKeystoreRSAECB extends AuthenticationCallback implemen
         }
     }
 
-    private void generateKeyAndStoreUnderAlias(@NonNull String service) throws NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException {
-        AlgorithmParameterSpec spec = new KeyGenParameterSpec.Builder(
+    @TargetApi(Build.VERSION_CODES.M)
+    protected KeyGenParameterSpec.Builder getKeyGenSpecBuilder(String service) {
+        return new KeyGenParameterSpec.Builder(
                 service,
                 KeyProperties.PURPOSE_DECRYPT | KeyProperties.PURPOSE_ENCRYPT)
                 .setBlockModes(ENCRYPTION_BLOCK_MODE)
@@ -203,13 +215,7 @@ public class CipherStorageKeystoreRSAECB extends AuthenticationCallback implemen
                 .setRandomizedEncryptionRequired(true)
                 .setUserAuthenticationRequired(true)
                 .setUserAuthenticationValidityDurationSeconds(1)
-                .setKeySize(ENCRYPTION_KEY_SIZE)
-                .build();
-
-        KeyPairGenerator generator;
-        generator = KeyPairGenerator.getInstance(ENCRYPTION_ALGORITHM, KEYSTORE_TYPE);
-        generator.initialize(spec);
-        generator.generateKeyPair();
+                .setKeySize(ENCRYPTION_KEY_SIZE);
     }
 
     @Override
@@ -243,6 +249,7 @@ public class CipherStorageKeystoreRSAECB extends AuthenticationCallback implemen
                 throw new CryptoFailedException("Could not start fingerprint Authentication");
             }
             try {
+                // The Cipher is locked, we will decrypt once fingerprint is recognised.
                 startFingerprintAuthentication();
             } catch (Exception e1) {
                 e1.printStackTrace();
@@ -251,23 +258,8 @@ public class CipherStorageKeystoreRSAECB extends AuthenticationCallback implemen
             return;
         }
 
-        decryptionResultHandler.onDecrypt(new DecryptionResult(decryptedUsername, decryptedPassword), null);
-    }
-
-    @Override
-    public void removeKey(@NonNull String service) throws KeyStoreAccessException {
-        service = getDefaultServiceIfEmpty(service);
-
-        try {
-            KeyStore keyStore = getKeyStoreAndLoad();
-            if (keyStore.containsAlias(service)) {
-                keyStore.deleteEntry(service);
-            }
-        } catch (KeyStoreException e) {
-            throw new KeyStoreAccessException("Failed to access Keystore", e);
-        } catch (Exception e) {
-            throw new KeyStoreAccessException("Unknown error " + e.getMessage(), e);
-        }
+        // The Cipher is unlocked, we can decrypt straight away.
+        decryptionResultHandler.onDecrypt(new DecryptionResult(decryptedUsername, decryptedPassword, SecurityLevel.ANY), null);
     }
 
     private byte[] encryptString(Key key, String service, String value) throws CryptoFailedException {
@@ -319,21 +311,6 @@ public class CipherStorageKeystoreRSAECB extends AuthenticationCallback implemen
         } catch (IOException e) {
             throw new CryptoFailedException("Could not decrypt bytes", e);
         }
-    }
-
-    private KeyStore getKeyStoreAndLoad() throws KeyStoreException, KeyStoreAccessException {
-        try {
-            KeyStore keyStore = KeyStore.getInstance(KEYSTORE_TYPE);
-            keyStore.load(null);
-            return keyStore;
-        } catch (NoSuchAlgorithmException | CertificateException | IOException e) {
-            throw new KeyStoreAccessException("Could not access Keystore", e);
-        }
-    }
-
-    @NonNull
-    private String getDefaultServiceIfEmpty(@NonNull String service) {
-        return service.isEmpty() ? DEFAULT_SERVICE : service;
     }
 
     @Override

@@ -216,7 +216,7 @@ public class BiometricPrompt implements BiometricConstants, LifecycleEventListen
      * BiometricPrompt} must provide an implementation of this for listening to
      * fingerprint events.
      */
-    public abstract static class AuthenticationCallback {
+    public static interface AuthenticationCallback {
         /**
          * Called when an unrecoverable error has been encountered and the operation is complete.
          * No further actions will be made on this object.
@@ -225,19 +225,19 @@ public class BiometricPrompt implements BiometricConstants, LifecycleEventListen
          * @param errString A human-readable error string that can be shown on an UI
          */
         public void onAuthenticationError(@BiometricError int errorCode,
-                @NonNull CharSequence errString) {}
+                @NonNull CharSequence errString);
 
         /**
          * Called when a biometric is recognized.
          * @param result An object containing authentication-related data
          */
-        public void onAuthenticationSucceeded(@NonNull AuthenticationResult result) {}
+        public void onAuthenticationSucceeded(@NonNull AuthenticationResult result);
 
         /**
          * Called when a biometric is valid but not recognized.
          */
 
-        public void onAuthenticationFailed() {}
+        public void onAuthenticationFailed();
     }
 
     /**
