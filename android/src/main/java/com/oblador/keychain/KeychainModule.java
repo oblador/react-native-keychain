@@ -48,7 +48,6 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     public static final String AUTHENTICATION_TYPE_DEVICE_PASSCODE_OR_BIOMETRICS = "AuthenticationWithBiometricsDevicePasscode";
     public static final String AUTHENTICATION_TYPE_BIOMETRICS = "AuthenticationWithBiometrics";
 
-    public static final String ACCESS_CONTROL_KEY = "accessControl";
     public static final String ACCESS_CONTROL_BIOMETRY_ANY = "BiometryAny";
     public static final String ACCESS_CONTROL_BIOMETRY_CURRENT_SET = "BiometryCurrentSet";
 
@@ -86,28 +85,17 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void getSecurityLevel(ReadableMap options, Promise promise) {
-        String accessControl = null;
-        if (options != null && options.hasKey(ACCESS_CONTROL_KEY)) {
-            accessControl = options.getString(ACCESS_CONTROL_KEY);
-        }
-
+    public void getSecurityLevel(String accessControl, Promise promise) {
         boolean useBiometry = getUseBiometry(accessControl);
-
         promise.resolve(getSecurityLevel(useBiometry).name());
     }
 
     @ReactMethod
-    public void setGenericPasswordForOptions(String service, String username, String password, ReadableMap options, String minimumSecurityLevel, Promise promise) {
+    public void setGenericPasswordForOptions(String service, String username, String password, String minimumSecurityLevel, String accessControl, Promise promise) {
         try {
             SecurityLevel level = SecurityLevel.valueOf(minimumSecurityLevel);
             if (username == null || username.isEmpty() || password == null || password.isEmpty()) {
                 throw new EmptyParameterException("you passed empty or null username/password");
-            }
-
-            String accessControl = null;
-            if (options != null && options.hasKey(ACCESS_CONTROL_KEY)) {
-                accessControl = options.getString(ACCESS_CONTROL_KEY);
             }
 
             service = getDefaultServiceIfNull(service);
@@ -266,8 +254,8 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void setInternetCredentialsForServer(@NonNull String server, String username, String password, ReadableMap options, String minimumSecurityLevel, Promise promise) {
-        setGenericPasswordForOptions(server, username, password, options, minimumSecurityLevel, promise);
+    public void setInternetCredentialsForServer(@NonNull String server, String username, String password, String minimumSecurityLevel, String accessControl, ReadableMap unusedOptions, Promise promise) {
+        setGenericPasswordForOptions(server, username, password, minimumSecurityLevel, accessControl, promise);
     }
 
     @ReactMethod

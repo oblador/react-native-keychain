@@ -245,7 +245,6 @@ public class CipherStorageKeystoreRSAECB extends CipherStorageKeystoreBase imple
         } catch (UserNotAuthenticatedException e) {
             mDecryptParams = new CipherDecryptionParams(decryptionResultHandler, key, username, password);
             if (!canStartFingerprintAuthentication()) {
-                e.printStackTrace();
                 throw new CryptoFailedException("Could not start fingerprint Authentication");
             }
             try {

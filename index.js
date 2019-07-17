@@ -67,7 +67,7 @@ export function getSecurityLevel(options?: Options): Promise<?($Values<typeof SE
     if (!RNKeychainManager.getSecurityLevel){
         return Promise.resolve(null);
     }
-    return RNKeychainManager.getSecurityLevel(options?: Options);
+    return RNKeychainManager.getSecurityLevel(getAccessControl(options));
 }
 
 /**
@@ -112,7 +112,8 @@ export function setInternetCredentials(
     username,
     password,
     getMinimumSecurityLevel(options),
-    options
+    getAccessControl(options),
+    options,
   );
 }
 
@@ -167,6 +168,16 @@ function getOptionsArgument(serviceOrOptions?: string | Options) {
     : serviceOrOptions;
 }
 
+function getAccessControl(serviceOrOptions?: string | Options) {
+  var accessControl = null;
+
+  if (typeof serviceOrOptions === 'object') {
+    accessControl = serviceOrOptions.accessControl;
+  }
+
+  return accessControl;
+}
+
 function getMinimumSecurityLevel(serviceOrOptions?: string | Options) {
   var specifiedLevel = undefined;
 
@@ -193,8 +204,8 @@ export function setGenericPassword(
     getOptionsArgument(serviceOrOptions),
     username,
     password,
-    serviceOrOptions,
-    getMinimumSecurityLevel(serviceOrOptions)
+    getMinimumSecurityLevel(serviceOrOptions),
+    getAccessControl(serviceOrOptions),
   );
 }
 
