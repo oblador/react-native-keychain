@@ -254,44 +254,39 @@ If so, add a proguard rule in `proguard-rules.pro`:
 }
 ```
 
-## Testing with Jest
+## Unit Testing with Jest
 
-The keychain manager relies on upstream libraries and interfacing with the native application itself. As such, it does not successfully compile and run in the context of a Jest Test, where there is no underlying app to communicate with. To compile your app for testing with Jest, you should mock the keychain manager in one of the following two ways:
+The keychain manager relies on interfacing with the native application itself. As such, it does not successfully compile and run in the context of a Jest test, where there is no underlying app to communicate with. To be able to call the JS functions exposed by this module in a unit test, you should mock them in one of the following two ways:
 
 ### Using a Jest `__mocks__` Directory
 
-1. Create a folder in your `src` directory named `__mocks__`
+1. Read the [jest docs](https://jestjs.io/docs/en/manual-mocks#mocking-node-modules) for initial setup
 
-2. Create a folder in `__mocks__` for the package you're mocking, in this case it'd be `react-native-keychain`
+2. Create a `react-native-keychain` folder in the `__mocks__` directory and add `index.js` file in it. It should contain the following code:
 
-3. Create a file in that directory named `index.js`. This file will be loaded in leiu of the package when code you're testing tries to access the package. It should contain the following code:
 ```javascript
 export default {
-  setGenericPassword: jest.fn(),
-  getGenericPassword: jest.fn(),
-  resetGenericPassword: jest.fn()
+  setGenericPassword: jest.fn().mockResolvedValue(),
+  getGenericPassword: jest.fn().mockResolvedValue(),
+  resetGenericPassword: jest.fn().mockResolvedValue()
 }
 ```
 
 ### Using a Jest Setup File
 
-1. In your Jest config (probably in package.json) add a reference to a setup file:
-```json
-"jest": {
-  "setupFiles": ["./__tests__/jestSetupFile.js"]
-}
-```
+1. In your Jest config, add a reference to a [setup file](https://jestjs.io/docs/en/configuration.html#setupfiles-array)
 
 2. Inside your setup file, set up mocking for this package:
+
 ```javascript
 jest.mock("react-native-keychain", () => ({
-  setGenericPassword: jest.fn(),
-  getGenericPassword: jest.fn(),
-  resetGenericPassword: jest.fn()
+  setGenericPassword: jest.fn().mockResolvedValue(),
+  getGenericPassword: jest.fn().mockResolvedValue(),
+  resetGenericPassword: jest.fn().mockResolvedValue()
 }));
 ```
 
-Now your tests should compile and run successfully, though note that writing and reading to the keychain will be effectively a no-op.
+Now your tests should run successfully, though note that writing and reading to the keychain will be effectively a no-op.
 
 ## Notes
 
