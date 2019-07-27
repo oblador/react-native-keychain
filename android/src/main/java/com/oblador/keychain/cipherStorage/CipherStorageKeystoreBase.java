@@ -1,12 +1,9 @@
 package com.oblador.keychain.cipherStorage;
 
 import android.annotation.TargetApi;
-import android.app.Activity;
 import android.os.Build;
 import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyInfo;
-import android.security.keystore.KeyPermanentlyInvalidatedException;
-import android.security.keystore.KeyProperties;
 import android.security.keystore.StrongBoxUnavailableException;
 import android.support.annotation.NonNull;
 import android.util.Log;
@@ -15,28 +12,15 @@ import com.oblador.keychain.SecurityLevel;
 import com.oblador.keychain.exceptions.CryptoFailedException;
 import com.oblador.keychain.exceptions.KeyStoreAccessException;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.Key;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
-import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
-import java.security.spec.AlgorithmParameterSpec;
 import java.security.spec.InvalidKeySpecException;
-
-import javax.crypto.Cipher;
-import javax.crypto.CipherInputStream;
-import javax.crypto.CipherOutputStream;
-import javax.crypto.KeyGenerator;
-import javax.crypto.SecretKey;
-import javax.crypto.SecretKeyFactory;
-import javax.crypto.spec.IvParameterSpec;
 
 @TargetApi(Build.VERSION_CODES.M)
 public abstract class CipherStorageKeystoreBase implements CipherStorage {
@@ -60,7 +44,7 @@ public abstract class CipherStorageKeystoreBase implements CipherStorage {
         final String testKeyAlias = "AndroidKeyStore#supportsSecureHardware";
 
         try {
-            SecretKey key = tryGenerateRegularSecurityKey(testKeyAlias);
+            Key key = tryGenerateRegularSecurityKey(testKeyAlias);
             return validateKeySecurityLevel(SecurityLevel.SECURE_HARDWARE, key);
         } catch (NoSuchAlgorithmException | InvalidAlgorithmParameterException | NoSuchProviderException e) {
             return false;
@@ -74,21 +58,21 @@ public abstract class CipherStorageKeystoreBase implements CipherStorage {
     }
 
     @TargetApi(Build.VERSION_CODES.M)
-    protected boolean validateKeySecurityLevel(SecurityLevel level, SecretKey generatedKey) {
+    protected boolean validateKeySecurityLevel(SecurityLevel level, Key generatedKey) {
         return getSecurityLevel(generatedKey).satisfiesSafetyThreshold(level);
     }
 
     @TargetApi(Build.VERSION_CODES.M)
-    protected SecurityLevel getSecurityLevel(SecretKey key) {
+    protected SecurityLevel getSecurityLevel(Key key) {
         try {
-            SecretKeyFactory factory = SecretKeyFactory.getInstance(key.getAlgorithm(), KEYSTORE_TYPE);
-            KeyInfo keyInfo;
-            keyInfo = (KeyInfo) factory.getKeySpec(key, KeyInfo.class);
+            KeyInfo keyInfo = getKeyInfo(key);
             return keyInfo.isInsideSecureHardware() ? SecurityLevel.SECURE_HARDWARE : SecurityLevel.SECURE_SOFTWARE;
         } catch (NoSuchAlgorithmException | NoSuchProviderException | InvalidKeySpecException e) {
             return SecurityLevel.ANY;
         }
     }
+
+    protected abstract KeyInfo getKeyInfo(Key key) throws NoSuchProviderException, NoSuchAlgorithmException, InvalidKeySpecException;
 
     @Override
     public void removeKey(@NonNull String service) throws KeyStoreAccessException {
@@ -125,20 +109,20 @@ public abstract class CipherStorageKeystoreBase implements CipherStorage {
     protected void generateKeyAndStoreUnderAlias(@NonNull String service, SecurityLevel requiredLevel) throws NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException, CryptoFailedException {
         // Firstly, try to generate the key as safe as possible (strongbox).
         // see https://developer.android.com/training/articles/keystore#HardwareSecurityModule
-        SecretKey secretKey = tryGenerateStrongBoxSecurityKey(service);
-        if (secretKey == null) {
+        Key key = tryGenerateStrongBoxSecurityKey(service);
+        if (key == null) {
             // If that is not possible, we generate the key in a regular way
             // (it still might be generated in hardware, but not in StrongBox)
-            secretKey = tryGenerateRegularSecurityKey(service);
+            key = tryGenerateRegularSecurityKey(service);
         }
 
-        if(!validateKeySecurityLevel(requiredLevel, secretKey)) {
+        if(!validateKeySecurityLevel(requiredLevel, key)) {
             throw new CryptoFailedException("Cannot generate keys with required security guarantees");
         }
     }
  
     @TargetApi(Build.VERSION_CODES.P)
-    protected SecretKey tryGenerateStrongBoxSecurityKey(String service) throws NoSuchAlgorithmException,
+    protected Key tryGenerateStrongBoxSecurityKey(String service) throws NoSuchAlgorithmException,
       InvalidAlgorithmParameterException, NoSuchProviderException {
         // StrongBox is only supported on Android P and higher
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
@@ -157,14 +141,14 @@ public abstract class CipherStorageKeystoreBase implements CipherStorage {
     }
 
     @TargetApi(Build.VERSION_CODES.M)
-    protected SecretKey tryGenerateRegularSecurityKey(String service) throws NoSuchAlgorithmException,
+    protected Key tryGenerateRegularSecurityKey(String service) throws NoSuchAlgorithmException,
       InvalidAlgorithmParameterException, NoSuchProviderException {
         return generateKey(getKeyGenSpecBuilder(service).build());
     }
 
     // returns true if the key was generated successfully
     @TargetApi(Build.VERSION_CODES.M)
-    protected abstract SecretKey generateKey(KeyGenParameterSpec spec) throws NoSuchProviderException,
+    protected abstract Key generateKey(KeyGenParameterSpec spec) throws NoSuchProviderException,
       NoSuchAlgorithmException, InvalidAlgorithmParameterException;
 
     @TargetApi(Build.VERSION_CODES.M)

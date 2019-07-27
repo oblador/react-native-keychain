@@ -8,7 +8,6 @@ import android.security.keystore.KeyPermanentlyInvalidatedException;
 import android.security.keystore.KeyInfo;
 import android.security.keystore.KeyProperties;
 import android.support.annotation.NonNull;
-import android.util.Log;
 
 import com.oblador.keychain.SecurityLevel;
 import com.oblador.keychain.exceptions.CryptoFailedException;
@@ -16,7 +15,6 @@ import com.oblador.keychain.exceptions.KeyStoreAccessException;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.nio.charset.Charset;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.Key;
@@ -25,10 +23,7 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.UnrecoverableKeyException;
-import java.security.cert.CertificateException;
-import java.security.spec.AlgorithmParameterSpec;
 import java.security.spec.InvalidKeySpecException;
-import android.security.keystore.StrongBoxUnavailableException;
 
 import javax.crypto.Cipher;
 import javax.crypto.CipherInputStream;
@@ -182,11 +177,17 @@ public class CipherStorageKeystoreAESCBC extends CipherStorageKeystoreBase {
 
     // returns true if the key was generated successfully
     @TargetApi(Build.VERSION_CODES.M)
-    protected SecretKey generateKey(KeyGenParameterSpec spec) throws NoSuchProviderException,
+    protected Key generateKey(KeyGenParameterSpec spec) throws NoSuchProviderException,
             NoSuchAlgorithmException, InvalidAlgorithmParameterException {
         KeyGenerator generator = KeyGenerator.getInstance(ENCRYPTION_ALGORITHM, KEYSTORE_TYPE);
         generator.init(spec);
         return generator.generateKey();
+    }
+
+    protected KeyInfo getKeyInfo(Key key) throws NoSuchProviderException, NoSuchAlgorithmException, InvalidKeySpecException {
+        SecretKeyFactory factory = SecretKeyFactory.getInstance(key.getAlgorithm(), KEYSTORE_TYPE);
+        KeyInfo keyInfo = (KeyInfo) factory.getKeySpec((SecretKey) key, KeyInfo.class);
+        return keyInfo;
     }
 
     @Override

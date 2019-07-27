@@ -9,13 +9,13 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.CancellationSignal;
 import android.security.keystore.KeyGenParameterSpec;
+import android.security.keystore.KeyInfo;
 import android.security.keystore.KeyPermanentlyInvalidatedException;
 import android.security.keystore.KeyProperties;
 import android.security.keystore.UserNotAuthenticatedException;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
-import android.support.v4.app.FragmentActivity;
 
 import com.facebook.react.bridge.ReactApplicationContext;
 
@@ -39,8 +39,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.PublicKey;
 import java.security.UnrecoverableKeyException;
-import java.security.cert.CertificateException;
-import java.security.spec.AlgorithmParameterSpec;
+import java.security.spec.InvalidKeySpecException;
 import java.security.spec.KeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.concurrent.Executors;
@@ -48,8 +47,6 @@ import java.util.concurrent.Executors;
 import javax.crypto.Cipher;
 import javax.crypto.CipherInputStream;
 import javax.crypto.CipherOutputStream;
-import javax.crypto.KeyGenerator;
-import javax.crypto.SecretKey;
 
 import static com.oblador.keychain.supportBiometric.BiometricPrompt.*;
 
@@ -154,11 +151,17 @@ public class CipherStorageKeystoreRSAECB extends CipherStorageKeystoreBase imple
 
     // returns true if the key was generated successfully
     @TargetApi(Build.VERSION_CODES.M)
-    protected SecretKey generateKey(KeyGenParameterSpec spec) throws NoSuchProviderException,
+    protected Key generateKey(KeyGenParameterSpec spec) throws NoSuchProviderException,
             NoSuchAlgorithmException, InvalidAlgorithmParameterException {
-        KeyGenerator generator = KeyGenerator.getInstance(ENCRYPTION_ALGORITHM, KEYSTORE_TYPE);
-        generator.init(spec);
-        return generator.generateKey();
+        KeyPairGenerator generator = KeyPairGenerator.getInstance(ENCRYPTION_ALGORITHM, KEYSTORE_TYPE);
+        generator.initialize(spec);
+        return generator.generateKeyPair().getPrivate();
+    }
+
+    protected KeyInfo getKeyInfo(Key key) throws NoSuchProviderException, NoSuchAlgorithmException, InvalidKeySpecException {
+        KeyFactory factory = KeyFactory.getInstance(key.getAlgorithm(), KEYSTORE_TYPE);
+        KeyInfo keyInfo = factory.getKeySpec(key, KeyInfo.class);
+        return keyInfo;
     }
 
     @Override
