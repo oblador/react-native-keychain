@@ -49,6 +49,7 @@ declare module 'react-native-keychain' {
         authenticationPrompt?: string;
         authenticationType?: LAPolicy;
         service?: string;
+        securityLevel? : SECURITY_LEVEL;
     }
 
     function canImplyAuthentication(
