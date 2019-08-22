@@ -121,6 +121,7 @@ NSString *accessGroupValue(NSDictionary *options)
 
 #define kAuthenticationType @"authenticationType"
 #define kAuthenticationTypeBiometrics @"AuthenticationWithBiometrics"
+#define kLAPolicyDeviceOwnerAuthentication @"DeviceOwnerAuthentication"
 
 #define kAccessControlType @"accessControl"
 #define kAccessControlUserPresence @"UserPresence"
@@ -270,7 +271,7 @@ RCT_EXPORT_METHOD(getSupportedBiometryType:(RCTPromiseResolveBlock)resolve rejec
 {
   NSError *aerr = nil;
   LAContext *context = [LAContext new];
-  BOOL canBeProtected = [context canEvaluatePolicy:LAPolicyDeviceOwnerAuthentication error:&aerr];
+  BOOL canBeProtected = [context canEvaluatePolicy:LAPolicyDeviceOwnerAuthenticationWithBiometrics error:&aerr];
 
   if (!aerr && canBeProtected) {
     if (@available(iOS 11, *)) {
