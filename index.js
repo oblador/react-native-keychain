@@ -32,6 +32,7 @@ export const ACCESS_CONTROL = Object.freeze({
 export const AUTHENTICATION_TYPE = Object.freeze({
   DEVICE_PASSCODE_OR_BIOMETRICS: 'AuthenticationWithBiometricsDevicePasscode',
   BIOMETRICS: 'AuthenticationWithBiometrics',
+  DEVICE_OWNER: 'DeviceOwnerAuthentication',
 });
 
 export const BIOMETRY_TYPE = Object.freeze({
@@ -87,11 +88,11 @@ export function canImplyAuthentication(options?: Options): Promise<boolean> {
  * Get what type of hardware biometry support the device has.
  * @return {Promise} Resolves to a `BIOMETRY_TYPE` when supported, otherwise `null`
  */
-export function getSupportedBiometryType(): Promise<?($Values<typeof BIOMETRY_TYPE>)> {
+export function getSupportedBiometryType(options?: Options): Promise<?($Values<typeof BIOMETRY_TYPE>)> {
   if (!RNKeychainManager.getSupportedBiometryType) {
     return Promise.resolve(null);
   }
-  return RNKeychainManager.getSupportedBiometryType();
+  return RNKeychainManager.getSupportedBiometryType(options);
 }
 
 /**
