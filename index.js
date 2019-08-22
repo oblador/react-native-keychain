@@ -48,10 +48,7 @@ export type LAPolicy = $Values<typeof AUTHENTICATION_TYPE>;
 
 export type SecMinimumLevel = $Values<typeof SECURITY_LEVEL>;
 
-export type 
-  
-  
-  = {
+export type Options = {
   accessControl?: SecAccessControl,
   accessGroup?: string,
   accessible?: SecAccessible,
