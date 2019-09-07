@@ -146,14 +146,7 @@ public class CipherStorageKeystoreAESCBC implements CipherStorage {
     }
 
     private void generateKeyAndStoreUnderAlias(@NonNull String service, SecurityLevel requiredLevel) throws NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException, CryptoFailedException {
-        // Firstly, try to generate the key as safe as possible (strongbox).
-        // see https://developer.android.com/training/articles/keystore#HardwareSecurityModule
-        SecretKey secretKey = tryGenerateStrongBoxSecurityKey(service);
-        if (secretKey == null) {
-            // If that is not possible, we generate the key in a regular way
-            // (it still might be generated in hardware, but not in StrongBox)
-            secretKey = tryGenerateRegularSecurityKey(service);
-        }
+        SecretKey secretKey = tryGenerateRegularSecurityKey(service);
 
         if(!validateKeySecurityLevel(requiredLevel, secretKey)) {
             throw new CryptoFailedException("Cannot generate keys with required security guarantees");
