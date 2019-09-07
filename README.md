@@ -258,6 +258,20 @@ If so, add a proguard rule in `proguard-rules.pro`:
 
 The keychain manager relies on interfacing with the native application itself. As such, it does not successfully compile and run in the context of a Jest test, where there is no underlying app to communicate with. To be able to call the JS functions exposed by this module in a unit test, you should mock them in one of the following two ways:
 
+First, let's create a mock object for the module:
+
+```js
+const keychainMock = {
+  SECURITY_LEVEL_ANY: "MOCK_SECURITY_LEVEL_ANY",
+  SECURITY_LEVEL_SECURE_SOFTWARE: "MOCK_SECURITY_LEVEL_SECURE_SOFTWARE",
+  SECURITY_LEVEL_SECURE_HARDWARE: "MOCK_SECURITY_LEVEL_SECURE_HARDWARE",
+  setGenericPassword: jest.fn().mockResolvedValue(),
+  getGenericPassword: jest.fn().mockResolvedValue(),
+  resetGenericPassword: jest.fn().mockResolvedValue(),
+  ...
+}
+```
+
 ### Using a Jest `__mocks__` Directory
 
 1. Read the [jest docs](https://jestjs.io/docs/en/manual-mocks#mocking-node-modules) for initial setup
@@ -265,11 +279,7 @@ The keychain manager relies on interfacing with the native application itself. A
 2. Create a `react-native-keychain` folder in the `__mocks__` directory and add `index.js` file in it. It should contain the following code:
 
 ```javascript
-export default {
-  setGenericPassword: jest.fn().mockResolvedValue(),
-  getGenericPassword: jest.fn().mockResolvedValue(),
-  resetGenericPassword: jest.fn().mockResolvedValue()
-}
+export default keychainMock;
 ```
 
 ### Using a Jest Setup File
@@ -279,11 +289,7 @@ export default {
 2. Inside your setup file, set up mocking for this package:
 
 ```javascript
-jest.mock("react-native-keychain", () => ({
-  setGenericPassword: jest.fn().mockResolvedValue(),
-  getGenericPassword: jest.fn().mockResolvedValue(),
-  resetGenericPassword: jest.fn().mockResolvedValue()
-}));
+jest.mock("react-native-keychain", () => keychainMock);
 ```
 
 Now your tests should run successfully, though note that writing and reading to the keychain will be effectively a no-op.
