@@ -94,7 +94,7 @@ public class CipherStorageKeystoreRSAECB extends CipherStorageKeystoreBase imple
     @Override
     public void onAuthenticationError(int errorCode, @Nullable CharSequence errString) {
         if (mDecryptParams != null && mDecryptParams.resultHandler != null) {
-            mDecryptParams.resultHandler.onDecrypt(null, errString.toString());
+            mDecryptParams.resultHandler.onDecrypt(null, errString != null ? errString.toString() : "Impossible to authenticate");
             mBiometricPromptCancellationSignal.cancel();
             mDecryptParams = null;
         }

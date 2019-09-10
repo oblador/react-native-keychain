@@ -268,7 +268,9 @@ public class FingerprintHelperFragment extends Fragment {
      * @param error
      */
     private void sendErrorToClient(final int error) {
-        mClientAuthenticationCallback.onAuthenticationError(error, getErrorString(mContext, error));
+        if (mClientAuthenticationCallback != null) {
+            mClientAuthenticationCallback.onAuthenticationError(error, getErrorString(mContext, error));
+        }
     }
 
     /**
