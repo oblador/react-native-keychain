@@ -11,7 +11,7 @@ declare module 'react-native-keychain' {
         password: string;
     }
 
-    export enum ACCESSIBLE   {
+    export enum ACCESSIBLE {
         WHEN_UNLOCKED = "AccessibleWhenUnlocked",
         AFTER_FIRST_UNLOCK = "AccessibleAfterFirstUnlock",
         ALWAYS = "AccessibleAlways",
@@ -36,6 +36,12 @@ declare module 'react-native-keychain' {
         BIOMETRICS = "AuthenticationWithBiometrics"
     }
 
+    export enum SECURITY_LEVEL {
+        SECURE_SOFTWARE,
+        SECURE_HARDWARE,
+        ANY
+    }
+
     export interface Options {
         accessControl?: ACCESS_CONTROL;
         accessGroup?: string;
@@ -43,6 +49,7 @@ declare module 'react-native-keychain' {
         authenticationPrompt?: string;
         authenticationType?: LAPolicy;
         service?: string;
+        securityLevel? : SECURITY_LEVEL;
     }
 
     function canImplyAuthentication(
@@ -79,13 +86,13 @@ declare module 'react-native-keychain' {
 
     function getGenericPassword(
         options?: Options
-    ): Promise<false | {service: string, username: string, password: string}>;
+    ): Promise<false | { service: string, username: string, password: string }>;
 
     function resetGenericPassword(
         options?: Options
     ): Promise<boolean>
 
-    function requestSharedWebCredentials (
+    function requestSharedWebCredentials(
     ): Promise<SharedWebCredentials>;
 
     function setSharedWebCredentials(
@@ -94,4 +101,6 @@ declare module 'react-native-keychain' {
         password: string
     ): Promise<void>;
 
+    function getSecurityLevel(
+    ): Promise<SECURITY_LEVEL>
 }
