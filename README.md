@@ -9,9 +9,10 @@ Keychain/Keystore Access for React Native.
 ## Installation
 
 1. Run `yarn add react-native-keychain`
-    1. **Only for React Native <= 0.59**: `$ react-native link react-native-keychain` and check `MainApplication.java` to verify the package was added. See manual installation below if you have issues with `react-native link`.
-1. Run `pod install` in `ios/` directory to install iOS dependencies.
-1. Re-run your Android and iOS projects.
+
+    1 a. **Only for React Native <= 0.59**: `$ react-native link react-native-keychain` and check `MainApplication.java` to verify the package was added. See manual installation below if you have issues with `react-native link`.
+2. Run `pod install` in `ios/` directory to install iOS dependencies.
+3. Re-build your Android and iOS projects.
 
 ## Usage
 
