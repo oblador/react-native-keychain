@@ -63,8 +63,10 @@ hasInternetCredentials('server').then(result => {
 // $FlowExpectedError - First argument is required
 getInternetCredentials();
 getInternetCredentials('server', simpleOptions).then(credentials => {
-  (credentials.username: string);
-  (credentials.password: string);
+  if (credentials) {
+    (credentials.username: string);
+    (credentials.password: string);
+  }
 });
 
 // $FlowExpectedError - First argument is required
@@ -94,9 +96,11 @@ resetGenericPassword('service');
 resetGenericPassword(simpleOptions);
 
 requestSharedWebCredentials().then(result => {
-  (result.server: string);
-  (result.username: string);
-  (result.password: string);
+  if (result) {
+    (result.server: string);
+    (result.username: string);
+    (result.password: string);
+  }
 });
 
 setSharedWebCredentials('server', 'username', 'password').then(result => {
