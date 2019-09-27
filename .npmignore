@@ -1,11 +1,1 @@
-# Logs
-*.log
-
-# Dependency directory
-node_modules
-
-KeychainExample
-
-.editorconfig
-
-test_index.js
+KeychainExample/
