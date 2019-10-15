@@ -31,7 +31,7 @@ declare module 'react-native-keychain' {
         BIOMETRY_CURRENT_SET_OR_DEVICE_PASSCODE = "BiometryCurrentSetOrDevicePasscode"
     }
 
-    export enum LAPolicy {
+    export enum AUTHENTICATION_TYPE {
         DEVICE_PASSCODE_OR_BIOMETRICS = "AuthenticationWithBiometricsDevicePasscode",
         BIOMETRICS = "AuthenticationWithBiometrics"
     }
