@@ -1,9 +1,7 @@
 package com.oblador.keychain.cipherStorage;
 
-import android.app.Activity;
 import android.os.Build;
 import android.security.keystore.KeyPermanentlyInvalidatedException;
-import android.support.annotation.NonNull;
 
 import com.facebook.android.crypto.keychain.AndroidConceal;
 import com.facebook.android.crypto.keychain.SharedPrefsBackedKeyChain;
@@ -17,7 +15,7 @@ import com.oblador.keychain.exceptions.CryptoFailedException;
 
 import java.nio.charset.Charset;
 
-import static android.R.attr.password;
+import androidx.annotation.NonNull;
 
 public class CipherStorageFacebookConceal implements CipherStorage {
     public static final String CIPHER_STORAGE_NAME = "FacebookConceal";
@@ -116,9 +114,4 @@ public class CipherStorageFacebookConceal implements CipherStorage {
     private String getEntityPrefix(String service) {
         return KEYCHAIN_DATA + ":" + service;
     }
-
-//    @Override
-//    public void setCurrentActivity(Activity activity) {
-        // Facebook conceal does not need the current activity
-//    }
 }

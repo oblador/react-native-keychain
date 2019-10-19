@@ -1,12 +1,12 @@
 package com.oblador.keychain.cipherStorage;
 
-import android.app.Activity;
 import android.security.keystore.KeyPermanentlyInvalidatedException;
-import android.support.annotation.NonNull;
 
 import com.oblador.keychain.SecurityLevel;
 import com.oblador.keychain.exceptions.CryptoFailedException;
 import com.oblador.keychain.exceptions.KeyStoreAccessException;
+
+import androidx.annotation.NonNull;
 
 public interface CipherStorage {
     abstract class CipherResult<T> {
@@ -57,7 +57,6 @@ public interface CipherStorage {
 
     int getMinSupportedApiLevel();
 
-    // void setCurrentActivity(Activity activity);
     SecurityLevel securityLevel();
 
     boolean supportsSecureHardware();

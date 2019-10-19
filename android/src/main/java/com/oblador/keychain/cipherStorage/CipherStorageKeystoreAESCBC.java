@@ -189,11 +189,6 @@ public class CipherStorageKeystoreAESCBC extends CipherStorageKeystoreBase {
         return keyInfo;
     }
 
-    @Override
-   // public void setCurrentActivity(Activity activity) {
-        // AESCBC does not need the current activity
-    //}
-
     @TargetApi(Build.VERSION_CODES.M)
     protected KeyGenParameterSpec.Builder getKeyGenSpecBuilder(String service) {
         return new KeyGenParameterSpec.Builder(

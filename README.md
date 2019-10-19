@@ -8,11 +8,12 @@ Keychain/Keystore Access for React Native.
 
 ## Installation
 
-1. `$ yarn add react-native-keychain`
-2. `$ react-native link react-native-keychain` and check `MainApplication.java` to verify the package was added.
-3. Rebuild your project with `react-native run-ios/android`
+1. Run `yarn add react-native-keychain`
 
-See manual installation below if you have issues with `react-native link`.
+    1 a. **Only for React Native <= 0.59**: `$ react-native link react-native-keychain` and check `MainApplication.java` to verify the package was added. See manual installation below if you have issues with `react-native link`.
+2. Run `pod install` in `ios/` directory to install iOS dependencies.
+3. If you want to support FaceID, add a `NSFaceIDUsageDescription` entry in your `Info.plist`.
+4. Re-build your Android and iOS projects.
 
 ## Usage
 
@@ -254,6 +255,46 @@ If so, add a proguard rule in `proguard-rules.pro`:
 }
 ```
 
+## Unit Testing with Jest
+
+The keychain manager relies on interfacing with the native application itself. As such, it does not successfully compile and run in the context of a Jest test, where there is no underlying app to communicate with. To be able to call the JS functions exposed by this module in a unit test, you should mock them in one of the following two ways:
+
+First, let's create a mock object for the module:
+
+```js
+const keychainMock = {
+  SECURITY_LEVEL_ANY: "MOCK_SECURITY_LEVEL_ANY",
+  SECURITY_LEVEL_SECURE_SOFTWARE: "MOCK_SECURITY_LEVEL_SECURE_SOFTWARE",
+  SECURITY_LEVEL_SECURE_HARDWARE: "MOCK_SECURITY_LEVEL_SECURE_HARDWARE",
+  setGenericPassword: jest.fn().mockResolvedValue(),
+  getGenericPassword: jest.fn().mockResolvedValue(),
+  resetGenericPassword: jest.fn().mockResolvedValue(),
+  ...
+}
+```
+
+### Using a Jest `__mocks__` Directory
+
+1. Read the [jest docs](https://jestjs.io/docs/en/manual-mocks#mocking-node-modules) for initial setup
+
+2. Create a `react-native-keychain` folder in the `__mocks__` directory and add `index.js` file in it. It should contain the following code:
+
+```javascript
+export default keychainMock;
+```
+
+### Using a Jest Setup File
+
+1. In your Jest config, add a reference to a [setup file](https://jestjs.io/docs/en/configuration.html#setupfiles-array)
+
+2. Inside your setup file, set up mocking for this package:
+
+```javascript
+jest.mock("react-native-keychain", () => keychainMock);
+```
+
+Now your tests should run successfully, though note that writing and reading to the keychain will be effectively a no-op.
+
 ## Notes
 
 ### Android
@@ -269,7 +310,7 @@ The `setInternetCredentials(server, username, password)` call will be resolved a
 
 ### iOS
 
-If you need Keychain Sharing in your iOS extension, make sure you use the same App Group and Keychain Sharing group names in your Main App and your Share Extension. To then share the keychain between the Main App and Share Extension, use the `accessGroup` ánd `service` option on `setGenericPassword` and `getGenericPassword`, like so: `getGenericPassword({ accessGroup: 'group.appname', service: 'com.example.appname' })`
+If you need Keychain Sharing in your iOS extension, make sure you use the same App Group and Keychain Sharing group names in your Main App and your Share Extension. To then share the keychain between the Main App and Share Extension, use the `accessGroup` and `service` option on `setGenericPassword` and `getGenericPassword`, like so: `getGenericPassword({ accessGroup: 'group.appname', service: 'com.example.appname' })`
 
 ### Security
 

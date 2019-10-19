@@ -3,8 +3,7 @@ package com.oblador.keychain;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.os.Build;
-import android.support.annotation.NonNull;
-import android.support.annotation.RequiresApi;
+import androidx.annotation.NonNull;
 import android.util.Log;
 
 import com.facebook.react.bridge.Callback;
@@ -335,8 +334,6 @@ public class KeychainModule extends ReactContextBaseJavaModule {
             throw new CryptoFailedException("Unsupported Android SDK " + Build.VERSION.SDK_INT);
         }
 
-        // currentCipherStorage.setCurrentActivity(getCurrentActivity());
-
         return currentCipherStorage;
     }
 
@@ -355,8 +352,6 @@ public class KeychainModule extends ReactContextBaseJavaModule {
 
     private CipherStorage getCipherStorageByName(String cipherStorageName) {
         CipherStorage storage = cipherStorageMap.get(cipherStorageName);
-
-        // storage.setCurrentActivity(getCurrentActivity());
 
         return storage;
     }

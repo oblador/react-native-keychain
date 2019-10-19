@@ -140,7 +140,7 @@ export type UserCredentials = {|
 export function getInternetCredentials(
   server: string,
   options?: Options
-): Promise<UserCredentials> {
+): Promise<false | UserCredentials> {
   return RNKeychainManager.getInternetCredentialsForServer(server, options);
 }
 
@@ -222,7 +222,7 @@ export type SharedWebCredentials = {|
  */
 export function getGenericPassword(
   serviceOrOptions?: string | Options
-): Promise<boolean | SharedWebCredentials> {
+): Promise<false | SharedWebCredentials> {
   return RNKeychainManager.getGenericPasswordForOptions(
     getOptionsArgument(serviceOrOptions),
   );
@@ -246,7 +246,7 @@ export function resetGenericPassword(
  * @return {Promise} Resolves to `{ server, username, password }` if approved and
  * `false` if denied and throws an error if not supported on platform or there's no shared credentials
  */
-export function requestSharedWebCredentials(): Promise<SharedWebCredentials> {
+export function requestSharedWebCredentials(): Promise<false | SharedWebCredentials> {
   if (Platform.OS !== 'ios') {
     return Promise.reject(
       new Error(
@@ -267,7 +267,7 @@ export function requestSharedWebCredentials(): Promise<SharedWebCredentials> {
 export function setSharedWebCredentials(
   server: string,
   username: string,
-  password: string
+  password: ?string
 ): Promise<void> {
   if (Platform.OS !== 'ios') {
     return Promise.reject(
