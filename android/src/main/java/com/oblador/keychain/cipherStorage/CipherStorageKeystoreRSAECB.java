@@ -52,16 +52,16 @@ import androidx.fragment.app.FragmentActivity;
 
 @RequiresApi(Build.VERSION_CODES.M)
 public class CipherStorageKeystoreRSAECB extends CipherStorageKeystoreBase {
-    public static final String CIPHER_STORAGE_NAME = "KeystoreRSAECB";
-    public static final String KEYSTORE_TYPE = "AndroidKeyStore";
-    public static final String ENCRYPTION_ALGORITHM = KeyProperties.KEY_ALGORITHM_RSA;
-    public static final String ENCRYPTION_BLOCK_MODE = KeyProperties.BLOCK_MODE_ECB;
-    public static final String ENCRYPTION_PADDING = KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1;
-    public static final String ENCRYPTION_TRANSFORMATION =
+    private static final String CIPHER_STORAGE_NAME = "KeystoreRSAECB";
+    private static final String KEYSTORE_TYPE = "AndroidKeyStore";
+    private static final String ENCRYPTION_ALGORITHM = KeyProperties.KEY_ALGORITHM_RSA;
+    private static final String ENCRYPTION_BLOCK_MODE = KeyProperties.BLOCK_MODE_ECB;
+    private static final String ENCRYPTION_PADDING = KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1;
+    private static final String ENCRYPTION_TRANSFORMATION =
             ENCRYPTION_ALGORITHM + "/" +
                     ENCRYPTION_BLOCK_MODE + "/" +
                     ENCRYPTION_PADDING;
-    public static final int ENCRYPTION_KEY_SIZE = 3072;
+    private static final int ENCRYPTION_KEY_SIZE = 3072;
 
     private CancellationSignal mBiometricPromptCancellationSignal;
     private BiometricPrompt mBiometricPrompt;
@@ -69,13 +69,13 @@ public class CipherStorageKeystoreRSAECB extends CipherStorageKeystoreBase {
     private ReactContext mReactContext;
     private FragmentActivity mActivity;
 
-    class CipherDecryptionParams {
-        public final DecryptionResultHandler resultHandler;
-        public final Key key;
-        public final byte[] username;
-        public final byte[] password;
+    private class CipherDecryptionParams {
+        private final DecryptionResultHandler resultHandler;
+        private final Key key;
+        private final byte[] username;
+        private final byte[] password;
 
-        public CipherDecryptionParams(DecryptionResultHandler handler, Key key, byte[] username, byte[] password) {
+        private CipherDecryptionParams(DecryptionResultHandler handler, Key key, byte[] username, byte[] password) {
             this.resultHandler = handler;
             this.key = key;
             this.username = username;
