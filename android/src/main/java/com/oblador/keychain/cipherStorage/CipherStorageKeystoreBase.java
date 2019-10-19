@@ -22,8 +22,10 @@ import java.security.NoSuchProviderException;
 import java.security.cert.CertificateException;
 import java.security.spec.InvalidKeySpecException;
 
+import androidx.biometric.BiometricPrompt;
+
 @TargetApi(Build.VERSION_CODES.M)
-public abstract class CipherStorageKeystoreBase implements CipherStorage {
+public abstract class CipherStorageKeystoreBase extends BiometricPrompt.AuthenticationCallback implements CipherStorage {
     public static final String TAG = "Keystore";
     public static final String DEFAULT_SERVICE = "RN_KEYCHAIN_DEFAULT_ALIAS";
     public static final String KEYSTORE_TYPE = "AndroidKeyStore";

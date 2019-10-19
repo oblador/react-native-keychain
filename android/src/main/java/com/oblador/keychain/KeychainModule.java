@@ -34,6 +34,8 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
+import androidx.fragment.app.FragmentActivity;
+
 public class KeychainModule extends ReactContextBaseJavaModule {
     public static final String E_EMPTY_PARAMETERS = "E_EMPTY_PARAMETERS";
     public static final String E_CRYPTO_FAILED = "E_CRYPTO_FAILED";
@@ -66,7 +68,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
         addCipherStorageToMap(new CipherStorageFacebookConceal(reactContext));
         addCipherStorageToMap(new CipherStorageKeystoreAESCBC());
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            addCipherStorageToMap(new CipherStorageKeystoreRSAECB(reactContext));
+            addCipherStorageToMap(new CipherStorageKeystoreRSAECB(reactContext, (FragmentActivity) getCurrentActivity()));
         }
     }
 
@@ -333,7 +335,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
             throw new CryptoFailedException("Unsupported Android SDK " + Build.VERSION.SDK_INT);
         }
 
-        currentCipherStorage.setCurrentActivity(getCurrentActivity());
+        // currentCipherStorage.setCurrentActivity(getCurrentActivity());
 
         return currentCipherStorage;
     }
@@ -354,7 +356,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     private CipherStorage getCipherStorageByName(String cipherStorageName) {
         CipherStorage storage = cipherStorageMap.get(cipherStorageName);
 
-        storage.setCurrentActivity(getCurrentActivity());
+        // storage.setCurrentActivity(getCurrentActivity());
 
         return storage;
     }

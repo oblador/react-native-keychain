@@ -57,7 +57,7 @@ public interface CipherStorage {
 
     int getMinSupportedApiLevel();
 
-    void setCurrentActivity(Activity activity);
+    // void setCurrentActivity(Activity activity);
     SecurityLevel securityLevel();
 
     boolean supportsSecureHardware();

@@ -7,7 +7,7 @@ import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyPermanentlyInvalidatedException;
 import android.security.keystore.KeyInfo;
 import android.security.keystore.KeyProperties;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.oblador.keychain.SecurityLevel;
 import com.oblador.keychain.exceptions.CryptoFailedException;
@@ -36,7 +36,6 @@ import javax.crypto.spec.IvParameterSpec;
 @TargetApi(Build.VERSION_CODES.M)
 public class CipherStorageKeystoreAESCBC extends CipherStorageKeystoreBase {
     public static final String CIPHER_STORAGE_NAME = "KeystoreAESCBC";
-    public static final String DEFAULT_SERVICE = "RN_KEYCHAIN_DEFAULT_ALIAS";
     public static final String KEYSTORE_TYPE = "AndroidKeyStore";
     public static final String ENCRYPTION_ALGORITHM = KeyProperties.KEY_ALGORITHM_AES;
     public static final String ENCRYPTION_BLOCK_MODE = KeyProperties.BLOCK_MODE_CBC;
@@ -191,9 +190,9 @@ public class CipherStorageKeystoreAESCBC extends CipherStorageKeystoreBase {
     }
 
     @Override
-    public void setCurrentActivity(Activity activity) {
+   // public void setCurrentActivity(Activity activity) {
         // AESCBC does not need the current activity
-    }
+    //}
 
     @TargetApi(Build.VERSION_CODES.M)
     protected KeyGenParameterSpec.Builder getKeyGenSpecBuilder(String service) {

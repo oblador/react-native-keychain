@@ -117,8 +117,8 @@ public class CipherStorageFacebookConceal implements CipherStorage {
         return KEYCHAIN_DATA + ":" + service;
     }
 
-    @Override
-    public void setCurrentActivity(Activity activity) {
+//    @Override
+//    public void setCurrentActivity(Activity activity) {
         // Facebook conceal does not need the current activity
-    }
+//    }
 }

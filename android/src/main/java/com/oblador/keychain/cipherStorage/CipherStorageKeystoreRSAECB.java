@@ -23,7 +23,6 @@ import com.facebook.react.bridge.ReactContext;
 import com.oblador.keychain.SecurityLevel;
 import com.oblador.keychain.exceptions.CryptoFailedException;
 import com.oblador.keychain.exceptions.KeyStoreAccessException;
-import com.oblador.keychain.supportBiometric.BiometricPrompt;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -48,10 +47,11 @@ import javax.crypto.Cipher;
 import javax.crypto.CipherInputStream;
 import javax.crypto.CipherOutputStream;
 
-import static com.oblador.keychain.supportBiometric.BiometricPrompt.*;
+import androidx.biometric.BiometricPrompt;
+import androidx.fragment.app.FragmentActivity;
 
 @RequiresApi(Build.VERSION_CODES.M)
-public class CipherStorageKeystoreRSAECB extends CipherStorageKeystoreBase implements AuthenticationCallback {
+public class CipherStorageKeystoreRSAECB extends CipherStorageKeystoreBase {
     public static final String CIPHER_STORAGE_NAME = "KeystoreRSAECB";
     public static final String KEYSTORE_TYPE = "AndroidKeyStore";
     public static final String ENCRYPTION_ALGORITHM = KeyProperties.KEY_ALGORITHM_RSA;
@@ -67,7 +67,7 @@ public class CipherStorageKeystoreRSAECB extends CipherStorageKeystoreBase imple
     private BiometricPrompt mBiometricPrompt;
     private KeyguardManager mKeyguardManager;
     private ReactContext mReactContext;
-    private Activity mActivity;
+    private FragmentActivity mActivity;
 
     class CipherDecryptionParams {
         public final DecryptionResultHandler resultHandler;
@@ -85,8 +85,9 @@ public class CipherStorageKeystoreRSAECB extends CipherStorageKeystoreBase imple
 
     private CipherDecryptionParams mDecryptParams;
 
-    public CipherStorageKeystoreRSAECB(ReactApplicationContext reactContext) {
+    public CipherStorageKeystoreRSAECB(ReactApplicationContext reactContext, FragmentActivity activity) {
         mReactContext = reactContext;
+        mActivity = activity;
 
         mKeyguardManager = (KeyguardManager) reactContext.getSystemService(Context.KEYGUARD_SERVICE);
     }
@@ -107,7 +108,7 @@ public class CipherStorageKeystoreRSAECB extends CipherStorageKeystoreBase imple
     public void onAuthenticationFailed() {}
 
     @Override
-    public void onAuthenticationSucceeded(@NonNull AuthenticationResult result) {
+    public void onAuthenticationSucceeded(@NonNull BiometricPrompt.AuthenticationResult result) {
         if (mDecryptParams != null && mDecryptParams.resultHandler != null) {
             try {
                 String decryptedUsername = decryptBytes(mDecryptParams.key, mDecryptParams.username);
@@ -139,14 +140,13 @@ public class CipherStorageKeystoreRSAECB extends CipherStorageKeystoreBase imple
         mBiometricPrompt = new BiometricPrompt(mActivity, Executors.newSingleThreadExecutor(), this);
         mBiometricPromptCancellationSignal = new CancellationSignal();
 
-        PromptInfo promptInfo = new PromptInfo.Builder()
+        BiometricPrompt.PromptInfo promptInfo = new BiometricPrompt.PromptInfo.Builder()
                 .setTitle("Authentication required")
                 .setNegativeButtonText("Cancel")
                 .setSubtitle("Please use biometric authentication to unlock the app")
                 .build();
 
         mBiometricPrompt.authenticate(promptInfo);
-        mReactContext.addLifecycleEventListener(mBiometricPrompt);
     }
 
     // returns true if the key was generated successfully
@@ -315,8 +315,8 @@ public class CipherStorageKeystoreRSAECB extends CipherStorageKeystoreBase imple
         }
     }
 
-    @Override
-    public void setCurrentActivity(Activity activity) {
-      mActivity = activity;
-    }
+    // @Override
+    // public void setCurrentActivity(Activity activity) {
+      // mActivity = activity;
+//    }
 }
