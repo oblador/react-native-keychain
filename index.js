@@ -63,11 +63,11 @@ export type Options = {
  * on the current device.
  * @return {Promise} Resolves to `SECURITY_LEVEL` when supported, otherwise `null`.
  */
-export function getSecurityLevel(): Promise<?($Values<typeof SECURITY_LEVEL>)> {
+export function getSecurityLevel(options?: Options): Promise<?($Values<typeof SECURITY_LEVEL>)> {
     if (!RNKeychainManager.getSecurityLevel){
         return Promise.resolve(null);
     }
-    return RNKeychainManager.getSecurityLevel();
+    return RNKeychainManager.getSecurityLevel(getAccessControl(options));
 }
 
 /**
@@ -166,6 +166,16 @@ function getOptionsArgument(serviceOrOptions?: string | Options) {
   return typeof serviceOrOptions === 'string'
     ? { service: serviceOrOptions }
     : serviceOrOptions;
+}
+
+function getAccessControl(serviceOrOptions?: string | Options) {
+  var accessControl = null;
+
+  if (typeof serviceOrOptions === 'object') {
+    accessControl = serviceOrOptions.accessControl;
+  }
+
+  return accessControl;
 }
 
 function getMinimumSecurityLevel(serviceOrOptions?: string | Options) {
