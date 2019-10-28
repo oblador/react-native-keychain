@@ -76,7 +76,7 @@ export default class KeychainExample extends Component {
         style={styles.container}
       >
         <View style={styles.content}>
-          <Text style={styles.title}>Keychain Example</Text>
+          <Text style={styles.title}>Keychain Example RN61</Text>
           <View style={styles.field}>
             <Text style={styles.label}>Username</Text>
             <TextInput

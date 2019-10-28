@@ -1,5 +1,11 @@
 rootProject.name = 'KeychainExample'
+
+def rnKeychainDir = new File(rootProject.projectDir, '../node_modules/react-native-keychain/android')
+if(!rnKeychainDir.exists()) {
+  throw new GradleException("`react-native-keychain` module folder not found. " +
+    "Project node_modules not in sync. Please run `yarn` first.")
+}
 include ':react-native-keychain'
-project(':react-native-keychain').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-keychain/android')
+project(':react-native-keychain').projectDir = rnKeychainDir
 
 include ':app'
