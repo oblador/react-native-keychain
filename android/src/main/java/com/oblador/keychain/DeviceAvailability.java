@@ -1,24 +1,51 @@
 package com.oblador.keychain;
 
-import android.os.Build;
-import android.content.Context;
+import android.Manifest;
 import android.app.KeyguardManager;
-import android.hardware.fingerprint.FingerprintManager;
+import android.content.Context;
+import android.os.Build;
 
+import androidx.annotation.NonNull;
+import androidx.biometric.BiometricManager;
+
+import static android.content.pm.PackageManager.PERMISSION_GRANTED;
+import static androidx.biometric.BiometricManager.BIOMETRIC_SUCCESS;
+
+/**
+ * @see <a href="https://stackoverflow.com/questions/50968732/determine-if-biometric-hardware-is-present-and-the-user-has-enrolled-biometrics">Biometric hradware</a>
+ */
+@SuppressWarnings("WeakerAccess")
 public class DeviceAvailability {
-    public static boolean isFingerprintAuthAvailable(Context context) {
-        if (android.os.Build.VERSION.SDK_INT >= 23) {
-            FingerprintManager fingerprintManager =
-                (FingerprintManager) context.getSystemService(Context.FINGERPRINT_SERVICE);
-            return fingerprintManager != null && fingerprintManager.isHardwareDetected() &&
-                fingerprintManager.hasEnrolledFingerprints();
-        }
-        return false;
+  public static boolean isFingerprintAuthAvailable(@NonNull final Context context) {
+    return BiometricManager.from(context).canAuthenticate() == BIOMETRIC_SUCCESS;
+  }
+
+  /** Check is permissions granted for biometric things. */
+  public static boolean isPermissionsGranted(@NonNull final Context context) {
+    // before api23 no permissions for biometric, no hardware == no permissions
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+      return false;
     }
 
-    public static boolean isDeviceSecure(Context context) {
-        KeyguardManager keyguardManager =
-                (KeyguardManager) context.getSystemService(Context.KEYGUARD_SERVICE);
-        return Build.VERSION.SDK_INT >= 23 && keyguardManager != null && keyguardManager.isDeviceSecure();
+    final KeyguardManager km =
+      (KeyguardManager) context.getSystemService(Context.KEYGUARD_SERVICE);
+    if( !km.isKeyguardSecure() ) return false;
+
+    // api28+
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+      return context.checkSelfPermission(Manifest.permission.USE_BIOMETRIC) == PERMISSION_GRANTED;
     }
+
+    // before api28
+    return context.checkSelfPermission(Manifest.permission.USE_FINGERPRINT) == PERMISSION_GRANTED;
+  }
+
+  public static boolean isDeviceSecure(@NonNull final Context context) {
+    final KeyguardManager km =
+      (KeyguardManager) context.getSystemService(Context.KEYGUARD_SERVICE);
+
+    return Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
+      km != null &&
+      km.isDeviceSecure();
+  }
 }

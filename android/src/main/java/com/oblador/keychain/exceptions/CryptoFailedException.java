@@ -1,11 +1,25 @@
 package com.oblador.keychain.exceptions;
 
-public class CryptoFailedException extends Exception {
-    public CryptoFailedException (String message) {
-        super(message);
-    }
+import androidx.annotation.Nullable;
 
-    public CryptoFailedException (String message, Throwable t) {
-        super(message, t);
-    }
+import java.security.GeneralSecurityException;
+
+public class CryptoFailedException extends GeneralSecurityException {
+  public CryptoFailedException(String message) {
+    super(message);
+  }
+
+  public CryptoFailedException(String message, Throwable t) {
+    super(message, t);
+  }
+
+  public static void reThrowOnError(@Nullable final Throwable error) throws CryptoFailedException {
+    if(null == error) return;
+
+    if (error instanceof CryptoFailedException)
+      throw (CryptoFailedException) error;
+
+    throw new CryptoFailedException("Wrapped error: " + error.getMessage(), error);
+
+  }
 }
