@@ -452,7 +452,7 @@ RCT_EXPORT_METHOD(resetInternetCredentialsForServer:(NSString *)server withOptio
   return resolve(@(YES));
 }
 
-#if TARGET_OS_IOS
+#if TARGET_OS_IOS && !TARGET_OS_UIKITFORMAC
 RCT_EXPORT_METHOD(requestSharedWebCredentials:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
 {
   SecRequestSharedWebCredential(NULL, NULL, ^(CFArrayRef credentials, CFErrorRef error) {
