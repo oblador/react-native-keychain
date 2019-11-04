@@ -193,6 +193,7 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   input: {
+    color: '#000',
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: '#ccc',
     backgroundColor: 'white',
