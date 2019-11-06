@@ -199,33 +199,6 @@ include ':app'
 + project(':react-native-keychain').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-keychain/android')
 ```
 
-* Edit `android/build.gradle` to look like this:
-
-```diff
-allprojects {
-  repositories {
-    mavenLocal()
-    jcenter()
-    google()
-    maven {
-      // All of React Native (JS, Obj-C sources, Android binaries) is installed from npm
-      url "$rootDir/../node_modules/react-native/android"
-    }
-    maven {
-      // Android JSC is installed from npm
-      url("$rootDir/../node_modules/jsc-android/dist")
-    }
-+    flatDir {
-+      dirs "$rootDir/../node_modules/react-native-keychain/android/build/intermediates/repack"
-+    }
-+    flatDir {
-+      dirs "$rootDir/../node_modules/react-native-keychain/android/build/intermediates/compatibility"
-+    }
-  }
-}
-
-```
-
 * Edit `android/app/build.gradle` (note: **app** folder) to look like this: 
 
 ```diff

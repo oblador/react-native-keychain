@@ -9,15 +9,22 @@ in this folder
 To run the app on iOS starting from the KeychainExample folder execute
 the following commands:
 
-```
-$ cd ios
-$ pod install
-$ cd ..
-$ react-native run-ios
+```bash
+cd ios
+
+# verify updates: pod install --clean-install --repo-update --deployment
+# forced updates: pod install --clean-install --repo-update
+#
+# Or regular usage:
+pod install
+
+cd ..
+react-native run-ios
 ``` 
 
 ## Android
 just run
-```
-$ react-native run-android
+
+```bash
+react-native run-android
 ```
