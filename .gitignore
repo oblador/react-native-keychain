@@ -50,3 +50,8 @@ project.xcworkspace
 local.properties
 .idea/
 *.iml
+
+# Vscode / Eclipse
+.settings/
+.project
+.classpath
