@@ -76,7 +76,7 @@ export default class KeychainExample extends Component {
         style={styles.container}
       >
         <View style={styles.content}>
-          <Text style={styles.title}>Keychain Example RN61</Text>
+          <Text style={styles.title}>Keychain Example</Text>
           <View style={styles.field}>
             <Text style={styles.label}>Username</Text>
             <TextInput
@@ -147,21 +147,19 @@ export default class KeychainExample extends Component {
               </View>
             </TouchableHighlight>
 
-            <TouchableHighlight
-              onPress={async() => {
-                if (Platform.OS !== 'android') {
-                  alert('android-only feature');
-                  return;
-                }
-                const level = await Keychain.getSecurityLevel();
-                alert(level)
-              }}
-              style={styles.button}
-            >
-              <View style={styles.load}>
-                <Text style={styles.buttonText}>Get security level</Text>
-              </View>
-            </TouchableHighlight>
+            {Platform.OS === 'android' &&
+              <TouchableHighlight
+                onPress={async() => {
+                  const level = await Keychain.getSecurityLevel();
+                  alert(level)
+                }}
+                style={styles.button}
+              >
+                <View style={styles.load}>
+                  <Text style={styles.buttonText}>Get security level</Text>
+                </View>
+              </TouchableHighlight>
+            }
           </View>
         </View>
       </KeyboardAvoidingView>
