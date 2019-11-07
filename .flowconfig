@@ -15,6 +15,10 @@ node_modules/warning/.*
 ; Flow doesn't support platforms
 .*/Libraries/Utilities/LoadingView.js
 
+; Example node_modules
+<PROJECT_ROOT>/KeychainExample/node_modules/
+<PROJECT_ROOT>/node_modules/fbjs/.*
+
 [untyped]
 .*/node_modules/@react-native-community/cli/.*/.*
 
@@ -30,9 +34,14 @@ emoji=true
 esproposal.optional_chaining=enable
 esproposal.nullish_coalescing=enable
 
+module.system=haste
+
 module.file_ext=.js
+module.file_ext=.jsx
 module.file_ext=.json
 module.file_ext=.ios.js
+module.file_ext=.android.js
+module.file_ext=.native.js
 
 munge_underscores=true
 
