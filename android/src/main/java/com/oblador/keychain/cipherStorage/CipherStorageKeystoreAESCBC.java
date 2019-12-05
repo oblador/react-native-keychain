@@ -155,7 +155,13 @@ public class CipherStorageKeystoreAESCBC implements CipherStorage {
             secretKey = tryGenerateRegularSecurityKey(service);
         }
 
-        if(!validateKeySecurityLevel(requiredLevel, secretKey)) {
+        if (!validateKeySecurityLevel(requiredLevel, secretKey)) {
+            try {
+                removeKey(service);
+            } catch (KeyStoreAccessException e) {
+                Log.e(TAG, "Unable to remove key from keychain", e);
+            }
+
             throw new CryptoFailedException("Cannot generate keys with required security guarantees");
         }
     }
