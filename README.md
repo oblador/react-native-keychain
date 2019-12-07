@@ -4,7 +4,7 @@
 
 [![Travis](https://img.shields.io/travis/oblador/react-native-keychain.svg)](https://travis-ci.org/oblador/react-native-keychain) [![npm](https://img.shields.io/npm/v/react-native-keychain.svg)](https://npmjs.com/package/react-native-keychain) [![npm](https://img.shields.io/npm/dm/react-native-keychain.svg)](https://npmjs.com/package/react-native-keychain)
 
-Keychain/Keystore Access for React Native. 
+Keychain/Keystore Access for React Native.
 
 ## Installation
 
@@ -46,7 +46,7 @@ See `KeychainExample` for fully working project example.
 
 Both `setGenericPassword` and `setInternetCredentials` are limited to strings only, so if you need to store objects etc, please use `JSON.stringify`/`JSON.parse` when you store/access it.
 
-### `setGenericPassword(username, password, [{ accessControl, accessible, accessGroup, service, securityLevel }])`
+### `setGenericPassword(username, password, [{ accessControl, accessible, accessGroup, service, securityLevel, useStrongBox }])`
 
 Will store the username/password combination in the secure storage. Resolves to `true` or rejects in case of an error.
 
@@ -102,6 +102,12 @@ If set, `securityLevel` parameter specifies minimum security level that the encr
 * `ANY` - no security guarantees needed (default value); Credentials can be stored in FB Secure Storage;
 * `SECURE_SOFTWARE` - requires for the key to be stored in the Android Keystore, separate from the encrypted data;
 * `SECURE_HARDWARE` - requires for the key to be stored on a secure hardware (Trusted Execution Environment or Secure Environment). Read [this article](https://developer.android.com/training/articles/keystore#ExtractionPrevention) for more information.
+
+### Use StrongBox (Android only)
+
+[StrongBox](https://developer.android.com/training/articles/keystore#HardwareSecurityModule) is an implementation of the Keymaster HAL that resides in a hardware security module. In order to prevent errors with different hardwares and keep the same encryptation method through all android devices, it's possible to skip the usage of it.
+
+If the option `useStrongBox` is set as `false`, the security key would be generated using the regular service. Default: `true`
 
 ### Options
 
@@ -200,7 +206,7 @@ include ':app'
 + project(':react-native-keychain').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-keychain/android')
 ```
 
-* Edit `android/app/build.gradle` (note: **app** folder) to look like this: 
+* Edit `android/app/build.gradle` (note: **app** folder) to look like this:
 
 ```diff
 apply plugin: 'com.android.application'
@@ -238,7 +244,7 @@ public class MainActivity extends extends ReactActivity {
   ...
 }
 ```
-  
+
 #### Proguard Rules
 
 On Android builds that use proguard (like release), you may see the following error:
@@ -298,7 +304,7 @@ Now your tests should run successfully, though note that writing and reading to 
 
 ## Notes
 
-### Android 
+### Android
 
 The module will automatically use the appropriate CipherStorage implementation based on API level:
 
