@@ -56,6 +56,7 @@ export type Options = {
   authenticationType?: LAPolicy,
   service?: string,
   securityLevel?: SecMinimumLevel,
+  useStrongBox?: boolean
 };
 
 /**
