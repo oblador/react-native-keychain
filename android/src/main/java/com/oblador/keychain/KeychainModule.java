@@ -72,7 +72,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void setGenericPasswordForOptions(String service, String username, String password, String minimumSecurityLevel, Promise promise) {
+    public void setGenericPasswordForOptions(String service, String username, String password, String minimumSecurityLevel, boolean useStrongBox, Promise promise) {
         try {
             SecurityLevel level = SecurityLevel.valueOf(minimumSecurityLevel);
             if (username == null || username.isEmpty() || password == null || password.isEmpty()) {
@@ -83,7 +83,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
             CipherStorage currentCipherStorage = getCipherStorageForCurrentAPILevel();
             validateCipherStorageSecurityLevel(currentCipherStorage, level);
 
-            EncryptionResult result = currentCipherStorage.encrypt(service, username, password, level);
+            EncryptionResult result = currentCipherStorage.encrypt(service, username, password, level, useStrongBox);
             prefsStorage.storeEncryptedEntry(service, result);
 
             promise.resolve(true);
@@ -152,7 +152,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
 
     private void migrateCipherStorage(String service, CipherStorage newCipherStorage, CipherStorage oldCipherStorage, DecryptionResult decryptionResult) throws KeyStoreAccessException, CryptoFailedException {
         // don't allow to degrade security level when transferring, the new storage should be as safe as the old one.
-        EncryptionResult encryptionResult = newCipherStorage.encrypt(service, decryptionResult.username, decryptionResult.password, decryptionResult.getSecurityLevel());
+        EncryptionResult encryptionResult = newCipherStorage.encrypt(service, decryptionResult.username, decryptionResult.password, decryptionResult.getSecurityLevel(), false);
         // store the encryption result
         prefsStorage.storeEncryptedEntry(service, encryptionResult);
         // clean up the old cipher storage
@@ -198,7 +198,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
 
     @ReactMethod
     public void setInternetCredentialsForServer(@NonNull String server, String username, String password, String minimumSecurityLevel, ReadableMap unusedOptions, Promise promise) {
-        setGenericPasswordForOptions(server, username, password, minimumSecurityLevel, promise);
+        setGenericPasswordForOptions(server, username, password, minimumSecurityLevel, false, promise);
     }
 
     @ReactMethod

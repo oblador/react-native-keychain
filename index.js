@@ -178,6 +178,16 @@ function getMinimumSecurityLevel(serviceOrOptions?: string | Options) {
   return specifiedLevel || SECURITY_LEVEL.ANY;
 }
 
+function getUseStrongBoxOption(serviceOrOptions?: string | Options) {
+  var useStrongBox = true;
+
+  if (typeof serviceOrOptions === 'object') {
+    useStrongBox = serviceOrOptions.useStrongBox;
+  }
+
+  return useStrongBox;
+}
+
 /**
  * Saves the `username` and `password` combination for `service`.
  * @param {string} username Associated username or e-mail to be saved.
@@ -194,7 +204,8 @@ export function setGenericPassword(
     getOptionsArgument(serviceOrOptions),
     username,
     password,
-    getMinimumSecurityLevel(serviceOrOptions)
+    getMinimumSecurityLevel(serviceOrOptions),
+    getUseStrongBoxOption(serviceOrOptions)
   );
 }
 

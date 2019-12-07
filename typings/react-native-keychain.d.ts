@@ -41,7 +41,7 @@ declare module 'react-native-keychain' {
         SECURE_HARDWARE,
         ANY
     }
-  
+
     export enum BIOMETRY_TYPE {
         TOUCH_ID = 'TouchID',
         FACE_ID = 'FaceID',
@@ -56,6 +56,7 @@ declare module 'react-native-keychain' {
         authenticationType?: LAPolicy;
         service?: string;
         securityLevel? : SECURITY_LEVEL;
+        useStrongBox? : boolean
     }
 
     function canImplyAuthentication(

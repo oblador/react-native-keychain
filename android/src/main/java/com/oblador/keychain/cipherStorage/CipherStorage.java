@@ -39,7 +39,7 @@ public interface CipherStorage {
       }
     }
 
-    EncryptionResult encrypt(@NonNull String service, @NonNull String username, @NonNull String password, SecurityLevel level) throws CryptoFailedException;
+    EncryptionResult encrypt(@NonNull String service, @NonNull String username, @NonNull String password, SecurityLevel level, boolean useStrongBox) throws CryptoFailedException;
 
     DecryptionResult decrypt(@NonNull String service, @NonNull byte[] username, @NonNull byte[] password) throws CryptoFailedException;
 

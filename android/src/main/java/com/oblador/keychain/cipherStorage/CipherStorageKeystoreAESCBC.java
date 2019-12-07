@@ -88,14 +88,14 @@ public class CipherStorageKeystoreAESCBC implements CipherStorage {
 
     @TargetApi(Build.VERSION_CODES.M)
     @Override
-    public EncryptionResult encrypt(@NonNull String service, @NonNull String username, @NonNull String password, SecurityLevel level) throws CryptoFailedException {
+    public EncryptionResult encrypt(@NonNull String service, @NonNull String username, @NonNull String password, SecurityLevel level, boolean useStrongBox) throws CryptoFailedException {
         service = getDefaultServiceIfEmpty(service);
 
         try {
             KeyStore keyStore = getKeyStoreAndLoad();
 
             if (!keyStore.containsAlias(service)) {
-                generateKeyAndStoreUnderAlias(service, level);
+                generateKeyAndStoreUnderAlias(service, level, useStrongBox);
             }
 
             Key key = null;
@@ -108,7 +108,7 @@ public class CipherStorageKeystoreAESCBC implements CipherStorage {
                 if (retry) {
                     retry = false;
                     keyStore.deleteEntry(service);
-                    return encrypt(service, username, password, level);
+                    return encrypt(service, username, password, level, useStrongBox);
                 } else {
                     throw ex;
                 }
@@ -145,10 +145,10 @@ public class CipherStorageKeystoreAESCBC implements CipherStorage {
         }
     }
 
-    private void generateKeyAndStoreUnderAlias(@NonNull String service, SecurityLevel requiredLevel) throws NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException, CryptoFailedException {
+    private void generateKeyAndStoreUnderAlias(@NonNull String service, SecurityLevel requiredLevel, boolean useStrongBox) throws NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException, CryptoFailedException {
         // Firstly, try to generate the key as safe as possible (strongbox).
         // see https://developer.android.com/training/articles/keystore#HardwareSecurityModule
-        SecretKey secretKey = tryGenerateStrongBoxSecurityKey(service);
+        SecretKey secretKey = tryGenerateStrongBoxSecurityKey(service, useStrongBox);
         if (secretKey == null) {
             // If that is not possible, we generate the key in a regular way
             // (it still might be generated in hardware, but not in StrongBox)
@@ -273,8 +273,12 @@ public class CipherStorageKeystoreAESCBC implements CipherStorage {
     }
 
     @TargetApi(Build.VERSION_CODES.P)
-    private SecretKey tryGenerateStrongBoxSecurityKey(String service) throws NoSuchAlgorithmException,
+    private SecretKey tryGenerateStrongBoxSecurityKey(String service, boolean useStrongBox) throws NoSuchAlgorithmException,
       InvalidAlgorithmParameterException, NoSuchProviderException {
+        // If user set useStrongBox as false skip StrongBox usage
+        if (!useStrongBox) {
+            return null;
+        }
         // StrongBox is only supported on Android P and higher
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
             return null;
