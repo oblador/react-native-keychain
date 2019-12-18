@@ -12,7 +12,6 @@ import com.oblador.keychain.SecurityLevel;
 import com.oblador.keychain.exceptions.CryptoFailedException;
 import com.oblador.keychain.exceptions.KeyStoreAccessException;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -28,7 +27,6 @@ import java.security.spec.InvalidKeySpecException;
 import android.security.keystore.StrongBoxUnavailableException;
 
 import javax.crypto.Cipher;
-import javax.crypto.CipherInputStream;
 import javax.crypto.CipherOutputStream;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
@@ -228,33 +226,17 @@ public class CipherStorageKeystoreAESCBC implements CipherStorage {
 
     private String decryptBytes(Key key, byte[] bytes) throws CryptoFailedException {
         try {
+            int ivLength = 16;
             Cipher cipher = Cipher.getInstance(ENCRYPTION_TRANSFORMATION);
-            ByteArrayInputStream inputStream = new ByteArrayInputStream(bytes);
             // read the initialization vector from the beginning of the stream
-            IvParameterSpec ivParams = readIvFromStream(inputStream);
+            IvParameterSpec ivParams = new IvParameterSpec(bytes, 0, ivLength);
             cipher.init(Cipher.DECRYPT_MODE, key, ivParams);
-            // decrypt the bytes using a CipherInputStream
-            CipherInputStream cipherInputStream = new CipherInputStream(
-                    inputStream, cipher);
-            ByteArrayOutputStream output = new ByteArrayOutputStream();
-            byte[] buffer = new byte[1024];
-            while (true) {
-                int n = cipherInputStream.read(buffer, 0, buffer.length);
-                if (n <= 0) {
-                    break;
-                }
-                output.write(buffer, 0, n);
-            }
-            return new String(output.toByteArray(), Charset.forName("UTF-8"));
+
+            byte[] decryptedBytes = cipher.doFinal(bytes, ivLength, bytes.length - ivLength);
+            return new String(decryptedBytes, Charset.forName("UTF-8"));
         } catch (Exception e) {
             throw new CryptoFailedException("Could not decrypt bytes: " + e.getMessage(), e);
         }
-    }
-
-    private IvParameterSpec readIvFromStream(ByteArrayInputStream inputStream) {
-        byte[] iv = new byte[16];
-        inputStream.read(iv, 0, iv.length);
-        return new IvParameterSpec(iv);
     }
 
     private KeyStore getKeyStoreAndLoad() throws KeyStoreException, KeyStoreAccessException {
