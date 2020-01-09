@@ -18,7 +18,7 @@ Keychain/Keystore Access for React Native.
 ## Usage
 
 ```js
-import * as Keychain from 'react-native-keychain';
+import Keychain from 'react-native-keychain';
 
 async () => {
   const username = 'zuck';

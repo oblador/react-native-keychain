@@ -271,3 +271,31 @@ export function setSharedWebCredentials(
     password
   );
 }
+
+export default {
+    SECURITY_LEVEL,
+    ACCESSIBLE,
+    ACCESS_CONTROL,
+    AUTHENTICATION_TYPE,
+    BIOMETRY_TYPE,
+    SecAccessible,
+    SecAccessControl,
+    LAPolicy,
+    SecMinimumLevel,
+    Options,
+    getSecurityLevel,
+    canImplyAuthentication,
+    getSupportedBiometryType,
+    setInternetCredentials,
+    UserCredentials,
+    getInternetCredentials,
+    resetInternetCredentials,
+    getOptionsArgument,
+    getMinimumSecurityLevel,
+    setGenericPassword,
+    SharedWebCredentials,
+    getGenericPassword,
+    resetGenericPassword,
+    requestSharedWebCredentials,
+    setSharedWebCredentials
+}
