@@ -272,16 +272,6 @@ export function setSharedWebCredentials(
   );
 }
 
-export type {
-    SecAccessible,
-    SecAccessControl,
-    LAPolicy,
-    SecMinimumLevel,
-    Options,
-    UserCredentials,
-    SharedWebCredentials,
-};
-
 export default {
     SECURITY_LEVEL,
     ACCESSIBLE,
