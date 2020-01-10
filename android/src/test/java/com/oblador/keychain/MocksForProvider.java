@@ -56,7 +56,7 @@ public final class MocksForProvider {
     when(service.getProvider()).thenReturn(provider);
     when(kpgSpi.generateKeyPair()).thenReturn(keyPair);
     when(keyPair.getPrivate()).thenReturn(privateKey);
-    when(keyInfo.isInsideSecureHardware()).thenReturn(true);
+    when(keyInfo.isInsideSecureHardware()).thenReturn(true, false);
 
     when(kgSpi.engineGenerateKey()).thenReturn(secretKey);
     when(skfSpi.engineGetKeySpec(any(), any())).thenReturn(keyInfo);

@@ -5,6 +5,7 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.hardware.fingerprint.FingerprintManager;
 import android.os.Build;
+import android.security.keystore.KeyInfo;
 
 import androidx.biometric.BiometricManager;
 
@@ -33,6 +34,7 @@ import org.robolectric.RuntimeEnvironment;
 import org.robolectric.annotation.Config;
 
 import java.security.Security;
+import java.util.HashMap;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
@@ -368,12 +370,6 @@ public class KeychainModuleTests {
 
     // THEN:
     verify(mockPromise).resolve(SecurityLevel.ANY.name());
-
-//    module.getSecurityLevel(KeychainModule.ACCESS_CONTROL_BIOMETRY_ANY, mockPromise);
-//    verify(mockPromise).resolve(SecurityLevel.SECURE_HARDWARE.name());
-//    module.getSecurityLevel(KeychainModule.ACCESS_CONTROL_BIOMETRY_CURRENT_SET, mockPromise);
-//    verify(mockPromise).resolve(SecurityLevel.SECURE_SOFTWARE.name());
-//    verify(mockPromise).resolve(SecurityLevel.ANY.name());
   }
 
   @Test
@@ -399,10 +395,27 @@ public class KeychainModuleTests {
     final KeychainModule module = new KeychainModule(context);
     final Promise mockPromise = mock(Promise.class);
 
+    // set key info - software method
+    provider.getService("SecretKeyFactory", null);
+    final HashMap<String, MocksForProvider> mocks = provider.mocks.get("SecretKeyFactory");
+    assertThat(mocks, notNullValue());
+
+    final MocksForProvider mocksForProvider = mocks.get(null);
+    assertThat(mocksForProvider, notNullValue());
+
+    final KeyInfo keyInfo = mocksForProvider.keyInfo;
+    Mockito.reset(keyInfo);
+    when(keyInfo.isInsideSecureHardware()).thenReturn(false);
+
     // WHEN:
     module.getSecurityLevel(AccessControl.DEVICE_PASSCODE, mockPromise);
 
     // THEN:
+    // expected AesCbc usage
+    assertThat(provider.mocks.get("KeyGenerator"), notNullValue());
+    assertThat(provider.mocks.get("KeyGenerator").get("AES"), notNullValue());
+    assertThat(provider.mocks.get("KeyPairGenerator"), notNullValue());
+    assertThat(provider.mocks.get("KeyPairGenerator").get("RSA"), notNullValue());
     verify(mockPromise).resolve(SecurityLevel.SECURE_SOFTWARE.name());
   }
 

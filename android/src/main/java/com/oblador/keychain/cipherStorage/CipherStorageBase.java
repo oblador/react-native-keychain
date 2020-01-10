@@ -228,7 +228,9 @@ abstract public class CipherStorageBase implements CipherStorage {
 
     // lower API23 we don't have any hardware support
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-      if (keyInfo.isInsideSecureHardware()) {
+      final boolean insideSecureHardware = keyInfo.isInsideSecureHardware();
+
+      if (insideSecureHardware) {
         return SECURE_HARDWARE;
       }
     }
