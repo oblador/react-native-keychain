@@ -71,3 +71,8 @@ buck-out/
 
 # Merge backups kdiff3
 *.orig
+
+# Root project gradle
+gradle/wrapper/
+gradlew
+gradlew.bat
