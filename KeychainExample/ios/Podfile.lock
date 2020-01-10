@@ -217,7 +217,7 @@ PODS:
     - React-cxxreact (= 0.61.2)
     - React-jsi (= 0.61.2)
     - ReactCommon/jscallinvoker (= 0.61.2)
-  - RNKeychain (4.0.1):
+  - RNKeychain (4.0.5):
     - React
   - Yoga (1.14.0)
 
@@ -335,7 +335,7 @@ SPEC CHECKSUMS:
   React-RCTText: e3ef6191cdb627855ff7fe8fa0c1e14094967fb8
   React-RCTVibration: fb54c732fd20405a76598e431aa2f8c2bf527de9
   ReactCommon: 5848032ed2f274fcb40f6b9ec24067787c42d479
-  RNKeychain: 45dbd50d1ac4bd42c3740f76ffb135abf05746d0
+  RNKeychain: 840f8e6f13be0576202aefcdffd26a4f54bfe7b5
   Yoga: 14927e37bd25376d216b150ab2a561773d57911f
 
 PODFILE CHECKSUM: 601b1a371f876590ac2f7b236a362d239f4217de

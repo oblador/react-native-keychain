@@ -38,23 +38,28 @@ import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-import static com.oblador.keychain.SecurityLevel.ANY;
-import static com.oblador.keychain.SecurityLevel.SECURE_HARDWARE;
-import static com.oblador.keychain.SecurityLevel.SECURE_SOFTWARE;
-
 @SuppressWarnings({"unused", "WeakerAccess"})
 public class KeychainModule extends ReactContextBaseJavaModule {
   //region Constants
   public static final String KEYCHAIN_MODULE = "RNKeychainManager";
   public static final String FINGERPRINT_SUPPORTED_NAME = "Fingerprint";
   public static final String EMPTY_STRING = "";
-  public static final String ACCESS_CONTROL_BIOMETRY_ANY = "BiometryAny";
-  public static final String ACCESS_CONTROL_BIOMETRY_CURRENT_SET = "BiometryCurrentSet";
+
+  @interface AccessControl {
+    String USER_PRESENCE = "UserPresence";
+    String BIOMETRY_ANY = "BiometryAny";
+    String BIOMETRY_CURRENT_SET = "BiometryCurrentSet";
+    String DEVICE_PASSCODE = "DevicePasscode";
+    String APPLICATION_PASSWORD = "ApplicationPassword";
+    String BIOMETRY_ANY_OR_DEVICE_PASSCODE = "BiometryAnyOrDevicePasscode";
+    String BIOMETRY_CURRENT_SET_OR_DEVICE_PASSCODE = "BiometryCurrentSetOrDevicePasscode";
+  }
 
   @interface Maps {
     String SERVICE = "service";
     String USERNAME = "username";
     String PASSWORD = "password";
+    String ACCESS_CONTROL = "accessControl";
   }
 
   @interface Errors {
@@ -103,9 +108,9 @@ public class KeychainModule extends ReactContextBaseJavaModule {
   public Map<String, Object> getConstants() {
     final Map<String, Object> constants = new HashMap<>();
 
-    constants.put(ANY.jsName(), ANY.name());
-    constants.put(SECURE_SOFTWARE.jsName(), SECURE_SOFTWARE.name());
-    constants.put(SECURE_HARDWARE.jsName(), SECURE_HARDWARE.name());
+    constants.put(SecurityLevel.ANY.jsName(), SecurityLevel.ANY.name());
+    constants.put(SecurityLevel.SECURE_SOFTWARE.jsName(), SecurityLevel.SECURE_SOFTWARE.name());
+    constants.put(SecurityLevel.SECURE_HARDWARE.jsName(), SecurityLevel.SECURE_HARDWARE.name());
 
     return constants;
   }
@@ -113,11 +118,13 @@ public class KeychainModule extends ReactContextBaseJavaModule {
 
   //region React Methods
   @ReactMethod
-  public void getSecurityLevel(@NonNull final String accessControl,
+  public void getSecurityLevel(@Nullable final String accessControl,
                                @NonNull final Promise promise) {
     final boolean useBiometry = getUseBiometry(accessControl);
 
-    promise.resolve(getSecurityLevel().name());
+    // TODO (olku): if forced biometry than we should return security level = HARDWARE if it supported
+
+    promise.resolve(getSecurityLevel(useBiometry).name());
   }
 
   @ReactMethod
@@ -125,13 +132,15 @@ public class KeychainModule extends ReactContextBaseJavaModule {
                                            @NonNull final String username,
                                            @NonNull final String password,
                                            @NonNull final String minimumSecurityLevel,
+                                           @NonNull final String accessControl,
                                            @NonNull final Promise promise) {
     try {
       throwIfEmptyLoginPassword(username, password);
 
       final SecurityLevel level = SecurityLevel.valueOf(minimumSecurityLevel);
+      final boolean useBiometry = getUseBiometry(accessControl);
       final String safeService = getDefaultServiceIfNull(service);
-      final CipherStorage storage = getCipherStorageForCurrentAPILevel();
+      final CipherStorage storage = getCipherStorageForCurrentAPILevel(useBiometry);
 
       throwIfInsufficientLevel(storage, level);
 
@@ -156,10 +165,12 @@ public class KeychainModule extends ReactContextBaseJavaModule {
 
   @ReactMethod
   public void getGenericPasswordForOptions(@Nullable final String service,
+                                           @NonNull final String accessControl,
                                            @NonNull final Promise promise) {
     try {
       final String safeService = getDefaultServiceIfNull(service);
-      final CipherStorage currentCipherStorage = getCipherStorageForCurrentAPILevel();
+      final boolean useBiometry = getUseBiometry(accessControl);
+      final CipherStorage currentCipherStorage = getCipherStorageForCurrentAPILevel(useBiometry);
       final ResultSet resultSet = prefsStorage.getEncryptedEntry(safeService);
 
       if (resultSet == null) {
@@ -239,14 +250,31 @@ public class KeychainModule extends ReactContextBaseJavaModule {
                                               String minimumSecurityLevel,
                                               ReadableMap unusedOptions,
                                               @NonNull final Promise promise) {
-    setGenericPasswordForOptions(server, username, password, minimumSecurityLevel, promise);
+    String accessControl = null;
+
+    if (null != unusedOptions && unusedOptions.hasKey(Maps.ACCESS_CONTROL)) {
+      accessControl = unusedOptions.getString(Maps.ACCESS_CONTROL);
+    }
+
+    if(null == accessControl) accessControl = AccessControl.BIOMETRY_ANY;
+
+    setGenericPasswordForOptions(server, username, password,
+      minimumSecurityLevel, accessControl, promise);
   }
 
   @ReactMethod
   public void getInternetCredentialsForServer(@NonNull String server,
                                               ReadableMap unusedOptions,
                                               @NonNull final Promise promise) {
-    getGenericPasswordForOptions(server, promise);
+    String accessControl = null;
+
+    if (null != unusedOptions && unusedOptions.hasKey(Maps.ACCESS_CONTROL)) {
+      accessControl = unusedOptions.getString(Maps.ACCESS_CONTROL);
+    }
+
+    if(null == accessControl) accessControl = AccessControl.BIOMETRY_ANY;
+
+    getGenericPasswordForOptions(server, accessControl, promise);
   }
 
   @ReactMethod
@@ -282,9 +310,11 @@ public class KeychainModule extends ReactContextBaseJavaModule {
 
   /** Is provided access control string matching biometry use request? */
   public static boolean getUseBiometry(@Nullable final String accessControl) {
-    return accessControl != null
-      && (accessControl.equals(ACCESS_CONTROL_BIOMETRY_ANY)
-      || accessControl.equals(ACCESS_CONTROL_BIOMETRY_CURRENT_SET));
+    return AccessControl.BIOMETRY_ANY.equals(accessControl)
+      || AccessControl.BIOMETRY_CURRENT_SET.equals(accessControl)
+      || AccessControl.BIOMETRY_ANY_OR_DEVICE_PASSCODE.equals(accessControl)
+      || AccessControl.BIOMETRY_CURRENT_SET_OR_DEVICE_PASSCODE.equals(accessControl)
+      || null == accessControl; /* by default we force biometry */
   }
 
   private void addCipherStorageToMap(@NonNull final CipherStorage cipherStorage) {
@@ -305,7 +335,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     // The encrypted data is encrypted using the current CipherStorage, so we just decrypt and return
     if (storageName.equals(current.getCipherStorageName())) {
       final DecryptionResultHandler handler = getInteractiveHandler(current);
-      current.decrypt(handler, alias, resultSet.username, resultSet.password, ANY);
+      current.decrypt(handler, alias, resultSet.username, resultSet.password, SecurityLevel.ANY);
 
       CryptoFailedException.reThrowOnError(handler.getError());
 
@@ -324,7 +354,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
 
     // decrypt using the older cipher storage
     final DecryptionResult decryptionResult = oldStorage.decrypt(
-      alias, resultSet.username, resultSet.password, ANY);
+      alias, resultSet.username, resultSet.password, SecurityLevel.ANY);
 
     try {
       // encrypt using the current cipher storage
@@ -372,8 +402,18 @@ public class KeychainModule extends ReactContextBaseJavaModule {
    */
   @NonNull
   /* package */ CipherStorage getCipherStorageForCurrentAPILevel() throws CryptoFailedException {
+    return getCipherStorageForCurrentAPILevel(true);
+  }
+
+  /**
+   * The "Current" CipherStorage is the cipherStorage with the highest API level that is
+   * lower than or equal to the current API level. Parameter allow to reduce level.
+   */
+  @NonNull
+  /* package */ CipherStorage getCipherStorageForCurrentAPILevel(final boolean useBiometry)
+    throws CryptoFailedException {
     final int currentApiLevel = Build.VERSION.SDK_INT;
-    final boolean isFingerprint = isFingerprintAuthAvailable();
+    final boolean isBiometry = isFingerprintAuthAvailable() && useBiometry;
     CipherStorage foundCipher = null;
 
     for (CipherStorage variant : cipherStorageMap.values()) {
@@ -391,7 +431,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
       if (foundCipher != null && capabilityLevel < foundCipher.getCapabilityLevel()) continue;
 
       // if biometric supported but not configured properly than skip
-      if (variant.isBiometrySupported() && !isFingerprint) continue;
+      if (variant.isBiometrySupported() && !isBiometry) continue;
 
       // remember storage with the best capabilities
       foundCipher = variant;
@@ -451,23 +491,23 @@ public class KeychainModule extends ReactContextBaseJavaModule {
 
   /** Resolve storage to security level it provides. */
   @NonNull
-  private SecurityLevel getSecurityLevel() {
+  private SecurityLevel getSecurityLevel(final boolean useBiometry) {
     try {
-      final CipherStorage storage = getCipherStorageForCurrentAPILevel();
+      final CipherStorage storage = getCipherStorageForCurrentAPILevel(useBiometry);
 
-      if (!storage.securityLevel().satisfiesSafetyThreshold(SECURE_SOFTWARE)) {
-        return ANY;
+      if (!storage.securityLevel().satisfiesSafetyThreshold(SecurityLevel.SECURE_SOFTWARE)) {
+        return SecurityLevel.ANY;
       }
 
-      if (isSecureHardwareAvailable()) {
-        return SECURE_HARDWARE;
+      if (storage.supportsSecureHardware()) {
+        return SecurityLevel.SECURE_HARDWARE;
       }
 
-      return SECURE_SOFTWARE;
+      return SecurityLevel.SECURE_SOFTWARE;
     } catch (CryptoFailedException e) {
       Log.w(KEYCHAIN_MODULE, "Security Level Exception: " + e.getMessage(), e);
 
-      return ANY;
+      return SecurityLevel.ANY;
     }
   }
 

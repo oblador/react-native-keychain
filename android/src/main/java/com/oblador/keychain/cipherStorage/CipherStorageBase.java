@@ -24,6 +24,7 @@ import java.security.Key;
 import java.security.KeyStore;
 import java.security.ProviderException;
 import java.security.UnrecoverableKeyException;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.crypto.Cipher;
@@ -33,7 +34,7 @@ import javax.crypto.spec.IvParameterSpec;
 
 import static com.oblador.keychain.SecurityLevel.SECURE_HARDWARE;
 
-@SuppressWarnings({"unused", "WeakerAccess"})
+@SuppressWarnings({"unused", "WeakerAccess", "CharsetObjectCanBeUsed"})
 abstract public class CipherStorageBase implements CipherStorage {
   //region Constants
   /** Logging tag. */
@@ -45,11 +46,18 @@ abstract public class CipherStorageBase implements CipherStorage {
   /** Default service name. */
   public static final String DEFAULT_ALIAS = "RN_KEYCHAIN_DEFAULT_ALIAS";
   /** Size of hash calculation buffer. Default: 4Kb. */
-  private final static int BUFFER_SIZE = 4 * 1024;
+  private static final int BUFFER_SIZE = 4 * 1024;
   /** Default size of read/write operation buffer. Default: 16Kb. */
-  private final static int BUFFER_READ_WRITE_SIZE = 4 * BUFFER_SIZE;
+  private static final int BUFFER_READ_WRITE_SIZE = 4 * BUFFER_SIZE;
   /** Default charset encoding. */
   public static final Charset UTF8 = Charset.forName("UTF-8");
+  //endregion
+
+  //region Members
+  /** Guard object for {@link #isSupportsSecureHardware} field. */
+  protected final Object _sync = new Object();
+  /** Try to resolve it only once and cache result for all future calls. */
+  protected transient AtomicBoolean isSupportsSecureHardware;
   //endregion
 
   //region Overrides
@@ -78,11 +86,21 @@ abstract public class CipherStorageBase implements CipherStorage {
   /** Try device capabilities by creating temporary key in keystore. */
   @Override
   public boolean supportsSecureHardware() {
-    try (SelfDestroyKey sdk = new SelfDestroyKey(TEST_KEY_ALIAS)) {
-      return validateKeySecurityLevel(SECURE_HARDWARE, sdk.key);
-    } catch (Throwable ignored) {
-      return false;
+    if (null != isSupportsSecureHardware) return isSupportsSecureHardware.get();
+
+    synchronized (_sync) {
+      // double check pattern in use
+      if (null != isSupportsSecureHardware) return isSupportsSecureHardware.get();
+
+      isSupportsSecureHardware = new AtomicBoolean(false);
+
+      try (SelfDestroyKey sdk = new SelfDestroyKey(TEST_KEY_ALIAS)) {
+        isSupportsSecureHardware.set(validateKeySecurityLevel(SECURE_HARDWARE, sdk.key));
+      } catch (Throwable ignored) {
+      }
     }
+
+    return isSupportsSecureHardware.get();
   }
 
   /** Remove key with provided name from security storage. */
@@ -106,7 +124,8 @@ abstract public class CipherStorageBase implements CipherStorage {
 
   /** Get encryption algorithm specification builder instance. */
   @NonNull
-  protected abstract KeyGenParameterSpec.Builder getKeyGenSpecBuilder(@NonNull final String alias) throws GeneralSecurityException;
+  protected abstract KeyGenParameterSpec.Builder getKeyGenSpecBuilder(@NonNull final String alias)
+    throws GeneralSecurityException;
 
   /** Get information about provided key. */
   @NonNull
@@ -114,7 +133,8 @@ abstract public class CipherStorageBase implements CipherStorage {
 
   /** Try to generate key from provided specification. */
   @NonNull
-  protected abstract Key generateKey(@NonNull final KeyGenParameterSpec spec) throws GeneralSecurityException;
+  protected abstract Key generateKey(@NonNull final KeyGenParameterSpec spec)
+    throws GeneralSecurityException;
 
   /** Get name of the required encryption algorithm. */
   @NonNull
@@ -395,6 +415,7 @@ abstract public class CipherStorageBase implements CipherStorage {
   //endregion
 
   //region Nested declarations
+
   /** Generic cipher initialization. */
   public static final class Defaults {
     public static final EncryptStringHandler encrypt = (cipher, key, output) -> {

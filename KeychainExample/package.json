@@ -15,7 +15,8 @@
   "dependencies": {
     "react": "16.9.0",
     "react-native": "0.61.2",
-    "react-native-keychain": "file:../"
+    "react-native-keychain": "file:../",
+    "react-native-segmented-control-tab": "^3.4.1"
   },
   "devDependencies": {
     "@babel/core": "^7.6.2",

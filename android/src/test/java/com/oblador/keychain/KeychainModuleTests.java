@@ -8,7 +8,9 @@ import android.os.Build;
 
 import androidx.biometric.BiometricManager;
 
+import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
+import com.oblador.keychain.KeychainModule.AccessControl;
 import com.oblador.keychain.cipherStorage.CipherStorage;
 import com.oblador.keychain.cipherStorage.CipherStorageFacebookConceal;
 import com.oblador.keychain.cipherStorage.CipherStorageKeystoreAesCbc;
@@ -38,24 +40,33 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.robolectric.Shadows.shadowOf;
 
 @RunWith(RobolectricTestRunner.class)
 public class KeychainModuleTests {
-  /** Cancel test after 5 seconds. */
+  /**
+   * Cancel test after 5 seconds.
+   */
   @ClassRule
   public static Timeout timeout = Timeout.seconds(10);
-  /** Get test method name. */
+  /**
+   * Get test method name.
+   */
   @Rule
   public TestName methodName = new TestName();
-  /** Mock all the dependencies. */
+  /**
+   * Mock all the dependencies.
+   */
   @Rule
   public MockitoRule mockDependencies = MockitoJUnit.rule().silent();
   @Rule
   public VerificationCollector collector = MockitoJUnit.collector();
-  /** Security fake provider. */
+  /**
+   * Security fake provider.
+   */
   private FakeProvider provider = new FakeProvider();
 
   @Before
@@ -298,4 +309,101 @@ public class KeychainModuleTests {
     assertThat(password, is("cGFzc3dvcmQ=\n"));
     assertThat(cipherName, is("dummy"));
   }
+
+  @Test
+  @Config(sdk = Build.VERSION_CODES.P)
+  public void testGetSecurityLevel_Unspecified_api28() throws Exception {
+    // GIVE:
+    final ReactApplicationContext context = getRNContext();
+    final KeychainModule module = new KeychainModule(context);
+    final Promise mockPromise = mock(Promise.class);
+
+    // WHEN:
+    module.getSecurityLevel(null, mockPromise);
+
+    // THEN:
+    verify(mockPromise).resolve(SecurityLevel.SECURE_HARDWARE.name());
+  }
+
+  @Test
+  @Config(sdk = Build.VERSION_CODES.M)
+  public void testGetSecurityLevel_Unspecified_api23() throws Exception {
+    // GIVE:
+    final ReactApplicationContext context = getRNContext();
+    final KeychainModule module = new KeychainModule(context);
+    final Promise mockPromise = mock(Promise.class);
+
+    // WHEN:
+    module.getSecurityLevel(null, mockPromise);
+
+    // THEN:
+    verify(mockPromise).resolve(SecurityLevel.SECURE_HARDWARE.name());
+  }
+
+  @Test
+  @Config(sdk = Build.VERSION_CODES.LOLLIPOP)
+  public void testGetSecurityLevel_Unspecified_api21() throws Exception {
+    // GIVE:
+    final ReactApplicationContext context = getRNContext();
+    final KeychainModule module = new KeychainModule(context);
+    final Promise mockPromise = mock(Promise.class);
+
+    // WHEN:
+    module.getSecurityLevel(null, mockPromise);
+
+    // THEN:
+    verify(mockPromise).resolve(SecurityLevel.ANY.name());
+  }
+
+  @Test
+  @Config(sdk = Build.VERSION_CODES.KITKAT)
+  public void testGetSecurityLevel_Unspecified_api19() throws Exception {
+    // GIVE:
+    final ReactApplicationContext context = getRNContext();
+    final KeychainModule module = new KeychainModule(context);
+    final Promise mockPromise = mock(Promise.class);
+
+    // WHEN:
+    module.getSecurityLevel(null, mockPromise);
+
+    // THEN:
+    verify(mockPromise).resolve(SecurityLevel.ANY.name());
+
+//    module.getSecurityLevel(KeychainModule.ACCESS_CONTROL_BIOMETRY_ANY, mockPromise);
+//    verify(mockPromise).resolve(SecurityLevel.SECURE_HARDWARE.name());
+//    module.getSecurityLevel(KeychainModule.ACCESS_CONTROL_BIOMETRY_CURRENT_SET, mockPromise);
+//    verify(mockPromise).resolve(SecurityLevel.SECURE_SOFTWARE.name());
+//    verify(mockPromise).resolve(SecurityLevel.ANY.name());
+  }
+
+  @Test
+  @Config(sdk = Build.VERSION_CODES.P)
+  public void testGetSecurityLevel_NoBiometry_api28() throws Exception {
+    // GIVE:
+    final ReactApplicationContext context = getRNContext();
+    final KeychainModule module = new KeychainModule(context);
+    final Promise mockPromise = mock(Promise.class);
+
+    // WHEN:
+    module.getSecurityLevel(AccessControl.DEVICE_PASSCODE, mockPromise);
+
+    // THEN:
+    verify(mockPromise).resolve(SecurityLevel.SECURE_HARDWARE.name());
+  }
+
+  @Test
+  @Config(sdk = Build.VERSION_CODES.P)
+  public void testGetSecurityLevel_NoBiometry_NoSecuredHardware_api28() throws Exception {
+    // GIVE:
+    final ReactApplicationContext context = getRNContext();
+    final KeychainModule module = new KeychainModule(context);
+    final Promise mockPromise = mock(Promise.class);
+
+    // WHEN:
+    module.getSecurityLevel(AccessControl.DEVICE_PASSCODE, mockPromise);
+
+    // THEN:
+    verify(mockPromise).resolve(SecurityLevel.SECURE_SOFTWARE.name());
+  }
+
 }

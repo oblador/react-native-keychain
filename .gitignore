@@ -33,6 +33,7 @@ local.properties
 .settings/
 .project
 .classpath
+.vscode/
 
 # node.js
 #
