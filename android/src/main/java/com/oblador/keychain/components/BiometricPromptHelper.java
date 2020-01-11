@@ -68,7 +68,7 @@ public class BiometricPromptHelper extends BiometricPrompt.AuthenticationCallbac
     mBiometricPrompt = new BiometricPrompt(mActivity, Executors.newSingleThreadExecutor(), this);
     mBiometricPromptCancellationSignal = new CancellationSignal();
 
-    BiometricPrompt.PromptInfo promptInfo = new BiometricPrompt.PromptInfo.Builder()
+    final BiometricPrompt.PromptInfo promptInfo = new BiometricPrompt.PromptInfo.Builder()
       .setTitle("Authentication required")
       .setNegativeButtonText("Cancel")
       .setSubtitle("Please use biometric authentication to unlock the app")

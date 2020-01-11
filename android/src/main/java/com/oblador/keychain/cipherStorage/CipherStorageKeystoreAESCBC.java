@@ -4,8 +4,11 @@ import android.annotation.TargetApi;
 import android.os.Build;
 import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyInfo;
+import android.security.keystore.KeyPermanentlyInvalidatedException;
 import android.security.keystore.KeyProperties;
 import androidx.annotation.NonNull;
+import androidx.fragment.app.FragmentActivity;
+
 import android.util.Log;
 
 import com.oblador.keychain.SecurityLevel;
@@ -53,6 +56,11 @@ public class CipherStorageKeystoreAESCBC implements CipherStorage {
     @Override
     public String getCipherStorageName() {
         return CIPHER_STORAGE_NAME;
+    }
+
+    @Override
+    public boolean getCipherBiometrySupported() {
+        return false;
     }
 
     @Override
@@ -165,7 +173,7 @@ public class CipherStorageKeystoreAESCBC implements CipherStorage {
     }
 
     @Override
-    public DecryptionResult decrypt(@NonNull String service, @NonNull byte[] username, @NonNull byte[] password, FragmentActivity activity) throws CryptoFailedException {
+    public void decrypt(@NonNull DecryptionResultHandler decryptionResultHandler, @NonNull String service, @NonNull byte[] username, @NonNull byte[] password, FragmentActivity activity) throws CryptoFailedException, KeyPermanentlyInvalidatedException {
         service = getDefaultServiceIfEmpty(service);
 
         try {
@@ -179,7 +187,9 @@ public class CipherStorageKeystoreAESCBC implements CipherStorage {
             String decryptedUsername = decryptBytes(key, username);
             String decryptedPassword = decryptBytes(key, password);
 
-            return new DecryptionResult(decryptedUsername, decryptedPassword, getSecurityLevel((SecretKey) key));
+            decryptionResultHandler.onDecrypt(new DecryptionResult(
+                    decryptedUsername,
+                    decryptedPassword, SecurityLevel.ANY), null);
         } catch (KeyStoreException | UnrecoverableKeyException | NoSuchAlgorithmException e) {
             throw new CryptoFailedException("Could not get key from Keystore", e);
         } catch (KeyStoreAccessException e) {
