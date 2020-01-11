@@ -41,13 +41,19 @@ declare module 'react-native-keychain' {
         SECURE_HARDWARE,
         ANY
     }
+  
+    export enum BIOMETRY_TYPE {
+        TOUCH_ID = 'TouchID',
+        FACE_ID = 'FaceID',
+        FINGERPRINT = 'Fingerprint'
+    }
 
     export interface Options {
         accessControl?: ACCESS_CONTROL;
         accessGroup?: string;
         accessible?: ACCESSIBLE;
         authenticationPrompt?: string;
-        authenticationType?: LAPolicy;
+        authenticationType?: AUTHENTICATION_TYPE;
         service?: string;
         securityLevel? : SECURITY_LEVEL;
     }
@@ -57,7 +63,7 @@ declare module 'react-native-keychain' {
     ): Promise<boolean>;
 
     function getSupportedBiometryType(
-    ): Promise<string>;
+    ): Promise<BIOMETRY_TYPE | null>;
 
     function setInternetCredentials(
         server: string,
@@ -68,7 +74,7 @@ declare module 'react-native-keychain' {
 
     function getInternetCredentials(
         server: string
-    ): Promise<UserCredentials>;
+    ): Promise<false | UserCredentials>;
 
     function hasInternetCredentials(
         server: string
