@@ -7,6 +7,8 @@ import com.oblador.keychain.exceptions.CryptoFailedException;
 import com.oblador.keychain.exceptions.KeyStoreAccessException;
 
 import androidx.annotation.NonNull;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentActivity;
 
 public interface CipherStorage {
     abstract class CipherResult<T> {
@@ -47,7 +49,7 @@ public interface CipherStorage {
 
     EncryptionResult encrypt(@NonNull String service, @NonNull String username, @NonNull String password, SecurityLevel level) throws CryptoFailedException;
 
-    void decrypt(@NonNull DecryptionResultHandler decryptionResultHandler, @NonNull String service, @NonNull byte[] username, @NonNull byte[] password) throws CryptoFailedException, KeyPermanentlyInvalidatedException;
+    void decrypt(@NonNull DecryptionResultHandler decryptionResultHandler, @NonNull String service, @NonNull byte[] username, @NonNull byte[] password, FragmentActivity activity) throws CryptoFailedException, KeyPermanentlyInvalidatedException;
 
     void removeKey(@NonNull String service) throws KeyStoreAccessException;
 

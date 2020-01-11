@@ -16,6 +16,7 @@ import com.oblador.keychain.exceptions.CryptoFailedException;
 import java.nio.charset.Charset;
 
 import androidx.annotation.NonNull;
+import androidx.fragment.app.FragmentActivity;
 
 public class CipherStorageFacebookConceal implements CipherStorage {
     public static final String CIPHER_STORAGE_NAME = "FacebookConceal";
@@ -77,7 +78,7 @@ public class CipherStorageFacebookConceal implements CipherStorage {
     }
 
     @Override
-    public void decrypt(@NonNull DecryptionResultHandler decryptionResultHandler, @NonNull String service, @NonNull byte[] username, @NonNull byte[] password) throws CryptoFailedException, KeyPermanentlyInvalidatedException {
+    public void decrypt(@NonNull DecryptionResultHandler decryptionResultHandler, @NonNull String service, @NonNull byte[] username, @NonNull byte[] password, FragmentActivity activity) throws CryptoFailedException, KeyPermanentlyInvalidatedException {
         if (!crypto.isAvailable()) {
             throw new CryptoFailedException("Crypto is missing");
         }

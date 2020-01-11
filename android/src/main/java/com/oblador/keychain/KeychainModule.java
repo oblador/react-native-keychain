@@ -1,12 +1,9 @@
 package com.oblador.keychain;
 
-import android.annotation.TargetApi;
-import android.app.Activity;
 import android.os.Build;
 import androidx.annotation.NonNull;
 import android.util.Log;
 
-import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
@@ -67,7 +64,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
         addCipherStorageToMap(new CipherStorageFacebookConceal(reactContext));
         addCipherStorageToMap(new CipherStorageKeystoreAESCBC());
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            addCipherStorageToMap(new CipherStorageKeystoreRSAECB(reactContext, (FragmentActivity) getCurrentActivity()));
+            addCipherStorageToMap(new CipherStorageKeystoreRSAECB());
         }
     }
 
@@ -89,7 +86,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     public void getSecurityLevel(String accessControl, Promise promise) {
         boolean useBiometry = getUseBiometry(accessControl);
         promise.resolve(getSecurityLevel(useBiometry).name());
-    }
+   }
 
     @ReactMethod
     public void setGenericPasswordForOptions(String service, String username, String password, String minimumSecurityLevel, String accessControl, Promise promise) {
@@ -160,7 +157,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
                     }
                 };
                 // The encrypted data is encrypted using the current CipherStorage, so we just decrypt and return
-                currentCipherStorage.decrypt(decryptionHandler, serviceOrDefault, resultSet.usernameBytes, resultSet.passwordBytes);
+                currentCipherStorage.decrypt(decryptionHandler, serviceOrDefault, resultSet.usernameBytes, resultSet.passwordBytes, (FragmentActivity) this.getCurrentActivity());
             }
             else {
                 // The encrypted data is encrypted using an older CipherStorage, so we need to decrypt the data first, then encrypt it using the current CipherStorage, then store it again and return
@@ -192,7 +189,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
                     }
                 };
                 // decrypt using the older cipher storage
-                oldCipherStorage.decrypt(decryptionHandler, serviceOrDefault, resultSet.usernameBytes, resultSet.passwordBytes);
+                oldCipherStorage.decrypt(decryptionHandler, serviceOrDefault, resultSet.usernameBytes, resultSet.passwordBytes, (FragmentActivity) this.getCurrentActivity());
             }
           } catch (InvalidKeyException e) {
               Log.e(KEYCHAIN_MODULE, String.format("Key for service %s permanently invalidated", serviceOrDefault));

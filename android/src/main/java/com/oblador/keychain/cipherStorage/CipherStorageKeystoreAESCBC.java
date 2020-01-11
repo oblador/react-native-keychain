@@ -1,13 +1,13 @@
 package com.oblador.keychain.cipherStorage;
 
 import android.annotation.TargetApi;
-import android.app.Activity;
 import android.os.Build;
 import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyPermanentlyInvalidatedException;
 import android.security.keystore.KeyInfo;
 import android.security.keystore.KeyProperties;
 import androidx.annotation.NonNull;
+import androidx.fragment.app.FragmentActivity;
 
 import com.oblador.keychain.SecurityLevel;
 import com.oblador.keychain.exceptions.CryptoFailedException;
@@ -34,7 +34,7 @@ import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.IvParameterSpec;
 
 @TargetApi(Build.VERSION_CODES.M)
-public class CipherStorageKeystoreAESCBC extends CipherStorageKeystoreBase {
+public class CipherStorageKeystoreAESCBC extends CipherStorageKeystoreMarshmallowBase {
     public static final String CIPHER_STORAGE_NAME = "KeystoreAESCBC";
     public static final String KEYSTORE_TYPE = "AndroidKeyStore";
     public static final String ENCRYPTION_ALGORITHM = KeyProperties.KEY_ALGORITHM_AES;
@@ -101,7 +101,7 @@ public class CipherStorageKeystoreAESCBC extends CipherStorageKeystoreBase {
     }
 
     @Override
-    public void decrypt(@NonNull DecryptionResultHandler decryptionResultHandler, @NonNull String service, @NonNull byte[] username, @NonNull byte[] password) throws CryptoFailedException, KeyPermanentlyInvalidatedException {
+    public void decrypt(@NonNull DecryptionResultHandler decryptionResultHandler, @NonNull String service, @NonNull byte[] username, @NonNull byte[] password, FragmentActivity activity) throws CryptoFailedException, KeyPermanentlyInvalidatedException {
         service = getDefaultServiceIfEmpty(service);
 
         try {

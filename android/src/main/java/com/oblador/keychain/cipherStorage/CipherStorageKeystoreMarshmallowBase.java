@@ -5,7 +5,7 @@ import android.os.Build;
 import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyInfo;
 import android.security.keystore.StrongBoxUnavailableException;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 import android.util.Log;
 
 import com.oblador.keychain.SecurityLevel;
@@ -25,7 +25,7 @@ import java.security.spec.InvalidKeySpecException;
 import androidx.biometric.BiometricPrompt;
 
 @TargetApi(Build.VERSION_CODES.M)
-public abstract class CipherStorageKeystoreBase extends BiometricPrompt.AuthenticationCallback implements CipherStorage {
+public abstract class CipherStorageKeystoreMarshmallowBase implements CipherStorage {
     public static final String TAG = "Keystore";
     public static final String DEFAULT_SERVICE = "RN_KEYCHAIN_DEFAULT_ALIAS";
     public static final String KEYSTORE_TYPE = "AndroidKeyStore";
