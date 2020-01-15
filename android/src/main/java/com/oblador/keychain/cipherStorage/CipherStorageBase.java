@@ -95,7 +95,10 @@ abstract public class CipherStorageBase implements CipherStorage {
       isSupportsSecureHardware = new AtomicBoolean(false);
 
       try (SelfDestroyKey sdk = new SelfDestroyKey(TEST_KEY_ALIAS)) {
-        isSupportsSecureHardware.set(validateKeySecurityLevel(SECURE_HARDWARE, sdk.key));
+        final boolean newValue = validateKeySecurityLevel(SECURE_HARDWARE, sdk.key);
+//        System.out.println("supportsSecureHardware: " + newValue + ", class: " + getClass().getSimpleName());
+
+        isSupportsSecureHardware.set(newValue);
       } catch (Throwable ignored) {
       }
     }

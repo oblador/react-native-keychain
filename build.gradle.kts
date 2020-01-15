@@ -4,6 +4,12 @@
 // LICENSE file in the root directory of this source tree.
 
 buildscript {
+  extra.apply {
+    set("minSdkVersion", 16)
+    set("compileSdkVersion", 28)
+    set("targetSdkVersion", 28)
+    set("buildToolsVersion", "29.0.2")
+  }
   repositories {
     mavenLocal()
     google()
@@ -11,7 +17,7 @@ buildscript {
     maven { url = uri("https://plugins.gradle.org/m2/") }
   }
   dependencies {
-    classpath("com.android.tools.build:gradle:3.5.1")
+    classpath("com.android.tools.build:gradle:4.0.0-alpha08")
 
     /* https://github.com/radarsh/gradle-test-logger-plugin */
     classpath("com.adarshr:gradle-test-logger-plugin:2.0.0")

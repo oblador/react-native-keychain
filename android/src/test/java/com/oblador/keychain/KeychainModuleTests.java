@@ -5,7 +5,6 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.hardware.fingerprint.FingerprintManager;
 import android.os.Build;
-import android.security.keystore.KeyInfo;
 
 import androidx.biometric.BiometricManager;
 
@@ -34,7 +33,6 @@ import org.robolectric.RuntimeEnvironment;
 import org.robolectric.annotation.Config;
 
 import java.security.Security;
-import java.util.HashMap;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
@@ -396,16 +394,7 @@ public class KeychainModuleTests {
     final Promise mockPromise = mock(Promise.class);
 
     // set key info - software method
-    provider.getService("SecretKeyFactory", null);
-    final HashMap<String, MocksForProvider> mocks = provider.mocks.get("SecretKeyFactory");
-    assertThat(mocks, notNullValue());
-
-    final MocksForProvider mocksForProvider = mocks.get(null);
-    assertThat(mocksForProvider, notNullValue());
-
-    final KeyInfo keyInfo = mocksForProvider.keyInfo;
-    Mockito.reset(keyInfo);
-    when(keyInfo.isInsideSecureHardware()).thenReturn(false);
+    provider.configuration.put("isInsideSecureHardware", false);
 
     // WHEN:
     module.getSecurityLevel(AccessControl.DEVICE_PASSCODE, mockPromise);

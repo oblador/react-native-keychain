@@ -6,6 +6,7 @@ import java.util.HashMap;
 public final class FakeProvider extends Provider {
   public static final String NAME = "AndroidKeyStore";
   public final HashMap<String, HashMap<String, MocksForProvider>> mocks = new HashMap<>();
+  public final HashMap<String, Object> configuration = new HashMap<>();
 
   public FakeProvider() {
     super(NAME, 1.0, "Fake");
@@ -26,7 +27,7 @@ public final class FakeProvider extends Provider {
       inner.put(algorithm, (mock = new MocksForProvider()));
     }
 
-    mock.configure(type, this);
+    mock.configure(type, this, configuration);
 
     return mock.service;
   }

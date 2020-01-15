@@ -14,7 +14,7 @@ import static androidx.biometric.BiometricManager.BIOMETRIC_SUCCESS;
 /**
  * @see <a href="https://stackoverflow.com/questions/50968732/determine-if-biometric-hardware-is-present-and-the-user-has-enrolled-biometrics">Biometric hradware</a>
  */
-@SuppressWarnings("WeakerAccess")
+@SuppressWarnings({"WeakerAccess", "deprecation"})
 public class DeviceAvailability {
   public static boolean isFingerprintAuthAvailable(@NonNull final Context context) {
     return BiometricManager.from(context).canAuthenticate() == BIOMETRIC_SUCCESS;

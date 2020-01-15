@@ -3,6 +3,7 @@ package com.oblador.keychain;
 import android.security.keystore.KeyInfo;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import org.mockito.MockSettings;
 import org.mockito.Mockito;
@@ -14,6 +15,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.Provider;
 import java.security.spec.InvalidKeySpecException;
+import java.util.Map;
 
 import javax.crypto.SecretKey;
 
@@ -43,20 +45,21 @@ public final class MocksForProvider {
   public final SecretKey secretKey = Mockito.mock(SecretKey.class, settings);
   public final KeyStore keyStore = Mockito.mock(KeyStore.class, settings);
 
-  public void configure(@NonNull final String type, @NonNull final Provider provider) {
+  public void configure(@NonNull final String type, @NonNull final Provider provider, @Nullable final Map<String, Object> configuration) {
     try {
-      innerConfiguration(type, provider);
+      innerConfiguration(type, provider, configuration);
     } catch (Throwable fail) {
       fail.printStackTrace(System.out);
     }
   }
 
-  private void innerConfiguration(@NonNull final String type, @NonNull final Provider provider)
+  private void innerConfiguration(@NonNull final String type, @NonNull final Provider provider, @Nullable final Map<String, Object> configuration)
     throws InvalidKeySpecException, NoSuchAlgorithmException {
     when(service.getProvider()).thenReturn(provider);
     when(kpgSpi.generateKeyPair()).thenReturn(keyPair);
     when(keyPair.getPrivate()).thenReturn(privateKey);
-    when(keyInfo.isInsideSecureHardware()).thenReturn(true, false);
+
+    when(keyInfo.isInsideSecureHardware()).thenReturn(getBool(configuration, "isInsideSecureHardware", true));
 
     when(kgSpi.engineGenerateKey()).thenReturn(secretKey);
     when(skfSpi.engineGetKeySpec(any(), any())).thenReturn(keyInfo);
@@ -79,5 +82,11 @@ public final class MocksForProvider {
         when(service.newInstance(isNull())).thenReturn(skfSpi);
         break;
     }
+  }
+
+  private boolean getBool(@Nullable final Map<String, Object> configuration, @NonNull final String key, final boolean $default) {
+    if(null == configuration) return $default;
+
+    return Boolean.parseBoolean("" + configuration.getOrDefault(key, $default));
   }
 }

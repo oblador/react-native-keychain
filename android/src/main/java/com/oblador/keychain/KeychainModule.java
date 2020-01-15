@@ -45,6 +45,8 @@ public class KeychainModule extends ReactContextBaseJavaModule {
   public static final String FINGERPRINT_SUPPORTED_NAME = "Fingerprint";
   public static final String EMPTY_STRING = "";
 
+  private static final String LOG_TAG = KeychainModule.class.getSimpleName();
+
   @interface AccessControl {
     String USER_PRESENCE = "UserPresence";
     String BIOMETRY_ANY = "BiometryAny";
@@ -122,7 +124,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
                                @NonNull final Promise promise) {
     final boolean useBiometry = getUseBiometry(accessControl);
 
-    // TODO (olku): if forced biometry than we should return security level = HARDWARE if it supported
+    // DONE (olku): if forced biometry than we should return security level = HARDWARE if it supported
 
     promise.resolve(getSecurityLevel(useBiometry).name());
   }
