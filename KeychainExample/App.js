@@ -49,6 +49,8 @@ export default class KeychainExample extends Component {
 
   async save(accessControl) {
     try {
+      let start = new Date();
+
       await Keychain.setGenericPassword(
         this.state.username,
         this.state.password,
@@ -57,10 +59,13 @@ export default class KeychainExample extends Component {
           securityLevel: this.state.securityLevel,
         }
       );
+
+      let end = new Date();
+
       this.setState({
         username: '',
         password: '',
-        status: 'Credentials saved!',
+        status: `Credentials saved! takes: ${(end.getTime() - start.getTime())} millis`,
       });
     } catch (err) {
       this.setState({ status: 'Could not save credentials, ' + err });
