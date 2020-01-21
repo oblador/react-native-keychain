@@ -8,18 +8,19 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.facebook.react.bridge.ReactApplicationContext;
+import com.oblador.keychain.KeychainModule.KnownCiphers;
 import com.oblador.keychain.cipherStorage.CipherStorage;
 import com.oblador.keychain.cipherStorage.CipherStorage.EncryptionResult;
-import com.oblador.keychain.cipherStorage.CipherStorageFacebookConceal;
 
 @SuppressWarnings({"unused", "WeakerAccess"})
 public class PrefsStorage {
   public static final String KEYCHAIN_DATA = "RN_KEYCHAIN";
 
   static public class ResultSet extends CipherStorage.CipherResult<byte[]> {
+    @KnownCiphers
     public final String cipherStorageName;
 
-    public ResultSet(final String cipherStorageName, final byte[] usernameBytes, final byte[] passwordBytes) {
+    public ResultSet(@KnownCiphers final String cipherStorageName, final byte[] usernameBytes, final byte[] passwordBytes) {
       super(usernameBytes, passwordBytes);
 
       this.cipherStorageName = cipherStorageName;
@@ -46,7 +47,7 @@ public class PrefsStorage {
 
     if (cipherStorageName == null) {
       // If the CipherStorage name is not found, we assume it is because the entry was written by an older version of this library. The older version used Facebook Conceal, so we default to that.
-      cipherStorageName = CipherStorageFacebookConceal.CIPHER_STORAGE_NAME_FACEBOOK;
+      cipherStorageName = KnownCiphers.FB;
     }
 
     return new ResultSet(cipherStorageName, bytesForUsername, bytesForPassword);

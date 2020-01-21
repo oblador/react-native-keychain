@@ -7,6 +7,7 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.StringDef;
 import androidx.biometric.BiometricPrompt;
 import androidx.fragment.app.FragmentActivity;
 
@@ -37,8 +38,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
-@SuppressWarnings({"unused", "WeakerAccess"})
+import javax.crypto.Cipher;
+
+@SuppressWarnings({"unused", "WeakerAccess", "SameParameterValue"})
 public class KeychainModule extends ReactContextBaseJavaModule {
   //region Constants
   public static final String KEYCHAIN_MODULE = "RNKeychainManager";
@@ -47,6 +51,13 @@ public class KeychainModule extends ReactContextBaseJavaModule {
 
   private static final String LOG_TAG = KeychainModule.class.getSimpleName();
 
+  @StringDef({AccessControl.USER_PRESENCE
+    , AccessControl.BIOMETRY_ANY
+    , AccessControl.BIOMETRY_CURRENT_SET
+    , AccessControl.DEVICE_PASSCODE
+    , AccessControl.APPLICATION_PASSWORD
+    , AccessControl.BIOMETRY_ANY_OR_DEVICE_PASSCODE
+    , AccessControl.BIOMETRY_CURRENT_SET_OR_DEVICE_PASSCODE})
   @interface AccessControl {
     String USER_PRESENCE = "UserPresence";
     String BIOMETRY_ANY = "BiometryAny";
@@ -57,13 +68,22 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     String BIOMETRY_CURRENT_SET_OR_DEVICE_PASSCODE = "BiometryCurrentSetOrDevicePasscode";
   }
 
+  /** Options mapping keys. */
   @interface Maps {
+    String ACCESS_CONTROL = "accessControl";
+    String ACCESS_GROUP = "accessGroup";
+    String ACCESSIBLE = "accessible";
+    String AUTH_PROMPT = "authenticationPrompt";
+    String AUTH_TYPE = "authenticationType";
     String SERVICE = "service";
+    String SECURITY_LEVEL = "securityLevel";
+
     String USERNAME = "username";
     String PASSWORD = "password";
-    String ACCESS_CONTROL = "accessControl";
+    String STORAGE = "storage";
   }
 
+  /** Known error codes. */
   @interface Errors {
     String E_EMPTY_PARAMETERS = "E_EMPTY_PARAMETERS";
     String E_CRYPTO_FAILED = "E_CRYPTO_FAILED";
@@ -71,6 +91,17 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     String E_SUPPORTED_BIOMETRY_ERROR = "E_SUPPORTED_BIOMETRY_ERROR";
     /** Raised for unexpected errors. */
     String E_UNKNOWN_ERROR = "E_UNKNOWN_ERROR";
+  }
+
+  /** Supported ciphers. */
+  @StringDef({KnownCiphers.FB, KnownCiphers.AES, KnownCiphers.RSA})
+  public @interface KnownCiphers {
+    /** Facebook conceal compatibility lib in use. */
+    String FB = "FacebookConceal";
+    /** AES encryption. */
+    String AES = "KeystoreAESCBC";
+    /** Biometric + RSA. */
+    String RSA = "KeystoreRSAECB";
   }
 
   //endregion
@@ -82,6 +113,9 @@ public class KeychainModule extends ReactContextBaseJavaModule {
   private final PrefsStorage prefsStorage;
   //endregion
 
+  //region Initialization
+
+  /** Default constructor. */
   public KeychainModule(@NonNull final ReactApplicationContext reactContext) {
     super(reactContext);
     prefsStorage = new PrefsStorage(reactContext);
@@ -94,6 +128,37 @@ public class KeychainModule extends ReactContextBaseJavaModule {
       addCipherStorageToMap(new CipherStorageKeystoreRsaEcb());
     }
   }
+
+  /** Allow initialization in chain. */
+  public static KeychainModule withWarming(@NonNull final ReactApplicationContext reactContext) {
+    final KeychainModule instance = new KeychainModule(reactContext);
+
+    // force initialization of the crypto api in background thread
+    final Thread warmingUp = new Thread(instance::internalWarmingBestCipher, "keychain-warming-up");
+    warmingUp.setDaemon(true);
+    warmingUp.start();
+
+    return instance;
+  }
+
+  /** cipher (crypto api) warming up logic. force java load classes and intializations. */
+  private void internalWarmingBestCipher() {
+    try {
+      final long startTime = System.nanoTime();
+
+      final CipherStorageBase best = (CipherStorageBase) getCipherStorageForCurrentAPILevel();
+      final Cipher instance = best.getCachedInstance();
+      final boolean isSecure = best.supportsSecureHardware();
+      best.generateKeyAndStoreUnderAlias("warmingUp", SecurityLevel.SECURE_HARDWARE);
+      best.getKeyStoreAndLoad();
+
+      Log.v(KEYCHAIN_MODULE, "warming up takes: " +
+        TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startTime) +
+        " ms");
+    } catch (Throwable ignored) {
+    }
+  }
+  //endregion
 
   //region Overrides
 
@@ -119,35 +184,27 @@ public class KeychainModule extends ReactContextBaseJavaModule {
   //endregion
 
   //region React Methods
-  @ReactMethod
-  public void getSecurityLevel(@Nullable final String accessControl,
-                               @NonNull final Promise promise) {
-    final boolean useBiometry = getUseBiometry(accessControl);
-
-    // DONE (olku): if forced biometry than we should return security level = HARDWARE if it supported
-
-    promise.resolve(getSecurityLevel(useBiometry).name());
-  }
 
   @ReactMethod
   public void setGenericPasswordForOptions(@Nullable final String service,
                                            @NonNull final String username,
                                            @NonNull final String password,
-                                           @NonNull final String minimumSecurityLevel,
-                                           @NonNull final String accessControl,
+                                           @Nullable final ReadableMap options,
                                            @NonNull final Promise promise) {
     try {
       throwIfEmptyLoginPassword(username, password);
 
-      final SecurityLevel level = SecurityLevel.valueOf(minimumSecurityLevel);
+      final String alias = getAliasOrDefault(service);
+      final SecurityLevel level = getSecurityLevelOrDefault(options);
+      final String accessControl = getAccessControlOrDefault(options);
       final boolean useBiometry = getUseBiometry(accessControl);
-      final String safeService = getDefaultServiceIfNull(service);
+
       final CipherStorage storage = getCipherStorageForCurrentAPILevel(useBiometry);
 
       throwIfInsufficientLevel(storage, level);
 
-      final EncryptionResult result = storage.encrypt(safeService, username, password, level);
-      prefsStorage.storeEncryptedEntry(safeService, result);
+      final EncryptionResult result = storage.encrypt(alias, username, password, level);
+      prefsStorage.storeEncryptedEntry(alias, result);
 
       promise.resolve(true);
     } catch (EmptyParameterException e) {
@@ -167,13 +224,11 @@ public class KeychainModule extends ReactContextBaseJavaModule {
 
   @ReactMethod
   public void getGenericPasswordForOptions(@Nullable final String service,
-                                           @NonNull final String accessControl,
+                                           @Nullable final ReadableMap options,
                                            @NonNull final Promise promise) {
     try {
-      final String safeService = getDefaultServiceIfNull(service);
-      final boolean useBiometry = getUseBiometry(accessControl);
-      final CipherStorage currentCipherStorage = getCipherStorageForCurrentAPILevel(useBiometry);
-      final ResultSet resultSet = prefsStorage.getEncryptedEntry(safeService);
+      final String alias = getAliasOrDefault(service);
+      final ResultSet resultSet = prefsStorage.getEncryptedEntry(alias);
 
       if (resultSet == null) {
         Log.e(KEYCHAIN_MODULE, "No entry found for service: " + service);
@@ -181,12 +236,17 @@ public class KeychainModule extends ReactContextBaseJavaModule {
         return;
       }
 
-      final DecryptionResult decryptionResult = decryptCredentials(safeService, currentCipherStorage, resultSet);
+      // get the best storage
+      final String accessControl = getAccessControlOrDefault(options);
+      final boolean useBiometry = getUseBiometry(accessControl);
+      final CipherStorage current = getCipherStorageForCurrentAPILevel(useBiometry);
+      final DecryptionResult decryptionResult = decryptCredentials(alias, current, resultSet);
 
       final WritableMap credentials = Arguments.createMap();
-      credentials.putString(Maps.SERVICE, safeService);
+      credentials.putString(Maps.SERVICE, alias);
       credentials.putString(Maps.USERNAME, decryptionResult.username);
       credentials.putString(Maps.PASSWORD, decryptionResult.password);
+      credentials.putString(Maps.STORAGE, current.getCipherStorageName());
 
       promise.resolve(credentials);
     } catch (KeyStoreAccessException e) {
@@ -203,25 +263,29 @@ public class KeychainModule extends ReactContextBaseJavaModule {
   }
 
   @ReactMethod
-  public void resetGenericPasswordForOptions(@Nullable String service,
+  public void resetGenericPasswordForOptions(@Nullable final String service,
+                                             @Nullable final ReadableMap options,
                                              @NonNull final Promise promise) {
     try {
-      service = getDefaultServiceIfNull(service);
+      final String alias = getAliasOrDefault(service);
 
       // First we clean up the cipher storage (using the cipher storage that was used to store the entry)
-      ResultSet resultSet = prefsStorage.getEncryptedEntry(service);
+      final ResultSet resultSet = prefsStorage.getEncryptedEntry(alias);
+
       if (resultSet != null) {
-        CipherStorage cipherStorage = getCipherStorageByName(resultSet.cipherStorageName);
+        final CipherStorage cipherStorage = getCipherStorageByName(resultSet.cipherStorageName);
+
         if (cipherStorage != null) {
-          cipherStorage.removeKey(service);
+          cipherStorage.removeKey(alias);
         }
       }
       // And then we remove the entry in the shared preferences
-      prefsStorage.removeEntry(service);
+      prefsStorage.removeEntry(alias);
 
       promise.resolve(true);
     } catch (KeyStoreAccessException e) {
       Log.e(KEYCHAIN_MODULE, e.getMessage());
+
       promise.reject(Errors.E_KEYSTORE_ACCESS_ERROR, e);
     } catch (Throwable fail) {
       Log.e(KEYCHAIN_MODULE, fail.getMessage(), fail);
@@ -231,13 +295,15 @@ public class KeychainModule extends ReactContextBaseJavaModule {
   }
 
   @ReactMethod
-  public void hasInternetCredentialsForServer(@NonNull String server,
+  public void hasInternetCredentialsForServer(@NonNull final String server,
+                                              @Nullable final ReadableMap options,
                                               @NonNull final Promise promise) {
-    final String defaultService = getDefaultServiceIfNull(server);
+    final String alias = getAliasOrDefault(server);
 
-    ResultSet resultSet = prefsStorage.getEncryptedEntry(defaultService);
+    final ResultSet resultSet = prefsStorage.getEncryptedEntry(alias);
+
     if (resultSet == null) {
-      Log.e(KEYCHAIN_MODULE, "No entry found for service: " + defaultService);
+      Log.e(KEYCHAIN_MODULE, "No entry found for service: " + alias);
       promise.resolve(false);
       return;
     }
@@ -246,56 +312,34 @@ public class KeychainModule extends ReactContextBaseJavaModule {
   }
 
   @ReactMethod
-  public void setInternetCredentialsForServer(@NonNull String server,
-                                              String username,
-                                              String password,
-                                              String minimumSecurityLevel,
-                                              ReadableMap unusedOptions,
+  public void setInternetCredentialsForServer(@NonNull final String server,
+                                              final String username,
+                                              final String password,
+                                              @Nullable final ReadableMap options,
                                               @NonNull final Promise promise) {
-    String accessControl = null;
 
-    if (null != unusedOptions && unusedOptions.hasKey(Maps.ACCESS_CONTROL)) {
-      accessControl = unusedOptions.getString(Maps.ACCESS_CONTROL);
-    }
-
-    if(null == accessControl) accessControl = AccessControl.BIOMETRY_ANY;
-
-    setGenericPasswordForOptions(server, username, password,
-      minimumSecurityLevel, accessControl, promise);
+    setGenericPasswordForOptions(server, username, password, options, promise);
   }
 
   @ReactMethod
-  public void getInternetCredentialsForServer(@NonNull String server,
-                                              ReadableMap unusedOptions,
+  public void getInternetCredentialsForServer(@NonNull final String server,
+                                              @Nullable final ReadableMap options,
                                               @NonNull final Promise promise) {
-    String accessControl = null;
-
-    if (null != unusedOptions && unusedOptions.hasKey(Maps.ACCESS_CONTROL)) {
-      accessControl = unusedOptions.getString(Maps.ACCESS_CONTROL);
-    }
-
-    if(null == accessControl) accessControl = AccessControl.BIOMETRY_ANY;
-
-    getGenericPasswordForOptions(server, accessControl, promise);
+    getGenericPasswordForOptions(server, options, promise);
   }
 
   @ReactMethod
-  public void resetInternetCredentialsForServer(@NonNull String server,
-                                                ReadableMap unusedOptions,
+  public void resetInternetCredentialsForServer(@NonNull final String server,
+                                                @Nullable final ReadableMap options,
                                                 @NonNull final Promise promise) {
-    resetGenericPasswordForOptions(server, promise);
+    resetGenericPasswordForOptions(server, options, promise);
   }
 
   @ReactMethod
-  public void getSupportedBiometryType(@NonNull final Promise promise) {
+  public void getSupportedBiometryType(@Nullable final ReadableMap options,
+                                       @NonNull final Promise promise) {
     try {
-      boolean fingerprintAuthAvailable = isFingerprintAuthAvailable();
-
-      if (fingerprintAuthAvailable) {
-        promise.resolve(FINGERPRINT_SUPPORTED_NAME);
-      } else {
-        promise.resolve(null);
-      }
+      promise.resolve(isFingerprintAuthAvailable() ? FINGERPRINT_SUPPORTED_NAME : null);
     } catch (Exception e) {
       Log.e(KEYCHAIN_MODULE, e.getMessage(), e);
 
@@ -306,12 +350,70 @@ public class KeychainModule extends ReactContextBaseJavaModule {
       promise.reject(Errors.E_UNKNOWN_ERROR, fail);
     }
   }
+
+  @ReactMethod
+  public void getSecurityLevel(@Nullable final ReadableMap options,
+                               @NonNull final Promise promise) {
+    // DONE (olku): if forced biometry than we should return security level = HARDWARE if it supported
+    final String accessControl = getAccessControlOrDefault(options);
+    final boolean useBiometry = getUseBiometry(accessControl);
+
+    promise.resolve(getSecurityLevel(useBiometry).name());
+  }
+  //endregion
+
+  //region Helpers
+
+  /** Get access control value from options or fallback to {@link AccessControl#BIOMETRY_ANY}. */
+  @AccessControl
+  @NonNull
+  private static String getAccessControlOrDefault(@Nullable final ReadableMap options) {
+    return getAccessControlOrDefault(options, AccessControl.BIOMETRY_ANY);
+  }
+
+  /** Get access control value from options or fallback to default. */
+  @AccessControl
+  @NonNull
+  private static String getAccessControlOrDefault(@Nullable final ReadableMap options,
+                                                  @AccessControl @NonNull final String fallback) {
+    String accessControl = null;
+
+    if (null != options && options.hasKey(Maps.ACCESS_CONTROL)) {
+      accessControl = options.getString(Maps.ACCESS_CONTROL);
+    }
+
+    if (null == accessControl) return fallback;
+
+    return accessControl;
+  }
+
+
+  /** Get security level from options or fallback {@link SecurityLevel#ANY} value. */
+  @NonNull
+  private static SecurityLevel getSecurityLevelOrDefault(@Nullable final ReadableMap options) {
+    return getSecurityLevelOrDefault(options, SecurityLevel.ANY.name());
+  }
+
+  /** Get security level from options or fallback to default value. */
+  @NonNull
+  private static SecurityLevel getSecurityLevelOrDefault(@Nullable final ReadableMap options,
+                                                         @NonNull final String fallback) {
+    String minimalSecurityLevel = null;
+
+    if (null != options && options.hasKey(Maps.SECURITY_LEVEL)) {
+      minimalSecurityLevel = options.getString(Maps.SECURITY_LEVEL);
+    }
+
+    if (null == minimalSecurityLevel) minimalSecurityLevel = fallback;
+
+    return SecurityLevel.valueOf(minimalSecurityLevel);
+  }
   //endregion
 
   //region Implementation
 
   /** Is provided access control string matching biometry use request? */
-  public static boolean getUseBiometry(@Nullable final String accessControl) {
+  public static boolean getUseBiometry(@AccessControl @Nullable final String accessControl) {
     return AccessControl.BIOMETRY_ANY.equals(accessControl)
       || AccessControl.BIOMETRY_CURRENT_SET.equals(accessControl)
       || AccessControl.BIOMETRY_ANY_OR_DEVICE_PASSCODE.equals(accessControl)
@@ -351,7 +453,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     // The encrypted data is encrypted using an older CipherStorage, so we need to decrypt the data first, then encrypt it using the current CipherStorage, then store it again and return
     final CipherStorage oldStorage = getCipherStorageByName(storageName);
     if (null == oldStorage) {
-      throw new KeyStoreAccessException("Wrong cipher storage name: " + storageName);
+      throw new KeyStoreAccessException("Wrong cipher storage name '" + storageName + "' or cipher not available");
     }
 
     // decrypt using the older cipher storage
@@ -472,9 +574,10 @@ public class KeychainModule extends ReactContextBaseJavaModule {
         storage.securityLevel().name()));
   }
 
+  /** Extract cipher by it unique name. {@link CipherStorage#getCipherStorageName()}. */
   @Nullable
-  private CipherStorage getCipherStorageByName(@NonNull final String cipherStorageName) {
-    return cipherStorageMap.get(cipherStorageName);
+  /* package */ CipherStorage getCipherStorageByName(@KnownCiphers @NonNull final String knownName) {
+    return cipherStorageMap.get(knownName);
   }
 
   /** True - if fingerprint hardware available and configured, otherwise false. */
@@ -514,7 +617,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
   }
 
   @NonNull
-  private String getDefaultServiceIfNull(@Nullable final String service) {
+  private static String getAliasOrDefault(@Nullable final String service) {
     return service == null ? EMPTY_STRING : service;
   }
   //endregion

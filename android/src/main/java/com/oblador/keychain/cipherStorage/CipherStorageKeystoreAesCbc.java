@@ -8,6 +8,7 @@ import android.security.keystore.KeyProperties;
 
 import androidx.annotation.NonNull;
 
+import com.oblador.keychain.KeychainModule.KnownCiphers;
 import com.oblador.keychain.SecurityLevel;
 import com.oblador.keychain.exceptions.CryptoFailedException;
 import com.oblador.keychain.exceptions.KeyStoreAccessException;
@@ -30,8 +31,6 @@ import javax.crypto.SecretKeyFactory;
 @SuppressWarnings({"unused", "WeakerAccess"})
 public class CipherStorageKeystoreAesCbc extends CipherStorageBase {
   //region Constants
-  /** AES CBC */
-  public static final String CIPHER_STORAGE_AESCBC = "KeystoreAESCBC";
   /** AES */
   public static final String ALGORITHM_AES = KeyProperties.KEY_ALGORITHM_AES;
   /** CBC */
@@ -48,7 +47,7 @@ public class CipherStorageKeystoreAesCbc extends CipherStorageBase {
   //region Configuration
   @Override
   public String getCipherStorageName() {
-    return CIPHER_STORAGE_AESCBC;
+    return KnownCiphers.AES;
   }
 
   /** API23 is a requirement. */

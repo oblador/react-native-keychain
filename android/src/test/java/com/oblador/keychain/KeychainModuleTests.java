@@ -8,9 +8,11 @@ import android.os.Build;
 
 import androidx.biometric.BiometricManager;
 
+import com.facebook.react.bridge.JavaOnlyMap;
 import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.oblador.keychain.KeychainModule.AccessControl;
+import com.oblador.keychain.KeychainModule.Maps;
 import com.oblador.keychain.cipherStorage.CipherStorage;
 import com.oblador.keychain.cipherStorage.CipherStorageFacebookConceal;
 import com.oblador.keychain.cipherStorage.CipherStorageKeystoreAesCbc;
@@ -71,6 +73,8 @@ public class KeychainModuleTests {
 
   @Before
   public void setUp() throws Exception {
+    provider.configuration.clear();
+
     Security.insertProviderAt(provider, 0);
   }
 
@@ -379,7 +383,10 @@ public class KeychainModuleTests {
     final Promise mockPromise = mock(Promise.class);
 
     // WHEN:
-    module.getSecurityLevel(AccessControl.DEVICE_PASSCODE, mockPromise);
+    final JavaOnlyMap options = new JavaOnlyMap();
+    options.putString(Maps.ACCESS_CONTROL, AccessControl.DEVICE_PASSCODE);
+
+    module.getSecurityLevel(options, mockPromise);
 
     // THEN:
     verify(mockPromise).resolve(SecurityLevel.SECURE_HARDWARE.name());
@@ -397,7 +404,10 @@ public class KeychainModuleTests {
     provider.configuration.put("isInsideSecureHardware", false);
 
     // WHEN:
-    module.getSecurityLevel(AccessControl.DEVICE_PASSCODE, mockPromise);
+    final JavaOnlyMap options = new JavaOnlyMap();
+    options.putString(Maps.ACCESS_CONTROL, AccessControl.DEVICE_PASSCODE);
+
+    module.getSecurityLevel(options, mockPromise);
 
     // THEN:
     // expected AesCbc usage

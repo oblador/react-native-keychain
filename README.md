@@ -1,4 +1,8 @@
-<p align="center"><img src="https://user-images.githubusercontent.com/378279/36642269-6195b10c-1a3d-11e8-9e1b-37a3d1bcf7b3.png" align="center" width="150" height="201" alt="" /></p>
+<p align="center"><img 
+    src="https://user-images.githubusercontent.com/378279/36642269-6195b10c-1a3d-11e8-9e1b-37a3d1bcf7b3.png" 
+    align="center" width="150" height="201" alt="" 
+  />
+</p>
 
 <h1 align="center">react-native-keychain</h1>
 
@@ -308,6 +312,12 @@ Encrypted data is stored in SharedPreferences.
 
 The `setInternetCredentials(server, username, password)` call will be resolved as call to `setGenericPassword(username, password, server)`. Use the `server` argument to distinguish between multiple entries.
 
+![Android Security Framework](https://source.android.com/security/images/authentication-flow.png)
+
+* [Android authentication](https://source.android.com/security/authentication)
+* [Android Cipher](https://developer.android.com/guide/topics/security/cryptography)
+* [Android Protected Confirmation](https://developer.android.com/training/articles/security-android-protected-confirmation)
+
 ### iOS
 
 If you need Keychain Sharing in your iOS extension, make sure you use the same App Group and Keychain Sharing group names in your Main App and your Share Extension. To then share the keychain between the Main App and Share Extension, use the `accessGroup` and `service` option on `setGenericPassword` and `getGenericPassword`, like so: `getGenericPassword({ accessGroup: 'group.appname', service: 'com.example.appname' })`
@@ -328,29 +338,38 @@ On API levels that do not support Android keystore, Facebook Conceal is used to 
       <td align="center">
         <a href="https://github.com/oblador">
           <img width="150" height="150" src="https://github.com/oblador.png?v=3&s=150">
-          <br>
+          <br />
           <strong>Joel Arvidsson</strong>
         </a>
-        <br>
+        <br />
         Author
       </td>
       <td align="center">
         <a href="https://github.com/vonovak">
           <img width="150" height="150" src="https://github.com/vonovak.png?v=3&s=150">
-          </br>
+          <br />
           <strong>Vojtech Novak</strong>
         </a>
-        <br>
+        <br />
         Maintainer
       </td>
       <td align="center">
         <a href="https://github.com/pcoltau">
           <img width="150" height="150" src="https://github.com/pcoltau.png?v=3&s=150">
-          </br>
+          <br />
           <strong>Pelle Stenild Coltau</strong>
         </a>
-        <br>
+        <br />
         Maintainer
+      </td>
+      <td align="center">
+        <a href="https://github.com/OleksandrKucherenko">
+          <img width="150" height="150" src="https://github.com/OleksandrKucherenko.png?v=3&s=150">
+          <br />
+          <strong>Oleksandr Kucherenko</strong>
+        </a>
+        <br />
+        Contributor
       </td>
     </tr>
   <tbody>
@@ -358,4 +377,4 @@ On API levels that do not support Android keystore, Facebook Conceal is used to 
 
 ## License
 
-MIT © Joel Arvidsson 2016-2018
+MIT © Joel Arvidsson 2016-2020

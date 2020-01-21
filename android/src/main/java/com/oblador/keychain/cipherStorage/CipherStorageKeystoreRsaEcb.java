@@ -12,6 +12,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
+import com.oblador.keychain.KeychainModule;
 import com.oblador.keychain.SecurityLevel;
 import com.oblador.keychain.exceptions.CryptoFailedException;
 import com.oblador.keychain.exceptions.KeyStoreAccessException;
@@ -38,8 +39,6 @@ import javax.crypto.NoSuchPaddingException;
 @SuppressWarnings({"unused", "WeakerAccess"})
 public class CipherStorageKeystoreRsaEcb extends CipherStorageBase {
   //region Constants
-  /** Storage name. */
-  public static final String CIPHER_STORAGE_NAME_RSAECB = "KeystoreRSAECB";
   /** Selected algorithm. */
   public static final String ALGORITHM_RSA = KeyProperties.KEY_ALGORITHM_RSA;
   /** Selected block mode. */
@@ -150,7 +149,7 @@ public class CipherStorageKeystoreRsaEcb extends CipherStorageBase {
   /** RSAECB. */
   @Override
   public String getCipherStorageName() {
-    return CIPHER_STORAGE_NAME_RSAECB;
+    return KeychainModule.KnownCiphers.RSA;
   }
 
   /** API23 is a requirement. */

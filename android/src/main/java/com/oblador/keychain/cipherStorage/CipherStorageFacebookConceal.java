@@ -15,6 +15,7 @@ import com.facebook.crypto.Entity;
 import com.facebook.crypto.keychain.KeyChain;
 import com.facebook.react.bridge.AssertionException;
 import com.facebook.react.bridge.ReactApplicationContext;
+import com.oblador.keychain.KeychainModule.KnownCiphers;
 import com.oblador.keychain.SecurityLevel;
 import com.oblador.keychain.exceptions.CryptoFailedException;
 
@@ -27,7 +28,6 @@ import java.security.Key;
  */
 @SuppressWarnings({"unused", "WeakerAccess"})
 public class CipherStorageFacebookConceal extends CipherStorageBase {
-  public static final String CIPHER_STORAGE_NAME_FACEBOOK = "FacebookConceal";
   public static final String KEYCHAIN_DATA = "RN_KEYCHAIN";
 
   private final Crypto crypto;
@@ -41,7 +41,7 @@ public class CipherStorageFacebookConceal extends CipherStorageBase {
   //region Configuration
   @Override
   public String getCipherStorageName() {
-    return CIPHER_STORAGE_NAME_FACEBOOK;
+    return KnownCiphers.FB;
   }
 
   @Override

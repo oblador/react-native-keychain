@@ -15,6 +15,7 @@ import com.oblador.keychain.exceptions.KeyStoreAccessException;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -22,6 +23,7 @@ import java.nio.charset.Charset;
 import java.security.GeneralSecurityException;
 import java.security.Key;
 import java.security.KeyStore;
+import java.security.NoSuchAlgorithmException;
 import java.security.ProviderException;
 import java.security.UnrecoverableKeyException;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -30,6 +32,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import javax.crypto.Cipher;
 import javax.crypto.CipherInputStream;
 import javax.crypto.CipherOutputStream;
+import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.IvParameterSpec;
 
 import static com.oblador.keychain.SecurityLevel.SECURE_HARDWARE;
@@ -58,6 +61,14 @@ abstract public class CipherStorageBase implements CipherStorage {
   protected final Object _sync = new Object();
   /** Try to resolve it only once and cache result for all future calls. */
   protected transient AtomicBoolean isSupportsSecureHardware;
+  /** Guard for {@link #isStrongboxAvailable} field assignment. */
+  protected final Object _syncStrongbox = new Object();
+  /** Try to resolve support of the strongbox and cache result for future calls. */
+  protected transient AtomicBoolean isStrongboxAvailable;
+  /** Get cached instance of cipher. Get instance operation is slow. */
+  protected transient Cipher cachedCipher;
+  /** Cached instance of the Keystore. */
+  protected transient KeyStore cachedKeyStore;
   //endregion
 
   //region Overrides
@@ -94,11 +105,18 @@ abstract public class CipherStorageBase implements CipherStorage {
 
       isSupportsSecureHardware = new AtomicBoolean(false);
 
-      try (SelfDestroyKey sdk = new SelfDestroyKey(TEST_KEY_ALIAS)) {
+      SelfDestroyKey sdk = null;
+
+      // auto-closable supported from api18 only, our minimal is api16
+      //noinspection TryFinallyCanBeTryWithResources
+      try {
+        sdk = new SelfDestroyKey(TEST_KEY_ALIAS);
         final boolean newValue = validateKeySecurityLevel(SECURE_HARDWARE, sdk.key);
 
         isSupportsSecureHardware.set(newValue);
       } catch (Throwable ignored) {
+      } finally {
+        if (null != sdk) sdk.close();
       }
     }
 
@@ -148,6 +166,20 @@ abstract public class CipherStorageBase implements CipherStorage {
   //endregion
 
   //region Implementation
+
+  /** Get cipher instance and cache it for any next call. */
+  @NonNull
+  public Cipher getCachedInstance() throws NoSuchAlgorithmException, NoSuchPaddingException {
+    if (null == cachedCipher) {
+      synchronized (this) {
+        if (null == cachedCipher) {
+          cachedCipher = Cipher.getInstance(getEncryptionTransformation());
+        }
+      }
+    }
+
+    return cachedCipher;
+  }
 
   /** Check requirements to the security level. */
   protected void throwIfInsufficientLevel(@NonNull final SecurityLevel level)
@@ -242,17 +274,24 @@ abstract public class CipherStorageBase implements CipherStorage {
 
   /** Load key store. */
   @NonNull
-  protected KeyStore getKeyStoreAndLoad() throws KeyStoreAccessException {
-    try {
-      final KeyStore keyStore = KeyStore.getInstance(KEYSTORE_TYPE);
+  public KeyStore getKeyStoreAndLoad() throws KeyStoreAccessException {
+    if (null == cachedKeyStore) {
+      synchronized (this) {
+        if (null == cachedKeyStore) {
+          // initialize instance
+          try {
+            final KeyStore keyStore = KeyStore.getInstance(KEYSTORE_TYPE);
+            keyStore.load(null);
 
-      // initialize instance
-      keyStore.load(null);
-
-      return keyStore;
-    } catch (final Throwable fail) {
-      throw new KeyStoreAccessException("Could not access Keystore", fail);
+            cachedKeyStore = keyStore;
+          } catch (final Throwable fail) {
+            throw new KeyStoreAccessException("Could not access Keystore", fail);
+          }
+        }
+      }
     }
+
+    return cachedKeyStore;
   }
 
   /** Default encryption with cipher without initialization vector. */
@@ -277,7 +316,7 @@ abstract public class CipherStorageBase implements CipherStorage {
                                  @Nullable final EncryptStringHandler handler)
     throws IOException, GeneralSecurityException {
 
-    final Cipher cipher = Cipher.getInstance(getEncryptionTransformation());
+    final Cipher cipher = getCachedInstance();
 
     // encrypt the value using a CipherOutputStream
     try (final ByteArrayOutputStream output = new ByteArrayOutputStream()) {
@@ -305,7 +344,7 @@ abstract public class CipherStorageBase implements CipherStorage {
   protected String decryptBytes(@NonNull final Key key, @NonNull final byte[] bytes,
                                 @Nullable final DecryptBytesHandler handler)
     throws GeneralSecurityException, IOException {
-    final Cipher cipher = Cipher.getInstance(getEncryptionTransformation());
+    final Cipher cipher = getCachedInstance();
 
     // decrypt the bytes using a CipherInputStream
     try (ByteArrayInputStream in = new ByteArrayInputStream(bytes);
@@ -329,22 +368,33 @@ abstract public class CipherStorageBase implements CipherStorage {
   }
 
   /** Get the most secured keystore */
-  protected void generateKeyAndStoreUnderAlias(@NonNull final String alias,
-                                               @NonNull final SecurityLevel requiredLevel)
+  public void generateKeyAndStoreUnderAlias(@NonNull final String alias,
+                                            @NonNull final SecurityLevel requiredLevel)
     throws GeneralSecurityException {
 
     // Firstly, try to generate the key as safe as possible (strongbox).
     // see https://developer.android.com/training/articles/keystore#HardwareSecurityModule
 
-    Key secretKey;
+    Key secretKey = null;
 
-    try {
-      secretKey = tryGenerateStrongBoxSecurityKey(alias);
-    } catch (GeneralSecurityException | ProviderException ex) {
-      Log.w(LOG_TAG, "StrongBox security storage is not available.", ex);
+    // multi-threaded usage is possible
+    synchronized (_syncStrongbox) {
+      if (null == isStrongboxAvailable || isStrongboxAvailable.get()) {
+        if (null == isStrongboxAvailable) isStrongboxAvailable = new AtomicBoolean(false);
 
-      // If that is not possible, we generate the key in a regular way
-      // (it still might be generated in hardware, but not in StrongBox)
+        try {
+          secretKey = tryGenerateStrongBoxSecurityKey(alias);
+
+          isStrongboxAvailable.set(true);
+        } catch (GeneralSecurityException | ProviderException ex) {
+          Log.w(LOG_TAG, "StrongBox security storage is not available.", ex);
+        }
+      }
+    }
+
+    // If that is not possible, we generate the key in a regular way
+    // (it still might be generated in hardware, but not in StrongBox)
+    if (null == secretKey || !isStrongboxAvailable.get()) {
       try {
         secretKey = tryGenerateRegularSecurityKey(alias);
       } catch (GeneralSecurityException fail) {
@@ -488,7 +538,7 @@ abstract public class CipherStorageBase implements CipherStorage {
   }
 
   /** Auto remove keystore key. */
-  public class SelfDestroyKey implements AutoCloseable {
+  public class SelfDestroyKey implements Closeable {
     public final String name;
     public final Key key;
 
