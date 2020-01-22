@@ -251,9 +251,11 @@ public class KeychainModule extends ReactContextBaseJavaModule {
       promise.resolve(credentials);
     } catch (KeyStoreAccessException e) {
       Log.e(KEYCHAIN_MODULE, e.getMessage());
+
       promise.reject(Errors.E_KEYSTORE_ACCESS_ERROR, e);
     } catch (CryptoFailedException e) {
       Log.e(KEYCHAIN_MODULE, e.getMessage());
+
       promise.reject(Errors.E_CRYPTO_FAILED, e);
     } catch (Throwable fail) {
       Log.e(KEYCHAIN_MODULE, fail.getMessage(), fail);

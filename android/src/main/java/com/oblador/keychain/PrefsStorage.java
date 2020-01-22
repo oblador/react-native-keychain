@@ -46,7 +46,8 @@ public class PrefsStorage {
     }
 
     if (cipherStorageName == null) {
-      // If the CipherStorage name is not found, we assume it is because the entry was written by an older version of this library. The older version used Facebook Conceal, so we default to that.
+      // If the CipherStorage name is not found, we assume it is because the entry was written by an older
+      // version of this library. The older version used Facebook Conceal, so we default to that.
       cipherStorageName = KnownCiphers.FB;
     }
 

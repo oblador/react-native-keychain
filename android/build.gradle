@@ -25,6 +25,8 @@ android {
     targetSdkVersion safeExtGet('targetSdkVersion', 28)
     versionCode 1
     versionName "1.0"
+
+    testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
   }
   lintOptions {
     abortOnError false
@@ -75,4 +77,15 @@ dependencies {
 
   /* http://robolectric.org/getting-started/ */
   testImplementation("org.robolectric:robolectric:4.3.1")
+
+  /* https://mvnrepository.com/artifact/androidx.test.ext/junit */
+  testImplementation "androidx.test.ext:junit:1.1.2-alpha03"
+
+  /* https://mvnrepository.com/artifact/androidx.test/core */
+  testImplementation 'androidx.test:core:1.3.0-alpha03'
+  testImplementation "androidx.test:runner:1.3.0-alpha03"
+  testImplementation "androidx.test:monitor:1.3.0-alpha03"
+
+  // Uncomment for including JRE implementation of crypto api (that is used in Robolectric tests)
+  testImplementation fileTree(dir: "${System.properties.get("java.home")}/lib", include: ["jce.jar"])
 }

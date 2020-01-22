@@ -11,7 +11,7 @@ public final class FakeProvider extends Provider {
   public FakeProvider() {
     super(NAME, 1.0, "Fake");
 
-    put("KeyStore.AndroidKeyStore", FakeKeystore.class.getName());
+    put("KeyStore.AndroidKeyStore", FakeKeyStoreSpi.class.getName());
   }
 
   @Override

@@ -8,6 +8,7 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 
 import com.oblador.keychain.SecurityLevel;
 import com.oblador.keychain.exceptions.CryptoFailedException;
@@ -439,6 +440,23 @@ abstract public class CipherStorageBase implements CipherStorage {
     return generateKey(specification);
   }
 
+  //endregion
+
+  //region Testing
+
+  /** Override internal cipher instance cache. */
+  @VisibleForTesting
+  public CipherStorageBase setCipher(final Cipher cipher) {
+    cachedCipher = cipher;
+    return this;
+  }
+
+  /** Override the keystore instance cache. */
+  @VisibleForTesting
+  public CipherStorageBase setKeyStore(final KeyStore keystore) {
+    cachedKeyStore = keystore;
+    return this;
+  }
   //endregion
 
   //region Static methods

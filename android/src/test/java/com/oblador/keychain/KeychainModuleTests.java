@@ -6,17 +6,24 @@ import android.content.pm.PackageManager;
 import android.hardware.fingerprint.FingerprintManager;
 import android.os.Build;
 
+import androidx.annotation.NonNull;
 import androidx.biometric.BiometricManager;
+import androidx.test.core.app.ApplicationProvider;
 
 import com.facebook.react.bridge.JavaOnlyMap;
 import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.oblador.keychain.KeychainModule.AccessControl;
+import com.oblador.keychain.KeychainModule.Errors;
+import com.oblador.keychain.KeychainModule.KnownCiphers;
 import com.oblador.keychain.KeychainModule.Maps;
 import com.oblador.keychain.cipherStorage.CipherStorage;
+import com.oblador.keychain.cipherStorage.CipherStorageBase;
 import com.oblador.keychain.cipherStorage.CipherStorageFacebookConceal;
 import com.oblador.keychain.cipherStorage.CipherStorageKeystoreAesCbc;
 import com.oblador.keychain.cipherStorage.CipherStorageKeystoreRsaEcb;
+import com.oblador.keychain.exceptions.CryptoFailedException;
+import com.oblador.keychain.exceptions.KeyStoreAccessException;
 
 import org.junit.After;
 import org.junit.Before;
@@ -26,15 +33,18 @@ import org.junit.Test;
 import org.junit.rules.TestName;
 import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import org.mockito.junit.VerificationCollector;
 import org.robolectric.RobolectricTestRunner;
-import org.robolectric.RuntimeEnvironment;
 import org.robolectric.annotation.Config;
 
+import java.security.KeyStore;
 import java.security.Security;
+
+import javax.crypto.Cipher;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
@@ -42,6 +52,7 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -49,6 +60,8 @@ import static org.robolectric.Shadows.shadowOf;
 
 @RunWith(RobolectricTestRunner.class)
 public class KeychainModuleTests {
+  public static final byte[] BYTES_USERNAME = "username".getBytes();
+  public static final byte[] BYTES_PASSWORD = "password".getBytes();
   /**
    * Cancel test after 5 seconds.
    */
@@ -83,8 +96,9 @@ public class KeychainModuleTests {
     Security.removeProvider(FakeProvider.NAME);
   }
 
+  @NonNull
   private ReactApplicationContext getRNContext() {
-    return new ReactApplicationContext(RuntimeEnvironment.application);
+    return new ReactApplicationContext(ApplicationProvider.getApplicationContext());
   }
 
   @Test
@@ -418,4 +432,35 @@ public class KeychainModuleTests {
     verify(mockPromise).resolve(SecurityLevel.SECURE_SOFTWARE.name());
   }
 
+  @Test
+  @Config(sdk = Build.VERSION_CODES.P)
+  public void testDowngradeBiometricToAes_api28() throws Exception {
+    // GIVEN:
+    final ReactApplicationContext context = getRNContext();
+    final KeychainModule module = new KeychainModule(context);
+    final PrefsStorage prefs = new PrefsStorage(context);
+    final Cipher mockCipher = Mockito.mock(Cipher.class);
+    final KeyStore mockKeyStore = Mockito.mock(KeyStore.class);
+    final CipherStorage storage = module.getCipherStorageByName(KnownCiphers.RSA);
+    final CipherStorage.EncryptionResult result = new CipherStorage.EncryptionResult(BYTES_USERNAME, BYTES_PASSWORD, storage);
+    final Promise mockPromise = mock(Promise.class);
+    final JavaOnlyMap options = new JavaOnlyMap();
+
+    // store record done with RSA/Biometric cipher
+    prefs.storeEncryptedEntry("dummy", result);
+
+    assertThat(storage, instanceOf(CipherStorage.class));
+    ((CipherStorageBase)storage).setCipher(mockCipher).setKeyStore(mockKeyStore);
+    when(mockKeyStore.getKey(eq("dummy"), isNull())).thenReturn(null); // return empty Key!
+
+    // WHEN:
+    module.getGenericPasswordForOptions("dummy", options, mockPromise);
+
+    // THEN:
+    ArgumentCaptor<Exception> exception = ArgumentCaptor.forClass(Exception.class);
+    verify(mockPromise).reject(eq(Errors.E_CRYPTO_FAILED), exception.capture());
+    assertThat(exception.getValue(), instanceOf(CryptoFailedException.class));
+    assertThat(exception.getValue().getCause(), instanceOf(KeyStoreAccessException.class));
+    assertThat(exception.getValue().getMessage(), is("Wrapped error: Empty key extracted!"));
+  }
 }

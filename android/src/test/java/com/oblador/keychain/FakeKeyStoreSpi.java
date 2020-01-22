@@ -13,7 +13,7 @@ import java.security.cert.CertificateException;
 import java.util.Date;
 import java.util.Enumeration;
 
-public final class FakeKeystore extends KeyStoreSpi {
+public final class FakeKeyStoreSpi extends KeyStoreSpi {
 
   @Override
   public Key engineGetKey(String alias, char[] password) throws NoSuchAlgorithmException, UnrecoverableKeyException {
