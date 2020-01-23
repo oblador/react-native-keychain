@@ -8,7 +8,53 @@
 
 [![Travis](https://img.shields.io/travis/oblador/react-native-keychain.svg)](https://travis-ci.org/oblador/react-native-keychain) [![npm](https://img.shields.io/npm/v/react-native-keychain.svg)](https://npmjs.com/package/react-native-keychain) [![npm](https://img.shields.io/npm/dm/react-native-keychain.svg)](https://npmjs.com/package/react-native-keychain)
 
-Keychain/Keystore Access for React Native.
+# Keychain/Keystore Access for React Native.
+
+- [Keychain/Keystore Access for React Native.](#keychainkeystore-access-for-react-native)
+  - [Installation](#installation)
+  - [Usage](#usage)
+  - [API](#api)
+    - [`setGenericPassword(username, password, [{ accessControl, accessible, accessGroup, service, securityLevel }])`](#setgenericpasswordusername-password--accesscontrol-accessible-accessgroup-service-securitylevel)
+    - [`getGenericPassword([{ authenticationPrompt, service }])`](#getgenericpassword-authenticationprompt-service)
+    - [`resetGenericPassword([{ service }])`](#resetgenericpassword-service)
+    - [`setInternetCredentials(server, username, password, [{ accessControl, accessible, accessGroup, securityLevel }])`](#setinternetcredentialsserver-username-password--accesscontrol-accessible-accessgroup-securitylevel)
+    - [`hasInternetCredentials(server, [{ authenticationPrompt }])`](#hasinternetcredentialsserver--authenticationprompt)
+    - [`getInternetCredentials(server, [{ authenticationPrompt }])`](#getinternetcredentialsserver--authenticationprompt)
+    - [`resetInternetCredentials(server, [{}])`](#resetinternetcredentialsserver)
+    - [`requestSharedWebCredentials()` (iOS only)](#requestsharedwebcredentials-ios-only)
+    - [`setSharedWebCredentials(server, username, password)` (iOS only)](#setsharedwebcredentialsserver-username-password-ios-only)
+    - [`canImplyAuthentication([{ authenticationType }])` (iOS only)](#canimplyauthentication-authenticationtype--ios-only)
+    - [`getSupportedBiometryType([{}])`](#getsupportedbiometrytype)
+    - [`getSecurityLevel([{}])` (Android only)](#getsecuritylevel-android-only)
+    - [Options](#options)
+      - [`Keychain.ACCESS_CONTROL` enum](#keychainaccesscontrol-enum)
+      - [`Keychain.ACCESSIBLE` enum](#keychainaccessible-enum)
+      - [`Keychain.AUTHENTICATION_TYPE` enum](#keychainauthenticationtype-enum)
+      - [`Keychain.BIOMETRY_TYPE` enum](#keychainbiometrytype-enum)
+      - [`Keychain.SECURITY_LEVEL` enum (Android only)](#keychainsecuritylevel-enum-android-only)
+      - [`Keychain.STORAGE_TYPE` enum (Android only)](#keychainstoragetype-enum-android-only)
+      - [`Keychain.RULES` enum (Android only)](#keychainrules-enum-android-only)
+  - [Important Behavior](#important-behavior)
+    - [Rule 1: Automatic Security Level Upgrade](#rule-1-automatic-security-level-upgrade)
+  - [Manual Installation](#manual-installation)
+    - [iOS](#ios)
+      - [Option: Manually](#option-manually)
+      - [Option: With CocoaPods](#option-with-cocoapods)
+      - [Enable `Keychain Sharing` entitlement for iOS 10+](#enable-keychain-sharing-entitlement-for-ios-10)
+    - [Android](#android)
+      - [Option: Manually](#option-manually-1)
+      - [Proguard Rules](#proguard-rules)
+  - [Unit Testing with Jest](#unit-testing-with-jest)
+    - [Using a Jest `__mocks__` Directory](#using-a-jest-mocks-directory)
+    - [Using a Jest Setup File](#using-a-jest-setup-file)
+  - [Notes](#notes)
+    - [Android Notes](#android-notes)
+    - [iOS Notes](#ios-notes)
+    - [macOS Catalyst](#macos-catalyst)
+    - [Security](#security)
+  - [Maintainers](#maintainers)
+  - [For Developers / Contributors](#for-developers--contributors)
+  - [License](#license)
 
 ## Installation
 
@@ -456,6 +502,10 @@ On API levels that do not support Android keystore, Facebook Conceal is used to 
     </tr>
   <tbody>
 </table>
+
+## For Developers / Contributors
+
+- [How to Configure Android Studio for Development](android/README.md)
 
 ## License
 

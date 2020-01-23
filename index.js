@@ -2,8 +2,6 @@
 import { NativeModules, Platform } from 'react-native';
 const { RNKeychainManager } = NativeModules;
 
-// last touched: 2020-01-23 09:35
-
 export const SECURITY_LEVEL = Object.freeze({
   ANY: RNKeychainManager.SECURITY_LEVEL_ANY,
   SECURE_SOFTWARE: RNKeychainManager.SECURITY_LEVEL_SECURE_SOFTWARE,

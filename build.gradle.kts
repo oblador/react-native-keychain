@@ -79,3 +79,10 @@ val updateLibrarySourcesInExample by tasks.registering(Copy::class) {
 
   from("${rootProject.projectDir}/index.js")
 }
+
+tasks.register("build") {
+  dependsOn(
+    updateLibrarySourcesInExample,
+    gradle.includedBuild("android").task(":app:assemble")
+  )
+}
