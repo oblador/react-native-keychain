@@ -152,5 +152,8 @@ public interface CipherStorage {
    * minSupportedApiLevel()
    */
   int getCapabilityLevel();
+
+  /** Get default name for alias/service. */
+  String getDefaultAliasServiceName();
   //endregion
 }

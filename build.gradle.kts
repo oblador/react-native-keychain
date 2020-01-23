@@ -17,7 +17,7 @@ buildscript {
     maven { url = uri("https://plugins.gradle.org/m2/") }
   }
   dependencies {
-    classpath("com.android.tools.build:gradle:4.0.0-alpha08")
+    classpath("com.android.tools.build:gradle:4.0.0-alpha09")
 
     /* https://github.com/radarsh/gradle-test-logger-plugin */
     classpath("com.adarshr:gradle-test-logger-plugin:2.0.0")
@@ -56,4 +56,26 @@ allprojects {
       }
     }
   }
+}
+
+val updateLibrarySourcesInExample by tasks.registering(Copy::class) {
+  into("${rootProject.projectDir}/KeychainExample/node_modules/react-native-keychain/")
+
+  from("${rootProject.projectDir}/android/src/"){
+    into("android/src")
+  }
+
+  from("${rootProject.projectDir}/typings/"){
+    into("typings")
+  }
+
+  from("${rootProject.projectDir}/RNKeychainManager"){
+    into("RNKeychainManager")
+  }
+
+  from("${rootProject.projectDir}/RNKeychain.xcodeproj"){
+    into("RNKeychain.xcodeproj")
+  }
+
+  from("${rootProject.projectDir}/index.js")
 }

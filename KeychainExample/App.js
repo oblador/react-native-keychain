@@ -13,7 +13,7 @@ import SegmentedControlTab from 'react-native-segmented-control-tab';
 import * as Keychain from 'react-native-keychain';
 
 const ACCESS_CONTROL_OPTIONS = ['None', 'Passcode', 'Password'];
-const ACCESS_CONTROL_OPTIONS_ANDROID = ['None'];
+const ACCESS_CONTROL_OPTIONS_ANDROID = ['Default'];
 const ACCESS_CONTROL_MAP = [
   null,
   Keychain.ACCESS_CONTROL.DEVICE_PASSCODE,
@@ -31,6 +31,14 @@ const SECURITY_LEVEL_MAP = [
   Keychain.SECURITY_LEVEL.SECURE_HARDWARE,
 ];
 
+const SECURITY_STORAGE_OPTIONS = ['Best', 'FB', 'AES', 'RSA'];
+const SECURITY_STORAGE_MAP = [
+  null,
+  Keychain.STORAGE_TYPE.FB,
+  Keychain.STORAGE_TYPE.AES,
+  Keychain.STORAGE_TYPE.RSA,
+];
+
 export default class KeychainExample extends Component {
   state = {
     username: '',
@@ -39,15 +47,16 @@ export default class KeychainExample extends Component {
     biometryType: null,
     accessControl: null,
     securityLevel: null,
+    storage: null,
   };
 
   componentDidMount() {
-    Keychain.getSupportedBiometryType().then(biometryType => {
+    Keychain.getSupportedBiometryType({}).then(biometryType => {
       this.setState({ biometryType });
     });
   }
 
-  async save(accessControl) {
+  async save() {
     try {
       let start = new Date();
 
@@ -57,6 +66,7 @@ export default class KeychainExample extends Component {
         {
           accessControl: this.state.accessControl,
           securityLevel: this.state.securityLevel,
+          storage: this.state.storageSelection,
         }
       );
 
@@ -65,7 +75,8 @@ export default class KeychainExample extends Component {
       this.setState({
         username: '',
         password: '',
-        status: `Credentials saved! takes: ${(end.getTime() - start.getTime())} millis`,
+        status: `Credentials saved! takes: ${end.getTime() -
+          start.getTime()} millis`,
       });
     } catch (err) {
       this.setState({ status: 'Could not save credentials, ' + err });
@@ -99,13 +110,14 @@ export default class KeychainExample extends Component {
   }
 
   render() {
-    let VALUES =
+    const VALUES =
       Platform.OS === 'ios'
         ? ACCESS_CONTROL_OPTIONS
         : ACCESS_CONTROL_OPTIONS_ANDROID;
-    let AC_MAP =
+    const AC_MAP =
       Platform.OS === 'ios' ? ACCESS_CONTROL_MAP : ACCESS_CONTROL_MAP_ANDROID;
-    let SL_MAP = Platform.OS === 'ios' ? [] : SECURITY_LEVEL_MAP;
+    const SL_MAP = Platform.OS === 'ios' ? [] : SECURITY_LEVEL_MAP;
+    const ST_MAP = Platform.OS === 'ios' ? [] : SECURITY_STORAGE_MAP;
 
     return (
       <KeyboardAvoidingView
@@ -166,7 +178,7 @@ export default class KeychainExample extends Component {
               }
             />
           </View>
-          {Platform.OS === 'android' &&
+          {Platform.OS === 'android' && (
             <View style={styles.field}>
               <Text style={styles.label}>Security Level</Text>
               <SegmentedControlTab
@@ -180,8 +192,21 @@ export default class KeychainExample extends Component {
                   })
                 }
               />
+
+              <Text style={styles.label}>Storage</Text>
+              <SegmentedControlTab
+                selectedIndex={this.state.selectedStorageIndex}
+                values={SECURITY_STORAGE_OPTIONS}
+                onTabPress={index =>
+                  this.setState({
+                    ...this.state,
+                    storageSelection: ST_MAP[index],
+                    selectedStorageIndex: index,
+                  })
+                }
+              />
             </View>
-          }
+          )}
           {!!this.state.status && (
             <Text style={styles.status}>{this.state.status}</Text>
           )}
@@ -213,8 +238,10 @@ export default class KeychainExample extends Component {
                 <Text style={styles.buttonText}>Reset</Text>
               </View>
             </TouchableHighlight>
+          </View>
 
-            {Platform.OS === 'android' && (
+          {Platform.OS === 'android' && (
+            <View style={styles.buttons}>
               <TouchableHighlight
                 onPress={async () => {
                   const level = await Keychain.getSecurityLevel();
@@ -226,8 +253,8 @@ export default class KeychainExample extends Component {
                   <Text style={styles.buttonText}>Get security level</Text>
                 </View>
               </TouchableHighlight>
-            )}
-          </View>
+            </View>
+          )}
         </View>
       </KeyboardAvoidingView>
     );
@@ -283,6 +310,7 @@ const styles = StyleSheet.create({
   },
   button: {
     borderRadius: 3,
+    padding: 2,
     overflow: 'hidden',
   },
   save: {

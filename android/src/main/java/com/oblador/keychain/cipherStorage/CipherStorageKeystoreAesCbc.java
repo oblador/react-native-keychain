@@ -42,6 +42,8 @@ public class CipherStorageKeystoreAesCbc extends CipherStorageBase {
     ALGORITHM_AES + "/" + BLOCK_MODE_CBC + "/" + PADDING_PKCS7;
   /** Key size. */
   public static final int ENCRYPTION_KEY_SIZE = 256;
+
+  public static final String DEFAULT_SERVICE = "RN_KEYCHAIN_DEFAULT_ALIAS";
   //endregion
 
   //region Configuration
@@ -81,6 +83,13 @@ public class CipherStorageKeystoreAesCbc extends CipherStorageBase {
   protected String getEncryptionTransformation() {
     return ENCRYPTION_TRANSFORMATION;
   }
+
+  /** {@inheritDoc}. Override for saving the compatibility with previous version of lib. */
+  @Override
+  public String getDefaultAliasServiceName() {
+    return DEFAULT_SERVICE;
+  }
+
   //endregion
 
   //region Overrides
@@ -94,7 +103,7 @@ public class CipherStorageKeystoreAesCbc extends CipherStorageBase {
 
     throwIfInsufficientLevel(level);
 
-    final String safeAlias = getDefaultAliasIfEmpty(alias);
+    final String safeAlias = getDefaultAliasIfEmpty(alias, getDefaultAliasServiceName());
     final AtomicInteger retries = new AtomicInteger(1);
 
     try {
@@ -122,7 +131,7 @@ public class CipherStorageKeystoreAesCbc extends CipherStorageBase {
 
     throwIfInsufficientLevel(level);
 
-    final String safeAlias = getDefaultAliasIfEmpty(alias);
+    final String safeAlias = getDefaultAliasIfEmpty(alias, getDefaultAliasServiceName());
     final AtomicInteger retries = new AtomicInteger(1);
 
     try {

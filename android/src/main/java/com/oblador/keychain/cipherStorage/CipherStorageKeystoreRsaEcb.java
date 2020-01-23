@@ -63,10 +63,10 @@ public class CipherStorageKeystoreRsaEcb extends CipherStorageBase {
 
     throwIfInsufficientLevel(level);
 
-    final String safeService = getDefaultAliasIfEmpty(alias);
+    final String safeAlias = getDefaultAliasIfEmpty(alias, getDefaultAliasServiceName());
 
     try {
-      return innerEncryptedCredentials(safeService, password, username, level);
+      return innerEncryptedCredentials(safeAlias, password, username, level);
 
       // KeyStoreException | KeyStoreAccessException  | NoSuchAlgorithmException | InvalidKeySpecException |
       //    IOException | NoSuchPaddingException | InvalidKeyException e
@@ -112,7 +112,7 @@ public class CipherStorageKeystoreRsaEcb extends CipherStorageBase {
 
     throwIfInsufficientLevel(level);
 
-    final String safeAlias = getDefaultAliasIfEmpty(alias);
+    final String safeAlias = getDefaultAliasIfEmpty(alias, getDefaultAliasServiceName());
     final AtomicInteger retries = new AtomicInteger(1);
     boolean shouldAskPermissions = false;
 

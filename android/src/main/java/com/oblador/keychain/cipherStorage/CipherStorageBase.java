@@ -38,7 +38,7 @@ import javax.crypto.spec.IvParameterSpec;
 
 import static com.oblador.keychain.SecurityLevel.SECURE_HARDWARE;
 
-@SuppressWarnings({"unused", "WeakerAccess", "CharsetObjectCanBeUsed"})
+@SuppressWarnings({"unused", "WeakerAccess", "CharsetObjectCanBeUsed", "UnusedReturnValue"})
 abstract public class CipherStorageBase implements CipherStorage {
   //region Constants
   /** Logging tag. */
@@ -47,8 +47,6 @@ abstract public class CipherStorageBase implements CipherStorage {
   public static final String KEYSTORE_TYPE = "AndroidKeyStore";
   /** Key used for testing storage capabilities. */
   public static final String TEST_KEY_ALIAS = KEYSTORE_TYPE + "#supportsSecureHardware";
-  /** Default service name. */
-  public static final String DEFAULT_ALIAS = "RN_KEYCHAIN_DEFAULT_ALIAS";
   /** Size of hash calculation buffer. Default: 4Kb. */
   private static final int BUFFER_SIZE = 4 * 1024;
   /** Default size of read/write operation buffer. Default: 16Kb. */
@@ -124,15 +122,21 @@ abstract public class CipherStorageBase implements CipherStorage {
     return isSupportsSecureHardware.get();
   }
 
+  /** {@inheritDoc} */
+  @Override
+  public String getDefaultAliasServiceName() {
+    return getCipherStorageName();
+  }
+
   /** Remove key with provided name from security storage. */
   @Override
   public void removeKey(@NonNull final String alias) throws KeyStoreAccessException {
-    final String safeService = getDefaultAliasIfEmpty(alias);
+    final String safeAlias = getDefaultAliasIfEmpty(alias, getDefaultAliasServiceName());
     final KeyStore ks = getKeyStoreAndLoad();
 
     try {
-      if (ks.containsAlias(safeService)) {
-        ks.deleteEntry(safeService);
+      if (ks.containsAlias(safeAlias)) {
+        ks.deleteEntry(safeAlias);
       }
     } catch (GeneralSecurityException ignored) {
       /* only one exception can be raised by code: 'KeyStore is not loaded' */
@@ -463,9 +467,9 @@ abstract public class CipherStorageBase implements CipherStorage {
 
   /** Convert provided service name to safe not-null/not-empty value. */
   @NonNull
-  public static String getDefaultAliasIfEmpty(@Nullable final String service) {
+  public static String getDefaultAliasIfEmpty(@Nullable final String service, @NonNull final String fallback) {
     //noinspection ConstantConditions
-    return TextUtils.isEmpty(service) ? DEFAULT_ALIAS : service;
+    return TextUtils.isEmpty(service) ? fallback : service;
   }
 
   /**

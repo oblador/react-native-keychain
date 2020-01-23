@@ -41,7 +41,7 @@ canImplyAuthentication(simpleOptions).then(result => {
   (result: boolean);
 });
 
-getSupportedBiometryType().then(result => {
+getSupportedBiometryType(simpleOptions).then(result => {
   (result: ?string);
 });
 

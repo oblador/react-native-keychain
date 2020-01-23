@@ -77,6 +77,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     String AUTH_TYPE = "authenticationType";
     String SERVICE = "service";
     String SECURITY_LEVEL = "securityLevel";
+    String RULES = "rules";
 
     String USERNAME = "username";
     String PASSWORD = "password";
@@ -104,6 +105,12 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     String RSA = "KeystoreRSAECB";
   }
 
+  /** Secret manipulation rules. */
+  @StringDef({Rules.AUTOMATIC_UPGRADE, Rules.NONE})
+  @interface Rules {
+    String NONE = "none";
+    String AUTOMATIC_UPGRADE = "automaticUpgradeToMoreSecuredStorage";
+  }
   //endregion
 
   //region Members
@@ -146,16 +153,19 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     try {
       final long startTime = System.nanoTime();
 
+      Log.v(KEYCHAIN_MODULE, "warming up started at " + startTime);
       final CipherStorageBase best = (CipherStorageBase) getCipherStorageForCurrentAPILevel();
       final Cipher instance = best.getCachedInstance();
       final boolean isSecure = best.supportsSecureHardware();
-      best.generateKeyAndStoreUnderAlias("warmingUp", SecurityLevel.SECURE_HARDWARE);
+      final SecurityLevel requiredLevel = isSecure ? SecurityLevel.SECURE_HARDWARE : SecurityLevel.SECURE_SOFTWARE;
+      best.generateKeyAndStoreUnderAlias("warmingUp", requiredLevel);
       best.getKeyStoreAndLoad();
 
       Log.v(KEYCHAIN_MODULE, "warming up takes: " +
         TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startTime) +
         " ms");
-    } catch (Throwable ignored) {
+    } catch (Throwable ex) {
+      Log.e(KEYCHAIN_MODULE, "warming up failed!", ex);
     }
   }
   //endregion
@@ -196,23 +206,26 @@ public class KeychainModule extends ReactContextBaseJavaModule {
 
       final String alias = getAliasOrDefault(service);
       final SecurityLevel level = getSecurityLevelOrDefault(options);
-      final String accessControl = getAccessControlOrDefault(options);
-      final boolean useBiometry = getUseBiometry(accessControl);
-
-      final CipherStorage storage = getCipherStorageForCurrentAPILevel(useBiometry);
+//      final String accessControl = getAccessControlOrDefault(options);
+//      final boolean useBiometry = getUseBiometry(accessControl);
+      final CipherStorage storage = getSelectedStorage(options);
 
       throwIfInsufficientLevel(storage, level);
 
       final EncryptionResult result = storage.encrypt(alias, username, password, level);
       prefsStorage.storeEncryptedEntry(alias, result);
 
-      promise.resolve(true);
+      final WritableMap results = Arguments.createMap();
+      results.putString(Maps.SERVICE, alias);
+      results.putString(Maps.STORAGE, storage.getCipherStorageName());
+
+      promise.resolve(results);
     } catch (EmptyParameterException e) {
-      Log.e(KEYCHAIN_MODULE, e.getMessage());
+      Log.e(KEYCHAIN_MODULE, e.getMessage(), e);
 
       promise.reject(Errors.E_EMPTY_PARAMETERS, e);
     } catch (CryptoFailedException e) {
-      Log.e(KEYCHAIN_MODULE, e.getMessage());
+      Log.e(KEYCHAIN_MODULE, e.getMessage(), e);
 
       promise.reject(Errors.E_CRYPTO_FAILED, e);
     } catch (Throwable fail) {
@@ -220,6 +233,28 @@ public class KeychainModule extends ReactContextBaseJavaModule {
 
       promise.reject(Errors.E_UNKNOWN_ERROR, fail);
     }
+  }
+
+  /** Get Cipher storage instance based on user provided options. */
+  @NonNull
+  private CipherStorage getSelectedStorage(@Nullable final ReadableMap options)
+    throws CryptoFailedException {
+    final String accessControl = getAccessControlOrDefault(options);
+    final boolean useBiometry = getUseBiometry(accessControl);
+    final String cipherName = getSpecificStorageOrDefault(options);
+
+    CipherStorage result = null;
+
+    if (null != cipherName) {
+      result = getCipherStorageByName(cipherName);
+    }
+
+    // attempt to access none existing storage will force fallback logic.
+    if (null == result) {
+      result = getCipherStorageForCurrentAPILevel(useBiometry);
+    }
+
+    return result;
   }
 
   @ReactMethod
@@ -240,7 +275,8 @@ public class KeychainModule extends ReactContextBaseJavaModule {
       final String accessControl = getAccessControlOrDefault(options);
       final boolean useBiometry = getUseBiometry(accessControl);
       final CipherStorage current = getCipherStorageForCurrentAPILevel(useBiometry);
-      final DecryptionResult decryptionResult = decryptCredentials(alias, current, resultSet);
+      final String rules = getSecurityRulesOrDefault(options);
+      final DecryptionResult decryptionResult = decryptCredentials(alias, current, resultSet, rules);
 
       final WritableMap credentials = Arguments.createMap();
       credentials.putString(Maps.SERVICE, alias);
@@ -310,13 +346,17 @@ public class KeychainModule extends ReactContextBaseJavaModule {
       return;
     }
 
-    promise.resolve(true);
+    final WritableMap results = Arguments.createMap();
+    results.putString(Maps.SERVICE, alias);
+    results.putString(Maps.STORAGE, resultSet.cipherStorageName);
+
+    promise.resolve(results);
   }
 
   @ReactMethod
   public void setInternetCredentialsForServer(@NonNull final String server,
-                                              final String username,
-                                              final String password,
+                                              @NonNull final String username,
+                                              @NonNull final String password,
                                               @Nullable final ReadableMap options,
                                               @NonNull final Promise promise) {
 
@@ -341,7 +381,9 @@ public class KeychainModule extends ReactContextBaseJavaModule {
   public void getSupportedBiometryType(@Nullable final ReadableMap options,
                                        @NonNull final Promise promise) {
     try {
-      promise.resolve(isFingerprintAuthAvailable() ? FINGERPRINT_SUPPORTED_NAME : null);
+      final String reply = isFingerprintAuthAvailable() ? FINGERPRINT_SUPPORTED_NAME : null;
+
+      promise.resolve(reply);
     } catch (Exception e) {
       Log.e(KEYCHAIN_MODULE, e.getMessage(), e);
 
@@ -365,6 +407,42 @@ public class KeychainModule extends ReactContextBaseJavaModule {
   //endregion
 
   //region Helpers
+
+  /** Get automatic secret manipulation rules, default: Automatic Upgrade. */
+  @Rules
+  @NonNull
+  private static String getSecurityRulesOrDefault(@Nullable final ReadableMap options) {
+    return getSecurityRulesOrDefault(options, Rules.AUTOMATIC_UPGRADE);
+  }
+
+  /** Get automatic secret manipulation rules. */
+  @Rules
+  @NonNull
+  private static String getSecurityRulesOrDefault(@Nullable final ReadableMap options,
+                                                  @Rules @NonNull final String rule) {
+    String rules = null;
+
+    if (null != options && options.hasKey(Maps.RULES)) {
+      rules = options.getString(Maps.ACCESS_CONTROL);
+    }
+
+    if (null == rules) return rule;
+
+    return rules;
+  }
+
+  /** Extract user specified storage from options. */
+  @KnownCiphers
+  @Nullable
+  private static String getSpecificStorageOrDefault(@Nullable final ReadableMap options) {
+    String storageName = null;
+
+    if (null != options && options.hasKey(Maps.STORAGE)) {
+      storageName = options.getString(Maps.STORAGE);
+    }
+
+    return storageName;
+  }
 
   /** Get access control value from options or fallback to {@link AccessControl#BIOMETRY_ANY}. */
   @AccessControl
@@ -434,48 +512,60 @@ public class KeychainModule extends ReactContextBaseJavaModule {
   @NonNull
   private DecryptionResult decryptCredentials(@NonNull final String alias,
                                               @NonNull final CipherStorage current,
-                                              @NonNull final ResultSet resultSet)
+                                              @NonNull final ResultSet resultSet,
+                                              @Rules @NonNull final String rules)
     throws CryptoFailedException, KeyStoreAccessException {
     final String storageName = resultSet.cipherStorageName;
 
     // The encrypted data is encrypted using the current CipherStorage, so we just decrypt and return
     if (storageName.equals(current.getCipherStorageName())) {
-      final DecryptionResultHandler handler = getInteractiveHandler(current);
-      current.decrypt(handler, alias, resultSet.username, resultSet.password, SecurityLevel.ANY);
-
-      CryptoFailedException.reThrowOnError(handler.getError());
-
-      if (null == handler.getResult()) {
-        throw new CryptoFailedException("No decryption results and no error. Something deeply wrong!");
-      }
-
-      return handler.getResult();
+      return decryptToResult(alias, current, resultSet);
     }
 
-    // The encrypted data is encrypted using an older CipherStorage, so we need to decrypt the data first, then encrypt it using the current CipherStorage, then store it again and return
+    // The encrypted data is encrypted using an older CipherStorage, so we need to decrypt the data first,
+    // then encrypt it using the current CipherStorage, then store it again and return
     final CipherStorage oldStorage = getCipherStorageByName(storageName);
     if (null == oldStorage) {
       throw new KeyStoreAccessException("Wrong cipher storage name '" + storageName + "' or cipher not available");
     }
 
     // decrypt using the older cipher storage
-    final DecryptionResult decryptionResult = oldStorage.decrypt(
-      alias, resultSet.username, resultSet.password, SecurityLevel.ANY);
+    final DecryptionResult decryptionResult = decryptToResult(alias, oldStorage, resultSet);
 
-    try {
-      // encrypt using the current cipher storage
-      migrateCipherStorage(alias, current, oldStorage, decryptionResult);
-    } catch (CryptoFailedException e) {
-      Log.w(KEYCHAIN_MODULE, "Migrating to a less safe storage is not allowed. Keeping the old one");
+    if (Rules.AUTOMATIC_UPGRADE.equals(rules)) {
+      try {
+        // encrypt using the current cipher storage
+        migrateCipherStorage(alias, current, oldStorage, decryptionResult);
+      } catch (CryptoFailedException e) {
+        Log.w(KEYCHAIN_MODULE, "Migrating to a less safe storage is not allowed. Keeping the old one");
+      }
     }
 
     return decryptionResult;
   }
 
+  /** Try to decrypt with provided storage. */
+  @NonNull
+  private DecryptionResult decryptToResult(@NonNull final String alias,
+                                           @NonNull final CipherStorage storage,
+                                           @NonNull final ResultSet resultSet)
+    throws CryptoFailedException {
+    final DecryptionResultHandler handler = getInteractiveHandler(storage);
+    storage.decrypt(handler, alias, resultSet.username, resultSet.password, SecurityLevel.ANY);
+
+    CryptoFailedException.reThrowOnError(handler.getError());
+
+    if (null == handler.getResult()) {
+      throw new CryptoFailedException("No decryption results and no error. Something deeply wrong!");
+    }
+
+    return handler.getResult();
+  }
+
   /** Get instance of handler that resolves access to the keystore on system request. */
   @NonNull
   protected DecryptionResultHandler getInteractiveHandler(@NonNull final CipherStorage current) {
-    if (current.isBiometrySupported() && isFingerprintAuthAvailable()) {
+    if (current.isBiometrySupported() /*&& isFingerprintAuthAvailable()*/) {
       return new InteractiveBiometric(current);
     }
 
