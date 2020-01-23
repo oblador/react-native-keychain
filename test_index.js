@@ -16,6 +16,8 @@ import {
   setInternetCredentials,
   setSharedWebCredentials,
   type Options,
+  type Result,
+  type UserCredentials,
   type SharedWebCredentials,
 } from 'react-native-keychain';
 
@@ -50,14 +52,14 @@ setInternetCredentials();
 setInternetCredentials('server', 'username', 'password');
 setInternetCredentials('server', 'username', 'password', simpleOptions).then(
   result => {
-    (result: void);
+    (result: boolean | Result);
   }
 );
 
 // $FlowExpectedError - First argument is required
 hasInternetCredentials();
 hasInternetCredentials('server').then(result => {
-  (result: boolean);
+  (result: boolean | Result);
 });
 
 // $FlowExpectedError - First argument is required
@@ -66,6 +68,8 @@ getInternetCredentials('server', simpleOptions).then(credentials => {
   if (credentials) {
     (credentials.username: string);
     (credentials.password: string);
+    (credentials.service: string);
+    (credentials.storage: string);
   }
 });
 
@@ -78,21 +82,18 @@ resetInternetCredentials('server', simpleOptions).then(result => {
 // $FlowExpectedError - First two arguments are required
 setGenericPassword();
 setGenericPassword('username', 'password').then(result => {
-  (result: boolean);
+  (result: boolean | Result);
 });
-setGenericPassword('username', 'password', 'service');
 setGenericPassword('username', 'password', simpleOptions);
 
 getGenericPassword().then(result => {
   (result: boolean | SharedWebCredentials);
 });
-getGenericPassword('service');
 getGenericPassword(simpleOptions);
 
 resetGenericPassword().then(result => {
   (result: boolean);
 });
-resetGenericPassword('service');
 resetGenericPassword(simpleOptions);
 
 requestSharedWebCredentials().then(result => {
@@ -100,6 +101,8 @@ requestSharedWebCredentials().then(result => {
     (result.server: string);
     (result.username: string);
     (result.password: string);
+    (result.storage: string);
+    (result.service: string);
   }
 });
 
