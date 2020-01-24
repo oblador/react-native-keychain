@@ -1,6 +1,7 @@
 // @flow
-import { NativeModules, Platform } from 'react-native';
-const { RNKeychainManager } = NativeModules;
+import {NativeModules, Platform} from 'react-native';
+
+const {RNKeychainManager} = NativeModules;
 
 export const SECURITY_LEVEL = Object.freeze({
   ANY: RNKeychainManager.SECURITY_LEVEL_ANY,
@@ -44,6 +45,7 @@ export const STORAGE_TYPE = Object.freeze({
   FB: 'FacebookConceal',
   AES: 'KeystoreAESCBC',
   RSA: 'KeystoreRSAECB',
+  KC: 'keychain', // <~ iOS only
 });
 
 export const SECURITY_RULES = Object.freeze({
@@ -62,6 +64,8 @@ export type SecMinimumLevel = $Values<typeof SECURITY_LEVEL>;
 export type SecStorageType = $Values<typeof STORAGE_TYPE>;
 
 export type SecSecurityRules = $Values<typeof SECURITY_RULES>;
+
+export type SecBiometryType = $Values<typeof BIOMETRY_TYPE>;
 
 export type Options = {
   accessControl?: SecAccessControl,
@@ -91,68 +95,39 @@ export type SharedWebCredentials = {|
   ...UserCredentials,
 |};
 
-function getOptionsArgument(serviceOrOptions?: string | Options) {
-  if (Platform.OS !== 'ios') {
-    return typeof serviceOrOptions === 'object'
-      ? serviceOrOptions.service
-      : serviceOrOptions;
-  }
-  return typeof serviceOrOptions === 'string'
-    ? { service: serviceOrOptions }
-    : serviceOrOptions;
-}
-
-function getAccessControl(serviceOrOptions?: string | Options) {
-  var accessControl = null;
-
-  if (typeof serviceOrOptions === 'object') {
-    accessControl = serviceOrOptions.accessControl;
-  }
-
-  return accessControl;
-}
-
-function getMinimumSecurityLevel(serviceOrOptions?: string | Options) {
-  var specifiedLevel = undefined;
-
-  if (typeof serviceOrOptions === 'object') {
-    specifiedLevel = serviceOrOptions.securityLevel;
-  }
-
-  return specifiedLevel || SECURITY_LEVEL.ANY;
-}
+//* EXPORTS */
 
 /**
  * Saves the `username` and `password` combination for `service`.
  * @param {string} username Associated username or e-mail to be saved.
  * @param {string} password Associated password to be saved.
- * @param {object} options An Keychain options object.
+ * @param {object} options A keychain options object.
  * @return {Promise} Resolves to `{ service, storage }` when successful
  */
 export function setGenericPassword(
   username: string,
   password: string,
-  options?: Options
+  options?: Options,
 ): Promise<false | Result> {
-  var obj: { service?: string } = options || {};
+  const obj: { service?: string } = options || {};
 
   return RNKeychainManager.setGenericPasswordForOptions(
     obj.service,
     username,
     password,
-    options
+    options,
   );
 }
 
 /**
  * Fetches login combination for `service`.
- * @param {object} options An Keychain options object.
+ * @param {object} options A keychain options object.
  * @return {Promise} Resolves to `{ service, username, password, storage }` when successful
  */
 export function getGenericPassword(
-  options?: Options
+  options?: Options,
 ): Promise<false | SharedWebCredentials> {
-  var obj: { service?: string } = options || {};
+  const obj: { service?: string } = options || {};
 
   return RNKeychainManager.getGenericPasswordForOptions(obj.service, options);
 }
@@ -163,7 +138,7 @@ export function getGenericPassword(
  * @return {Promise} Resolves to `true` when successful
  */
 export function resetGenericPassword(options?: Options): Promise<boolean> {
-  var obj: { service?: string } = options || {};
+  const obj: { service?: string } = options || {};
 
   return RNKeychainManager.resetGenericPasswordForOptions(obj.service, options);
 }
@@ -176,7 +151,7 @@ export function resetGenericPassword(options?: Options): Promise<boolean> {
  */
 export function hasInternetCredentials(
   server: string,
-  options?: Options
+  options?: Options,
 ): Promise<false | Result> {
   return RNKeychainManager.hasInternetCredentialsForServer(server, options);
 }
@@ -193,13 +168,13 @@ export function setInternetCredentials(
   server: string,
   username: string,
   password: string,
-  options?: Options
+  options?: Options,
 ): Promise<false | Result> {
   return RNKeychainManager.setInternetCredentialsForServer(
     server,
     username,
     password,
-    options
+    options,
   );
 }
 
@@ -211,7 +186,7 @@ export function setInternetCredentials(
  */
 export function getInternetCredentials(
   server: string,
-  options?: Options
+  options?: Options,
 ): Promise<false | UserCredentials> {
   return RNKeychainManager.getInternetCredentialsForServer(server, options);
 }
@@ -224,12 +199,31 @@ export function getInternetCredentials(
  */
 export function resetInternetCredentials(
   server: string,
-  options?: Options
+  options?: Options,
 ): Promise<void> {
   return RNKeychainManager.resetInternetCredentialsForServer(server, options);
 }
 
-/** IOS ONLY */
+/**
+ * Get what type of hardware biometry support the device has.
+ * @param {object} options An Keychain options object.
+ * @return {Promise} Resolves to a `BIOMETRY_TYPE` when supported, otherwise `null`
+ */
+export function getSupportedBiometryType(
+  options?: Options,
+): Promise<null | SecBiometryType> {
+  if (!RNKeychainManager.getSupportedBiometryType) {
+    return Promise.resolve(null);
+  }
+
+  if (Platform.OS === 'ios') {
+    return RNKeychainManager.getSupportedBiometryType();
+  }
+
+  return RNKeychainManager.getSupportedBiometryType(options);
+}
+
+//* IOS ONLY */
 
 /**
  * Asks the user for a shared web credential.
@@ -237,13 +231,13 @@ export function resetInternetCredentials(
  * `false` if denied and throws an error if not supported on platform or there's no shared credentials
  */
 export function requestSharedWebCredentials(
-  options: ?Options
+  options?: Options,
 ): Promise<false | SharedWebCredentials> {
   if (Platform.OS !== 'ios') {
     return Promise.reject(
       new Error(
-        `requestSharedWebCredentials() is not supported on ${Platform.OS} yet`
-      )
+        `requestSharedWebCredentials() is not supported on ${Platform.OS} yet`,
+      ),
     );
   }
   return RNKeychainManager.requestSharedWebCredentials(options);
@@ -254,27 +248,27 @@ export function requestSharedWebCredentials(
  * @param {string} server URL to server.
  * @param {string} username Associated username or e-mail to be saved.
  * @param {string} password Associated password to be saved.
- * @param {object} options An Keychain options object.
+ * @param {object} options a keychain options object.
  * @return {Promise} Resolves to `true` when successful
  */
 export function setSharedWebCredentials(
   server: string,
   username: string,
-  password: ?string,
-  options: ?Options
+  password?: string,
+  options?: Options,
 ): Promise<void> {
   if (Platform.OS !== 'ios') {
     return Promise.reject(
       new Error(
-        `setSharedWebCredentials() is not supported on ${Platform.OS} yet`
-      )
+        `setSharedWebCredentials() is not supported on ${Platform.OS} yet`,
+      ),
     );
   }
   return RNKeychainManager.setSharedWebCredentialsForServer(
     server,
     username,
     password,
-    options
+    options,
   );
 }
 
@@ -291,7 +285,7 @@ export function canImplyAuthentication(options?: Options): Promise<boolean> {
   return RNKeychainManager.canCheckAuthentication(options);
 }
 
-/** ANDROID ONLY */
+//* ANDROID ONLY */
 
 /**
  * (Android only) Returns guaranteed security level supported by this library
@@ -300,47 +294,33 @@ export function canImplyAuthentication(options?: Options): Promise<boolean> {
  * @return {Promise} Resolves to `SECURITY_LEVEL` when supported, otherwise `null`.
  */
 export function getSecurityLevel(
-  options?: Options
-): Promise<?$Values<typeof SECURITY_LEVEL>> {
+  options?: Options,
+): Promise<null | SecMinimumLevel> {
   if (!RNKeychainManager.getSecurityLevel) {
     return Promise.resolve(null);
   }
   return RNKeychainManager.getSecurityLevel(options);
 }
 
-/**
- * Get what type of hardware biometry support the device has.
- * @param {object} options An Keychain options object.
- * @return {Promise} Resolves to a `BIOMETRY_TYPE` when supported, otherwise `null`
- */
-export function getSupportedBiometryType(
-  options?: Options
-): Promise<?$Values<typeof BIOMETRY_TYPE>> {
-  if (!RNKeychainManager.getSupportedBiometryType) {
-    return Promise.resolve(null);
-  }
-  return RNKeychainManager.getSupportedBiometryType(options);
-}
-
 /** Refs: https://www.saltycrane.com/cheat-sheets/flow-type/latest/ */
 
 export default {
-    SECURITY_LEVEL,
-    ACCESSIBLE,
-    ACCESS_CONTROL,
-    AUTHENTICATION_TYPE,
-    BIOMETRY_TYPE,
-    getSecurityLevel,
-    canImplyAuthentication,
-    getSupportedBiometryType,
-    setInternetCredentials,
-    getInternetCredentials,
-    resetInternetCredentials,
-    getOptionsArgument,
-    getMinimumSecurityLevel,
-    setGenericPassword,
-    getGenericPassword,
-    resetGenericPassword,
-    requestSharedWebCredentials,
-    setSharedWebCredentials
-}
+  SECURITY_LEVEL,
+  ACCESSIBLE,
+  ACCESS_CONTROL,
+  AUTHENTICATION_TYPE,
+  BIOMETRY_TYPE,
+  STORAGE_TYPE,
+  SECURITY_RULES,
+  getSecurityLevel,
+  canImplyAuthentication,
+  getSupportedBiometryType,
+  setInternetCredentials,
+  getInternetCredentials,
+  resetInternetCredentials,
+  setGenericPassword,
+  getGenericPassword,
+  resetGenericPassword,
+  requestSharedWebCredentials,
+  setSharedWebCredentials,
+};

@@ -54,6 +54,7 @@ declare module 'react-native-keychain' {
     FB = 'FacebookConceal',
     AES = 'KeystoreAESCBC',
     RSA = 'KeystoreRSAECB',
+    KC = 'keychain',
   }
 
   export enum SECURITY_RULES {
@@ -109,7 +110,7 @@ declare module 'react-native-keychain' {
 
   function getSupportedBiometryType(
     options?: Options
-  ): Promise<BIOMETRY_TYPE | null>;
+  ): Promise<null | BIOMETRY_TYPE>;
 
   /** IOS ONLY */
 
@@ -128,5 +129,5 @@ declare module 'react-native-keychain' {
 
   /** ANDROID ONLY */
 
-  function getSecurityLevel(options?: Options): Promise<SECURITY_LEVEL>;
+  function getSecurityLevel(options?: Options): Promise<null | SECURITY_LEVEL>;
 }

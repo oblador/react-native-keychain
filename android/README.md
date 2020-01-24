@@ -33,6 +33,11 @@
 react-native start --reset-cache
 ```
 
+```bash
+# set working dir to: 'react-native-keychain/KeychainExample'
+/usr/bin/env node node_modules/.bin/react-native start --reset-cache
+```
+
 > Important! to set checkbox `Allow parallel run`.
 
 ### Create Automatic self-refreshed TCP ports binding

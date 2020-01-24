@@ -75,7 +75,7 @@ public class PrefsStorage {
     prefs.edit()
       .putString(keyForUsername, Base64.encodeToString(encryptionResult.username, Base64.DEFAULT))
       .putString(keyForPassword, Base64.encodeToString(encryptionResult.password, Base64.DEFAULT))
-      .putString(keyForCipherStorage, encryptionResult.cipherStorage.getCipherStorageName())
+      .putString(keyForCipherStorage, encryptionResult.cipherName)
       .apply();
   }
 

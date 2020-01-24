@@ -8,31 +8,32 @@
 
 [![Travis](https://img.shields.io/travis/oblador/react-native-keychain.svg)](https://travis-ci.org/oblador/react-native-keychain) [![npm](https://img.shields.io/npm/v/react-native-keychain.svg)](https://npmjs.com/package/react-native-keychain) [![npm](https://img.shields.io/npm/dm/react-native-keychain.svg)](https://npmjs.com/package/react-native-keychain)
 
-# Keychain/Keystore Access for React Native.
+# Keychain/Keystore Access for React Native
 
-- [Keychain/Keystore Access for React Native.](#keychainkeystore-access-for-react-native)
+- [Keychain/Keystore Access for React Native](#keychainkeystore-access-for-react-native)
   - [Installation](#installation)
   - [Usage](#usage)
   - [API](#api)
-    - [`setGenericPassword(username, password, [{ accessControl, accessible, accessGroup, service, securityLevel }])`](#setgenericpasswordusername-password--accesscontrol-accessible-accessgroup-service-securitylevel)
-    - [`getGenericPassword([{ authenticationPrompt, service }])`](#getgenericpassword-authenticationprompt-service)
-    - [`resetGenericPassword([{ service }])`](#resetgenericpassword-service)
-    - [`setInternetCredentials(server, username, password, [{ accessControl, accessible, accessGroup, securityLevel }])`](#setinternetcredentialsserver-username-password--accesscontrol-accessible-accessgroup-securitylevel)
-    - [`hasInternetCredentials(server, [{ authenticationPrompt }])`](#hasinternetcredentialsserver--authenticationprompt)
-    - [`getInternetCredentials(server, [{ authenticationPrompt }])`](#getinternetcredentialsserver--authenticationprompt)
-    - [`resetInternetCredentials(server, [{}])`](#resetinternetcredentialsserver)
+    - [`setGenericPassword(username, password, [{ accessControl, accessible, accessGroup, service, securityLevel }])`](#setgenericpasswordusername-password--accesscontrol-accessible-accessgroup-service-securitylevel-)
+    - [`getGenericPassword([{ authenticationPrompt, service }])`](#getgenericpassword-authenticationprompt-service-)
+    - [`resetGenericPassword([{ service }])`](#resetgenericpassword-service-)
+    - [`setInternetCredentials(server, username, password, [{ accessControl, accessible, accessGroup, securityLevel }])`](#setinternetcredentialsserver-username-password--accesscontrol-accessible-accessgroup-securitylevel-)
+    - [`hasInternetCredentials(server, [{ authenticationPrompt }])`](#hasinternetcredentialsserver--authenticationprompt-)
+    - [`getInternetCredentials(server, [{ authenticationPrompt }])`](#getinternetcredentialsserver--authenticationprompt-)
+    - [`resetInternetCredentials(server, [{}])`](#resetinternetcredentialsserver-)
     - [`requestSharedWebCredentials()` (iOS only)](#requestsharedwebcredentials-ios-only)
     - [`setSharedWebCredentials(server, username, password)` (iOS only)](#setsharedwebcredentialsserver-username-password-ios-only)
     - [`canImplyAuthentication([{ authenticationType }])` (iOS only)](#canimplyauthentication-authenticationtype--ios-only)
     - [`getSupportedBiometryType([{}])`](#getsupportedbiometrytype)
-    - [`getSecurityLevel([{}])` (Android only)](#getsecuritylevel-android-only)
+    - [`getSecurityLevel([{ accessControl }])` (Android only)](#getsecuritylevel-accesscontrol--android-only)
     - [Options](#options)
-      - [`Keychain.ACCESS_CONTROL` enum](#keychainaccesscontrol-enum)
+      - [Data Structure Properties/Fields](#data-structure-propertiesfields)
+      - [`Keychain.ACCESS_CONTROL` enum](#keychainaccess_control-enum)
       - [`Keychain.ACCESSIBLE` enum](#keychainaccessible-enum)
-      - [`Keychain.AUTHENTICATION_TYPE` enum](#keychainauthenticationtype-enum)
-      - [`Keychain.BIOMETRY_TYPE` enum](#keychainbiometrytype-enum)
-      - [`Keychain.SECURITY_LEVEL` enum (Android only)](#keychainsecuritylevel-enum-android-only)
-      - [`Keychain.STORAGE_TYPE` enum (Android only)](#keychainstoragetype-enum-android-only)
+      - [`Keychain.AUTHENTICATION_TYPE` enum](#keychainauthentication_type-enum)
+      - [`Keychain.BIOMETRY_TYPE` enum](#keychainbiometry_type-enum)
+      - [`Keychain.SECURITY_LEVEL` enum (Android only)](#keychainsecurity_level-enum-android-only)
+      - [`Keychain.STORAGE_TYPE` enum (Android only)](#keychainstorage_type-enum-android-only)
       - [`Keychain.RULES` enum (Android only)](#keychainrules-enum-android-only)
   - [Important Behavior](#important-behavior)
     - [Rule 1: Automatic Security Level Upgrade](#rule-1-automatic-security-level-upgrade)
@@ -108,11 +109,11 @@ Will retrieve the username/password combination from the secure storage. Resolve
 
 ### `resetGenericPassword([{ service }])`
 
-Will remove the username/password combination from the secure storage. Returns `true` in case of success.
+Will remove the username/password combination from the secure storage. Resolves to `true` in case of success.
 
 ### `setInternetCredentials(server, username, password, [{ accessControl, accessible, accessGroup, securityLevel }])`
 
-Will store the server/username/password combination in the secure storage. Returns `{ username, password, service, storage }`;
+Will store the server/username/password combination in the secure storage. Resolves to `{ username, password, service, storage }`;
 
 ### `hasInternetCredentials(server, [{ authenticationPrompt }])`
 
@@ -124,7 +125,7 @@ Will retrieve the server/username/password combination from the secure storage. 
 
 ### `resetInternetCredentials(server, [{}])`
 
-Will remove the server/username/password combination from the secure storage.
+Will remove the server/username/password combination from the secure storage. Method accept `options` object instance but ignores all it values for now. Its reserved for future functionality.
 
 ### `requestSharedWebCredentials()` (iOS only)
 
@@ -140,15 +141,17 @@ Inquire if the type of local authentication policy is supported on this device w
 
 ### `getSupportedBiometryType([{}])`
 
-Get what type of hardware biometry support the device has. Resolves to a `Keychain.BIOMETRY_TYPE` value when supported, otherwise `null`.
+Get what type of hardware biometry support the device has. Resolves to a `Keychain.BIOMETRY_TYPE` value when supported, otherwise `null`. Method accept `options` object instance but ignores all it values for now. Its reserved for future functionality.
 
 > This method returns `null`, if the device haven't enrolled into fingerprint/FaceId. Even though it has hardware for it.
 
-### `getSecurityLevel([{}])` (Android only)
+### `getSecurityLevel([{ accessControl }])` (Android only)
 
-Get security level that is supported on the current device with the current OS.
+Get security level that is supported on the current device with the current OS. Resolves to `Keychain.SECURITY_LEVEL` enum value.
 
 ### Options
+
+#### Data Structure Properties/Fields
 
 | Key                        | Platform     | Description                                                                                      | Default                                                      |
 | -------------------------- | ------------ | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------ |

@@ -109,6 +109,27 @@ export default class KeychainExample extends Component {
     }
   }
 
+  async ios_specifics() {
+    try {
+      const reply = await Keychain.setSharedWebCredentials(
+        'server',
+        'username',
+        'password',
+        {}
+      );
+      console.log(`setSharedWebCredentials: ${JSON.stringify(reply)}`);
+    } catch (err) {
+      alert(`setSharedWebCredentials: ${err}`);
+    }
+
+    try {
+      const reply = await Keychain.requestSharedWebCredentials({});
+      console.log(`requestSharedWebCredentials: ${JSON.stringify(reply)}`)
+    } catch (err) {
+      alert(`requestSharedWebCredentials: ${err}`);
+    }
+  }
+
   render() {
     const VALUES =
       Platform.OS === 'ios'
@@ -251,6 +272,19 @@ export default class KeychainExample extends Component {
               >
                 <View style={styles.load}>
                   <Text style={styles.buttonText}>Get security level</Text>
+                </View>
+              </TouchableHighlight>
+            </View>
+          )}
+
+          {Platform.OS === 'ios' && (
+            <View style={styles.buttons}>
+              <TouchableHighlight
+                onPress={() => this.ios_specifics()}
+                style={styles.button}
+              >
+                <View style={styles.load}>
+                  <Text style={styles.buttonText}>Test Other APIs</Text>
                 </View>
               </TouchableHighlight>
             </View>

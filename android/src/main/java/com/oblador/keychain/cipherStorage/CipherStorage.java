@@ -18,7 +18,7 @@ public interface CipherStorage {
     public final T username;
     public final T password;
 
-    public CipherResult(T username, T password) {
+    public CipherResult(final T username, final T password) {
       this.username = username;
       this.password = password;
     }
@@ -26,11 +26,18 @@ public interface CipherStorage {
 
   /** Credentials in bytes array, often a result of encryption. */
   class EncryptionResult extends CipherResult<byte[]> {
-    public final CipherStorage cipherStorage;
+    /** Name of used for encryption cipher storage. */
+    public final String cipherName;
 
-    public EncryptionResult(final byte[] username, final byte[] password, final CipherStorage cipherStorage) {
+    /** Main constructor. */
+    public EncryptionResult(final byte[] username, final byte[] password, final String cipherName) {
       super(username, password);
-      this.cipherStorage = cipherStorage;
+      this.cipherName = cipherName;
+    }
+
+    /** Helper constructor. Simplifies cipher name extraction. */
+    public EncryptionResult(final byte[] username, final byte[] password, @NonNull final CipherStorage cipherStorage) {
+      this(username, password, cipherStorage.getCipherStorageName());
     }
   }
 

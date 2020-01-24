@@ -25,21 +25,16 @@ android {
     targetSdkVersion safeExtGet('targetSdkVersion', 28)
     versionCode 1
     versionName "1.0"
-
-//    testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
   }
+
   lintOptions {
     abortOnError false
   }
+
   compileOptions {
     sourceCompatibility JavaVersion.VERSION_1_8
     targetCompatibility JavaVersion.VERSION_1_8
   }
-
-  // Gradle automatically adds 'android.test.runner' as a dependency.
-//  useLibrary 'android.test.runner'
-//  useLibrary 'android.test.base'
-//  useLibrary 'android.test.mock'
 
   testOptions {
     unitTests {
@@ -89,13 +84,3 @@ dependencies {
   // Uncomment for including JRE implementation of crypto api (that is used in Robolectric tests)
   // testImplementation fileTree(dir: "${System.properties.get("java.home")}/lib", include: ["jce.jar"])
 }
-//
-//task updateLibrarySourceInExample(type: Copy) {
-//  from "${project.projectDir}/src/"
-//  // react-native-keychain/KeychainExample/node_modules/react-native-keychain/android/src
-//  into "${rootProject.projectDir}/KeychainExample/node_modules/react-native-keychain/android/src"
-//}
-//
-//gradle.projectsEvaluated {
-//  preBuild.dependsOn(updateLibrarySourceInExample)
-//}
