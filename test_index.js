@@ -43,7 +43,7 @@ canImplyAuthentication(simpleOptions).then(result => {
   (result: boolean);
 });
 
-getSupportedBiometryType(simpleOptions).then(result => {
+getSupportedBiometryType().then(result => {
   (result: ?string);
 });
 
@@ -75,7 +75,7 @@ getInternetCredentials('server', simpleOptions).then(credentials => {
 
 // $FlowExpectedError - First argument is required
 resetInternetCredentials();
-resetInternetCredentials('server', simpleOptions).then(result => {
+resetInternetCredentials('server').then(result => {
   (result: void);
 });
 
@@ -85,16 +85,19 @@ setGenericPassword('username', 'password').then(result => {
   (result: boolean | Result);
 });
 setGenericPassword('username', 'password', simpleOptions);
+setGenericPassword('username', 'password', 'service');
 
 getGenericPassword().then(result => {
   (result: boolean | SharedWebCredentials);
 });
 getGenericPassword(simpleOptions);
+getGenericPassword('service');
 
 resetGenericPassword().then(result => {
   (result: boolean);
 });
 resetGenericPassword(simpleOptions);
+resetGenericPassword('service');
 
 requestSharedWebCredentials().then(result => {
   if (result) {
