@@ -230,9 +230,7 @@ export function getSupportedBiometryType(
  * @return {Promise} Resolves to `{ server, username, password }` if approved and
  * `false` if denied and throws an error if not supported on platform or there's no shared credentials
  */
-export function requestSharedWebCredentials(
-  options?: Options,
-): Promise<false | SharedWebCredentials> {
+export function requestSharedWebCredentials(): Promise<false | SharedWebCredentials> {
   if (Platform.OS !== 'ios') {
     return Promise.reject(
       new Error(
@@ -240,7 +238,7 @@ export function requestSharedWebCredentials(
       ),
     );
   }
-  return RNKeychainManager.requestSharedWebCredentials(options);
+  return RNKeychainManager.requestSharedWebCredentials();
 }
 
 /**
@@ -248,14 +246,12 @@ export function requestSharedWebCredentials(
  * @param {string} server URL to server.
  * @param {string} username Associated username or e-mail to be saved.
  * @param {string} password Associated password to be saved.
- * @param {object} options a keychain options object.
  * @return {Promise} Resolves to `true` when successful
  */
 export function setSharedWebCredentials(
   server: string,
   username: string,
   password?: string,
-  options?: Options,
 ): Promise<void> {
   if (Platform.OS !== 'ios') {
     return Promise.reject(
@@ -268,7 +264,6 @@ export function setSharedWebCredentials(
     server,
     username,
     password,
-    options,
   );
 }
 

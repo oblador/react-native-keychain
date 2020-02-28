@@ -115,7 +115,6 @@ export default class KeychainExample extends Component {
         'server',
         'username',
         'password',
-        {}
       );
       console.log(`setSharedWebCredentials: ${JSON.stringify(reply)}`);
     } catch (err) {
@@ -123,7 +122,7 @@ export default class KeychainExample extends Component {
     }
 
     try {
-      const reply = await Keychain.requestSharedWebCredentials({});
+      const reply = await Keychain.requestSharedWebCredentials();
       console.log(`requestSharedWebCredentials: ${JSON.stringify(reply)}`)
     } catch (err) {
       alert(`requestSharedWebCredentials: ${err}`);

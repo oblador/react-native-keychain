@@ -488,11 +488,8 @@ RCT_EXPORT_METHOD(resetInternetCredentialsForServer:(NSString *)server
 }
 
 #if TARGET_OS_IOS && !TARGET_OS_UIKITFORMAC
-RCT_EXPORT_METHOD(requestSharedWebCredentials:(NSDictionary * __nullable)options
-                  resolver:(RCTPromiseResolveBlock)resolve
-                  rejecter:(RCTPromiseRejectBlock)reject)
+RCT_EXPORT_METHOD(requestSharedWebCredentials:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
 {
-  /* Options can be used for specifying the [domain & account == server & username] */
   SecRequestSharedWebCredential(NULL, NULL, ^(CFArrayRef credentials, CFErrorRef error) {
     if (error != NULL) {
       NSError *nsError = (__bridge NSError *)error;
@@ -520,7 +517,6 @@ RCT_EXPORT_METHOD(requestSharedWebCredentials:(NSDictionary * __nullable)options
 RCT_EXPORT_METHOD(setSharedWebCredentialsForServer:(NSString *)server
                   withUsername:(NSString *)username
                   withPassword:(NSString *)password
-                  withOptions:(NSDictionary * __nullable)options
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
 {

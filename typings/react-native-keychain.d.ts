@@ -114,15 +114,12 @@ declare module 'react-native-keychain' {
 
   /** IOS ONLY */
 
-  function requestSharedWebCredentials(
-    options?: Options
-  ): Promise<false | SharedWebCredentials>;
+  function requestSharedWebCredentials(): Promise<false | SharedWebCredentials>;
 
   function setSharedWebCredentials(
     server: string,
     username: string,
     password?: string,
-    options?: Options
   ): Promise<void>;
 
   function canImplyAuthentication(options?: Options): Promise<boolean>;
