@@ -14,7 +14,7 @@ echo
 if [[ $# -eq 0 ]] ; then
     echo 'Expected flavor name as input parameter. Example:'
     echo
-    echo '  ./create_local_release_flavor_key.sh appium'
+    echo '  ./create_local_release_flavor_key.sh release'
     echo
     exit 1
 fi
