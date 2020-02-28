@@ -194,20 +194,15 @@ public class KeychainModule extends ReactContextBaseJavaModule {
   //endregion
 
   //region React Methods
-
-  @ReactMethod
-  public void setGenericPasswordForOptions(@Nullable final String service,
-                                           @NonNull final String username,
-                                           @NonNull final String password,
-                                           @Nullable final ReadableMap options,
-                                           @NonNull final Promise promise) {
+  protected void setGenericPassword(@NonNull final String alias,
+                                    @NonNull final String username,
+                                    @NonNull final String password,
+                                    @Nullable final ReadableMap options,
+                                    @NonNull final Promise promise) {
     try {
       throwIfEmptyLoginPassword(username, password);
 
-      final String alias = getAliasOrDefault(service);
       final SecurityLevel level = getSecurityLevelOrDefault(options);
-//      final String accessControl = getAccessControlOrDefault(options);
-//      final boolean useBiometry = getUseBiometry(accessControl);
       final CipherStorage storage = getSelectedStorage(options);
 
       throwIfInsufficientLevel(storage, level);
@@ -235,6 +230,15 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     }
   }
 
+  @ReactMethod
+  public void setGenericPasswordForOptions(@Nullable final ReadableMap options,
+                                           @NonNull final String username,
+                                           @NonNull final String password,
+                                           @NonNull final Promise promise) {
+    final String service = getServiceOrDefault(options);
+    setGenericPassword(service, username, password, options, promise);
+  }
+
   /** Get Cipher storage instance based on user provided options. */
   @NonNull
   private CipherStorage getSelectedStorage(@Nullable final ReadableMap options)
@@ -257,16 +261,14 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     return result;
   }
 
-  @ReactMethod
-  public void getGenericPasswordForOptions(@Nullable final String service,
-                                           @Nullable final ReadableMap options,
-                                           @NonNull final Promise promise) {
+  protected void getGenericPassword(@NonNull final String alias,
+                                    @Nullable final ReadableMap options,
+                                    @NonNull final Promise promise) {
     try {
-      final String alias = getAliasOrDefault(service);
       final ResultSet resultSet = prefsStorage.getEncryptedEntry(alias);
 
       if (resultSet == null) {
-        Log.e(KEYCHAIN_MODULE, "No entry found for service: " + service);
+        Log.e(KEYCHAIN_MODULE, "No entry found for service: " + alias);
         promise.resolve(false);
         return;
       }
@@ -301,12 +303,15 @@ public class KeychainModule extends ReactContextBaseJavaModule {
   }
 
   @ReactMethod
-  public void resetGenericPasswordForOptions(@Nullable final String service,
-                                             @Nullable final ReadableMap options,
-                                             @NonNull final Promise promise) {
-    try {
-      final String alias = getAliasOrDefault(service);
+  public void getGenericPasswordForOptions(@Nullable final ReadableMap options,
+                                           @NonNull final Promise promise) {
+    final String service = getServiceOrDefault(options);
+    getGenericPassword(service, options, promise);
+  }
 
+  protected void resetGenericPassword(@NonNull final String alias,
+                                      @NonNull final Promise promise) {
+    try {
       // First we clean up the cipher storage (using the cipher storage that was used to store the entry)
       final ResultSet resultSet = prefsStorage.getEncryptedEntry(alias);
 
@@ -330,6 +335,13 @@ public class KeychainModule extends ReactContextBaseJavaModule {
 
       promise.reject(Errors.E_UNKNOWN_ERROR, fail);
     }
+  }
+
+  @ReactMethod
+  public void resetGenericPasswordForOptions(@Nullable final ReadableMap options,
+                                             @NonNull final Promise promise) {
+    final String service = getServiceOrDefault(options);
+    resetGenericPassword(service, promise);
   }
 
   @ReactMethod
@@ -359,27 +371,24 @@ public class KeychainModule extends ReactContextBaseJavaModule {
                                               @NonNull final String password,
                                               @Nullable final ReadableMap options,
                                               @NonNull final Promise promise) {
-
-    setGenericPasswordForOptions(server, username, password, options, promise);
+    setGenericPassword(server, username, password, options, promise);
   }
 
   @ReactMethod
   public void getInternetCredentialsForServer(@NonNull final String server,
                                               @Nullable final ReadableMap options,
                                               @NonNull final Promise promise) {
-    getGenericPasswordForOptions(server, options, promise);
+    getGenericPassword(server, options, promise);
   }
 
   @ReactMethod
   public void resetInternetCredentialsForServer(@NonNull final String server,
-                                                @Nullable final ReadableMap options,
                                                 @NonNull final Promise promise) {
-    resetGenericPasswordForOptions(server, options, promise);
+    resetGenericPassword(server, promise);
   }
 
   @ReactMethod
-  public void getSupportedBiometryType(@Nullable final ReadableMap options,
-                                       @NonNull final Promise promise) {
+  public void getSupportedBiometryType(@NonNull final Promise promise) {
     try {
       final String reply = isFingerprintAuthAvailable() ? FINGERPRINT_SUPPORTED_NAME : null;
 
@@ -407,6 +416,18 @@ public class KeychainModule extends ReactContextBaseJavaModule {
   //endregion
 
   //region Helpers
+
+  /** Get service value from options. */
+  @NonNull
+  private static String getServiceOrDefault(@Nullable final ReadableMap options) {
+    String service = null;
+
+    if (null != options && options.hasKey(Maps.SERVICE)) {
+      service = options.getString(Maps.SERVICE);
+    }
+
+    return getAliasOrDefault(service);
+  }
 
   /** Get automatic secret manipulation rules, default: Automatic Upgrade. */
   @Rules

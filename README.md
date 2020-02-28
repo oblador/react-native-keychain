@@ -123,9 +123,9 @@ Will check if the username/password combination for server is available in the s
 
 Will retrieve the server/username/password combination from the secure storage. Resolves to `{ username, password }` if an entry exists or `false` if it doesn't. It will reject only if an unexpected error is encountered like lacking entitlements or permission.
 
-### `resetInternetCredentials(server, [{}])`
+### `resetInternetCredentials(server)`
 
-Will remove the server/username/password combination from the secure storage. Method accept `options` object instance but ignores all it values for now. Its reserved for future functionality.
+Will remove the server/username/password combination from the secure storage. 
 
 ### `requestSharedWebCredentials()` (iOS only)
 
@@ -139,9 +139,9 @@ Sets a shared web credential. Resolves to `true` when successful.
 
 Inquire if the type of local authentication policy is supported on this device with the device settings the user chose. Should be used in combination with `accessControl` option in the setter functions. Resolves to `true` if supported.
 
-### `getSupportedBiometryType([{}])`
+### `getSupportedBiometryType()`
 
-Get what type of hardware biometry support the device has. Resolves to a `Keychain.BIOMETRY_TYPE` value when supported, otherwise `null`. Method accept `options` object instance but ignores all it values for now. Its reserved for future functionality.
+Get what type of hardware biometry support the device has. Resolves to a `Keychain.BIOMETRY_TYPE` value when supported, otherwise `null`. 
 
 > This method returns `null`, if the device haven't enrolled into fingerprint/FaceId. Even though it has hardware for it.
 

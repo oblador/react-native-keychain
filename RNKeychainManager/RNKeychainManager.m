@@ -222,7 +222,7 @@ SecAccessControlCreateFlags accessControlValue(NSDictionary *options)
       } else {
           NSString *service = serviceValue(options);
           return resolve(@{
-              @"server": service,
+              @"service": service,
               @"storage": @"keychain"
           });
       }
@@ -295,14 +295,13 @@ RCT_EXPORT_METHOD(getSupportedBiometryType:(RCTPromiseResolveBlock)resolve
 }
 #endif
 
-RCT_EXPORT_METHOD(setGenericPasswordForOptions:(NSString *)service
+RCT_EXPORT_METHOD(setGenericPasswordForOptions:(NSDictionary *)options
                   withUsername:(NSString *)username
                   withPassword:(NSString *)password
-                  withOptions:(NSDictionary * __nullable)options
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
 {
-  if(service == NULL) service = serviceValue(options);
+  NSString *service = serviceValue(options);
   NSDictionary *attributes = attributes = @{
     (__bridge NSString *)kSecClass: (__bridge id)(kSecClassGenericPassword),
     (__bridge NSString *)kSecAttrService: service,
@@ -315,12 +314,11 @@ RCT_EXPORT_METHOD(setGenericPasswordForOptions:(NSString *)service
   [self insertKeychainEntry:attributes withOptions:options resolver:resolve rejecter:reject];
 }
 
-RCT_EXPORT_METHOD(getGenericPasswordForOptions:(NSString *)service
-                  withOptions:(NSDictionary * __nullable)options
+RCT_EXPORT_METHOD(getGenericPasswordForOptions:(NSDictionary * __nullable)options
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
 {
-  if(service == NULL) service = serviceValue(options);
+  NSString *service = serviceValue(options);
   NSString *authenticationPrompt = @"Authenticate to retrieve secret";
   if (options && options[kAuthenticationPromptMessage]) {
     authenticationPrompt = options[kAuthenticationPromptMessage];
@@ -364,7 +362,7 @@ RCT_EXPORT_METHOD(getGenericPasswordForOptions:(NSString *)service
 
 }
 
-RCT_EXPORT_METHOD(resetGenericPasswordForOptions:(NSDictionary * __nullable)options
+RCT_EXPORT_METHOD(resetGenericPasswordForOptions:(NSDictionary *)options
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
 {
@@ -473,7 +471,6 @@ RCT_EXPORT_METHOD(getInternetCredentialsForServer:(NSString *)server
 }
 
 RCT_EXPORT_METHOD(resetInternetCredentialsForServer:(NSString *)server
-                  withOptions:(NSDictionary * __nullable)options
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
 {

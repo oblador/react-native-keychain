@@ -1,7 +1,7 @@
 // @flow
-import {NativeModules, Platform} from 'react-native';
+import { NativeModules, Platform } from 'react-native';
 
-const {RNKeychainManager} = NativeModules;
+const { RNKeychainManager } = NativeModules;
 
 export const SECURITY_LEVEL = Object.freeze({
   ANY: RNKeychainManager.SECURITY_LEVEL_ANY,
@@ -95,6 +95,12 @@ export type SharedWebCredentials = {|
   ...UserCredentials,
 |};
 
+function normalizeOptions(serviceOrOptions?: string | Options): ?Options {
+  return typeof serviceOrOptions === 'string'
+    ? { service: serviceOrOptions }
+    : serviceOrOptions;
+}
+
 //* EXPORTS */
 
 /**
@@ -107,15 +113,13 @@ export type SharedWebCredentials = {|
 export function setGenericPassword(
   username: string,
   password: string,
-  options?: Options,
+  serviceOrOptions?: string | Options
 ): Promise<false | Result> {
-  const obj: { service?: string } = options || {};
-
+  const options = normalizeOptions(serviceOrOptions);
   return RNKeychainManager.setGenericPasswordForOptions(
-    obj.service,
-    username,
-    password,
     options,
+    username,
+    password
   );
 }
 
@@ -125,11 +129,10 @@ export function setGenericPassword(
  * @return {Promise} Resolves to `{ service, username, password, storage }` when successful
  */
 export function getGenericPassword(
-  options?: Options,
+  serviceOrOptions?: string | Options
 ): Promise<false | SharedWebCredentials> {
-  const obj: { service?: string } = options || {};
-
-  return RNKeychainManager.getGenericPasswordForOptions(obj.service, options);
+  const options = normalizeOptions(serviceOrOptions);
+  return RNKeychainManager.getGenericPasswordForOptions(options);
 }
 
 /**
@@ -137,21 +140,22 @@ export function getGenericPassword(
  * @param {object} options An Keychain options object.
  * @return {Promise} Resolves to `true` when successful
  */
-export function resetGenericPassword(options?: Options): Promise<boolean> {
-  const obj: { service?: string } = options || {};
-
-  return RNKeychainManager.resetGenericPasswordForOptions(obj.service, options);
+export function resetGenericPassword(
+  serviceOrOptions?: string | Options
+): Promise<boolean> {
+  const options = normalizeOptions(serviceOrOptions);
+  return RNKeychainManager.resetGenericPasswordForOptions(options);
 }
 
 /**
  * Checks if we have a login combination for `server`.
  * @param {string} server URL to server.
- * @param {object} options An Keychain options object.
+ * @param {object} options A keychain options object.
  * @return {Promise} Resolves to `{service, storage}` when successful
  */
 export function hasInternetCredentials(
   server: string,
-  options?: Options,
+  options?: Options
 ): Promise<false | Result> {
   return RNKeychainManager.hasInternetCredentialsForServer(server, options);
 }
@@ -161,32 +165,32 @@ export function hasInternetCredentials(
  * @param {string} server URL to server.
  * @param {string} username Associated username or e-mail to be saved.
  * @param {string} password Associated password to be saved.
- * @param {object} options An Keychain options object.
+ * @param {object} options A keychain options object.
  * @return {Promise} Resolves to `{service, storage}` when successful
  */
 export function setInternetCredentials(
   server: string,
   username: string,
   password: string,
-  options?: Options,
+  options?: Options
 ): Promise<false | Result> {
   return RNKeychainManager.setInternetCredentialsForServer(
     server,
     username,
     password,
-    options,
+    options
   );
 }
 
 /**
  * Fetches login combination for `server`.
  * @param {string} server URL to server.
- * @param {object} options An Keychain options object.
+ * @param {object} options A keychain options object.
  * @return {Promise} Resolves to `{ server, username, password }` when successful
  */
 export function getInternetCredentials(
   server: string,
-  options?: Options,
+  options?: Options
 ): Promise<false | UserCredentials> {
   return RNKeychainManager.getInternetCredentialsForServer(server, options);
 }
@@ -197,11 +201,8 @@ export function getInternetCredentials(
  * @param {object} options Keychain options, iOS only
  * @return {Promise} Resolves to `true` when successful
  */
-export function resetInternetCredentials(
-  server: string,
-  options?: Options,
-): Promise<void> {
-  return RNKeychainManager.resetInternetCredentialsForServer(server, options);
+export function resetInternetCredentials(server: string): Promise<void> {
+  return RNKeychainManager.resetInternetCredentialsForServer(server);
 }
 
 /**
@@ -209,9 +210,7 @@ export function resetInternetCredentials(
  * @param {object} options An Keychain options object.
  * @return {Promise} Resolves to a `BIOMETRY_TYPE` when supported, otherwise `null`
  */
-export function getSupportedBiometryType(
-  options?: Options,
-): Promise<null | SecBiometryType> {
+export function getSupportedBiometryType(): Promise<null | SecBiometryType> {
   if (!RNKeychainManager.getSupportedBiometryType) {
     return Promise.resolve(null);
   }
@@ -220,7 +219,7 @@ export function getSupportedBiometryType(
     return RNKeychainManager.getSupportedBiometryType();
   }
 
-  return RNKeychainManager.getSupportedBiometryType(options);
+  return RNKeychainManager.getSupportedBiometryType();
 }
 
 //* IOS ONLY */
@@ -230,12 +229,14 @@ export function getSupportedBiometryType(
  * @return {Promise} Resolves to `{ server, username, password }` if approved and
  * `false` if denied and throws an error if not supported on platform or there's no shared credentials
  */
-export function requestSharedWebCredentials(): Promise<false | SharedWebCredentials> {
+export function requestSharedWebCredentials(): Promise<
+  false | SharedWebCredentials
+> {
   if (Platform.OS !== 'ios') {
     return Promise.reject(
       new Error(
-        `requestSharedWebCredentials() is not supported on ${Platform.OS} yet`,
-      ),
+        `requestSharedWebCredentials() is not supported on ${Platform.OS} yet`
+      )
     );
   }
   return RNKeychainManager.requestSharedWebCredentials();
@@ -251,19 +252,19 @@ export function requestSharedWebCredentials(): Promise<false | SharedWebCredenti
 export function setSharedWebCredentials(
   server: string,
   username: string,
-  password?: string,
+  password?: string
 ): Promise<void> {
   if (Platform.OS !== 'ios') {
     return Promise.reject(
       new Error(
-        `setSharedWebCredentials() is not supported on ${Platform.OS} yet`,
-      ),
+        `setSharedWebCredentials() is not supported on ${Platform.OS} yet`
+      )
     );
   }
   return RNKeychainManager.setSharedWebCredentialsForServer(
     server,
     username,
-    password,
+    password
   );
 }
 
@@ -285,11 +286,11 @@ export function canImplyAuthentication(options?: Options): Promise<boolean> {
 /**
  * (Android only) Returns guaranteed security level supported by this library
  * on the current device.
- * @param {object} options An Keychain options object.
+ * @param {object} options A keychain options object.
  * @return {Promise} Resolves to `SECURITY_LEVEL` when supported, otherwise `null`.
  */
 export function getSecurityLevel(
-  options?: Options,
+  options?: Options
 ): Promise<null | SecMinimumLevel> {
   if (!RNKeychainManager.getSecurityLevel) {
     return Promise.resolve(null);
