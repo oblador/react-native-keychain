@@ -300,6 +300,8 @@ public class KeychainModuleTests {
     final ReactApplicationContext context = getRNContext();
     final CipherStorage aes = Mockito.mock(CipherStorage.class);
     final CipherStorage rsa = Mockito.mock(CipherStorage.class);
+    when(rsa.getCipherStorageName()).thenReturn("dummy");
+
     final CipherStorage.DecryptionResult decrypted = new CipherStorage.DecryptionResult("user", "password");
     final CipherStorage.EncryptionResult encrypted = new CipherStorage.EncryptionResult("user".getBytes(), "password".getBytes(), rsa);
     final KeychainModule module = new KeychainModule(context);
@@ -308,7 +310,6 @@ public class KeychainModuleTests {
     when(
       rsa.encrypt(eq("dummy"), eq("user"), eq("password"), any())
     ).thenReturn(encrypted);
-    when(rsa.getCipherStorageName()).thenReturn("dummy");
 
     // WHEN:
     module.migrateCipherStorage("dummy", rsa, aes, decrypted);
@@ -445,6 +446,7 @@ public class KeychainModuleTests {
     final CipherStorage.EncryptionResult result = new CipherStorage.EncryptionResult(BYTES_USERNAME, BYTES_PASSWORD, storage);
     final Promise mockPromise = mock(Promise.class);
     final JavaOnlyMap options = new JavaOnlyMap();
+    options.putString(Maps.SERVICE, "dummy");
 
     // store record done with RSA/Biometric cipher
     prefs.storeEncryptedEntry("dummy", result);
@@ -454,7 +456,7 @@ public class KeychainModuleTests {
     when(mockKeyStore.getKey(eq("dummy"), isNull())).thenReturn(null); // return empty Key!
 
     // WHEN:
-    module.getGenericPasswordForOptions("dummy", options, mockPromise);
+    module.getGenericPasswordForOptions(options, mockPromise);
 
     // THEN:
     ArgumentCaptor<Exception> exception = ArgumentCaptor.forClass(Exception.class);
