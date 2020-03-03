@@ -17,7 +17,8 @@ buildscript {
     maven { url = uri("https://plugins.gradle.org/m2/") }
   }
   dependencies {
-    classpath("com.android.tools.build:gradle:4.0.0-alpha09")
+    /* https://mvnrepository.com/artifact/com.android.tools.build/gradle?repo=google */
+    classpath("com.android.tools.build:gradle:4.0.0-beta01")
 
     /* https://github.com/radarsh/gradle-test-logger-plugin */
     classpath("com.adarshr:gradle-test-logger-plugin:2.0.0")
