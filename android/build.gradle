@@ -1,55 +1,86 @@
-def safeExtGet(prop, fallback) {
-    rootProject.ext.has(prop) ? rootProject.ext.get(prop) : fallback
-}
-
 buildscript {
-    // The Android Gradle plugin is only required when opening the android folder stand-alone.
-    // This avoids unnecessary downloads and potential conflicts when the library is included as a
-    // module dependency in an application project.
-    if (project == rootProject) {
-        repositories {
-            google()
-            jcenter()
-        }
-        dependencies {
-            classpath 'com.android.tools.build:gradle:3.5.3'
-        }
+  repositories {
+    maven {
+      url 'https://plugins.gradle.org/m2/'
     }
+  }
+  dependencies {
+    classpath 'com.adarshr:gradle-test-logger-plugin:2.0.0'
+  }
 }
 
 apply plugin: 'com.android.library'
+apply plugin: "com.adarshr.test-logger"
+
+def safeExtGet(prop, fallback) {
+  rootProject.ext.has(prop) ? rootProject.ext.get(prop) : fallback
+}
 
 android {
-    compileSdkVersion safeExtGet('compileSdkVersion', 28)
-    buildToolsVersion safeExtGet('buildToolsVersion', '28.0.3')
-    defaultConfig {
-        minSdkVersion safeExtGet('minSdkVersion', 16)
-        targetSdkVersion safeExtGet('targetSdkVersion', 26)
-        versionCode 1
-        versionName "1.0"
+  compileSdkVersion safeExtGet('compileSdkVersion', 28)
+  buildToolsVersion safeExtGet('buildToolsVersion', '28.0.3')
+
+  defaultConfig {
+    minSdkVersion safeExtGet('minSdkVersion', 19)
+    targetSdkVersion safeExtGet('targetSdkVersion', 28)
+    versionCode 1
+    versionName "1.0"
+  }
+
+  lintOptions {
+    abortOnError false
+  }
+
+  compileOptions {
+    sourceCompatibility JavaVersion.VERSION_1_8
+    targetCompatibility JavaVersion.VERSION_1_8
+  }
+
+  testOptions {
+    unitTests {
+      includeAndroidResources = true
     }
-    lintOptions {
-        abortOnError false
-    }
+  }
 }
 
 repositories {
-    mavenLocal()
-    maven {
-        // All of React Native (JS, Obj-C sources, Android binaries) is installed from npm
-        url "$rootDir/../node_modules/react-native/android"
-    }
-    maven {
-        // Android JSC is installed from npm
-        url "$rootDir/../node_modules/jsc-android/dist"
-    }
-    google()
-    jcenter()
+  mavenCentral()
 }
 
 dependencies {
-    //noinspection GradleDynamicVersion
-    implementation 'com.facebook.react:react-native:+'  // From node_modules
-    implementation 'androidx.annotation:annotation:1.1.0'
-    implementation 'com.facebook.conceal:conceal:1.1.3@aar'
+  implementation 'com.facebook.react:react-native:+'
+
+  implementation 'androidx.appcompat:appcompat:1.1.0'
+  implementation 'androidx.legacy:legacy-support-v4:1.0.0'
+
+  /* https://mvnrepository.com/artifact/androidx.biometric/biometric
+      src: http://bit.ly/31DhLZG */
+  implementation 'androidx.biometric:biometric:1.0.1@aar'
+
+  /* version higher 1.1.3 has problems with included soloader packages,
+      https://github.com/facebook/conceal/releases */
+  implementation "com.facebook.conceal:conceal:1.1.3@aar"
+
+  /* Unit Testing Frameworks */
+  testImplementation 'junit:junit:4.13'
+
+  /* Mockito, https://mvnrepository.com/artifact/org.mockito/mockito-inline */
+  testImplementation 'org.mockito:mockito-inline:3.2.4'
+
+  /* https://mvnrepository.com/artifact/org.hamcrest/hamcrest/2.1 */
+  testImplementation 'org.hamcrest:hamcrest:2.2'
+
+  /* http://robolectric.org/getting-started/ */
+  testImplementation("org.robolectric:robolectric:4.3.1")
+
+  /* https://mvnrepository.com/artifact/androidx.test.ext/junit */
+  testImplementation "androidx.test.ext:junit:1.1.2-alpha03"
+
+  /* https://mvnrepository.com/artifact/androidx.test/core */
+  testImplementation 'androidx.test:core:1.3.0-alpha03'
+  testImplementation "androidx.test:runner:1.3.0-alpha03"
+  testImplementation "androidx.test:monitor:1.3.0-alpha03"
+
+  // Uncomment for including JRE implementation of crypto api (that is used in Robolectric tests)
+  // testImplementation fileTree(dir: "${System.properties.get("java.home")}/lib", include: ["jce.jar"])
 }

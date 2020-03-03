@@ -174,7 +174,10 @@ SecAccessControlCreateFlags accessControlValue(NSDictionary *options)
   return 0;
 }
 
-- (void)insertKeychainEntry:(NSDictionary *)attributes withOptions:(NSDictionary * __nullable)options resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject
+- (void)insertKeychainEntry:(NSDictionary *)attributes
+                withOptions:(NSDictionary * __nullable)options
+                   resolver:(RCTPromiseResolveBlock)resolve
+                   rejecter:(RCTPromiseRejectBlock)reject
 {
   NSString *accessGroup = accessGroupValue(options);
   CFStringRef accessible = accessibleValue(options);
@@ -217,7 +220,11 @@ SecAccessControlCreateFlags accessControlValue(NSDictionary *options)
         NSError *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:osStatus userInfo:nil];
         return rejectWithError(reject, error);
       } else {
-        return resolve(@(YES));
+          NSString *service = serviceValue(options);
+          return resolve(@{
+              @"service": service,
+              @"storage": @"keychain"
+          });
       }
     });
   });
@@ -250,7 +257,9 @@ SecAccessControlCreateFlags accessControlValue(NSDictionary *options)
 #pragma mark - RNKeychain
 
 #if TARGET_OS_IOS
-RCT_EXPORT_METHOD(canCheckAuthentication:(NSDictionary *)options resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
+RCT_EXPORT_METHOD(canCheckAuthentication:(NSDictionary * __nullable)options
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
 {
   LAPolicy policyToEvaluate = authPolicy(options);
 
@@ -266,7 +275,8 @@ RCT_EXPORT_METHOD(canCheckAuthentication:(NSDictionary *)options resolver:(RCTPr
 #endif
 
 #if TARGET_OS_IOS
-RCT_EXPORT_METHOD(getSupportedBiometryType:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
+RCT_EXPORT_METHOD(getSupportedBiometryType:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
 {
   NSError *aerr = nil;
   LAContext *context = [LAContext new];
@@ -285,7 +295,11 @@ RCT_EXPORT_METHOD(getSupportedBiometryType:(RCTPromiseResolveBlock)resolve rejec
 }
 #endif
 
-RCT_EXPORT_METHOD(setGenericPasswordForOptions:(NSDictionary *)options withUsername:(NSString *)username withPassword:(NSString *)password withSecurityLevel:(__unused NSString *)level resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
+RCT_EXPORT_METHOD(setGenericPasswordForOptions:(NSDictionary *)options
+                  withUsername:(NSString *)username
+                  withPassword:(NSString *)password
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
 {
   NSString *service = serviceValue(options);
   NSDictionary *attributes = attributes = @{
@@ -300,7 +314,9 @@ RCT_EXPORT_METHOD(setGenericPasswordForOptions:(NSDictionary *)options withUsern
   [self insertKeychainEntry:attributes withOptions:options resolver:resolve rejecter:reject];
 }
 
-RCT_EXPORT_METHOD(getGenericPasswordForOptions:(NSDictionary *)options resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
+RCT_EXPORT_METHOD(getGenericPasswordForOptions:(NSDictionary * __nullable)options
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
 {
   NSString *service = serviceValue(options);
   NSString *authenticationPrompt = @"Authenticate to retrieve secret";
@@ -340,12 +356,15 @@ RCT_EXPORT_METHOD(getGenericPasswordForOptions:(NSDictionary *)options resolver:
   return resolve(@{
     @"service": service,
     @"username": username,
-    @"password": password
+    @"password": password,
+    @"storage": @"keychain"
   });
 
 }
 
-RCT_EXPORT_METHOD(resetGenericPasswordForOptions:(NSDictionary *)options resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
+RCT_EXPORT_METHOD(resetGenericPasswordForOptions:(NSDictionary *)options
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
 {
   NSString *service = serviceValue(options);
 
@@ -359,7 +378,12 @@ RCT_EXPORT_METHOD(resetGenericPasswordForOptions:(NSDictionary *)options resolve
   return resolve(@(YES));
 }
 
-RCT_EXPORT_METHOD(setInternetCredentialsForServer:(NSString *)server withUsername:(NSString*)username withPassword:(NSString*)password withSecurityLevel:(__unused NSString *)level withOptions:(NSDictionary *)options resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
+RCT_EXPORT_METHOD(setInternetCredentialsForServer:(NSString *)server
+                  withUsername:(NSString*)username
+                  withPassword:(NSString*)password
+                  withOptions:(NSDictionary * __nullable)options
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
 {
   [self deleteCredentialsForServer:server];
 
@@ -373,7 +397,9 @@ RCT_EXPORT_METHOD(setInternetCredentialsForServer:(NSString *)server withUsernam
   [self insertKeychainEntry:attributes withOptions:options resolver:resolve rejecter:reject];
 }
 
-RCT_EXPORT_METHOD(hasInternetCredentialsForServer:(NSString *)server resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
+RCT_EXPORT_METHOD(hasInternetCredentialsForServer:(NSString *)server
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
 {
   NSMutableDictionary *queryParts = [[NSMutableDictionary alloc] init];
   queryParts[(__bridge NSString *)kSecClass] = (__bridge id)(kSecClassInternetPassword);
@@ -402,7 +428,10 @@ RCT_EXPORT_METHOD(hasInternetCredentialsForServer:(NSString *)server resolver:(R
   return rejectWithError(reject, error);
 }
 
-RCT_EXPORT_METHOD(getInternetCredentialsForServer:(NSString *)server withOptions:(NSDictionary *)options resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
+RCT_EXPORT_METHOD(getInternetCredentialsForServer:(NSString *)server
+                  withOptions:(NSDictionary * __nullable)options
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
 {
   NSDictionary *query = @{
     (__bridge NSString *)kSecClass: (__bridge id)(kSecClassInternetPassword),
@@ -435,12 +464,15 @@ RCT_EXPORT_METHOD(getInternetCredentialsForServer:(NSString *)server withOptions
   return resolve(@{
     @"server": server,
     @"username": username,
-    @"password": password
+    @"password": password,
+    @"storage": @"keychain"
   });
 
 }
 
-RCT_EXPORT_METHOD(resetInternetCredentialsForServer:(NSString *)server withOptions:(NSDictionary *)options resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
+RCT_EXPORT_METHOD(resetInternetCredentialsForServer:(NSString *)server
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
 {
   OSStatus osStatus = [self deleteCredentialsForServer:server];
 
@@ -470,7 +502,8 @@ RCT_EXPORT_METHOD(requestSharedWebCredentials:(RCTPromiseResolveBlock)resolve re
       return resolve(@{
         @"server": server,
         @"username": username,
-        @"password": password
+        @"password": password,
+        @"storage": @"keychain"
       });
     }
     return resolve(@(NO));
@@ -478,7 +511,11 @@ RCT_EXPORT_METHOD(requestSharedWebCredentials:(RCTPromiseResolveBlock)resolve re
 }
 
 
-RCT_EXPORT_METHOD(setSharedWebCredentialsForServer:(NSString *)server withUsername:(NSString *)username withPassword:(NSString *)password resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
+RCT_EXPORT_METHOD(setSharedWebCredentialsForServer:(NSString *)server
+                  withUsername:(NSString *)username
+                  withPassword:(NSString *)password
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
 {
   SecAddSharedWebCredential(
     (__bridge CFStringRef)server,

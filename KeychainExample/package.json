@@ -3,20 +3,30 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
+    "android": "node node_modules/react-native/local-cli/cli.js run-android",
+    "ios": "node node_modules/react-native/local-cli/cli.js run-ios",
     "start": "node node_modules/react-native/local-cli/cli.js start",
-    "test": "jest"
+    "test": "jest",
+    "postinstall": "pwd && ./postinstall_cleanup.sh",
+    "duplicates": "./node_modules/.bin/yarn-deduplicate ./yarn.lock",
+    "android:x": "npx jetifier",
+    "android:support": "npx jetifier -r"
   },
   "dependencies": {
-    "react": "16.5.0",
-    "react-native": "0.57.1",
-    "react-native-keychain": "^3.0.0"
+    "react": "16.9.0",
+    "react-native": "0.61.2",
+    "react-native-keychain": "file:../",
+    "react-native-segmented-control-tab": "^3.4.1"
   },
   "devDependencies": {
-    "@babel/runtime": "^7.1.2",
-    "babel-jest": "23.6.0",
-    "jest": "23.6.0",
-    "metro-react-native-babel-preset": "0.47.0",
-    "react-test-renderer": "16.5.0"
+    "@babel/core": "^7.6.2",
+    "@babel/runtime": "^7.6.2",
+    "babel-jest": "^24.9.0",
+    "jest": "^24.9.0",
+    "jetifier": "^1.6.4",
+    "metro-react-native-babel-preset": "^0.56.0",
+    "react-test-renderer": "16.9.0",
+    "yarn-deduplicate": "^1.1.1"
   },
   "jest": {
     "preset": "react-native"

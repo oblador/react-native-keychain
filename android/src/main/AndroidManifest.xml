@@ -1,4 +1,18 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.oblador.keychain">
-  <uses-permission  android:name="android.permission.USE_FINGERPRINT" />
+<manifest
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  package="com.oblador.keychain"
+  >
+
+  <uses-permission android:name="android.permission.USE_BIOMETRIC" />
+  <uses-permission android:name="android.permission.USE_FINGERPRINT" />
+
+  <application>
+    <!--suppress AndroidDomInspection -->
+    <activity
+      android:name="androidx.biometric.DeviceCredentialHandlerActivity"
+      android:exported="true"
+      android:theme="@style/DeviceCredentialHandlerTheme"
+      />
+  </application>
+
 </manifest>

@@ -1,10 +1,61 @@
-<p align="center"><img src="https://user-images.githubusercontent.com/378279/36642269-6195b10c-1a3d-11e8-9e1b-37a3d1bcf7b3.png" align="center" width="150" height="201" alt="" /></p>
-
 <h1 align="center">react-native-keychain</h1>
+
+<p align="center"><img
+    src="https://user-images.githubusercontent.com/378279/36642269-6195b10c-1a3d-11e8-9e1b-37a3d1bcf7b3.png"
+    align="center" width="150" height="201" alt=""
+  />
+</p>
 
 [![Travis](https://img.shields.io/travis/oblador/react-native-keychain.svg)](https://travis-ci.org/oblador/react-native-keychain) [![npm](https://img.shields.io/npm/v/react-native-keychain.svg)](https://npmjs.com/package/react-native-keychain) [![npm](https://img.shields.io/npm/dm/react-native-keychain.svg)](https://npmjs.com/package/react-native-keychain)
 
-Keychain/Keystore Access for React Native. 
+# Keychain/Keystore Access for React Native
+
+- [Keychain/Keystore Access for React Native](#keychainkeystore-access-for-react-native)
+  - [Installation](#installation)
+  - [Usage](#usage)
+  - [API](#api)
+    - [`setGenericPassword(username, password, [{ accessControl, accessible, accessGroup, service, securityLevel }])`](#setgenericpasswordusername-password--accesscontrol-accessible-accessgroup-service-securitylevel-)
+    - [`getGenericPassword([{ authenticationPrompt, service }])`](#getgenericpassword-authenticationprompt-service-)
+    - [`resetGenericPassword([{ service }])`](#resetgenericpassword-service-)
+    - [`setInternetCredentials(server, username, password, [{ accessControl, accessible, accessGroup, securityLevel }])`](#setinternetcredentialsserver-username-password--accesscontrol-accessible-accessgroup-securitylevel-)
+    - [`hasInternetCredentials(server, [{ authenticationPrompt }])`](#hasinternetcredentialsserver--authenticationprompt-)
+    - [`getInternetCredentials(server, [{ authenticationPrompt }])`](#getinternetcredentialsserver--authenticationprompt-)
+    - [`resetInternetCredentials(server, [{}])`](#resetinternetcredentialsserver-)
+    - [`requestSharedWebCredentials()` (iOS only)](#requestsharedwebcredentials-ios-only)
+    - [`setSharedWebCredentials(server, username, password)` (iOS only)](#setsharedwebcredentialsserver-username-password-ios-only)
+    - [`canImplyAuthentication([{ authenticationType }])` (iOS only)](#canimplyauthentication-authenticationtype--ios-only)
+    - [`getSupportedBiometryType([{}])`](#getsupportedbiometrytype)
+    - [`getSecurityLevel([{ accessControl }])` (Android only)](#getsecuritylevel-accesscontrol--android-only)
+    - [Options](#options)
+      - [Data Structure Properties/Fields](#data-structure-propertiesfields)
+      - [`Keychain.ACCESS_CONTROL` enum](#keychainaccess_control-enum)
+      - [`Keychain.ACCESSIBLE` enum](#keychainaccessible-enum)
+      - [`Keychain.AUTHENTICATION_TYPE` enum](#keychainauthentication_type-enum)
+      - [`Keychain.BIOMETRY_TYPE` enum](#keychainbiometry_type-enum)
+      - [`Keychain.SECURITY_LEVEL` enum (Android only)](#keychainsecurity_level-enum-android-only)
+      - [`Keychain.STORAGE_TYPE` enum (Android only)](#keychainstorage_type-enum-android-only)
+      - [`Keychain.RULES` enum (Android only)](#keychainrules-enum-android-only)
+  - [Important Behavior](#important-behavior)
+    - [Rule 1: Automatic Security Level Upgrade](#rule-1-automatic-security-level-upgrade)
+  - [Manual Installation](#manual-installation)
+    - [iOS](#ios)
+      - [Option: Manually](#option-manually)
+      - [Option: With CocoaPods](#option-with-cocoapods)
+      - [Enable `Keychain Sharing` entitlement for iOS 10+](#enable-keychain-sharing-entitlement-for-ios-10)
+    - [Android](#android)
+      - [Option: Manually](#option-manually-1)
+      - [Proguard Rules](#proguard-rules)
+  - [Unit Testing with Jest](#unit-testing-with-jest)
+    - [Using a Jest `__mocks__` Directory](#using-a-jest-mocks-directory)
+    - [Using a Jest Setup File](#using-a-jest-setup-file)
+  - [Notes](#notes)
+    - [Android Notes](#android-notes)
+    - [iOS Notes](#ios-notes)
+    - [macOS Catalyst](#macos-catalyst)
+    - [Security](#security)
+  - [Maintainers](#maintainers)
+  - [For Developers / Contributors](#for-developers--contributors)
+  - [License](#license)
 
 ## Installation
 
@@ -46,21 +97,23 @@ See `KeychainExample` for fully working project example.
 
 Both `setGenericPassword` and `setInternetCredentials` are limited to strings only, so if you need to store objects etc, please use `JSON.stringify`/`JSON.parse` when you store/access it.
 
+## API
+
 ### `setGenericPassword(username, password, [{ accessControl, accessible, accessGroup, service, securityLevel }])`
 
-Will store the username/password combination in the secure storage. Resolves to `true` or rejects in case of an error.
+Will store the username/password combination in the secure storage. Resolves to `{service, storage}` or rejects in case of an error. `storage` - is a name of used internal cipher for saving secret; `service` - name used for storing secret in internal storage (empty string resolved to valid default name).
 
 ### `getGenericPassword([{ authenticationPrompt, service }])`
 
-Will retrieve the username/password combination from the secure storage. Resolves to `{ username, password }` if an entry exists or `false` if it doesn't. It will reject only if an unexpected error is encountered like lacking entitlements or permission.
+Will retrieve the username/password combination from the secure storage. Resolves to `{ username, password, service, storage }` if an entry exists or `false` if it doesn't. It will reject only if an unexpected error is encountered like lacking entitlements or permission.
 
 ### `resetGenericPassword([{ service }])`
 
-Will remove the username/password combination from the secure storage.
+Will remove the username/password combination from the secure storage. Resolves to `true` in case of success.
 
 ### `setInternetCredentials(server, username, password, [{ accessControl, accessible, accessGroup, securityLevel }])`
 
-Will store the server/username/password combination in the secure storage.
+Will store the server/username/password combination in the secure storage. Resolves to `{ username, password, service, storage }`;
 
 ### `hasInternetCredentials(server, [{ authenticationPrompt }])`
 
@@ -72,7 +125,7 @@ Will retrieve the server/username/password combination from the secure storage. 
 
 ### `resetInternetCredentials(server)`
 
-Will remove the server/username/password combination from the secure storage.
+Will remove the server/username/password combination from the secure storage. 
 
 ### `requestSharedWebCredentials()` (iOS only)
 
@@ -82,75 +135,152 @@ Asks the user for a shared web credential. Requires additional setup both in the
 
 Sets a shared web credential. Resolves to `true` when successful.
 
-### `canImplyAuthentication([{ authenticationType }])`
+### `canImplyAuthentication([{ authenticationType }])` (iOS only)
 
 Inquire if the type of local authentication policy is supported on this device with the device settings the user chose. Should be used in combination with `accessControl` option in the setter functions. Resolves to `true` if supported.
 
 ### `getSupportedBiometryType()`
 
-Get what type of hardware biometry support the device has. Resolves to a `Keychain.BIOMETRY_TYPE` value when supported, otherwise `null`.
+Get what type of hardware biometry support the device has. Resolves to a `Keychain.BIOMETRY_TYPE` value when supported, otherwise `null`. 
 
-### `getSecurityLevel()` (Android only)
+> This method returns `null`, if the device haven't enrolled into fingerprint/FaceId. Even though it has hardware for it.
 
-Get security level that is supported on the current device with the current OS.
+### `getSecurityLevel([{ accessControl }])` (Android only)
 
-### Security Levels (Android only)
-
-If set, `securityLevel` parameter specifies minimum security level that the encryption key storage should guarantee for storing credentials to succeed.
-
-* `ANY` - no security guarantees needed (default value); Credentials can be stored in FB Secure Storage;
-* `SECURE_SOFTWARE` - requires for the key to be stored in the Android Keystore, separate from the encrypted data;
-* `SECURE_HARDWARE` - requires for the key to be stored on a secure hardware (Trusted Execution Environment or Secure Environment). Read [this article](https://developer.android.com/training/articles/keystore#ExtractionPrevention) for more information.
+Get security level that is supported on the current device with the current OS. Resolves to `Keychain.SECURITY_LEVEL` enum value.
 
 ### Options
 
-| Key | Platform | Description | Default |
-|---|---|---|---|
-|**`accessControl`**|iOS only|This dictates how a keychain item may be used, see possible values in `Keychain.ACCESS_CONTROL`. |*None*|
-|**`accessible`**|iOS only|This dictates when a keychain item is accessible, see possible values in `Keychain.ACCESSIBLE`. |*`Keychain.ACCESSIBLE.WHEN_UNLOCKED`*|
-|**`accessGroup`**|iOS only|In which App Group to share the keychain. Requires additional setup with entitlements. |*None*|
-|**`authenticationPrompt`**|iOS only|What to prompt the user when unlocking the keychain with biometry or device password. |`Authenticate to retrieve secret`|
-|**`authenticationType`**|iOS only|Policies specifying which forms of authentication are acceptable. |`Keychain.AUTHENTICATION_TYPE.DEVICE_PASSCODE_OR_BIOMETRICS`|
-|**`service`**|All|Reverse domain name qualifier for the service associated with password. |*App bundle ID*|
+#### Data Structure Properties/Fields
+
+| Key                        | Platform     | Description                                                                                      | Default                                                      |
+| -------------------------- | ------------ | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------ |
+| **`accessControl`**        | All          | This dictates how a keychain item may be used, see possible values in `Keychain.ACCESS_CONTROL`. | *None* (iOS), `BIOMETRY_ANY` default for Android.            |
+| **`accessible`**           | iOS only     | This dictates when a keychain item is accessible, see possible values in `Keychain.ACCESSIBLE`.  | *`Keychain.ACCESSIBLE.WHEN_UNLOCKED`*                        |
+| **`accessGroup`**          | iOS only     | In which App Group to share the keychain. Requires additional setup with entitlements.           | *None*                                                       |
+| **`authenticationPrompt`** | iOS only     | What to prompt the user when unlocking the keychain with biometry or device password.            | `Authenticate to retrieve secret`                            |
+| **`authenticationType`**   | iOS only     | Policies specifying which forms of authentication are acceptable.                                | `Keychain.AUTHENTICATION_TYPE.DEVICE_PASSCODE_OR_BIOMETRICS` |
+| **`service`**              | All          | Reverse domain name qualifier for the service associated with password.                          | *App bundle ID*                                              |
+| **`storage`**              | Android only | Force specific cipher storage usage during saving the password                                   | Select best available storage                                |
+| **`rules`**                | Android only | Force following to a specific security rules                                                     | Default: `Keychain.RULES.AUTOMATIC_UPGRADE`                  |
 
 #### `Keychain.ACCESS_CONTROL` enum
 
-| Key | Description |
-|-----|-------------|
-|**`USER_PRESENCE`**|Constraint to access an item with either Touch ID or passcode.|
-|**`BIOMETRY_ANY`**|Constraint to access an item with Touch ID for any enrolled fingers.|
-|**`BIOMETRY_CURRENT_SET`**|Constraint to access an item with Touch ID for currently enrolled fingers.|
-|**`DEVICE_PASSCODE`**|Constraint to access an item with a passcode.|
-|**`APPLICATION_PASSWORD`**|Constraint to use an application-provided password for data encryption key generation.|
-|**`BIOMETRY_ANY_OR_DEVICE_PASSCODE`**|Constraint to access an item with Touch ID for any enrolled fingers or passcode.|
-|**`BIOMETRY_CURRENT_SET_OR_DEVICE_PASSCODE`**|Constraint to access an item with Touch ID for currently enrolled fingers or passcode.|
+| Key                                           | Description                                                                            |
+| --------------------------------------------- | -------------------------------------------------------------------------------------- |
+| **`USER_PRESENCE`**                           | Constraint to access an item with either Touch ID or passcode.                         |
+| **`BIOMETRY_ANY`**                            | Constraint to access an item with Touch ID for any enrolled fingers.                   |
+| **`BIOMETRY_CURRENT_SET`**                    | Constraint to access an item with Touch ID for currently enrolled fingers.             |
+| **`DEVICE_PASSCODE`**                         | Constraint to access an item with a passcode.                                          |
+| **`APPLICATION_PASSWORD`**                    | Constraint to use an application-provided password for data encryption key generation. |
+| **`BIOMETRY_ANY_OR_DEVICE_PASSCODE`**         | Constraint to access an item with Touch ID for any enrolled fingers or passcode.       |
+| **`BIOMETRY_CURRENT_SET_OR_DEVICE_PASSCODE`** | Constraint to access an item with Touch ID for currently enrolled fingers or passcode. |
+
+> Note #1: `BIOMETRY_ANY`, `BIOMETRY_CURRENT_SET`, `BIOMETRY_ANY_OR_DEVICE_PASSCODE`, `BIOMETRY_CURRENT_SET_OR_DEVICE_PASSCODE` - recognized by Android as a requirement for Biometric enabled storage (Till we got a better implementation);
+>
+> Note #2: For Android we support only two states: `Default` (use the best available secured storage) and `Fingerprint` (use only biometric protected storage);
+
+Refs:
+
+- <https://developer.apple.com/documentation/security/secaccesscontrolcreateflags?language=objc>
 
 #### `Keychain.ACCESSIBLE` enum
 
-| Key | Description |
-|-----|-------------|
-|**`WHEN_UNLOCKED`**|The data in the keychain item can be accessed only while the device is unlocked by the user.|
-|**`AFTER_FIRST_UNLOCK`**|The data in the keychain item cannot be accessed after a restart until the device has been unlocked once by the user.|
-|**`ALWAYS`**|The data in the keychain item can always be accessed regardless of whether the device is locked.|
-|**`WHEN_PASSCODE_SET_THIS_DEVICE_ONLY`**|The data in the keychain can only be accessed when the device is unlocked. Only available if a passcode is set on the device. Items with this attribute never migrate to a new device.|
-|**`WHEN_UNLOCKED_THIS_DEVICE_ONLY`**|The data in the keychain item can be accessed only while the device is unlocked by the user. Items with this attribute do not migrate to a new device.|
-|**`AFTER_FIRST_UNLOCK_THIS_DEVICE_ONLY`**|The data in the keychain item cannot be accessed after a restart until the device has been unlocked once by the user. Items with this attribute never migrate to a new device.|
-|**`ALWAYS_THIS_DEVICE_ONLY`**|The data in the keychain item can always be accessed regardless of whether the device is locked. Items with this attribute never migrate to a new device.|
+| Key                                       | Description                                                                                                                                                                            |
+| ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **`WHEN_UNLOCKED`**                       | The data in the keychain item can be accessed only while the device is unlocked by the user.                                                                                           |
+| **`AFTER_FIRST_UNLOCK`**                  | The data in the keychain item cannot be accessed after a restart until the device has been unlocked once by the user.                                                                  |
+| **`ALWAYS`**                              | The data in the keychain item can always be accessed regardless of whether the device is locked.                                                                                       |
+| **`WHEN_PASSCODE_SET_THIS_DEVICE_ONLY`**  | The data in the keychain can only be accessed when the device is unlocked. Only available if a passcode is set on the device. Items with this attribute never migrate to a new device. |
+| **`WHEN_UNLOCKED_THIS_DEVICE_ONLY`**      | The data in the keychain item can be accessed only while the device is unlocked by the user. Items with this attribute do not migrate to a new device.                                 |
+| **`AFTER_FIRST_UNLOCK_THIS_DEVICE_ONLY`** | The data in the keychain item cannot be accessed after a restart until the device has been unlocked once by the user. Items with this attribute never migrate to a new device.         |
+| **`ALWAYS_THIS_DEVICE_ONLY`**             | The data in the keychain item can always be accessed regardless of whether the device is locked. Items with this attribute never migrate to a new device.                              |
+
+Refs:
+
+- <https://developer.apple.com/documentation/security/ksecattraccessiblewhenunlocked>
 
 #### `Keychain.AUTHENTICATION_TYPE` enum
 
-| Key | Description |
-|-----|-------------|
-|**`DEVICE_PASSCODE_OR_BIOMETRICS`**|Device owner is going to be authenticated by biometry or device passcode.|
-|**`BIOMETRICS`**|Device owner is going to be authenticated using a biometric method (Touch ID or Face ID).|
+| Key                                 | Description                                                                               |
+| ----------------------------------- | ----------------------------------------------------------------------------------------- |
+| **`DEVICE_PASSCODE_OR_BIOMETRICS`** | Device owner is going to be authenticated by biometry or device passcode.                 |
+| **`BIOMETRICS`**                    | Device owner is going to be authenticated using a biometric method (Touch ID or Face ID). |
+
+Refs:
+
+- <https://developer.apple.com/documentation/localauthentication/lapolicy>
 
 #### `Keychain.BIOMETRY_TYPE` enum
 
-| Key | Description |
-|-----|-------------|
-|**`TOUCH_ID`**|Device supports authentication with Touch ID.|
-|**`FACE_ID`**|Device supports authentication with Face ID.|
-|**`FINGERPRINT`**|Device supports authentication with Android Fingerprint.|
+| Key               | Description                                                     |
+| ----------------- | --------------------------------------------------------------- |
+| **`TOUCH_ID`**    | Device supports authentication with Touch ID. (iOS only)        |
+| **`FACE_ID`**     | Device supports authentication with Face ID. (iOS only)         |
+| **`FINGERPRINT`** | Device supports authentication with Fingerprint. (Android only) |
+
+Refs:
+
+- <https://developer.apple.com/documentation/localauthentication/labiometrytype?language=objc>
+
+#### `Keychain.SECURITY_LEVEL` enum (Android only)
+
+If set, `securityLevel` parameter specifies minimum security level that the encryption key storage should guarantee for storing credentials to succeed.
+
+| Key               | Description                                                                                                                                                                                                                            |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ANY`             | no security guarantees needed (default value); Credentials can be stored in FB Secure Storage;                                                                                                                                         |
+| `SECURE_SOFTWARE` | requires for the key to be stored in the Android Keystore, separate from the encrypted data;                                                                                                                                           |
+| `SECURE_HARDWARE` | requires for the key to be stored on a secure hardware (Trusted Execution Environment or Secure Environment). Read [this article](https://developer.android.com/training/articles/keystore#ExtractionPrevention) for more information. |
+
+#### `Keychain.STORAGE_TYPE` enum (Android only)
+
+| Key   | Description                            |
+| ----- | -------------------------------------- |
+| `FB`  | Facebook compatibility cipher          |
+| `AES` | Encryptions without human interaction. |
+| `RSA` | Encryption with biometrics.            |
+
+#### `Keychain.RULES` enum (Android only)
+
+| Key                 | Description                                                                                                                                                 |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `NONE`              | No rules. Be dummy, developer control everything                                                                                                            |
+| `AUTOMATIC_UPGRADE` | Upgrade secret to the best available storage as soon as it is available and user request secret extraction. Upgrade not applied till we request the secret. |
+
+## Important Behavior
+
+### Rule 1: Automatic Security Level Upgrade
+
+As a rule library try to apply the best possible encryption and access method for storing secrets.
+
+What does it mean in practical use case?
+
+> Scenario #1: User has a new phone and run on it application with this module and store secret on device.
+> Several days later user configured biometrics on the device and run application again. When user will try to access the secret, library will detect security enhancement and will upgrade secret storage to the best possible.
+
+---
+Q: What will happens if user disable/drop biometrics usage?
+
+A: User will lost ability to extract secret from storage. On re-enable biometrics access to the secret will be possible to access again.
+
+---
+Q: Is it possible any automatic downgrading?
+
+A: From security perspective any Automatic downgrading is treated as "a loss of the trust" point.
+Developer should implement own logic to allow downgrade and deal with "security loss". _(My recommendation - never do that!)_
+
+---
+Q: How to disable automatic upgrade?
+
+A: Do call `getGenericPassword({ ...otherProps, rules: "none" })` with extra property `rules` set to `none` string value.
+
+---
+Q: How to force a specific level of encryption during saving the secret?
+
+A: Do call `setGenericPassword({ ...otherProps, storage: "AES" })` with forced storage.
+
+> Note: attempt to force storage `RSA` when biometrics is not available will force code to reject call with errors specific to device biometric configuration state.
 
 ## Manual Installation
 
@@ -209,10 +339,10 @@ android {
 }
 
 dependencies {
-  compile fileTree(dir: 'libs', include: ['*.jar'])
-  compile 'com.android.support:appcompat-v7:23.0.1'
-  compile 'com.facebook.react:react-native:0.19.+'
-+ compile project(':react-native-keychain')
+  implementation fileTree(dir: 'libs', include: ['*.jar'])
+  implementation 'com.android.support:appcompat-v7:23.0.1'
+  implementation 'com.facebook.react:react-native:0.19.+'
++ implementation project(':react-native-keychain')
 }
 ```
 
@@ -297,7 +427,7 @@ Now your tests should run successfully, though note that writing and reading to 
 
 ## Notes
 
-### Android 
+### Android Notes
 
 The module will automatically use the appropriate CipherStorage implementation based on API level:
 
@@ -308,9 +438,14 @@ Encrypted data is stored in SharedPreferences.
 
 The `setInternetCredentials(server, username, password)` call will be resolved as call to `setGenericPassword(username, password, server)`. Use the `server` argument to distinguish between multiple entries.
 
-### iOS
+### iOS Notes
 
 If you need Keychain Sharing in your iOS extension, make sure you use the same App Group and Keychain Sharing group names in your Main App and your Share Extension. To then share the keychain between the Main App and Share Extension, use the `accessGroup` and `service` option on `setGenericPassword` and `getGenericPassword`, like so: `getGenericPassword({ accessGroup: 'group.appname', service: 'com.example.appname' })`
+
+Refs:
+
+- <https://developer.apple.com/documentation/localauthentication>
+- <https://developer.apple.com/documentation/security>
 
 ### macOS Catalyst
 
@@ -320,6 +455,12 @@ This package supports macOS Catalyst.
 
 On API levels that do not support Android keystore, Facebook Conceal is used to en/decrypt stored data. The encrypted data is then stored in SharedPreferences. Since Conceal itself stores its encryption key in SharedPreferences, it follows that if the device is rooted (or if an attacker can somehow access the filesystem), the key can be obtained and the stored data can be decrypted. Therefore, on such a device, the conceal encryption is only an obscurity. On API level 23+ the key is stored in the Android Keystore, which makes the key non-exportable and therefore makes the entire process more secure. Follow best practices and do not store user credentials on a device. Instead use tokens or other forms of authentication and re-ask for user credentials before performing sensitive operations.
 
+![Android Security Framework](https://source.android.com/security/images/authentication-flow.png)
+
+* [Android authentication](https://source.android.com/security/authentication)
+* [Android Cipher](https://developer.android.com/guide/topics/security/cryptography)
+* [Android Protected Confirmation](https://developer.android.com/training/articles/security-android-protected-confirmation)
+
 ## Maintainers
 
 <table>
@@ -328,34 +469,47 @@ On API levels that do not support Android keystore, Facebook Conceal is used to 
       <td align="center">
         <a href="https://github.com/oblador">
           <img width="150" height="150" src="https://github.com/oblador.png?v=3&s=150">
-          <br>
+          <br />
           <strong>Joel Arvidsson</strong>
         </a>
-        <br>
+        <br />
         Author
       </td>
       <td align="center">
         <a href="https://github.com/vonovak">
           <img width="150" height="150" src="https://github.com/vonovak.png?v=3&s=150">
-          </br>
+          <br />
           <strong>Vojtech Novak</strong>
         </a>
-        <br>
+        <br />
         Maintainer
       </td>
       <td align="center">
         <a href="https://github.com/pcoltau">
           <img width="150" height="150" src="https://github.com/pcoltau.png?v=3&s=150">
-          </br>
+          <br />
           <strong>Pelle Stenild Coltau</strong>
         </a>
-        <br>
+        <br />
         Maintainer
+      </td>
+      <td align="center">
+        <a href="https://github.com/OleksandrKucherenko">
+          <img width="150" height="150" src="https://github.com/OleksandrKucherenko.png?v=3&s=150">
+          <br />
+          <strong>Oleksandr Kucherenko</strong>
+        </a>
+        <br />
+        Contributor
       </td>
     </tr>
   <tbody>
 </table>
 
+## For Developers / Contributors
+
+- [How to Configure Android Studio for Development](android/README.md)
 
 ## License
-MIT © Joel Arvidsson 2016-2018
+
+MIT © Joel Arvidsson 2016-2020
