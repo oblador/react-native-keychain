@@ -87,9 +87,9 @@ export default class KeychainExample extends Component {
     try {
       const options = {
         authenticationPrompt: "Authentification needed",
-        authenticationPromptTitle: "Android auth needed222",
-        authenticationPromptSubtitle: "" + new Date().getTime(),
-        authenticationPromptNegativeBtnText: "Cancel btn",
+        promptInfoTitle: "Authentication needed",
+        promptInfoSubtitle: "Some descriptive subtitle",
+        promptInfoNegativeBtnText: "Cancel",
       }
       const credentials = await Keychain.getGenericPassword(options);
       if (credentials) {

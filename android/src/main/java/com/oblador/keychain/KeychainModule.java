@@ -84,9 +84,9 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     String PASSWORD = "password";
     String STORAGE = "storage";
 
-    String AUTHENTICATION_PROMPT_TITLE = "authenticationPromptTitle";
-    String AUTHENTICATION_PROMPT_SUBTITLE = "authenticationPromptSubtitle";
-    String AUTHENTICATION_PROMPT_NEGATIVE_BTN_TEXT = "authenticationPromptNegativeBtnText";
+    String PROMPT_INFO_TITLE = "promptInfoTitle";
+    String PROMPT_INFO_SUBTITLE = "promptInfoSubtitle";
+    String PROMPT_INFO_NEGATIVE_BTN_TEXT = "promptInfoNegativeBtnText";
   }
 
   /** Known error codes. */
@@ -284,7 +284,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
       final CipherStorage current = getCipherStorageForCurrentAPILevel(useBiometry);
       final String rules = getSecurityRulesOrDefault(options);
 
-      final PromptInfo promptInfo = getAuthenticationPrompt(options);
+      final PromptInfo promptInfo = getPromptInfo(options);
       final DecryptionResult decryptionResult = decryptCredentials(alias, current, resultSet, rules, promptInfo);
 
       final WritableMap credentials = Arguments.createMap();
@@ -533,27 +533,27 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     cipherStorageMap.put(cipherStorage.getCipherStorageName(), cipherStorage);
   }
 
-  /** Extract user specified authentication prompt title from options. */
+  /** Extract user specified prompt info from options. */
   @NonNull
-  private static PromptInfo getAuthenticationPrompt(@Nullable final ReadableMap options) {
-    String authenticationPromptTitle = "Authentication required";
-    String authenticationPromptSubtitle = "Some descriptive subtitle";
-    String authenticationPromptNegativeBtnText = "Cancel";
+  private static PromptInfo getPromptInfo(@Nullable final ReadableMap options) {
+    String promptInfoTitle = "Authentication needed";
+    String promptInfoSubtitle = "Some descriptive subtitle";
+    String promptInfoNegativeButton = "Cancel";
 
-    if (null != options && options.hasKey(Maps.AUTHENTICATION_PROMPT_TITLE)) {
-      authenticationPromptTitle = options.getString(Maps.AUTHENTICATION_PROMPT_TITLE);
+    if (null != options && options.hasKey(Maps.PROMPT_INFO_TITLE)) {
+      promptInfoTitle = options.getString(Maps.PROMPT_INFO_TITLE);
     }
-    if (null != options && options.hasKey(Maps.AUTHENTICATION_PROMPT_SUBTITLE)) {
-      authenticationPromptSubtitle = options.getString(Maps.AUTHENTICATION_PROMPT_SUBTITLE);
+    if (null != options && options.hasKey(Maps.PROMPT_INFO_SUBTITLE)) {
+      promptInfoSubtitle = options.getString(Maps.PROMPT_INFO_SUBTITLE);
     }
-    if (null != options && options.hasKey(Maps.AUTHENTICATION_PROMPT_NEGATIVE_BTN_TEXT)) {
-      authenticationPromptNegativeBtnText = options.getString(Maps.AUTHENTICATION_PROMPT_NEGATIVE_BTN_TEXT);
+    if (null != options && options.hasKey(Maps.PROMPT_INFO_NEGATIVE_BTN_TEXT)) {
+      promptInfoNegativeButton = options.getString(Maps.PROMPT_INFO_NEGATIVE_BTN_TEXT);
     }
 
     final PromptInfo promptInfo = new PromptInfo.Builder()
-      .setTitle(authenticationPromptTitle)
-      .setSubtitle(authenticationPromptSubtitle)
-      .setNegativeButtonText(authenticationPromptNegativeBtnText)
+      .setTitle(promptInfo)
+      .setSubtitle(promptInfoSubtitle)
+      .setNegativeButtonText(promptInfoNegativeButton)
       .build();
 
     return promptInfo;
@@ -568,13 +568,13 @@ public class KeychainModule extends ReactContextBaseJavaModule {
                                               @NonNull final CipherStorage current,
                                               @NonNull final ResultSet resultSet,
                                               @Rules @NonNull final String rules,
-                                              @NonNull final PromptInfo authenticationPromptTitle)
+                                              @NonNull final PromptInfo promptInfo)
     throws CryptoFailedException, KeyStoreAccessException {
     final String storageName = resultSet.cipherStorageName;
 
     // The encrypted data is encrypted using the current CipherStorage, so we just decrypt and return
     if (storageName.equals(current.getCipherStorageName())) {
-      return decryptToResult(alias, current, resultSet, authenticationPromptTitle);
+      return decryptToResult(alias, current, resultSet, promptInfo);
     }
 
     // The encrypted data is encrypted using an older CipherStorage, so we need to decrypt the data first,
@@ -585,7 +585,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     }
 
     // decrypt using the older cipher storage
-    final DecryptionResult decryptionResult = decryptToResult(alias, oldStorage, resultSet, authenticationPromptTitle);
+    final DecryptionResult decryptionResult = decryptToResult(alias, oldStorage, resultSet, promptInfo);
 
     if (Rules.AUTOMATIC_UPGRADE.equals(rules)) {
       try {
@@ -604,10 +604,10 @@ public class KeychainModule extends ReactContextBaseJavaModule {
   private DecryptionResult decryptToResult(@NonNull final String alias,
                                            @NonNull final CipherStorage storage,
                                            @NonNull final ResultSet resultSet,
-                                           @NonNull final PromptInfo authenticationPromptTitle)
+                                           @NonNull final PromptInfo promptInfo)
     throws CryptoFailedException {
-    final DecryptionResultHandler handler = getInteractiveHandler(storage, authenticationPromptTitle);
-    storage.decrypt(handler, alias, resultSet.username, resultSet.password, SecurityLevel.ANY, authenticationPromptTitle);
+    final DecryptionResultHandler handler = getInteractiveHandler(storage, promptInfo);
+    storage.decrypt(handler, alias, resultSet.username, resultSet.password, SecurityLevel.ANY);
 
     CryptoFailedException.reThrowOnError(handler.getError());
 
@@ -620,9 +620,9 @@ public class KeychainModule extends ReactContextBaseJavaModule {
 
   /** Get instance of handler that resolves access to the keystore on system request. */
   @NonNull
-  protected DecryptionResultHandler getInteractiveHandler(@NonNull final CipherStorage current, @NonNull final PromptInfo authenticationPromptTitle) {
+  protected DecryptionResultHandler getInteractiveHandler(@NonNull final CipherStorage current, @NonNull final PromptInfo promptInfo) {
     if (current.isBiometrySupported() /*&& isFingerprintAuthAvailable()*/) {
-      return new InteractiveBiometric(current, authenticationPromptTitle);
+      return new InteractiveBiometric(current, promptInfo);
     }
 
     return new NonInteractiveHandler();
@@ -781,13 +781,13 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     private DecryptionContext context;
     private PromptInfo promptInfo;
 
-    private InteractiveBiometric(@NonNull final CipherStorage storage, @NonNull final PromptInfo authenticationPromptTitle) {
+    private InteractiveBiometric(@NonNull final CipherStorage storage, @NonNull final PromptInfo promptInfo) {
       this.storage = (CipherStorageBase) storage;
-      this.promptInfo = authenticationPromptTitle;
+      this.promptInfo = promptInfo;
     }
 
     @Override
-    public void askAccessPermissions(@NonNull final DecryptionContext context, @NonNull final PromptInfo authenticationPromptTitle) {
+    public void askAccessPermissions(@NonNull final DecryptionContext context) {
       this.context = context;
 
       if (!DeviceAvailability.isPermissionsGranted(getReactApplicationContext())) {
@@ -796,7 +796,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
 
         onDecrypt(null, failure);
       } else {
-        startAuthentication(authenticationPromptTitle);
+        startAuthentication();
       }
     }
 
@@ -856,9 +856,16 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     }
 
     /** trigger interactive authentication. */
-    public void startAuthentication(@NonNull final PromptInfo promptInfo) {
+    public void startAuthentication() {
       final FragmentActivity activity = (FragmentActivity) getCurrentActivity();
       if (null == activity) throw new NullPointerException("Not assigned current activity");
+
+      // code can be executed only from MAIN thread
+      if (Thread.currentThread() != Looper.getMainLooper().getThread()) {
+        activity.runOnUiThread(this::startAuthentication);
+        waitResult();
+        return;
+      }
 
       final BiometricPrompt prompt = new BiometricPrompt(activity, executor, this);
 

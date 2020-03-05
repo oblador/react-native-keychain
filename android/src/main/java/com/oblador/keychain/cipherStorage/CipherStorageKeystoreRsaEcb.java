@@ -11,7 +11,6 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
-import androidx.biometric.BiometricPrompt.PromptInfo;
 
 import com.oblador.keychain.KeychainModule;
 import com.oblador.keychain.SecurityLevel;
@@ -87,12 +86,11 @@ public class CipherStorageKeystoreRsaEcb extends CipherStorageBase {
   public DecryptionResult decrypt(@NonNull String alias,
                                   @NonNull byte[] username,
                                   @NonNull byte[] password,
-                                  @NonNull final SecurityLevel level,
-                                  @NonNull final PromptInfo authenticationPromptTitle)
+                                  @NonNull final SecurityLevel level)
     throws CryptoFailedException {
 
     final NonInteractiveHandler handler = new NonInteractiveHandler();
-    decrypt(handler, alias, username, password, level, authenticationPromptTitle);
+    decrypt(handler, alias, username, password, level);
 
     CryptoFailedException.reThrowOnError(handler.getError());
 
@@ -109,8 +107,7 @@ public class CipherStorageKeystoreRsaEcb extends CipherStorageBase {
                       @NonNull String alias,
                       @NonNull byte[] username,
                       @NonNull byte[] password,
-                      @NonNull final SecurityLevel level,
-                      @NonNull final PromptInfo authenticationPromptTitle)
+                      @NonNull final SecurityLevel level)
     throws CryptoFailedException {
 
     throwIfInsufficientLevel(level);
@@ -138,7 +135,7 @@ public class CipherStorageKeystoreRsaEcb extends CipherStorageBase {
       @SuppressWarnings("ConstantConditions") final DecryptionContext context =
         new DecryptionContext(safeAlias, key, password, username);
 
-      handler.askAccessPermissions(context, authenticationPromptTitle);
+      handler.askAccessPermissions(context);
     } catch (final Throwable fail) {
       // any other exception treated as a failure
       handler.onDecrypt(null, fail);
@@ -269,7 +266,7 @@ public class CipherStorageKeystoreRsaEcb extends CipherStorageBase {
     private Throwable error;
 
     @Override
-    public void askAccessPermissions(@NonNull final DecryptionContext context, @NonNull final PromptInfo authenticationPromptTitle) {
+    public void askAccessPermissions(@NonNull final DecryptionContext context) {
       final CryptoFailedException failure = new CryptoFailedException(
         "Non interactive decryption mode.");
 
