@@ -537,30 +537,24 @@ public class KeychainModule extends ReactContextBaseJavaModule {
   /** Extract user specified prompt info from options. */
   @NonNull
   private static PromptInfo getPromptInfo(@Nullable final ReadableMap options) {
-    String promptInfoTitle = "Authentication needed";
-    String promptInfoSubtitle = "Subtitle";
-    String promptInfoDescription = "Some descriptive text";
-    String promptInfoNegativeButton = "Cancel";
-
+    final PromptInfo.Builder promptInfoBuilder = new PromptInfo.Builder();
     if (null != options && options.hasKey(Maps.PROMPT_INFO_TITLE)) {
-      promptInfoTitle = options.getString(Maps.PROMPT_INFO_TITLE);
+      String promptInfoTitle = options.getString(Maps.PROMPT_INFO_TITLE);
+      promptInfoBuilder.setTitle(promptInfoTitle);
     }
     if (null != options && options.hasKey(Maps.PROMPT_INFO_SUBTITLE)) {
-      promptInfoSubtitle = options.getString(Maps.PROMPT_INFO_SUBTITLE);
+      String promptInfoSubtitle = options.getString(Maps.PROMPT_INFO_SUBTITLE);
+      promptInfoBuilder.setSubtitle(promptInfoSubtitle);
     }
     if (null != options && options.hasKey(Maps.PROMPT_INFO_DESCRIPTION)) {
-      promptInfoDescription = options.getString(Maps.PROMPT_INFO_DESCRIPTION);
+      String promptInfoDescription = options.getString(Maps.PROMPT_INFO_DESCRIPTION);
+      promptInfoBuilder.setDescription(promptInfoDescription);
     }
     if (null != options && options.hasKey(Maps.PROMPT_INFO_NEGATIVE_BTN_TEXT)) {
-      promptInfoNegativeButton = options.getString(Maps.PROMPT_INFO_NEGATIVE_BTN_TEXT);
+      String promptInfoNegativeButton = options.getString(Maps.PROMPT_INFO_NEGATIVE_BTN_TEXT);
+      promptInfoBuilder.setNegativeButtonText(promptInfoNegativeButton);
     }
-
-    final PromptInfo promptInfo = new PromptInfo.Builder()
-      .setTitle(promptInfoTitle)
-      .setSubtitle(promptInfoSubtitle)
-      .setDescription(promptInfoDescription)
-      .setNegativeButtonText(promptInfoNegativeButton)
-      .build();
+    final PromptInfo promptInfo = promptInfoBuilder.build();
 
     return promptInfo;
   }

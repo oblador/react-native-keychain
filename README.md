@@ -163,10 +163,10 @@ Get security level that is supported on the current device with the current OS. 
 | **`service`**                     | All          | Reverse domain name qualifier for the service associated with password.                          | *App bundle ID*                                              |
 | **`storage`**                     | Android only | Force specific cipher storage usage during saving the password                                   | Select best available storage                                |
 | **`rules`**                       | Android only | Force following to a specific security rules                                                     | Default: `Keychain.RULES.AUTOMATIC_UPGRADE`                  |
-| **`promptInfoTitle`**             | Android only | Title of the Android authentication prompt when requesting a stored secret.                      | `Authentication needed`                                      |
-| **`promptInfoSubtitle`**          | Android only | Subtitle of the Android authentication prompt when requesting a stored secret.                   | `Subtitle`                                                   |
-| **`promptInfoDescription`**       | Android only | Description of the Android authentication prompt when requesting a stored secret.                | `Some descriptive text`                                      |
-| **`promptInfoNegativeBtnText`**   | Android only | Negative button text of the Android authentication prompt when requesting a stored secret.       | `Cancel`                                                     |
+| **`promptInfoTitle`**             | Android only | Title of the Android authentication prompt when requesting a stored secret.                      | None. *Required*                                             |
+| **`promptInfoSubtitle`**          | Android only | Subtitle of the Android authentication prompt when requesting a stored secret.                   | None. Optional                                               |
+| **`promptInfoDescription`**       | Android only | Description of the Android authentication prompt when requesting a stored secret.                | None. Optional                                               |
+| **`promptInfoNegativeBtnText`**   | Android only | Negative button text of the Android authentication prompt when requesting a stored secret.       | None. *Required*                                             |
 
 #### `Keychain.ACCESS_CONTROL` enum
 

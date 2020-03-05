@@ -72,10 +72,10 @@ declare module 'react-native-keychain' {
     securityLevel?: SECURITY_LEVEL;
     storage?: STORAGE_TYPE;
     rules?: SECURITY_RULES;
-    promptInfoTitle?: string;
+    promptInfoTitle: string;
     promptInfoSubtitle?: string;
     promptInfoDescription?: string;
-    promptInfoNegativeBtnText?: string;
+    promptInfoNegativeBtnText: string;
   }
 
   function setGenericPassword(
