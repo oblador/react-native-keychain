@@ -86,6 +86,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
 
     String PROMPT_INFO_TITLE = "promptInfoTitle";
     String PROMPT_INFO_SUBTITLE = "promptInfoSubtitle";
+    String PROMPT_INFO_DESCRIPTION = "promptInfoDescription";
     String PROMPT_INFO_NEGATIVE_BTN_TEXT = "promptInfoNegativeBtnText";
   }
 
@@ -537,7 +538,8 @@ public class KeychainModule extends ReactContextBaseJavaModule {
   @NonNull
   private static PromptInfo getPromptInfo(@Nullable final ReadableMap options) {
     String promptInfoTitle = "Authentication needed";
-    String promptInfoSubtitle = "Some descriptive subtitle";
+    String promptInfoSubtitle = "Subtitle";
+    String promptInfoDescription = "Some descriptive text";
     String promptInfoNegativeButton = "Cancel";
 
     if (null != options && options.hasKey(Maps.PROMPT_INFO_TITLE)) {
@@ -546,13 +548,17 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     if (null != options && options.hasKey(Maps.PROMPT_INFO_SUBTITLE)) {
       promptInfoSubtitle = options.getString(Maps.PROMPT_INFO_SUBTITLE);
     }
+    if (null != options && options.hasKey(Maps.PROMPT_INFO_DESCRIPTION)) {
+      promptInfoDescription = options.getString(Maps.PROMPT_INFO_DESCRIPTION);
+    }
     if (null != options && options.hasKey(Maps.PROMPT_INFO_NEGATIVE_BTN_TEXT)) {
       promptInfoNegativeButton = options.getString(Maps.PROMPT_INFO_NEGATIVE_BTN_TEXT);
     }
 
     final PromptInfo promptInfo = new PromptInfo.Builder()
-      .setTitle(promptInfo)
+      .setTitle(promptInfoTitle)
       .setSubtitle(promptInfoSubtitle)
+      .setDescription(promptInfoDescription)
       .setNegativeButtonText(promptInfoNegativeButton)
       .build();
 

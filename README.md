@@ -15,11 +15,11 @@
   - [Usage](#usage)
   - [API](#api)
     - [`setGenericPassword(username, password, [{ accessControl, accessible, accessGroup, service, securityLevel }])`](#setgenericpasswordusername-password--accesscontrol-accessible-accessgroup-service-securitylevel-)
-    - [`getGenericPassword([{ authenticationPrompt, promptInfoTitle, promptInfoSubtitle, promptInfoNegativeBtnText, service }])`](#getgenericpassword-authenticationprompt-promptinfotitle-promptinfosubtitle-promptinfonegativebtntext-service-)
+    - [`getGenericPassword([{ authenticationPrompt, promptInfoTitle, promptInfoSubtitle, promptInfoDescription, promptInfoNegativeBtnText, service }])`](#getgenericpassword-authenticationprompt-promptinfotitle-promptinfosubtitle-promptinfodescription-promptinfonegativebtntext-service-)
     - [`resetGenericPassword([{ service }])`](#resetgenericpassword-service-)
     - [`setInternetCredentials(server, username, password, [{ accessControl, accessible, accessGroup, securityLevel }])`](#setinternetcredentialsserver-username-password--accesscontrol-accessible-accessgroup-securitylevel-)
-    - [`hasInternetCredentials(server, [{ authenticationPrompt, promptInfoTitle, promptInfoSubtitle, promptInfoNegativeBtnText }])`](#hasinternetcredentialsserver--authenticationprompt-promptinfotitle-promptinfosubtitle-promptinfonegativebtntext-)
-    - [`getInternetCredentials(server, [{ authenticationPrompt, promptInfoTitle, promptInfoSubtitle, promptInfoNegativeBtnText }])`](#getinternetcredentialsserver--authenticationprompt-promptinfotitle-promptinfosubtitle-promptinfonegativebtntext-)
+    - [`hasInternetCredentials(server, [{ authenticationPrompt, promptInfoTitle, promptInfoSubtitle, promptInfoDescription, promptInfoNegativeBtnText }])`](#hasinternetcredentialsserver--authenticationprompt-promptinfotitle-promptinfosubtitle-promptinfodescription-promptinfonegativebtntext-)
+    - [`getInternetCredentials(server, [{ authenticationPrompt, promptInfoTitle, promptInfoSubtitle, promptInfoDescription, promptInfoNegativeBtnText }])`](#getinternetcredentialsserver--authenticationprompt-promptinfotitle-promptinfosubtitle-promptinfodescription-promptinfonegativebtntext-)
     - [`resetInternetCredentials(server, [{}])`](#resetinternetcredentialsserver)
     - [`requestSharedWebCredentials()` (iOS only)](#requestsharedwebcredentials-ios-only)
     - [`setSharedWebCredentials(server, username, password)` (iOS only)](#setsharedwebcredentialsserver-username-password-ios-only)
@@ -103,7 +103,7 @@ Both `setGenericPassword` and `setInternetCredentials` are limited to strings on
 
 Will store the username/password combination in the secure storage. Resolves to `{service, storage}` or rejects in case of an error. `storage` - is a name of used internal cipher for saving secret; `service` - name used for storing secret in internal storage (empty string resolved to valid default name).
 
-### `getGenericPassword([{ authenticationPrompt, promptInfoTitle, promptInfoSubtitle, promptInfoNegativeBtnText, service }])`
+### `getGenericPassword([{ authenticationPrompt, promptInfoTitle, promptInfoSubtitle, promptInfoDescription, promptInfoNegativeBtnText, service }])`
 
 Will retrieve the username/password combination from the secure storage. Resolves to `{ username, password, service, storage }` if an entry exists or `false` if it doesn't. It will reject only if an unexpected error is encountered like lacking entitlements or permission.
 
@@ -115,11 +115,11 @@ Will remove the username/password combination from the secure storage. Resolves 
 
 Will store the server/username/password combination in the secure storage. Resolves to `{ username, password, service, storage }`;
 
-### `hasInternetCredentials(server, [{ authenticationPrompt, promptInfoTitle, promptInfoSubtitle, promptInfoNegativeBtnText }])`
+### `hasInternetCredentials(server, [{ authenticationPrompt, promptInfoTitle, promptInfoSubtitle, promptInfoDescription, promptInfoNegativeBtnText }])`
 
 Will check if the username/password combination for server is available in the secure storage. Resolves to `true` if an entry exists or `false` if it doesn't.
 
-### `getInternetCredentials(server, [{ authenticationPrompt, promptInfoTitle, promptInfoSubtitle, promptInfoNegativeBtnText }])`
+### `getInternetCredentials(server, [{ authenticationPrompt, promptInfoTitle, promptInfoSubtitle, promptInfoDescription, promptInfoNegativeBtnText }])`
 
 Will retrieve the server/username/password combination from the secure storage. Resolves to `{ username, password }` if an entry exists or `false` if it doesn't. It will reject only if an unexpected error is encountered like lacking entitlements or permission.
 
@@ -164,7 +164,8 @@ Get security level that is supported on the current device with the current OS. 
 | **`storage`**                     | Android only | Force specific cipher storage usage during saving the password                                   | Select best available storage                                |
 | **`rules`**                       | Android only | Force following to a specific security rules                                                     | Default: `Keychain.RULES.AUTOMATIC_UPGRADE`                  |
 | **`promptInfoTitle`**             | Android only | Title of the Android authentication prompt when requesting a stored secret.                      | `Authentication needed`                                      |
-| **`promptInfoSubtitle`**          | Android only | Subtitle of the Android authentication prompt when requesting a stored secret.                   | `Some descriptive subtitle`                                  |
+| **`promptInfoSubtitle`**          | Android only | Subtitle of the Android authentication prompt when requesting a stored secret.                   | `Subtitle`                                                   |
+| **`promptInfoDescription`**       | Android only | Description of the Android authentication prompt when requesting a stored secret.                | `Some descriptive text`                                      |
 | **`promptInfoNegativeBtnText`**   | Android only | Negative button text of the Android authentication prompt when requesting a stored secret.       | `Cancel`                                                     |
 
 #### `Keychain.ACCESS_CONTROL` enum

@@ -88,7 +88,8 @@ export default class KeychainExample extends Component {
       const options = {
         authenticationPrompt: "Authentification needed",
         promptInfoTitle: "Authentication needed",
-        promptInfoSubtitle: "Some descriptive subtitle",
+        promptInfoSubtitle: "Subtitle",
+        promptInfoDescription: "Some descriptive text",
         promptInfoNegativeBtnText: "Cancel",
       }
       const credentials = await Keychain.getGenericPassword(options);
