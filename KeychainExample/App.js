@@ -85,7 +85,13 @@ export default class KeychainExample extends Component {
 
   async load() {
     try {
-      const credentials = await Keychain.getGenericPassword();
+      const options = {
+        authenticationPrompt: "Authentification needed",
+        authenticationPromptTitle: "Android auth needed222",
+        authenticationPromptSubtitle: "" + new Date().getTime(),
+        authenticationPromptNegativeBtnText: "Cancel btn",
+      }
+      const credentials = await Keychain.getGenericPassword(options);
       if (credentials) {
         this.setState({ ...credentials, status: 'Credentials loaded!' });
       } else {

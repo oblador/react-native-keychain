@@ -2,6 +2,7 @@ package com.oblador.keychain.cipherStorage;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.biometric.BiometricPrompt.PromptInfo;
 
 import com.oblador.keychain.SecurityLevel;
 import com.oblador.keychain.exceptions.CryptoFailedException;
@@ -91,7 +92,7 @@ public interface CipherStorage {
   /** Handler that allows to inject some actions during decrypt operations. */
   interface DecryptionResultHandler extends WithResults {
     /** Ask user for interaction, often its unlock of keystore by biometric data providing. */
-    void askAccessPermissions(@NonNull final DecryptionContext context);
+    void askAccessPermissions(@NonNull final DecryptionContext context, @NonNull final PromptInfo authenticationPromptTitle);
 
     /**
      *
@@ -119,7 +120,8 @@ public interface CipherStorage {
   DecryptionResult decrypt(@NonNull final String alias,
                            @NonNull final byte[] username,
                            @NonNull final byte[] password,
-                           @NonNull final SecurityLevel level)
+                           @NonNull final SecurityLevel level,
+                           @NonNull final PromptInfo authenticationPromptTitle)
     throws CryptoFailedException;
 
   /** Decrypt the credentials but redirect results of operation to handler. */
@@ -127,7 +129,8 @@ public interface CipherStorage {
                @NonNull final String alias,
                @NonNull final byte[] username,
                @NonNull final byte[] password,
-               @NonNull final SecurityLevel level)
+               @NonNull final SecurityLevel level,
+               @NonNull final PromptInfo authenticationPromptTitle)
     throws CryptoFailedException;
 
   /** Remove key (by alias) from storage. */

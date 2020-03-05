@@ -7,6 +7,7 @@ import android.security.keystore.KeyInfo;
 import android.security.keystore.KeyProperties;
 
 import androidx.annotation.NonNull;
+import androidx.biometric.BiometricPrompt.PromptInfo;
 
 import com.oblador.keychain.KeychainModule.KnownCiphers;
 import com.oblador.keychain.SecurityLevel;
@@ -126,7 +127,8 @@ public class CipherStorageKeystoreAesCbc extends CipherStorageBase {
   public DecryptionResult decrypt(@NonNull final String alias,
                                   @NonNull final byte[] username,
                                   @NonNull final byte[] password,
-                                  @NonNull final SecurityLevel level)
+                                  @NonNull final SecurityLevel level,
+                                  @NonNull final PromptInfo authenticationPromptTitle)
     throws CryptoFailedException {
 
     throwIfInsufficientLevel(level);
@@ -149,15 +151,16 @@ public class CipherStorageKeystoreAesCbc extends CipherStorageBase {
     }
   }
 
-  /** Redirect call to {@link #decrypt(String, byte[], byte[], SecurityLevel)} method. */
+  /** Redirect call to {@link #decrypt(String, byte[], byte[], SecurityLevel, String)} method. */
   @Override
   public void decrypt(@NonNull final DecryptionResultHandler handler,
                       @NonNull final String service,
                       @NonNull final byte[] username,
                       @NonNull final byte[] password,
-                      @NonNull final SecurityLevel level) {
+                      @NonNull final SecurityLevel level,
+                      @NonNull final PromptInfo authenticationPromptTitle) {
     try {
-      final DecryptionResult results = decrypt(service, username, password, level);
+      final DecryptionResult results = decrypt(service, username, password, level, authenticationPromptTitle);
 
       handler.onDecrypt(results, null);
     } catch (Throwable fail) {

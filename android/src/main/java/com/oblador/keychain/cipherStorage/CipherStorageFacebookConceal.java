@@ -6,6 +6,7 @@ import android.security.keystore.KeyInfo;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
+import androidx.biometric.BiometricPrompt.PromptInfo;
 
 import com.facebook.android.crypto.keychain.AndroidConceal;
 import com.facebook.android.crypto.keychain.SharedPrefsBackedKeyChain;
@@ -98,7 +99,8 @@ public class CipherStorageFacebookConceal extends CipherStorageBase {
   public DecryptionResult decrypt(@NonNull final String alias,
                                   @NonNull final byte[] username,
                                   @NonNull final byte[] password,
-                                  @NonNull final SecurityLevel level)
+                                  @NonNull final SecurityLevel level,
+                                  @NonNull final PromptInfo authenticationPromptTitle)
     throws CryptoFailedException {
 
     throwIfInsufficientLevel(level);
@@ -120,16 +122,17 @@ public class CipherStorageFacebookConceal extends CipherStorageBase {
     }
   }
 
-  /** redirect call to default {@link #decrypt(String, byte[], byte[], SecurityLevel)} method. */
+  /** redirect call to default {@link #decrypt(String, byte[], byte[], SecurityLevel, String)} method. */
   @Override
   public void decrypt(@NonNull DecryptionResultHandler handler,
                       @NonNull String service,
                       @NonNull byte[] username,
                       @NonNull byte[] password,
-                      @NonNull final SecurityLevel level) {
+                      @NonNull final SecurityLevel level,
+                      @NonNull final PromptInfo authenticationPromptTitle) {
 
     try {
-      final DecryptionResult results = decrypt(service, username, password, level);
+      final DecryptionResult results = decrypt(service, username, password, level, authenticationPromptTitle);
 
       handler.onDecrypt(results, null);
     } catch (Throwable fail) {
