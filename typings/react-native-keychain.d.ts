@@ -86,10 +86,7 @@ declare module 'react-native-keychain' {
 
   function resetGenericPassword(options?: Options): Promise<boolean>;
 
-  function hasInternetCredentials(
-    server: string,
-    options?: Options
-  ): Promise<false | Result>;
+  function hasInternetCredentials(server: string): Promise<false | Result>;
 
   function setInternetCredentials(
     server: string,
@@ -119,7 +116,7 @@ declare module 'react-native-keychain' {
   function setSharedWebCredentials(
     server: string,
     username: string,
-    password?: string,
+    password?: string
   ): Promise<void>;
 
   function canImplyAuthentication(options?: Options): Promise<boolean>;
