@@ -157,7 +157,7 @@ export function hasInternetCredentials(
   server: string,
   options?: Options
 ): Promise<false | Result> {
-  return RNKeychainManager.hasInternetCredentialsForServer(server, options);
+  return RNKeychainManager.hasInternetCredentialsForServer(server);
 }
 
 /**
