@@ -541,6 +541,8 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     if (null != options && options.hasKey(Maps.PROMPT_INFO_TITLE)) {
       String promptInfoTitle = options.getString(Maps.PROMPT_INFO_TITLE);
       promptInfoBuilder.setTitle(promptInfoTitle);
+    } else {
+      promptInfoBuilder.setTitle("Authentication required");
     }
     if (null != options && options.hasKey(Maps.PROMPT_INFO_SUBTITLE)) {
       String promptInfoSubtitle = options.getString(Maps.PROMPT_INFO_SUBTITLE);
@@ -553,6 +555,8 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     if (null != options && options.hasKey(Maps.PROMPT_INFO_NEGATIVE_BTN_TEXT)) {
       String promptInfoNegativeButton = options.getString(Maps.PROMPT_INFO_NEGATIVE_BTN_TEXT);
       promptInfoBuilder.setNegativeButtonText(promptInfoNegativeButton);
+    } else {
+      promptInfoBuilder.setNegativeButtonText("Cancel");
     }
     final PromptInfo promptInfo = promptInfoBuilder.build();
 
