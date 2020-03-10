@@ -813,8 +813,6 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     @Override
     public void onAuthenticationFailed() {
       final CryptoFailedException error = new CryptoFailedException("Authentication failed. User Not recognized.");
-
-      onDecrypt(null, error);
     }
 
     /** trigger interactive authentication. */
