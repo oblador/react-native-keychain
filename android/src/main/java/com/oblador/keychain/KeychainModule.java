@@ -354,7 +354,6 @@ public class KeychainModule extends ReactContextBaseJavaModule {
 
   @ReactMethod
   public void hasInternetCredentialsForServer(@NonNull final String server,
-                                              @Nullable final ReadableMap options,
                                               @NonNull final Promise promise) {
     final String alias = getAliasOrDefault(server);
 

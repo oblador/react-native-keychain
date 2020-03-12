@@ -18,13 +18,13 @@
     - [`getGenericPassword([{ authenticationPrompt, promptInfoTitle, promptInfoSubtitle, promptInfoDescription, promptInfoNegativeBtnText, service }])`](#getgenericpassword-authenticationprompt-promptinfotitle-promptinfosubtitle-promptinfodescription-promptinfonegativebtntext-service-)
     - [`resetGenericPassword([{ service }])`](#resetgenericpassword-service-)
     - [`setInternetCredentials(server, username, password, [{ accessControl, accessible, accessGroup, securityLevel }])`](#setinternetcredentialsserver-username-password--accesscontrol-accessible-accessgroup-securitylevel-)
-    - [`hasInternetCredentials(server, [{ authenticationPrompt, promptInfoTitle, promptInfoSubtitle, promptInfoDescription, promptInfoNegativeBtnText }])`](#hasinternetcredentialsserver--authenticationprompt-promptinfotitle-promptinfosubtitle-promptinfodescription-promptinfonegativebtntext-)
+    - [`hasInternetCredentials(server)`](#hasinternetcredentialsserver)
     - [`getInternetCredentials(server, [{ authenticationPrompt, promptInfoTitle, promptInfoSubtitle, promptInfoDescription, promptInfoNegativeBtnText }])`](#getinternetcredentialsserver--authenticationprompt-promptinfotitle-promptinfosubtitle-promptinfodescription-promptinfonegativebtntext-)
-    - [`resetInternetCredentials(server, [{}])`](#resetinternetcredentialsserver)
+    - [`resetInternetCredentials(server)`](#resetinternetcredentialsserver)
     - [`requestSharedWebCredentials()` (iOS only)](#requestsharedwebcredentials-ios-only)
     - [`setSharedWebCredentials(server, username, password)` (iOS only)](#setsharedwebcredentialsserver-username-password-ios-only)
     - [`canImplyAuthentication([{ authenticationType }])` (iOS only)](#canimplyauthentication-authenticationtype--ios-only)
-    - [`getSupportedBiometryType([{}])`](#getsupportedbiometrytype)
+    - [`getSupportedBiometryType()`](#getsupportedbiometrytype)
     - [`getSecurityLevel([{ accessControl }])` (Android only)](#getsecuritylevel-accesscontrol--android-only)
     - [Options](#options)
       - [Data Structure Properties/Fields](#data-structure-propertiesfields)
@@ -46,7 +46,7 @@
       - [Option: Manually](#option-manually-1)
       - [Proguard Rules](#proguard-rules)
   - [Unit Testing with Jest](#unit-testing-with-jest)
-    - [Using a Jest `__mocks__` Directory](#using-a-jest-mocks-directory)
+    - [Using a Jest `__mocks__` Directory](#using-a-jest-__mocks__-directory)
     - [Using a Jest Setup File](#using-a-jest-setup-file)
   - [Notes](#notes)
     - [Android Notes](#android-notes)
@@ -61,7 +61,8 @@
 
 1. Run `yarn add react-native-keychain`
 
-    1 a. **Only for React Native <= 0.59**: `$ react-native link react-native-keychain` and check `MainApplication.java` to verify the package was added. See manual installation below if you have issues with `react-native link`.
+   1 a. **Only for React Native <= 0.59**: `$ react-native link react-native-keychain` and check `MainApplication.java` to verify the package was added. See manual installation below if you have issues with `react-native link`.
+
 2. Run `pod install` in `ios/` directory to install iOS dependencies.
 3. If you want to support FaceID, add a `NSFaceIDUsageDescription` entry in your `Info.plist`.
 4. Re-build your Android and iOS projects.
@@ -82,15 +83,17 @@ async () => {
     // Retrieve the credentials
     const credentials = await Keychain.getGenericPassword();
     if (credentials) {
-      console.log('Credentials successfully loaded for user ' + credentials.username);
+      console.log(
+        'Credentials successfully loaded for user ' + credentials.username
+      );
     } else {
       console.log('No credentials stored');
     }
   } catch (error) {
-    console.log('Keychain couldn\'t be accessed!', error);
+    console.log("Keychain couldn't be accessed!", error);
   }
   await Keychain.resetGenericPassword();
-}
+};
 ```
 
 See `KeychainExample` for fully working project example.
@@ -115,7 +118,7 @@ Will remove the username/password combination from the secure storage. Resolves 
 
 Will store the server/username/password combination in the secure storage. Resolves to `{ username, password, service, storage }`;
 
-### `hasInternetCredentials(server, [{ authenticationPrompt, promptInfoTitle, promptInfoSubtitle, promptInfoDescription, promptInfoNegativeBtnText }])`
+### `hasInternetCredentials(server)`
 
 Will check if the username/password combination for server is available in the secure storage. Resolves to `true` if an entry exists or `false` if it doesn't.
 
@@ -125,7 +128,7 @@ Will retrieve the server/username/password combination from the secure storage. 
 
 ### `resetInternetCredentials(server)`
 
-Will remove the server/username/password combination from the secure storage. 
+Will remove the server/username/password combination from the secure storage.
 
 ### `requestSharedWebCredentials()` (iOS only)
 
@@ -141,7 +144,7 @@ Inquire if the type of local authentication policy is supported on this device w
 
 ### `getSupportedBiometryType()`
 
-Get what type of hardware biometry support the device has. Resolves to a `Keychain.BIOMETRY_TYPE` value when supported, otherwise `null`. 
+Get what type of hardware biometry support the device has. Resolves to a `Keychain.BIOMETRY_TYPE` value when supported, otherwise `null`.
 
 > This method returns `null`, if the device haven't enrolled into fingerprint/FaceId. Even though it has hardware for it.
 
@@ -155,18 +158,18 @@ Get security level that is supported on the current device with the current OS. 
 
 | Key                               | Platform     | Description                                                                                      | Default                                                      |
 | --------------------------------- | ------------ | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------ |
-| **`accessControl`**               | All          | This dictates how a keychain item may be used, see possible values in `Keychain.ACCESS_CONTROL`. | *None* (iOS), `BIOMETRY_ANY` default for Android.            |
-| **`accessible`**                  | iOS only     | This dictates when a keychain item is accessible, see possible values in `Keychain.ACCESSIBLE`.  | *`Keychain.ACCESSIBLE.WHEN_UNLOCKED`*                        |
-| **`accessGroup`**                 | iOS only     | In which App Group to share the keychain. Requires additional setup with entitlements.           | *None*                                                       |
+| **`accessControl`**               | All          | This dictates how a keychain item may be used, see possible values in `Keychain.ACCESS_CONTROL`. | _None_ (iOS), `BIOMETRY_ANY` default for Android.            |
+| **`accessible`**                  | iOS only     | This dictates when a keychain item is accessible, see possible values in `Keychain.ACCESSIBLE`.  | _`Keychain.ACCESSIBLE.WHEN_UNLOCKED`_                        |
+| **`accessGroup`**                 | iOS only     | In which App Group to share the keychain. Requires additional setup with entitlements.           | _None_                                                       |
 | **`authenticationPrompt`**        | iOS only     | What to prompt the user when unlocking the keychain with biometry or device password.            | `Authenticate to retrieve secret`                            |
 | **`authenticationType`**          | iOS only     | Policies specifying which forms of authentication are acceptable.                                | `Keychain.AUTHENTICATION_TYPE.DEVICE_PASSCODE_OR_BIOMETRICS` |
-| **`service`**                     | All          | Reverse domain name qualifier for the service associated with password.                          | *App bundle ID*                                              |
+| **`service`**                     | All          | Reverse domain name qualifier for the service associated with password.                          | _App bundle ID_                                              |
 | **`storage`**                     | Android only | Force specific cipher storage usage during saving the password                                   | Select best available storage                                |
 | **`rules`**                       | Android only | Force following to a specific security rules                                                     | Default: `Keychain.RULES.AUTOMATIC_UPGRADE`                  |
-| **`promptInfoTitle`**             | Android only | Title of the Android authentication prompt when requesting a stored secret.                      | None. *Required*                                             |
+| **`promptInfoTitle`**             | Android only | Title of the Android authentication prompt when requesting a stored secret.                      | None. _Required_                                             |
 | **`promptInfoSubtitle`**          | Android only | Subtitle of the Android authentication prompt when requesting a stored secret.                   | None. Optional                                               |
 | **`promptInfoDescription`**       | Android only | Description of the Android authentication prompt when requesting a stored secret.                | None. Optional                                               |
-| **`promptInfoNegativeBtnText`**   | Android only | Negative button text of the Android authentication prompt when requesting a stored secret.       | None. *Required*                                             |
+| **`promptInfoNegativeBtnText`**   | Android only | Negative button text of the Android authentication prompt when requesting a stored secret.       | None. _Required_                                             |
 
 #### `Keychain.ACCESS_CONTROL` enum
 
@@ -264,22 +267,26 @@ What does it mean in practical use case?
 > Several days later user configured biometrics on the device and run application again. When user will try to access the secret, library will detect security enhancement and will upgrade secret storage to the best possible.
 
 ---
+
 Q: What will happens if user disable/drop biometrics usage?
 
 A: User will lost ability to extract secret from storage. On re-enable biometrics access to the secret will be possible to access again.
 
 ---
+
 Q: Is it possible any automatic downgrading?
 
 A: From security perspective any Automatic downgrading is treated as "a loss of the trust" point.
 Developer should implement own logic to allow downgrade and deal with "security loss". _(My recommendation - never do that!)_
 
 ---
+
 Q: How to disable automatic upgrade?
 
 A: Do call `getGenericPassword({ ...otherProps, rules: "none" })` with extra property `rules` set to `none` string value.
 
 ---
+
 Q: How to force a specific level of encryption during saving the secret?
 
 A: Do call `setGenericPassword({ ...otherProps, storage: "AES" })` with forced storage.
@@ -292,9 +299,9 @@ A: Do call `setGenericPassword({ ...otherProps, storage: "AES" })` with forced s
 
 #### Option: Manually
 
-* Right click on Libraries, select **Add files to "…"** and select `node_modules/react-native-keychain/RNKeychain.xcodeproj`
-* Select your project and under **Build Phases** -> **Link Binary With Libraries**, press the + and select `libRNKeychain.a`.
-* make sure `pod 'RNKeychain'` is not in your `Podfile`
+- Right click on Libraries, select **Add files to "…"** and select `node_modules/react-native-keychain/RNKeychain.xcodeproj`
+- Select your project and under **Build Phases** -> **Link Binary With Libraries**, press the + and select `libRNKeychain.a`.
+- make sure `pod 'RNKeychain'` is not in your `Podfile`
 
 #### Option: With [CocoaPods](https://cocoapods.org/)
 
@@ -322,7 +329,7 @@ Error: {
 
 #### Option: Manually
 
-* Edit `android/settings.gradle` to look like this (without the +):
+- Edit `android/settings.gradle` to look like this (without the +):
 
 ```diff
 rootProject.name = 'MyApp'
@@ -333,7 +340,7 @@ include ':app'
 + project(':react-native-keychain').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-keychain/android')
 ```
 
-* Edit `android/app/build.gradle` (note: **app** folder) to look like this: 
+- Edit `android/app/build.gradle` (note: **app** folder) to look like this:
 
 ```diff
 apply plugin: 'com.android.application'
@@ -350,7 +357,7 @@ dependencies {
 }
 ```
 
-* Edit your `MainApplication.java` (deep in `android/app/src/main/java/...`) to look like this (note **two** places to edit):
+- Edit your `MainApplication.java` (deep in `android/app/src/main/java/...`) to look like this (note **two** places to edit):
 
 ```diff
 package com.myapp;
@@ -371,7 +378,7 @@ public class MainActivity extends extends ReactActivity {
   ...
 }
 ```
-  
+
 #### Proguard Rules
 
 On Android builds that use proguard (like release), you may see the following error:
@@ -424,7 +431,7 @@ export default keychainMock;
 2. Inside your setup file, set up mocking for this package:
 
 ```javascript
-jest.mock("react-native-keychain", () => keychainMock);
+jest.mock('react-native-keychain', () => keychainMock);
 ```
 
 Now your tests should run successfully, though note that writing and reading to the keychain will be effectively a no-op.
@@ -435,8 +442,8 @@ Now your tests should run successfully, though note that writing and reading to 
 
 The module will automatically use the appropriate CipherStorage implementation based on API level:
 
-* API level 16-22 will en/de crypt using Facebook Conceal
-* API level 23+ will en/de crypt using Android Keystore
+- API level 16-22 will en/de crypt using Facebook Conceal
+- API level 23+ will en/de crypt using Android Keystore
 
 Encrypted data is stored in SharedPreferences.
 
@@ -461,9 +468,9 @@ On API levels that do not support Android keystore, Facebook Conceal is used to 
 
 ![Android Security Framework](https://source.android.com/security/images/authentication-flow.png)
 
-* [Android authentication](https://source.android.com/security/authentication)
-* [Android Cipher](https://developer.android.com/guide/topics/security/cryptography)
-* [Android Protected Confirmation](https://developer.android.com/training/articles/security-android-protected-confirmation)
+- [Android authentication](https://source.android.com/security/authentication)
+- [Android Cipher](https://developer.android.com/guide/topics/security/cryptography)
+- [Android Protected Confirmation](https://developer.android.com/training/articles/security-android-protected-confirmation)
 
 ## Maintainers
 

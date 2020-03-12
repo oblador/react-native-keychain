@@ -150,14 +150,12 @@ export function resetGenericPassword(
 /**
  * Checks if we have a login combination for `server`.
  * @param {string} server URL to server.
- * @param {object} options A keychain options object.
  * @return {Promise} Resolves to `{service, storage}` when successful
  */
 export function hasInternetCredentials(
-  server: string,
-  options?: Options
+  server: string
 ): Promise<false | Result> {
-  return RNKeychainManager.hasInternetCredentialsForServer(server, options);
+  return RNKeychainManager.hasInternetCredentialsForServer(server);
 }
 
 /**
