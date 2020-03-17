@@ -86,11 +86,13 @@ export default class KeychainExample extends Component {
   async load() {
     try {
       const options = {
-        authenticationPrompt: "Authentification needed",
-        promptInfoTitle: "Authentication needed",
-        promptInfoSubtitle: "Subtitle",
-        promptInfoDescription: "Some descriptive text",
-        promptInfoNegativeBtnText: "Cancel",
+        authenticationPrompt: "Authentication needed",
+        promptInfoOptions: {
+          title: "Authentication needed",
+          subtitle: "Subtitle",
+          description: "Some descriptive text",
+          negativeBtnText: "Cancel",
+        },
       }
       const credentials = await Keychain.getGenericPassword(options);
       if (credentials) {

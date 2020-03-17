@@ -69,6 +69,13 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     String BIOMETRY_CURRENT_SET_OR_DEVICE_PASSCODE = "BiometryCurrentSetOrDevicePasscode";
   }
 
+  @interface PromptInfoOptions {
+    String TITLE = "title";
+    String SUBTITLE = "subtitle";
+    String DESCRIPTION = "description";
+    String NEGATIVE_BTN_TEXT = "negativeBtnText";
+  }
+
   /** Options mapping keys. */
   @interface Maps {
     String ACCESS_CONTROL = "accessControl";
@@ -83,11 +90,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     String USERNAME = "username";
     String PASSWORD = "password";
     String STORAGE = "storage";
-
-    String PROMPT_INFO_TITLE = "promptInfoTitle";
-    String PROMPT_INFO_SUBTITLE = "promptInfoSubtitle";
-    String PROMPT_INFO_DESCRIPTION = "promptInfoDescription";
-    String PROMPT_INFO_NEGATIVE_BTN_TEXT = "promptInfoNegativeBtnText";
+    String PROMPT_INFO_OPTIONS = "promptInfoOptions";
   }
 
   /** Known error codes. */
@@ -536,23 +539,25 @@ public class KeychainModule extends ReactContextBaseJavaModule {
   /** Extract user specified prompt info from options. */
   @NonNull
   private static PromptInfo getPromptInfo(@Nullable final ReadableMap options) {
+    final ReadableMap promptInfoOptionsMap = (options != null && options.hasKey(Maps.PROMPT_INFO_OPTIONS)) ? options.getMap(Maps.PROMPT_INFO_OPTIONS) : null;
+
     final PromptInfo.Builder promptInfoBuilder = new PromptInfo.Builder();
-    if (null != options && options.hasKey(Maps.PROMPT_INFO_TITLE)) {
-      String promptInfoTitle = options.getString(Maps.PROMPT_INFO_TITLE);
+    if (null != promptInfoOptionsMap && promptInfoOptionsMap.hasKey(PromptInfoOptions.TITLE)) {
+      String promptInfoTitle = promptInfoOptionsMap.getString(PromptInfoOptions.TITLE);
       promptInfoBuilder.setTitle(promptInfoTitle);
     } else {
       promptInfoBuilder.setTitle("Authentication required");
     }
-    if (null != options && options.hasKey(Maps.PROMPT_INFO_SUBTITLE)) {
-      String promptInfoSubtitle = options.getString(Maps.PROMPT_INFO_SUBTITLE);
+    if (null != promptInfoOptionsMap && promptInfoOptionsMap.hasKey(PromptInfoOptions.SUBTITLE)) {
+      String promptInfoSubtitle = promptInfoOptionsMap.getString(PromptInfoOptions.SUBTITLE);
       promptInfoBuilder.setSubtitle(promptInfoSubtitle);
     }
-    if (null != options && options.hasKey(Maps.PROMPT_INFO_DESCRIPTION)) {
-      String promptInfoDescription = options.getString(Maps.PROMPT_INFO_DESCRIPTION);
+    if (null != promptInfoOptionsMap && promptInfoOptionsMap.hasKey(PromptInfoOptions.DESCRIPTION)) {
+      String promptInfoDescription = promptInfoOptionsMap.getString(PromptInfoOptions.DESCRIPTION);
       promptInfoBuilder.setDescription(promptInfoDescription);
     }
-    if (null != options && options.hasKey(Maps.PROMPT_INFO_NEGATIVE_BTN_TEXT)) {
-      String promptInfoNegativeButton = options.getString(Maps.PROMPT_INFO_NEGATIVE_BTN_TEXT);
+    if (null != promptInfoOptionsMap && promptInfoOptionsMap.hasKey(PromptInfoOptions.NEGATIVE_BTN_TEXT)) {
+      String promptInfoNegativeButton = promptInfoOptionsMap.getString(PromptInfoOptions.NEGATIVE_BTN_TEXT);
       promptInfoBuilder.setNegativeButtonText(promptInfoNegativeButton);
     } else {
       promptInfoBuilder.setNegativeButtonText("Cancel");

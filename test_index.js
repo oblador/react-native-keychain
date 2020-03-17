@@ -36,6 +36,12 @@ const simpleOptions: Options = {
   authenticationType: AUTHENTICATION_TYPE.BIOMETRICS,
   accessGroup: 'accessGroup',
   authenticationPrompt: 'authenticationPrompt',
+  promptInfoOptions: {
+    title: "title",
+    subtitle: "subtitle",
+    description: "description",
+    negativeBtnText: "negativeBtnText",
+  },
   service: 'service',
 };
 

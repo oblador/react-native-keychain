@@ -1,5 +1,6 @@
 // @flow
 import { NativeModules, Platform } from 'react-native';
+import {PromptInfoOptions} from "react-native-keychain"
 
 const { RNKeychainManager } = NativeModules;
 
@@ -67,6 +68,13 @@ export type SecSecurityRules = $Values<typeof SECURITY_RULES>;
 
 export type SecBiometryType = $Values<typeof BIOMETRY_TYPE>;
 
+export type PromptInfoOptions = {
+  title?: string;
+  subtitle?: string;
+  description?: string;
+  negativeBtnText?: string;
+}
+
 export type Options = {
   accessControl?: SecAccessControl,
   accessGroup?: string,
@@ -77,6 +85,7 @@ export type Options = {
   securityLevel?: SecMinimumLevel,
   storage?: SecStorageType,
   rules?: SecSecurityRules,
+  promptInfoOptions?: PromptInfoOptions,
 };
 
 export type Result = {|
