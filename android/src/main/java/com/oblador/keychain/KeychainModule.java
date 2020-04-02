@@ -809,14 +809,6 @@ public class KeychainModule extends ReactContextBaseJavaModule {
       }
     }
 
-    /** Called when a biometric is valid but not recognized. */
-    @Override
-    public void onAuthenticationFailed() {
-      final CryptoFailedException error = new CryptoFailedException("Authentication failed. User Not recognized.");
-
-      onDecrypt(null, error);
-    }
-
     /** trigger interactive authentication. */
     public void startAuthentication() {
       final FragmentActivity activity = (FragmentActivity) getCurrentActivity();
