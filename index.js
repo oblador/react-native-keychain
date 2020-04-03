@@ -1,6 +1,5 @@
 // @flow
 import { NativeModules, Platform } from 'react-native';
-import {PromptInfoOptions} from "react-native-keychain"
 
 const { RNKeychainManager } = NativeModules;
 
