@@ -51,7 +51,8 @@ public class KeychainModule extends ReactContextBaseJavaModule {
 
   private static final String LOG_TAG = KeychainModule.class.getSimpleName();
 
-  @StringDef({AccessControl.USER_PRESENCE
+  @StringDef({AccessControl.NONE
+    , AccessControl.USER_PRESENCE
     , AccessControl.BIOMETRY_ANY
     , AccessControl.BIOMETRY_CURRENT_SET
     , AccessControl.DEVICE_PASSCODE
@@ -59,6 +60,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     , AccessControl.BIOMETRY_ANY_OR_DEVICE_PASSCODE
     , AccessControl.BIOMETRY_CURRENT_SET_OR_DEVICE_PASSCODE})
   @interface AccessControl {
+    String NONE = "None";
     String USER_PRESENCE = "UserPresence";
     String BIOMETRY_ANY = "BiometryAny";
     String BIOMETRY_CURRENT_SET = "BiometryCurrentSet";
@@ -464,11 +466,11 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     return storageName;
   }
 
-  /** Get access control value from options or fallback to {@link AccessControl#BIOMETRY_ANY}. */
+  /** Get access control value from options or fallback to {@link AccessControl#NONE}. */
   @AccessControl
   @NonNull
   private static String getAccessControlOrDefault(@Nullable final ReadableMap options) {
-    return getAccessControlOrDefault(options, AccessControl.BIOMETRY_ANY);
+    return getAccessControlOrDefault(options, AccessControl.NONE);
   }
 
   /** Get access control value from options or fallback to default. */
@@ -517,8 +519,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     return AccessControl.BIOMETRY_ANY.equals(accessControl)
       || AccessControl.BIOMETRY_CURRENT_SET.equals(accessControl)
       || AccessControl.BIOMETRY_ANY_OR_DEVICE_PASSCODE.equals(accessControl)
-      || AccessControl.BIOMETRY_CURRENT_SET_OR_DEVICE_PASSCODE.equals(accessControl)
-      || null == accessControl; /* by default we force biometry */
+      || AccessControl.BIOMETRY_CURRENT_SET_OR_DEVICE_PASSCODE.equals(accessControl);
   }
 
   private void addCipherStorageToMap(@NonNull final CipherStorage cipherStorage) {

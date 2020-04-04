@@ -158,7 +158,7 @@ Get security level that is supported on the current device with the current OS. 
 
 | Key                        | Platform     | Description                                                                                      | Default                                                      |
 | -------------------------- | ------------ | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------ |
-| **`accessControl`**        | All          | This dictates how a keychain item may be used, see possible values in `Keychain.ACCESS_CONTROL`. | _None_ (iOS), `BIOMETRY_ANY` default for Android.            |
+| **`accessControl`**        | All          | This dictates how a keychain item may be used, see possible values in `Keychain.ACCESS_CONTROL`. | _None_                                                       |
 | **`accessible`**           | iOS only     | This dictates when a keychain item is accessible, see possible values in `Keychain.ACCESSIBLE`.  | _`Keychain.ACCESSIBLE.WHEN_UNLOCKED`_                        |
 | **`accessGroup`**          | iOS only     | In which App Group to share the keychain. Requires additional setup with entitlements.           | _None_                                                       |
 | **`authenticationPrompt`** | iOS only     | What to prompt the user when unlocking the keychain with biometry or device password.            | `Authenticate to retrieve secret`                            |
@@ -181,7 +181,7 @@ Get security level that is supported on the current device with the current OS. 
 
 > Note #1: `BIOMETRY_ANY`, `BIOMETRY_CURRENT_SET`, `BIOMETRY_ANY_OR_DEVICE_PASSCODE`, `BIOMETRY_CURRENT_SET_OR_DEVICE_PASSCODE` - recognized by Android as a requirement for Biometric enabled storage (Till we got a better implementation);
 >
-> Note #2: For Android we support only two states: `Default` (use the best available secured storage) and `Fingerprint` (use only biometric protected storage);
+> Note #2: For Android we support only two states: `None` (default) and `Fingerprint` (use only biometric protected storage);
 
 Refs:
 
