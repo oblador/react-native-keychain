@@ -62,24 +62,24 @@ declare module 'react-native-keychain' {
     AUTOMATIC_UPGRADE = 'automaticUpgradeToMoreSecuredStorage',
   }
 
-  export interface PromptInfoOptions {
+  export interface AuthenticationPrompt {
     title?: string;
     subtitle?: string;
     description?: string;
-    negativeBtnText?: string;
+    cancel?: string;
   }
 
   export interface Options {
     accessControl?: ACCESS_CONTROL;
     accessGroup?: string;
     accessible?: ACCESSIBLE;
-    authenticationPrompt?: string;
+    authenticationPrompt?: string | AuthenticationPrompt;
     authenticationType?: AUTHENTICATION_TYPE;
     service?: string;
     securityLevel?: SECURITY_LEVEL;
     storage?: STORAGE_TYPE;
     rules?: SECURITY_RULES;
-    promptInfoOptions?: PromptInfoOptions,
+    promptInfoOptions?: PromptInfoOptions;
   }
 
   function setGenericPassword(

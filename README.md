@@ -15,11 +15,11 @@
   - [Usage](#usage)
   - [API](#api)
     - [`setGenericPassword(username, password, [{ accessControl, accessible, accessGroup, service, securityLevel }])`](#setgenericpasswordusername-password--accesscontrol-accessible-accessgroup-service-securitylevel-)
-    - [`getGenericPassword([{ authenticationPrompt, promptInfoOptions, service }])`](#getgenericpassword-authenticationprompt-promptinfooptions-service-)
+    - [`getGenericPassword([{ authenticationPrompt, service }])`](#getgenericpassword-authenticationprompt-service-)
     - [`resetGenericPassword([{ service }])`](#resetgenericpassword-service-)
     - [`setInternetCredentials(server, username, password, [{ accessControl, accessible, accessGroup, securityLevel }])`](#setinternetcredentialsserver-username-password--accesscontrol-accessible-accessgroup-securitylevel-)
     - [`hasInternetCredentials(server)`](#hasinternetcredentialsserver)
-    - [`getInternetCredentials(server, [{ authenticationPrompt, promptInfoOptions }])`](#getinternetcredentialsserver--authenticationprompt-promptinfooptions-)
+    - [`getInternetCredentials(server, [{ authenticationPrompt }])`](#getinternetcredentialsserver--authenticationprompt-)
     - [`resetInternetCredentials(server)`](#resetinternetcredentialsserver)
     - [`requestSharedWebCredentials()` (iOS only)](#requestsharedwebcredentials-ios-only)
     - [`setSharedWebCredentials(server, username, password)` (iOS only)](#setsharedwebcredentialsserver-username-password-ios-only)
@@ -106,7 +106,7 @@ Both `setGenericPassword` and `setInternetCredentials` are limited to strings on
 
 Will store the username/password combination in the secure storage. Resolves to `{service, storage}` or rejects in case of an error. `storage` - is a name of used internal cipher for saving secret; `service` - name used for storing secret in internal storage (empty string resolved to valid default name).
 
-### `getGenericPassword([{ authenticationPrompt, promptInfoOptions, service }])`
+### `getGenericPassword([{ authenticationPrompt, service }])`
 
 Will retrieve the username/password combination from the secure storage. Resolves to `{ username, password, service, storage }` if an entry exists or `false` if it doesn't. It will reject only if an unexpected error is encountered like lacking entitlements or permission.
 
@@ -122,7 +122,7 @@ Will store the server/username/password combination in the secure storage. Resol
 
 Will check if the username/password combination for server is available in the secure storage. Resolves to `true` if an entry exists or `false` if it doesn't.
 
-### `getInternetCredentials(server, [{ authenticationPrompt, promptInfoOptions }])`
+### `getInternetCredentials(server, [{ authenticationPrompt }])`
 
 Will retrieve the server/username/password combination from the secure storage. Resolves to `{ username, password }` if an entry exists or `false` if it doesn't. It will reject only if an unexpected error is encountered like lacking entitlements or permission.
 
@@ -156,26 +156,25 @@ Get security level that is supported on the current device with the current OS. 
 
 #### Data Structure Properties/Fields
 
-| Key                        | Platform     | Description                                                                                      | Default                                                      |
-| -------------------------- | ------------ | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------ |
-| **`accessControl`**        | All          | This dictates how a keychain item may be used, see possible values in `Keychain.ACCESS_CONTROL`. | _None_                                                       |
-| **`accessible`**           | iOS only     | This dictates when a keychain item is accessible, see possible values in `Keychain.ACCESSIBLE`.  | _`Keychain.ACCESSIBLE.WHEN_UNLOCKED`_                        |
-| **`accessGroup`**          | iOS only     | In which App Group to share the keychain. Requires additional setup with entitlements.           | _None_                                                       |
-| **`authenticationPrompt`** | iOS only     | What to prompt the user when unlocking the keychain with biometry or device password.            | `Authenticate to retrieve secret`                            |
-| **`authenticationType`**   | iOS only     | Policies specifying which forms of authentication are acceptable.                                | `Keychain.AUTHENTICATION_TYPE.DEVICE_PASSCODE_OR_BIOMETRICS` |
-| **`service`**              | All          | Reverse domain name qualifier for the service associated with password.                          | _App bundle ID_                                              |
-| **`storage`**              | Android only | Force specific cipher storage usage during saving the password                                   | Select best available storage                                |
-| **`rules`**                | Android only | Force following to a specific security rules                                                     | `Keychain.RULES.AUTOMATIC_UPGRADE`                           |
-| **`promptInfoOptions`**    | Android only | Options for the Android authentication prompt when requesting a stored secret.                   | See [PromptInfoOptions](#promptinfooptions)                  |
+| Key                        | Platform     | Description                                                                                      | Default                                                                   |
+| -------------------------- | ------------ | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------- |
+| **`accessControl`**        | All          | This dictates how a keychain item may be used, see possible values in `Keychain.ACCESS_CONTROL`. | _None_                                                                    |
+| **`accessible`**           | iOS only     | This dictates when a keychain item is accessible, see possible values in `Keychain.ACCESSIBLE`.  | _`Keychain.ACCESSIBLE.WHEN_UNLOCKED`_                                     |
+| **`accessGroup`**          | iOS only     | In which App Group to share the keychain. Requires additional setup with entitlements.           | _None_                                                                    |
+| **`authenticationPrompt`** | iOS only     | What to prompt the user when unlocking the keychain with biometry or device password.            | See [`authenticationPrompt` Properties](#authenticationprompt-properties) |
+| **`authenticationType`**   | iOS only     | Policies specifying which forms of authentication are acceptable.                                | `Keychain.AUTHENTICATION_TYPE.DEVICE_PASSCODE_OR_BIOMETRICS`              |
+| **`service`**              | All          | Reverse domain name qualifier for the service associated with password.                          | _App bundle ID_                                                           |
+| **`storage`**              | Android only | Force specific cipher storage usage during saving the password                                   | Select best available storage                                             |
+| **`rules`**                | Android only | Force following to a specific security rules                                                     | `Keychain.RULES.AUTOMATIC_UPGRADE`                                        |
 
-#### PromptInfoOptions
+##### `authenticationPrompt` Properties
 
-| Key                   | Platform     | Description                                                                                | Default                   |
-| --------------------- | ------------ | ------------------------------------------------------------------------------------------ | ------------------------- |
-| **`title`**           | Android only | Title of the Android authentication prompt when requesting a stored secret.                | `Authentication required` |
-| **`subtitle`**        | Android only | Subtitle of the Android authentication prompt when requesting a stored secret.             | None. Optional            |
-| **`description`**     | Android only | Description of the Android authentication prompt when requesting a stored secret.          | None. Optional            |
-| **`negativeBtnText`** | Android only | Negative button text of the Android authentication prompt when requesting a stored secret. | `Cancel`                  |
+| Key               | Platform     | Description                                                                                | Default                           |
+| ----------------- | ------------ | ------------------------------------------------------------------------------------------ | --------------------------------- |
+| **`title`**       | All          | Title of the authentication prompt when requesting a stored secret.                        | `Authenticate to retrieve secret` |
+| **`subtitle`**    | Android only | Subtitle of the Android authentication prompt when requesting a stored secret.             | None. Optional                    |
+| **`description`** | Android only | Description of the Android authentication prompt when requesting a stored secret.          | None. Optional                    |
+| **`cancel`**      | Android only | Negative button text of the Android authentication prompt when requesting a stored secret. | `Cancel`                          |
 
 #### `Keychain.ACCESS_CONTROL` enum
 

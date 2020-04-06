@@ -319,10 +319,7 @@ RCT_EXPORT_METHOD(getGenericPasswordForOptions:(NSDictionary * __nullable)option
                   rejecter:(RCTPromiseRejectBlock)reject)
 {
   NSString *service = serviceValue(options);
-  NSString *authenticationPrompt = @"Authenticate to retrieve secret";
-  if (options && options[kAuthenticationPromptMessage]) {
-    authenticationPrompt = options[kAuthenticationPromptMessage];
-  }
+  NSString *authenticationPrompt = options[kAuthenticationPromptMessage];
 
   NSDictionary *query = @{
     (__bridge NSString *)kSecClass: (__bridge id)(kSecClassGenericPassword),
