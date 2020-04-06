@@ -156,27 +156,26 @@ Get security level that is supported on the current device with the current OS. 
 
 #### Data Structure Properties/Fields
 
-| Key                               | Platform     | Description                                                                                                                    | Default                                                      |
-| --------------------------------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------ |
-| **`accessControl`**               | All          | This dictates how a keychain item may be used, see possible values in `Keychain.ACCESS_CONTROL`.                               | _None_ (iOS), `BIOMETRY_ANY` default for Android.            |
-| **`accessible`**                  | iOS only     | This dictates when a keychain item is accessible, see possible values in `Keychain.ACCESSIBLE`.                                | _`Keychain.ACCESSIBLE.WHEN_UNLOCKED`_                        |
-| **`accessGroup`**                 | iOS only     | In which App Group to share the keychain. Requires additional setup with entitlements.                                         | _None_                                                       |
-| **`authenticationPrompt`**        | iOS only     | What to prompt the user when unlocking the keychain with biometry or device password.                                          | `Authenticate to retrieve secret`                            |
-| **`authenticationType`**          | iOS only     | Policies specifying which forms of authentication are acceptable.                                                              | `Keychain.AUTHENTICATION_TYPE.DEVICE_PASSCODE_OR_BIOMETRICS` |
-| **`service`**                     | All          | Reverse domain name qualifier for the service associated with password.                                                        | _App bundle ID_                                              |
-| **`storage`**                     | Android only | Force specific cipher storage usage during saving the password                                                                 | Select best available storage                                |
-| **`rules`**                       | Android only | Force following to a specific security rules                                                                                   | Default: `Keychain.RULES.AUTOMATIC_UPGRADE`                  |
-| **`promptInfoOptions`**           | Android only | Options for the Android authentication prompt when requesting a stored secret. See [PromptInfoOptions](#promptinfooptions)     | None.                                                        |
+| Key                        | Platform     | Description                                                                                      | Default                                                      |
+| -------------------------- | ------------ | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------ |
+| **`accessControl`**        | All          | This dictates how a keychain item may be used, see possible values in `Keychain.ACCESS_CONTROL`. | _None_                                                       |
+| **`accessible`**           | iOS only     | This dictates when a keychain item is accessible, see possible values in `Keychain.ACCESSIBLE`.  | _`Keychain.ACCESSIBLE.WHEN_UNLOCKED`_                        |
+| **`accessGroup`**          | iOS only     | In which App Group to share the keychain. Requires additional setup with entitlements.           | _None_                                                       |
+| **`authenticationPrompt`** | iOS only     | What to prompt the user when unlocking the keychain with biometry or device password.            | `Authenticate to retrieve secret`                            |
+| **`authenticationType`**   | iOS only     | Policies specifying which forms of authentication are acceptable.                                | `Keychain.AUTHENTICATION_TYPE.DEVICE_PASSCODE_OR_BIOMETRICS` |
+| **`service`**              | All          | Reverse domain name qualifier for the service associated with password.                          | _App bundle ID_                                              |
+| **`storage`**              | Android only | Force specific cipher storage usage during saving the password                                   | Select best available storage                                |
+| **`rules`**                | Android only | Force following to a specific security rules                                                     | `Keychain.RULES.AUTOMATIC_UPGRADE`                           |
+| **`promptInfoOptions`**    | Android only | Options for the Android authentication prompt when requesting a stored secret.                   | See [PromptInfoOptions](#promptinfooptions)                  |
 
 #### PromptInfoOptions
 
-| Key                               | Platform     | Description                                                                                      | Default                                                      |
-| --------------------------------- | ------------ | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------ |
-| **`title`**                       | Android only | Title of the Android authentication prompt when requesting a stored secret.                      | `Authentication required`                                    |
-| **`subtitle`**                    | Android only | Subtitle of the Android authentication prompt when requesting a stored secret.                   | None. Optional                                               |
-| **`description`**                 | Android only | Description of the Android authentication prompt when requesting a stored secret.                | None. Optional                                               |
-| **`negativeBtnText`**             | Android only | Negative button text of the Android authentication prompt when requesting a stored secret.       | `Cancel`                                                     |
-
+| Key                   | Platform     | Description                                                                                | Default                   |
+| --------------------- | ------------ | ------------------------------------------------------------------------------------------ | ------------------------- |
+| **`title`**           | Android only | Title of the Android authentication prompt when requesting a stored secret.                | `Authentication required` |
+| **`subtitle`**        | Android only | Subtitle of the Android authentication prompt when requesting a stored secret.             | None. Optional            |
+| **`description`**     | Android only | Description of the Android authentication prompt when requesting a stored secret.          | None. Optional            |
+| **`negativeBtnText`** | Android only | Negative button text of the Android authentication prompt when requesting a stored secret. | `Cancel`                  |
 
 #### `Keychain.ACCESS_CONTROL` enum
 
@@ -192,7 +191,7 @@ Get security level that is supported on the current device with the current OS. 
 
 > Note #1: `BIOMETRY_ANY`, `BIOMETRY_CURRENT_SET`, `BIOMETRY_ANY_OR_DEVICE_PASSCODE`, `BIOMETRY_CURRENT_SET_OR_DEVICE_PASSCODE` - recognized by Android as a requirement for Biometric enabled storage (Till we got a better implementation);
 >
-> Note #2: For Android we support only two states: `Default` (use the best available secured storage) and `Fingerprint` (use only biometric protected storage);
+> Note #2: For Android we support only two states: `None` (default) and `Fingerprint` (use only biometric protected storage);
 
 Refs:
 

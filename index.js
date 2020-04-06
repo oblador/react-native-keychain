@@ -104,9 +104,15 @@ export type SharedWebCredentials = {|
 |};
 
 function normalizeOptions(serviceOrOptions?: string | Options): ?Options {
-  return typeof serviceOrOptions === 'string'
-    ? { service: serviceOrOptions }
-    : serviceOrOptions;
+  if (typeof serviceOrOptions === 'string') {
+    console.warn(
+      `You passed a service string as an argument to one of the react-native-keychain functions. 
+      This way of passing service is deprecated and will be removed in a future major. 
+      Please update your code to use { service: ${serviceOrOptions} }`
+    );
+    return { service: serviceOrOptions };
+  }
+  return serviceOrOptions;
 }
 
 //* EXPORTS */
