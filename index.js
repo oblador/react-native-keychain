@@ -151,7 +151,7 @@ function normalizeOptions(
   } else {
     options.authenticationPrompt = {
       ...AUTH_PROMPT_DEFAULTS,
-      authenticationPrompt,
+      ...authenticationPrompt,
     };
   }
 
@@ -247,7 +247,10 @@ export function getInternetCredentials(
   server: string,
   options?: Options
 ): Promise<false | UserCredentials> {
-  return RNKeychainManager.getInternetCredentialsForServer(server, options);
+  return RNKeychainManager.getInternetCredentialsForServer(
+    server,
+    normalizeOptions(options)
+  );
 }
 
 /**

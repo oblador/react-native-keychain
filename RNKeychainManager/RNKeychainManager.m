@@ -117,6 +117,14 @@ NSString *accessGroupValue(NSDictionary *options)
   return nil;
 }
 
+NSString *authenticationPromptValue(NSDictionary *options)
+{
+  if (options && options[@"authenticationPrompt"] != nil && options[@"authenticationPrompt"][@"title"]) {
+    return options[@"authenticationPrompt"][@"title"];
+  }
+  return nil;
+}
+
 #pragma mark - Proposed functionality - Helpers
 
 #define kAuthenticationType @"authenticationType"
@@ -133,8 +141,6 @@ NSString *accessGroupValue(NSDictionary *options)
 
 #define kBiometryTypeTouchID @"TouchID"
 #define kBiometryTypeFaceID @"FaceID"
-
-#define kAuthenticationPromptMessage @"authenticationPrompt"
 
 LAPolicy authPolicy(NSDictionary *options)
 {
@@ -319,7 +325,7 @@ RCT_EXPORT_METHOD(getGenericPasswordForOptions:(NSDictionary * __nullable)option
                   rejecter:(RCTPromiseRejectBlock)reject)
 {
   NSString *service = serviceValue(options);
-  NSString *authenticationPrompt = options[kAuthenticationPromptMessage];
+  NSString *authenticationPrompt = authenticationPromptValue(options);
 
   NSDictionary *query = @{
     (__bridge NSString *)kSecClass: (__bridge id)(kSecClassGenericPassword),
