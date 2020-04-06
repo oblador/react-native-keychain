@@ -13,7 +13,7 @@ import SegmentedControlTab from 'react-native-segmented-control-tab';
 import * as Keychain from 'react-native-keychain';
 
 const ACCESS_CONTROL_OPTIONS = ['None', 'Passcode', 'Password'];
-const ACCESS_CONTROL_OPTIONS_ANDROID = ['Default'];
+const ACCESS_CONTROL_OPTIONS_ANDROID = ['None'];
 const ACCESS_CONTROL_MAP = [
   null,
   Keychain.ACCESS_CONTROL.DEVICE_PASSCODE,
