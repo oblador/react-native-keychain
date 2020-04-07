@@ -67,16 +67,32 @@ export type SecSecurityRules = $Values<typeof SECURITY_RULES>;
 
 export type SecBiometryType = $Values<typeof BIOMETRY_TYPE>;
 
-export type Options = {
+export type AuthenticationPrompt = {
+  title?: string,
+  subtitle?: string,
+  description?: string,
+  cancel?: string,
+};
+
+type BaseOptions = {
   accessControl?: SecAccessControl,
   accessGroup?: string,
   accessible?: SecAccessible,
-  authenticationPrompt?: string,
   authenticationType?: LAPolicy,
   service?: string,
   securityLevel?: SecMinimumLevel,
   storage?: SecStorageType,
   rules?: SecSecurityRules,
+};
+
+type NormalizedOptions = {
+  authenticationPrompt?: AuthenticationPrompt,
+  ...BaseOptions,
+};
+
+export type Options = {
+  authenticationPrompt?: string | AuthenticationPrompt,
+  ...BaseOptions,
 };
 
 export type Result = {|
@@ -95,16 +111,51 @@ export type SharedWebCredentials = {|
   ...UserCredentials,
 |};
 
-function normalizeOptions(serviceOrOptions?: string | Options): ?Options {
+const AUTH_PROMPT_DEFAULTS = {
+  title: 'Authenticate to retrieve secret',
+  cancel: 'Cancel',
+};
+
+function normalizeServiceOption(serviceOrOptions?: string | Options): Options {
   if (typeof serviceOrOptions === 'string') {
     console.warn(
-      `You passed a service string as an argument to one of the react-native-keychain functions. 
-      This way of passing service is deprecated and will be removed in a future major. 
-      Please update your code to use { service: ${serviceOrOptions} }`
+      `You passed a service string as an argument to one of the react-native-keychain functions.
+      This way of passing service is deprecated and will be removed in a future major.
+      Please update your code to use { service: ${JSON.stringify(
+        serviceOrOptions
+      )} }`
     );
     return { service: serviceOrOptions };
   }
-  return serviceOrOptions;
+  return serviceOrOptions || {};
+}
+
+function normalizeOptions(
+  serviceOrOptions?: string | Options
+): NormalizedOptions {
+  let options = { ...normalizeServiceOption(serviceOrOptions) };
+  const { authenticationPrompt } = options;
+
+  if (typeof authenticationPrompt === 'string') {
+    console.warn(
+      `You passed a authenticationPrompt string as an argument to one of the react-native-keychain functions.
+      This way of passing authenticationPrompt is deprecated and will be removed in a future major.
+      Please update your code to use { authenticationPrompt: { title: ${JSON.stringify(
+        authenticationPrompt
+      )} }`
+    );
+    options.authenticationPrompt = {
+      ...AUTH_PROMPT_DEFAULTS,
+      title: authenticationPrompt,
+    };
+  } else {
+    options.authenticationPrompt = {
+      ...AUTH_PROMPT_DEFAULTS,
+      ...authenticationPrompt,
+    };
+  }
+
+  return options;
 }
 
 //* EXPORTS */
@@ -196,7 +247,10 @@ export function getInternetCredentials(
   server: string,
   options?: Options
 ): Promise<false | UserCredentials> {
-  return RNKeychainManager.getInternetCredentialsForServer(server, options);
+  return RNKeychainManager.getInternetCredentialsForServer(
+    server,
+    normalizeOptions(options)
+  );
 }
 
 /**

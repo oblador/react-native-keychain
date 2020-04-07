@@ -85,7 +85,15 @@ export default class KeychainExample extends Component {
 
   async load() {
     try {
-      const credentials = await Keychain.getGenericPassword();
+      const options = {
+        authenticationPrompt: {
+          title: 'Authentication needed',
+          subtitle: 'Subtitle',
+          description: 'Some descriptive text',
+          cancel: 'Cancel',
+        },
+      };
+      const credentials = await Keychain.getGenericPassword(options);
       if (credentials) {
         this.setState({ ...credentials, status: 'Credentials loaded!' });
       } else {
@@ -114,7 +122,7 @@ export default class KeychainExample extends Component {
       const reply = await Keychain.setSharedWebCredentials(
         'server',
         'username',
-        'password',
+        'password'
       );
       console.log(`setSharedWebCredentials: ${JSON.stringify(reply)}`);
     } catch (err) {
@@ -123,7 +131,7 @@ export default class KeychainExample extends Component {
 
     try {
       const reply = await Keychain.requestSharedWebCredentials();
-      console.log(`requestSharedWebCredentials: ${JSON.stringify(reply)}`)
+      console.log(`requestSharedWebCredentials: ${JSON.stringify(reply)}`);
     } catch (err) {
       alert(`requestSharedWebCredentials: ${err}`);
     }

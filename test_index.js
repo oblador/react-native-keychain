@@ -35,7 +35,12 @@ const simpleOptions: Options = {
   accessible: ACCESSIBLE.ALWAYS,
   authenticationType: AUTHENTICATION_TYPE.BIOMETRICS,
   accessGroup: 'accessGroup',
-  authenticationPrompt: 'authenticationPrompt',
+  authenticationPrompt: {
+    title: 'title',
+    subtitle: 'subtitle',
+    description: 'description',
+    cancel: 'cancel',
+  },
   service: 'service',
 };
 
@@ -91,6 +96,9 @@ getGenericPassword().then(result => {
   (result: boolean | SharedWebCredentials);
 });
 getGenericPassword(simpleOptions);
+getGenericPassword({
+  authenticationPrompt: 'authenticationPrompt',
+});
 getGenericPassword('service');
 
 resetGenericPassword().then(result => {
