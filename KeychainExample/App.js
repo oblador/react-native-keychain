@@ -90,7 +90,7 @@ export default class KeychainExample extends Component {
           title: 'Authentication needed',
           subtitle: 'Subtitle',
           description: 'Some descriptive text',
-          negativeBtnText: 'Cancel',
+          cancel: 'Cancel',
         },
       };
       const credentials = await Keychain.getGenericPassword(options);
