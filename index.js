@@ -67,14 +67,14 @@ export type SecSecurityRules = $Values<typeof SECURITY_RULES>;
 
 export type SecBiometryType = $Values<typeof BIOMETRY_TYPE>;
 
-export type AuthenticationPrompt = {
+export type AuthenticationPrompt = {|
   title?: string,
   subtitle?: string,
   description?: string,
   cancel?: string,
-};
+|};
 
-type BaseOptions = {
+type BaseOptions = {|
   accessControl?: SecAccessControl,
   accessGroup?: string,
   accessible?: SecAccessible,
@@ -83,7 +83,7 @@ type BaseOptions = {
   securityLevel?: SecMinimumLevel,
   storage?: SecStorageType,
   rules?: SecSecurityRules,
-};
+|};
 
 type NormalizedOptions = {
   authenticationPrompt?: AuthenticationPrompt,
@@ -116,7 +116,7 @@ const AUTH_PROMPT_DEFAULTS = {
   cancel: 'Cancel',
 };
 
-function normalizeServiceOption(serviceOrOptions?: string | Options): Options {
+function normalizeServiceOption(serviceOrOptions?: string | Options) {
   if (typeof serviceOrOptions === 'string') {
     console.warn(
       `You passed a service string as an argument to one of the react-native-keychain functions.
@@ -155,6 +155,7 @@ function normalizeOptions(
     };
   }
 
+  // $FlowFixMe >=0.107.x – remove in next major, when authenticationPrompt as string is removed
   return options;
 }
 
