@@ -62,6 +62,13 @@ declare module 'react-native-keychain' {
     AUTOMATIC_UPGRADE = 'automaticUpgradeToMoreSecuredStorage',
   }
 
+  export interface PromptInfoOptions {
+    title: string;
+    subtitle?: string;
+    description?: string;
+    cancel?: string;
+  }
+
   export interface AuthenticationPrompt {
     title?: string;
     subtitle?: string;
