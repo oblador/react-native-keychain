@@ -225,7 +225,7 @@ public class CipherStorageKeystoreRsaEcb extends CipherStorageBase {
       .setEncryptionPaddings(PADDING_PKCS1)
       .setRandomizedEncryptionRequired(true)
       .setUserAuthenticationRequired(true)
-      .setUserAuthenticationValidityDurationSeconds(1)
+      .setUserAuthenticationValidityDurationSeconds(5)
       .setKeySize(ENCRYPTION_KEY_SIZE);
   }
 
