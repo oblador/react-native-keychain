@@ -79,7 +79,6 @@ declare module 'react-native-keychain' {
     securityLevel?: SECURITY_LEVEL;
     storage?: STORAGE_TYPE;
     rules?: SECURITY_RULES;
-    promptInfoOptions?: PromptInfoOptions;
   }
 
   function setGenericPassword(
