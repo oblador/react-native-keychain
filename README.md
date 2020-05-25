@@ -190,7 +190,7 @@ Get security level that is supported on the current device with the current OS. 
 
 > Note #1: `BIOMETRY_ANY`, `BIOMETRY_CURRENT_SET`, `BIOMETRY_ANY_OR_DEVICE_PASSCODE`, `BIOMETRY_CURRENT_SET_OR_DEVICE_PASSCODE` - recognized by Android as a requirement for Biometric enabled storage (Till we got a better implementation);
 >
-> Note #2: For Android we support only two states: `None` (default) and `Fingerprint` (use only biometric protected storage);
+> Note #2: For Android we support only two states: `None` (default) and `Fingerprint` (use only biometric protected storage); `Face` recognition fails with "User not authenticated" exception, see issue #318
 
 Refs:
 
@@ -225,11 +225,13 @@ Refs:
 
 #### `Keychain.BIOMETRY_TYPE` enum
 
-| Key               | Description                                                     |
-| ----------------- | --------------------------------------------------------------- |
-| **`TOUCH_ID`**    | Device supports authentication with Touch ID. (iOS only)        |
-| **`FACE_ID`**     | Device supports authentication with Face ID. (iOS only)         |
-| **`FINGERPRINT`** | Device supports authentication with Fingerprint. (Android only) |
+| Key               | Description                                                          |
+| ----------------- | -------------------------------------------------------------------- |
+| **`TOUCH_ID`**    | Device supports authentication with Touch ID. (iOS only)             |
+| **`FACE_ID`**     | Device supports authentication with Face ID. (iOS only)              |
+| **`FINGERPRINT`** | Device supports authentication with Fingerprint. (Android only)      |
+| **`FACE`**        | Device supports authentication with Face Recognition. (Android only) |
+| **`IRIS`**        | Device supports authentication with Iris Recognition. (Android only) |
 
 Refs:
 

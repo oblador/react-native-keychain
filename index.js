@@ -39,6 +39,8 @@ export const BIOMETRY_TYPE = Object.freeze({
   TOUCH_ID: 'TouchID',
   FACE_ID: 'FaceID',
   FINGERPRINT: 'Fingerprint',
+  FACE: 'Face',
+  IRIS: 'Iris',
 });
 
 export const STORAGE_TYPE = Object.freeze({

@@ -48,6 +48,8 @@ public class KeychainModule extends ReactContextBaseJavaModule {
   //region Constants
   public static final String KEYCHAIN_MODULE = "RNKeychainManager";
   public static final String FINGERPRINT_SUPPORTED_NAME = "Fingerprint";
+  public static final String FACE_SUPPORTED_NAME = "Face";
+  public static final String IRIS_SUPPORTED_NAME = "Iris";
   public static final String EMPTY_STRING = "";
 
   private static final String LOG_TAG = KeychainModule.class.getSimpleName();
@@ -401,7 +403,14 @@ public class KeychainModule extends ReactContextBaseJavaModule {
   @ReactMethod
   public void getSupportedBiometryType(@NonNull final Promise promise) {
     try {
-      final String reply = isFingerprintAuthAvailable() ? FINGERPRINT_SUPPORTED_NAME : null;
+      String reply = null;
+      if(isFaceAuthAvailable()){
+        reply = FACE_SUPPORTED_NAME;
+      } else if(isIrisAuthAvailable()) {
+        reply = IRIS_SUPPORTED_NAME;
+      } else if(isFingerprintAuthAvailable()) {
+        reply = FINGERPRINT_SUPPORTED_NAME;
+      }
 
       promise.resolve(reply);
     } catch (Exception e) {
@@ -669,7 +678,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
   /* package */ CipherStorage getCipherStorageForCurrentAPILevel(final boolean useBiometry)
     throws CryptoFailedException {
     final int currentApiLevel = Build.VERSION.SDK_INT;
-    final boolean isBiometry = isFingerprintAuthAvailable() && useBiometry;
+    final boolean isBiometry = (isFingerprintAuthAvailable() || isFaceAuthAvailable() || isIrisAuthAvailable()) && useBiometry;
     CipherStorage foundCipher = null;
 
     for (CipherStorage variant : cipherStorageMap.values()) {
@@ -734,7 +743,17 @@ public class KeychainModule extends ReactContextBaseJavaModule {
 
   /** True - if fingerprint hardware available and configured, otherwise false. */
   /* package */ boolean isFingerprintAuthAvailable() {
-    return DeviceAvailability.isFingerprintAuthAvailable(getReactApplicationContext());
+    return DeviceAvailability.isBiometricAuthAvailable(getReactApplicationContext()) && DeviceAvailability.isFingerprintAuthAvailable(getReactApplicationContext());
+  }
+
+  /** True - if face recognition hardware available and configured, otherwise false. */
+  /* package */ boolean isFaceAuthAvailable() {
+    return DeviceAvailability.isBiometricAuthAvailable(getReactApplicationContext()) && DeviceAvailability.isFaceAuthAvailable(getReactApplicationContext());
+  }
+
+  /** True - if iris recognition hardware available and configured, otherwise false. */
+  /* package */ boolean isIrisAuthAvailable() {
+    return DeviceAvailability.isBiometricAuthAvailable(getReactApplicationContext()) && DeviceAvailability.isIrisAuthAvailable(getReactApplicationContext());
   }
 
   /** Is secured hardware a part of current storage or not. */
