@@ -4744,12 +4744,12 @@ react-is@^16.8.1, react-is@^16.8.4, react-is@^16.9.0:
   integrity sha512-INBT1QEgtcCCgvccr5/86CfD71fw9EPmDxgiJX4I2Ddr6ZsV6iFXsuby+qWJPtmNuMY0zByTsG4468P7nHuNWA==
 
 "react-native-keychain@file:..":
-  version "5.0.1"
+  version "6.0.0"
 
 react-native-segmented-control-tab@^3.4.1:
   version "3.4.1"
-  resolved "https://artifactory-proxy.klarna.net/artifactory/api/npm/v-npm-production/react-native-segmented-control-tab/-/react-native-segmented-control-tab-3.4.1.tgz#b6e54b8975ce8092315c9b0a1ab58b834d8ccf8e"
-  integrity sha1-tuVLiXXOgJIxXJsKGrWLg02Mz44=
+  resolved "https://registry.yarnpkg.com/react-native-segmented-control-tab/-/react-native-segmented-control-tab-3.4.1.tgz#b6e54b8975ce8092315c9b0a1ab58b834d8ccf8e"
+  integrity sha512-BNPdlE9Unr0Xabewn8W+FhBMLjssXy9Ey7S7AY0hXlrKrEKFdC9z0yT+eEWd5dLam4T6T4IuGL8b7ZF4uGyWNw==
 
 react-native@0.61.2:
   version "0.61.2"
