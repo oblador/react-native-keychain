@@ -39,9 +39,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-
-import javax.crypto.Cipher;
 
 @SuppressWarnings({"unused", "WeakerAccess", "SameParameterValue"})
 public class KeychainModule extends ReactContextBaseJavaModule {
@@ -148,38 +145,6 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     }
   }
 
-  /** Allow initialization in chain. */
-  public static KeychainModule withWarming(@NonNull final ReactApplicationContext reactContext) {
-    final KeychainModule instance = new KeychainModule(reactContext);
-
-    // force initialization of the crypto api in background thread
-    final Thread warmingUp = new Thread(instance::internalWarmingBestCipher, "keychain-warming-up");
-    warmingUp.setDaemon(true);
-    warmingUp.start();
-
-    return instance;
-  }
-
-  /** cipher (crypto api) warming up logic. force java load classes and intializations. */
-  private void internalWarmingBestCipher() {
-    try {
-      final long startTime = System.nanoTime();
-
-      Log.v(KEYCHAIN_MODULE, "warming up started at " + startTime);
-      final CipherStorageBase best = (CipherStorageBase) getCipherStorageForCurrentAPILevel();
-      final Cipher instance = best.getCachedInstance();
-      final boolean isSecure = best.supportsSecureHardware();
-      final SecurityLevel requiredLevel = isSecure ? SecurityLevel.SECURE_HARDWARE : SecurityLevel.SECURE_SOFTWARE;
-      best.generateKeyAndStoreUnderAlias("warmingUp", requiredLevel);
-      best.getKeyStoreAndLoad();
-
-      Log.v(KEYCHAIN_MODULE, "warming up takes: " +
-        TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startTime) +
-        " ms");
-    } catch (Throwable ex) {
-      Log.e(KEYCHAIN_MODULE, "warming up failed!", ex);
-    }
-  }
   //endregion
 
   //region Overrides
