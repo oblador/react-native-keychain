@@ -271,6 +271,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     return result;
   }
 
+  // TODO Change signature: make options @NonNull. Reason: as options map now contains AUTH_PROMPT which is always required, the options parameter cannot be @Nullable anymore.
   protected void getGenericPassword(@NonNull final String alias,
                                     @Nullable final ReadableMap options,
                                     @NonNull final Promise promise) {
@@ -289,7 +290,10 @@ public class KeychainModule extends ReactContextBaseJavaModule {
       final CipherStorage current = getCipherStorageForCurrentAPILevel(useBiometry);
       final String rules = getSecurityRulesOrDefault(options);
 
-      final PromptInfo promptInfo = getPromptInfo(options);
+      if (options == null) {
+        throw new IllegalArgumentException("Options map must be non-null and contain <Maps.AUTH_PROMPT> entry");
+      }
+      final PromptInfo promptInfo = PromptInfoHelper.getPromptInfo(options.getMap(Maps.AUTH_PROMPT));
       final DecryptionResult decryptionResult = decryptCredentials(alias, current, resultSet, rules, promptInfo);
 
       final WritableMap credentials = Arguments.createMap();
@@ -534,33 +538,6 @@ public class KeychainModule extends ReactContextBaseJavaModule {
 
   private void addCipherStorageToMap(@NonNull final CipherStorage cipherStorage) {
     cipherStorageMap.put(cipherStorage.getCipherStorageName(), cipherStorage);
-  }
-
-  /** Extract user specified prompt info from options. */
-  @NonNull
-  private static PromptInfo getPromptInfo(@Nullable final ReadableMap options) {
-    final ReadableMap promptInfoOptionsMap = (options != null && options.hasKey(Maps.AUTH_PROMPT)) ? options.getMap(Maps.AUTH_PROMPT) : null;
-
-    final PromptInfo.Builder promptInfoBuilder = new PromptInfo.Builder();
-    if (null != promptInfoOptionsMap && promptInfoOptionsMap.hasKey(AuthPromptOptions.TITLE)) {
-      String promptInfoTitle = promptInfoOptionsMap.getString(AuthPromptOptions.TITLE);
-      promptInfoBuilder.setTitle(promptInfoTitle);
-    }
-    if (null != promptInfoOptionsMap && promptInfoOptionsMap.hasKey(AuthPromptOptions.SUBTITLE)) {
-      String promptInfoSubtitle = promptInfoOptionsMap.getString(AuthPromptOptions.SUBTITLE);
-      promptInfoBuilder.setSubtitle(promptInfoSubtitle);
-    }
-    if (null != promptInfoOptionsMap && promptInfoOptionsMap.hasKey(AuthPromptOptions.DESCRIPTION)) {
-      String promptInfoDescription = promptInfoOptionsMap.getString(AuthPromptOptions.DESCRIPTION);
-      promptInfoBuilder.setDescription(promptInfoDescription);
-    }
-    if (null != promptInfoOptionsMap && promptInfoOptionsMap.hasKey(AuthPromptOptions.CANCEL)) {
-      String promptInfoNegativeButton = promptInfoOptionsMap.getString(AuthPromptOptions.CANCEL);
-      promptInfoBuilder.setNegativeButtonText(promptInfoNegativeButton);
-    }
-    final PromptInfo promptInfo = promptInfoBuilder.build();
-
-    return promptInfo;
   }
 
   /**
