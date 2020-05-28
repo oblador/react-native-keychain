@@ -7,6 +7,8 @@ import com.facebook.react.bridge.JavaScriptModule;
 import com.facebook.react.bridge.NativeModule;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.uimanager.ViewManager;
+import com.oblador.keychain.workaround.Issue314Filter;
+import com.oblador.keychain.workaround.Issue337Filter;
 
 import java.util.Collections;
 import java.util.List;
@@ -21,8 +23,10 @@ public class KeychainPackage implements ReactPackage {
   @Override
   @NonNull
   public List<NativeModule> createNativeModules(@NonNull final ReactApplicationContext reactContext) {
-    return Collections.singletonList(
-      new KeychainModuleBuilder(reactContext)
+    return Collections.singletonList(new KeychainModuleBuilder(reactContext)
+        .workaroundAffectedDevices(
+          new Issue314Filter(),
+          new Issue337Filter())
         .build());
   }
 
