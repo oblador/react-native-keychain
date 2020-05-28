@@ -34,6 +34,7 @@ import com.oblador.keychain.cipherStorage.CipherStorageKeystoreRsaEcb.NonInterac
 import com.oblador.keychain.exceptions.CryptoFailedException;
 import com.oblador.keychain.exceptions.EmptyParameterException;
 import com.oblador.keychain.exceptions.KeyStoreAccessException;
+import com.oblador.keychain.workaround.IDeviceFilter;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -132,10 +133,16 @@ public class KeychainModule extends ReactContextBaseJavaModule {
   //region Initialization
 
   /** Default constructor. */
-  public KeychainModule(@NonNull final ReactApplicationContext reactContext) {
+  public KeychainModule(@NonNull final ReactApplicationContext reactContext, @NonNull final IDeviceFilter deviceFilter) {
     super(reactContext);
     prefsStorage = new PrefsStorage(reactContext);
 
+  // Exclude the refactored code from the execution path to keep it aligned with the old version as much as possible.
+  // NOTE: This may result in reduction of the encryption capabilities.
+  // TODO Unwrap this workaround once the problem is resolved
+  if (deviceFilter.isDeviceAffected()) {
+    // TODO Add a fallback Cipher
+  } else {
     addCipherStorageToMap(new CipherStorageFacebookConceal(reactContext));
     addCipherStorageToMap(new CipherStorageKeystoreAesCbc());
 
@@ -143,6 +150,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
       addCipherStorageToMap(new CipherStorageKeystoreRsaEcb());
     }
+  }
   }
 
   //endregion

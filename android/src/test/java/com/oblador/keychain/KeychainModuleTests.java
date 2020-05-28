@@ -84,11 +84,16 @@ public class KeychainModuleTests {
    */
   private FakeProvider provider = new FakeProvider();
 
+  private KeychainModuleBuilder builder;
+
   @Before
   public void setUp() throws Exception {
     provider.configuration.clear();
 
     Security.insertProviderAt(provider, 0);
+
+    builder = new KeychainModuleBuilder(getRNContext())
+                    .usingWarmUp(false);
   }
 
   @After

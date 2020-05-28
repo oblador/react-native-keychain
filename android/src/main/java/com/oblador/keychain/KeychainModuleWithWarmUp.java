@@ -6,6 +6,7 @@ import androidx.annotation.NonNull;
 
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.oblador.keychain.cipherStorage.CipherStorageBase;
+import com.oblador.keychain.workaround.IDeviceFilter;
 
 import java.util.concurrent.TimeUnit;
 
@@ -16,9 +17,10 @@ public class KeychainModuleWithWarmUp extends KeychainModule {
      * Default constructor.
      *
      * @param reactContext
+     * @param deviceFilter
      */
-    public KeychainModuleWithWarmUp(@NonNull ReactApplicationContext reactContext) {
-      super(reactContext);
+    public KeychainModuleWithWarmUp(@NonNull ReactApplicationContext reactContext, IDeviceFilter deviceFilter) {
+      super(reactContext, deviceFilter);
 
       // force initialization of the crypto api in background thread
       final Thread warmingUp = new Thread(this::internalWarmingBestCipher, "keychain-warming-up");
