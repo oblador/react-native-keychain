@@ -15,7 +15,7 @@
   - [Usage](#usage)
   - [API](#api)
     - [`setGenericPassword(username, password, [{ accessControl, accessible, accessGroup, service, securityLevel }])`](#setgenericpasswordusername-password--accesscontrol-accessible-accessgroup-service-securitylevel-)
-    - [`getGenericPassword([{ authenticationPrompt, service }])`](#getgenericpassword-authenticationprompt-service-)
+    - [`getGenericPassword([{ authenticationPrompt, service, accessControl }])`](#getgenericpassword-authenticationprompt-service-accessControl-)
     - [`resetGenericPassword([{ service }])`](#resetgenericpassword-service-)
     - [`setInternetCredentials(server, username, password, [{ accessControl, accessible, accessGroup, securityLevel }])`](#setinternetcredentialsserver-username-password--accesscontrol-accessible-accessgroup-securitylevel-)
     - [`hasInternetCredentials(server)`](#hasinternetcredentialsserver)
@@ -106,7 +106,7 @@ Both `setGenericPassword` and `setInternetCredentials` are limited to strings on
 
 Will store the username/password combination in the secure storage. Resolves to `{service, storage}` or rejects in case of an error. `storage` - is a name of used internal cipher for saving secret; `service` - name used for storing secret in internal storage (empty string resolved to valid default name).
 
-### `getGenericPassword([{ authenticationPrompt, service }])`
+### `getGenericPassword([{ authenticationPrompt, service, accessControl }])`
 
 Will retrieve the username/password combination from the secure storage. Resolves to `{ username, password, service, storage }` if an entry exists or `false` if it doesn't. It will reject only if an unexpected error is encountered like lacking entitlements or permission.
 
@@ -268,18 +268,18 @@ As a rule library try to apply the best possible encryption and access method fo
 
 What does it mean in practical use case?
 
-> Scenario #1: User has a new phone and run on it application with this module and store secret on device.
-> Several days later user configured biometrics on the device and run application again. When user will try to access the secret, library will detect security enhancement and will upgrade secret storage to the best possible.
+> Scenario #1: User has a new phone and run on it an application with this module and store secret on device.
+> Several days later user configures biometrics on the device and run application again. When the user will try to access the secret, the library will detect security enhancement and will upgrade secret storage to the best possible.
 
 ---
 
-Q: What will happens if user disable/drop biometrics usage?
+Q: What will happen if user disables/drops biometric usage?
 
-A: User will lost ability to extract secret from storage. On re-enable biometrics access to the secret will be possible to access again.
+A: User will lose ability to extract secret from storage. On re-enable biometric access to the secret will be possible again.
 
 ---
 
-Q: Is it possible any automatic downgrading?
+Q: Is it possible to implement automatic downgrading?
 
 A: From security perspective any Automatic downgrading is treated as "a loss of the trust" point.
 Developer should implement own logic to allow downgrade and deal with "security loss". _(My recommendation - never do that!)_
