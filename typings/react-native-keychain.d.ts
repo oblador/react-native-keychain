@@ -48,6 +48,8 @@ declare module 'react-native-keychain' {
     TOUCH_ID = 'TouchID',
     FACE_ID = 'FaceID',
     FINGERPRINT = 'Fingerprint',
+    FACE = 'Face',
+    IRIS = 'Iris',
   }
 
   export enum STORAGE_TYPE {
