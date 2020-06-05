@@ -20,6 +20,16 @@
 @synthesize bridge = _bridge;
 RCT_EXPORT_MODULE();
 
++ (BOOL)requiresMainQueueSetup
+{
+  return NO;
+}
+
+- (dispatch_queue_t)methodQueue
+{
+  return dispatch_queue_create("com.oblador.KeychainQueue", DISPATCH_QUEUE_SERIAL);
+}
+
 // Messages from the comments in <Security/SecBase.h>
 NSString *messageForError(NSError *error)
 {
@@ -218,22 +228,18 @@ SecAccessControlCreateFlags accessControlValue(NSDictionary *options)
 
   attributes = [NSDictionary dictionaryWithDictionary:mAttributes];
 
-  dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-    OSStatus osStatus = SecItemAdd((__bridge CFDictionaryRef) attributes, NULL);
+  OSStatus osStatus = SecItemAdd((__bridge CFDictionaryRef) attributes, NULL);
 
-    dispatch_async(dispatch_get_main_queue(), ^{
-      if (osStatus != noErr && osStatus != errSecItemNotFound) {
-        NSError *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:osStatus userInfo:nil];
-        return rejectWithError(reject, error);
-      } else {
-          NSString *service = serviceValue(options);
-          return resolve(@{
-              @"service": service,
-              @"storage": @"keychain"
-          });
-      }
+  if (osStatus != noErr && osStatus != errSecItemNotFound) {
+    NSError *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:osStatus userInfo:nil];
+    return rejectWithError(reject, error);
+  } else {
+    NSString *service = serviceValue(options);
+    return resolve(@{
+      @"service": service,
+      @"storage": @"keychain"
     });
-  });
+  }
 }
 
 - (OSStatus)deletePasswordsForService:(NSString *)service
@@ -362,7 +368,6 @@ RCT_EXPORT_METHOD(getGenericPasswordForOptions:(NSDictionary * __nullable)option
     @"password": password,
     @"storage": @"keychain"
   });
-
 }
 
 RCT_EXPORT_METHOD(resetGenericPasswordForOptions:(NSDictionary *)options
