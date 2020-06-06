@@ -59,7 +59,7 @@ import static org.mockito.Mockito.when;
 import static org.robolectric.Shadows.shadowOf;
 
 @RunWith(RobolectricTestRunner.class)
-public class KeychainModuleTests {
+public class KeychainModuleTest {
   public static final byte[] BYTES_USERNAME = "username".getBytes();
   public static final byte[] BYTES_PASSWORD = "password".getBytes();
   /**
