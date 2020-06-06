@@ -5,11 +5,14 @@ import android.annotation.TargetApi;
 import android.app.KeyguardManager;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.hardware.fingerprint.FingerprintManager;
 import android.os.Build;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.biometric.BiometricManager;
 
+import static android.content.Context.FINGERPRINT_SERVICE;
 import static android.content.pm.PackageManager.PERMISSION_GRANTED;
 import static androidx.biometric.BiometricManager.BIOMETRIC_SUCCESS;
 
@@ -23,13 +26,45 @@ public class DeviceAvailability {
   }
 
   public static boolean isFingerprintAuthAvailable(@NonNull final Context context) {
-    return context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_FINGERPRINT);
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+      return false;
+    } else if (Build.VERSION.SDK_INT == Build.VERSION_CODES.M) {
+      // -----------------------------------------------------------------------------------------------
+      // WARNING: hasSystemFeature(PackageManager.FEATURE_FINGERPRINT) cannot be reliably used on API23.
+      // -----------------------------------------------------------------------------------------------
+      return isFingerprintHardwareDetected_Api23_Workaround(context);
+    } else {
+      return context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_FINGERPRINT);
+    }
   }
 
+  /**
+   * On API23, hasSystemFeature(PackageManager.FEATURE_FINGERPRINT) will return false on *some* devices,
+   * even though the fingerprint HW is present and usable.
+   *
+   * This Google Issue Tracker ticket https://issuetracker.google.com/issues/124066957 reported that this check was
+   * problematic and they had to remove it in the support lib:
+   *
+   *   | mContext.getPackageManager().hasSystemFeature(PackageManager.FEATURE_FINGERPRINT) which can return false,
+   *   | even if scanner exists and fingerprint is configured, and FingerprintManager can be used for authentication. ...
+   *   | We need to update FingerprintManagerCompat which also checks PackageManager.
+   *   | The flag exists on API23, but OEMs were not setting it properly. I believe we started enforcing this after 23.
+   *
+   * @deprecated TODO Remove this method once API23 support is phased out.
+   */
+  @RequiresApi(Build.VERSION_CODES.M)
+  @Deprecated
+  private static boolean isFingerprintHardwareDetected_Api23_Workaround(@NonNull final Context context) {
+    final FingerprintManager manager = (FingerprintManager) context.getSystemService(FINGERPRINT_SERVICE);
+    return (manager != null) && manager.isHardwareDetected();
+  }
+
+  @TargetApi(Build.VERSION_CODES.Q)
   public static boolean isFaceAuthAvailable(@NonNull final Context context) {
     return context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_FACE);
   }
 
+    @TargetApi(Build.VERSION_CODES.Q)
     public static boolean isIrisAuthAvailable(@NonNull final Context context) {
         return context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_IRIS);
     }
