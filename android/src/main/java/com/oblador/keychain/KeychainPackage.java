@@ -21,7 +21,7 @@ public class KeychainPackage implements ReactPackage {
   @Override
   @NonNull
   public List<NativeModule> createNativeModules(@NonNull final ReactApplicationContext reactContext) {
-    return Collections.singletonList(KeychainModule.withWarming(reactContext));
+    return Collections.singletonList(KeychainModule.withBiometryProbing(reactContext));
   }
 
   @NonNull
