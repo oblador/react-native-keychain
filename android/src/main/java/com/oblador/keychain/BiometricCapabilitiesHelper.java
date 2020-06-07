@@ -32,7 +32,7 @@ public class BiometricCapabilitiesHelper {
   public static final String FACE_SUPPORTED_NAME = "Face";
   public static final String IRIS_SUPPORTED_NAME = "Iris";
 
-  private final Context context;
+  protected final Context context;
 
   private CapabilitiesChangeListener listener;
 
