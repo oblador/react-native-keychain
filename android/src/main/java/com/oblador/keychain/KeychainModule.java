@@ -44,7 +44,7 @@ import java.util.concurrent.TimeUnit;
 import javax.crypto.Cipher;
 
 @SuppressWarnings({"unused", "WeakerAccess", "SameParameterValue"})
-public class KeychainModule extends ReactContextBaseJavaModule {
+public class KeychainModule extends ReactContextBaseJavaModule implements BiometricCapabilitiesHelper.CapabilitiesChangeListener {
   //region Constants
   public static final String KEYCHAIN_MODULE = "RNKeychainManager";
   public static final String EMPTY_STRING = "";
@@ -146,6 +146,13 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
       addCipherStorageToMap(new CipherStorageKeystoreRsaEcb());
     }
+
+    biometricCapabilitiesHelper.setCapabilitiesChangeListener(this);
+  }
+
+  @Override
+  public void onBiometricCapabilitiesChanged(@NonNull final BiometricCapabilitiesHelper helper) {
+    // Do nothing (yet)
   }
 
   /** Allow initialization in chain. */

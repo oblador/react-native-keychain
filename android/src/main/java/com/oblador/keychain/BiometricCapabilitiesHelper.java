@@ -3,6 +3,9 @@ package com.oblador.keychain;
 import android.content.Context;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
+
 
 
 /**
@@ -12,11 +15,26 @@ import androidx.annotation.NonNull;
  * Prefer using this helper; direct use of {@link DeviceAvailability} is discouraged.
  */
 public class BiometricCapabilitiesHelper {
+
+  /**
+   * Listener for the event when capabilities change.
+   */
+  public interface CapabilitiesChangeListener {
+    /**
+     * This callback is called when the biometric capabilities are changed (i.e. fingerprint HW is enabled, etc.).
+     *
+     * @param helper instance of helper
+     */
+    void onBiometricCapabilitiesChanged(@NonNull final BiometricCapabilitiesHelper helper);
+  }
+
   public static final String FINGERPRINT_SUPPORTED_NAME = "Fingerprint";
   public static final String FACE_SUPPORTED_NAME = "Face";
   public static final String IRIS_SUPPORTED_NAME = "Iris";
 
   private final Context context;
+
+  private CapabilitiesChangeListener listener;
 
   /**
    * Constructor.
@@ -25,6 +43,22 @@ public class BiometricCapabilitiesHelper {
    */
   public BiometricCapabilitiesHelper(@NonNull final Context context) {
     this.context = context;
+  }
+
+  /**
+   * Set or remove capabilities change listener.
+   *
+   * @param listener the listener
+   */
+  public void setCapabilitiesChangeListener(@Nullable final CapabilitiesChangeListener listener) {
+    this.listener = listener;
+  }
+
+  @VisibleForTesting
+  /* package */ void notifyCapabilitiesChanged() {
+    if (listener != null) {
+      listener.onBiometricCapabilitiesChanged(this);
+    }
   }
 
   /**
