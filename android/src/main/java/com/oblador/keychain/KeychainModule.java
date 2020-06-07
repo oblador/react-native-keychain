@@ -187,6 +187,13 @@ public class KeychainModule extends ReactContextBaseJavaModule implements Biomet
       Log.e(KEYCHAIN_MODULE, "warming up failed!", ex);
     }
   }
+
+  /** Start with biometry warm-up. */
+  public static KeychainModule withBiometryProbing(@NonNull final ReactApplicationContext reactContext) {
+    final InhibitableBiometricCapabilitiesHelper helper = new InhibitableBiometricCapabilitiesHelper(reactContext);
+    new BiometryKickStarter(helper).tryStartBiometry(300);
+    return new KeychainModule(reactContext, helper);
+  }
   //endregion
 
   //region Overrides
