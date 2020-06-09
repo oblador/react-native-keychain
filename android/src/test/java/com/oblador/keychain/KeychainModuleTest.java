@@ -447,9 +447,6 @@ public class KeychainModuleTest {
     final Promise mockPromise = mock(Promise.class);
     final JavaOnlyMap options = new JavaOnlyMap();
     options.putString(Maps.SERVICE, "dummy");
-    options.putMap(KeychainModule.Maps.AUTH_PROMPT, JavaOnlyMap.of(
-      KeychainModule.AuthPromptOptions.TITLE,        "title",
-      KeychainModule.AuthPromptOptions.CANCEL,       "cancel"));
 
     // store record done with RSA/Biometric cipher
     prefs.storeEncryptedEntry("dummy", result);
@@ -463,10 +460,7 @@ public class KeychainModuleTest {
 
     // THEN:
     ArgumentCaptor<Exception> exception = ArgumentCaptor.forClass(Exception.class);
-    ArgumentCaptor<String> capturedError = ArgumentCaptor.forClass(String.class);
-    verify(mockPromise).reject(capturedError.capture(), exception.capture());
-
-    assertThat(capturedError.getValue(), is(Errors.E_CRYPTO_FAILED));
+    verify(mockPromise).reject(eq(Errors.E_CRYPTO_FAILED), exception.capture());
     assertThat(exception.getValue(), instanceOf(CryptoFailedException.class));
     assertThat(exception.getValue().getCause(), instanceOf(KeyStoreAccessException.class));
     assertThat(exception.getValue().getMessage(), is("Wrapped error: Empty key extracted!"));
