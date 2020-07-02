@@ -34,7 +34,7 @@
       - [`Keychain.BIOMETRY_TYPE` enum](#keychainbiometry_type-enum)
       - [`Keychain.SECURITY_LEVEL` enum (Android only)](#keychainsecurity_level-enum-android-only)
       - [`Keychain.STORAGE_TYPE` enum (Android only)](#keychainstorage_type-enum-android-only)
-      - [`Keychain.RULES` enum (Android only)](#keychainrules-enum-android-only)
+      - [`Keychain.SECURITY_RULES` enum (Android only)](#keychainrules-enum-android-only)
   - [Important Behavior](#important-behavior)
     - [Rule 1: Automatic Security Level Upgrade](#rule-1-automatic-security-level-upgrade)
   - [Manual Installation](#manual-installation)
@@ -255,7 +255,7 @@ If set, `securityLevel` parameter specifies minimum security level that the encr
 | `AES` | Encryptions without human interaction. |
 | `RSA` | Encryption with biometrics.            |
 
-#### `Keychain.RULES` enum (Android only)
+#### `Keychain.SECURITY_RULES` enum (Android only)
 
 | Key                 | Description                                                                                                                                                 |
 | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
