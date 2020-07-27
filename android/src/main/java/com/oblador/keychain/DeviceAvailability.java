@@ -27,12 +27,21 @@ public class DeviceAvailability {
   }
 
   public static boolean isFaceAuthAvailable(@NonNull final Context context) {
-    return context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_FACE);
+    // Only available on API level 29 or above, return false otherwise
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+      return context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_FACE);
+    }
+
+    return false;
   }
 
-    public static boolean isIrisAuthAvailable(@NonNull final Context context) {
-        return context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_IRIS);
+  public static boolean isIrisAuthAvailable(@NonNull final Context context) {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+      return context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_IRIS);
     }
+
+    return false;
+  }
 
   /** Check is permissions granted for biometric things. */
   public static boolean isPermissionsGranted(@NonNull final Context context) {
