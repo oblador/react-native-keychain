@@ -1,3 +1,5 @@
+import { EmitterSubscription } from "react-native";
+
 declare module 'react-native-keychain' {
   export interface Result {
     service: string;
@@ -133,4 +135,37 @@ declare module 'react-native-keychain' {
   /** ANDROID ONLY */
 
   function getSecurityLevel(options?: Options): Promise<null | SECURITY_LEVEL>;
+
+  /**
+   * Registers an event listener that's called when fallback fingerprint authentication begins.
+   *
+   * This is ideally when you want to display your UI that tells the user to scan their fingerprint.
+   */
+  function addOnFallbackAuthenticationStartListener(listener: () => void): EmitterSubscription;
+
+  /**
+   * Registers an event listener that's called when fallback fingerprint authentication succeeds and the keystore entry
+   * has been successfully decrypted.
+   *
+   * You ideally want to close any UI elements that you opened when authentication started.
+   */
+  function addOnFallbackAuthenticationSuccessListener(listener: () => void): EmitterSubscription
+
+  interface OnFailureEvent {
+    shouldHideUI: boolean;
+    message?: string;
+  }
+
+  /**
+   * Registers an event listener that's called when fallback fingerprint authentication fails and the user cannot try
+   * again or recover from the failure.
+   *
+   * Depending on the event properties, you'll want to either continue showing or hide your UI, see parameter info below.
+   *
+   * @param {OnFailureEvent} event An event that may contain a message that can be displayed to the user as-is that will
+   *                               instruct them on what to do before trying to scan their fingerprint again and whether
+   *                               or not the UI should be hidden, in case the cause of failure isn't recoverable by the
+   *                               user.
+   */
+  function addOnFallbackAuthenticationFailureListener(listener: (event: OnFailureEvent) => void): EmitterSubscription;
 }
