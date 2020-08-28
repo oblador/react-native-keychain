@@ -14,7 +14,6 @@ import com.oblador.keychain.SecurityLevel;
 import com.oblador.keychain.exceptions.CryptoFailedException;
 import com.oblador.keychain.exceptions.KeyStoreAccessException;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
@@ -350,13 +349,13 @@ abstract public class CipherStorageBase implements CipherStorage {
     throws GeneralSecurityException, IOException {
     final Cipher cipher = getCachedInstance();
 
-    // decrypt the bytes using cipher.doFinal()
-    try (ByteArrayInputStream in = new ByteArrayInputStream(bytes);
-         ByteArrayOutputStream output = new ByteArrayOutputStream()) {
-
-      // read the initialization vector from the beginning of the stream
+    // decrypt the bytes using cipher.doFinal(). Using a CipherInputStream for decryption has historically led to issues
+    // on the Pixel family of devices.
+    // see https://github.com/oblador/react-native-keychain/issues/383
+    try {
+      // read the initialization vector from bytes array
       if (null != handler) {
-        handler.initialize(cipher, key, in);
+        handler.initialize(cipher, key, bytes);
       }
 
       byte[] decryptedBytes = cipher.doFinal(bytes, IV.IV_LENGTH, bytes.length - IV.IV_LENGTH);
@@ -494,7 +493,7 @@ abstract public class CipherStorageBase implements CipherStorage {
       final byte[] iv = cipher.getIV();
       output.write(iv, 0, iv.length);
     };
-    /** Read initialization vector from input stream and configure cipher by it. */
+    /** Read initialization vector from input bytes array and configure cipher by it. */
     public static final DecryptBytesHandler decrypt = (cipher, key, input) -> {
       final IvParameterSpec iv = readIv(input);
       cipher.init(Cipher.DECRYPT_MODE, key, iv);
@@ -532,9 +531,9 @@ abstract public class CipherStorageBase implements CipherStorage {
       throws GeneralSecurityException, IOException;
   }
 
-  /** Handler for configuring cipher by initialization data from input stream. */
+  /** Handler for configuring cipher by initialization data from input bytes array. */
   public interface DecryptBytesHandler {
-    void initialize(@NonNull final Cipher cipher, @NonNull final Key key, @NonNull final InputStream input)
+    void initialize(@NonNull final Cipher cipher, @NonNull final Key key, @NonNull final byte[] input)
       throws GeneralSecurityException, IOException;
   }
 
