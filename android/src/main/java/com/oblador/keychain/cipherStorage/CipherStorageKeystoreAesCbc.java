@@ -5,8 +5,10 @@ import android.os.Build;
 import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyInfo;
 import android.security.keystore.KeyProperties;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.oblador.keychain.KeychainModule.KnownCiphers;
 import com.oblador.keychain.SecurityLevel;
@@ -19,6 +21,7 @@ import java.security.Key;
 import java.security.spec.KeySpec;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
@@ -214,6 +217,32 @@ public class CipherStorageKeystoreAesCbc extends CipherStorageBase {
     generator.init(spec);
 
     return generator.generateKey();
+  }
+
+  /** Decrypt provided bytes to a string. */
+  @NonNull
+  @Override
+  protected String decryptBytes(@NonNull final Key key, @NonNull final byte[] bytes,
+                                @Nullable final DecryptBytesHandler handler)
+    throws GeneralSecurityException, IOException {
+    final Cipher cipher = getCachedInstance();
+
+    // decrypt the bytes using cipher.doFinal(). Using a CipherInputStream for decryption has historically led to issues
+    // on the Pixel family of devices.
+    // see https://github.com/oblador/react-native-keychain/issues/383
+    try {
+      // read the initialization vector from bytes array
+      if (null != handler) {
+        handler.initialize(cipher, key, bytes);
+      }
+
+      byte[] decryptedBytes = cipher.doFinal(bytes, IV.IV_LENGTH, bytes.length - IV.IV_LENGTH);
+      return new String(decryptedBytes, UTF8);
+    } catch (Throwable fail) {
+      Log.w(LOG_TAG, fail.getMessage(), fail);
+
+      throw fail;
+    }
   }
   //endregion
 

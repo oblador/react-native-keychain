@@ -14,6 +14,7 @@ import com.oblador.keychain.SecurityLevel;
 import com.oblador.keychain.exceptions.CryptoFailedException;
 import com.oblador.keychain.exceptions.KeyStoreAccessException;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
@@ -30,6 +31,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.crypto.Cipher;
+import javax.crypto.CipherInputStream;
 import javax.crypto.CipherOutputStream;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.IvParameterSpec;
@@ -349,17 +351,20 @@ abstract public class CipherStorageBase implements CipherStorage {
     throws GeneralSecurityException, IOException {
     final Cipher cipher = getCachedInstance();
 
-    // decrypt the bytes using cipher.doFinal(). Using a CipherInputStream for decryption has historically led to issues
-    // on the Pixel family of devices.
-    // see https://github.com/oblador/react-native-keychain/issues/383
-    try {
-      // read the initialization vector from bytes array
+    // decrypt the bytes using a CipherInputStream
+    try (ByteArrayInputStream in = new ByteArrayInputStream(bytes);
+         ByteArrayOutputStream output = new ByteArrayOutputStream()) {
+
+      // read the initialization vector from the beginning of the stream
       if (null != handler) {
-        handler.initialize(cipher, key, bytes);
+        handler.initialize(cipher, key, in);
       }
 
-      byte[] decryptedBytes = cipher.doFinal(bytes, IV.IV_LENGTH, bytes.length - IV.IV_LENGTH);
-      return new String(decryptedBytes, UTF8);
+      try (CipherInputStream decrypt = new CipherInputStream(in, cipher)) {
+        copy(decrypt, output);
+      }
+
+      return new String(output.toByteArray(), UTF8);
     } catch (Throwable fail) {
       Log.w(LOG_TAG, fail.getMessage(), fail);
 
@@ -466,6 +471,23 @@ abstract public class CipherStorageBase implements CipherStorage {
     //noinspection ConstantConditions
     return TextUtils.isEmpty(service) ? fallback : service;
   }
+
+  /**
+   * Copy input stream to output.
+   *
+   * @param in  instance of input stream.
+   * @param out instance of output stream.
+   * @throws IOException read/write operation failure.
+   */
+  public static void copy(@NonNull final InputStream in, @NonNull final OutputStream out) throws IOException {
+    // Transfer bytes from in to out
+    final byte[] buf = new byte[BUFFER_READ_WRITE_SIZE];
+    int len;
+
+    while ((len = in.read(buf)) > 0) {
+      out.write(buf, 0, len);
+    }
+  }
   //endregion
 
   //region Nested declarations
@@ -476,7 +498,7 @@ abstract public class CipherStorageBase implements CipherStorage {
       cipher.init(Cipher.ENCRYPT_MODE, key);
     };
 
-    public static final DecryptBytesHandler decrypt = (cipher, key, input) -> {
+    public static final DecryptBytesHandler<InputStream> decrypt = (cipher, key, input) -> {
       cipher.init(Cipher.DECRYPT_MODE, key);
     };
   }
@@ -494,7 +516,7 @@ abstract public class CipherStorageBase implements CipherStorage {
       output.write(iv, 0, iv.length);
     };
     /** Read initialization vector from input bytes array and configure cipher by it. */
-    public static final DecryptBytesHandler decrypt = (cipher, key, input) -> {
+    public static final DecryptBytesHandler<byte[]> decrypt = (cipher, key, input) -> {
       final IvParameterSpec iv = readIv(input);
       cipher.init(Cipher.DECRYPT_MODE, key, iv);
     };
@@ -531,9 +553,9 @@ abstract public class CipherStorageBase implements CipherStorage {
       throws GeneralSecurityException, IOException;
   }
 
-  /** Handler for configuring cipher by initialization data from input bytes array. */
-  public interface DecryptBytesHandler {
-    void initialize(@NonNull final Cipher cipher, @NonNull final Key key, @NonNull final byte[] input)
+  /** Handler for configuring cipher by initialization data from input. */
+  public interface DecryptBytesHandler<T> {
+    void initialize(@NonNull final Cipher cipher, @NonNull final Key key, @NonNull final T input)
       throws GeneralSecurityException, IOException;
   }
 
