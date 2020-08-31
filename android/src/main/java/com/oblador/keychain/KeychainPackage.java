@@ -14,14 +14,20 @@ import java.util.List;
 @SuppressWarnings("unused")
 public class KeychainPackage implements ReactPackage {
 
-  public KeychainPackage() {
+  private final KeychainModuleBuilder builder;
 
+  public KeychainPackage() {
+    this(new KeychainModuleBuilder());
+  }
+
+  public KeychainPackage(KeychainModuleBuilder builder) {
+    this.builder = builder;
   }
 
   @Override
   @NonNull
   public List<NativeModule> createNativeModules(@NonNull final ReactApplicationContext reactContext) {
-    return Collections.singletonList(KeychainModule.withWarming(reactContext));
+    return Collections.singletonList(builder.withReactContext(reactContext).build());
   }
 
   @NonNull
