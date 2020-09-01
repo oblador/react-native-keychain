@@ -498,7 +498,7 @@ abstract public class CipherStorageBase implements CipherStorage {
       cipher.init(Cipher.ENCRYPT_MODE, key);
     };
 
-    public static final DecryptBytesHandler<InputStream> decrypt = (cipher, key, input) -> {
+    public static final DecryptBytesHandler decrypt = (cipher, key, input) -> {
       cipher.init(Cipher.DECRYPT_MODE, key);
     };
   }
@@ -515,8 +515,8 @@ abstract public class CipherStorageBase implements CipherStorage {
       final byte[] iv = cipher.getIV();
       output.write(iv, 0, iv.length);
     };
-    /** Read initialization vector from input bytes array and configure cipher by it. */
-    public static final DecryptBytesHandler<byte[]> decrypt = (cipher, key, input) -> {
+    /** Read initialization vector from input stream and configure cipher by it. */
+    public static final DecryptBytesHandler decrypt = (cipher, key, input) -> {
       final IvParameterSpec iv = readIv(input);
       cipher.init(Cipher.DECRYPT_MODE, key, iv);
     };
@@ -553,9 +553,9 @@ abstract public class CipherStorageBase implements CipherStorage {
       throws GeneralSecurityException, IOException;
   }
 
-  /** Handler for configuring cipher by initialization data from input. */
-  public interface DecryptBytesHandler<T> {
-    void initialize(@NonNull final Cipher cipher, @NonNull final Key key, @NonNull final T input)
+  /** Handler for configuring cipher by initialization data from input stream. */
+  public interface DecryptBytesHandler {
+    void initialize(@NonNull final Cipher cipher, @NonNull final Key key, @NonNull final InputStream input)
       throws GeneralSecurityException, IOException;
   }
 

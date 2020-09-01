@@ -25,6 +25,7 @@ import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.IvParameterSpec;
 
 /**
  * @see <a href="https://proandroiddev.com/secure-data-in-android-initialization-vector-6ca1c659762c">Secure Data in Android</a>
@@ -227,15 +228,14 @@ public class CipherStorageKeystoreAesCbc extends CipherStorageBase {
     throws GeneralSecurityException, IOException {
     final Cipher cipher = getCachedInstance();
 
-    // decrypt the bytes using cipher.doFinal(). Using a CipherInputStream for decryption has historically led to issues
-    // on the Pixel family of devices.
-    // see https://github.com/oblador/react-native-keychain/issues/383
     try {
       // read the initialization vector from bytes array
-      if (null != handler) {
-        handler.initialize(cipher, key, bytes);
-      }
+      final IvParameterSpec iv = IV.readIv(bytes);
+      cipher.init(Cipher.DECRYPT_MODE, key, iv);
 
+      // decrypt the bytes using cipher.doFinal(). Using a CipherInputStream for decryption has historically led to issues
+      // on the Pixel family of devices.
+      // see https://github.com/oblador/react-native-keychain/issues/383
       byte[] decryptedBytes = cipher.doFinal(bytes, IV.IV_LENGTH, bytes.length - IV.IV_LENGTH);
       return new String(decryptedBytes, UTF8);
     } catch (Throwable fail) {
