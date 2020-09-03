@@ -456,6 +456,32 @@ Encrypted data is stored in SharedPreferences.
 
 The `setInternetCredentials(server, username, password)` call will be resolved as call to `setGenericPassword(username, password, server)`. Use the `server` argument to distinguish between multiple entries.
 
+#### Configuring the Android-specific behavior
+
+Android implementation has behavioural specifics incurred by existing inconsistency between implementations by different vendors. E.g., some Samsung devices show very slow startup of crypto system. To alleviate this, a warm-up strategy is introduced in Android implementation of this library. 
+
+Using default constructor you get default behaviour, i.e. with the warming up on.
+```java
+    private List<ReactPackage> createPackageList() {
+      return Arrays.asList(
+        ...
+        new KeychainPackage(),  // warming up is ON
+        ...
+      )
+
+``` 
+Those who want finer control are required to use constructor with a builder which can be configured as they like:
+```java
+    private List<ReactPackage> createPackageList() {
+      return Arrays.asList(
+        ...
+        new KeychainPackage(
+                new KeychainModuleBuilder()
+                        .withoutWarmUp()),   // warming up is OFF
+        ...
+      )
+```
+
 ### iOS Notes
 
 If you need Keychain Sharing in your iOS extension, make sure you use the same App Group and Keychain Sharing group names in your Main App and your Share Extension. To then share the keychain between the Main App and Share Extension, use the `accessGroup` and `service` option on `setGenericPassword` and `getGenericPassword`, like so: `getGenericPassword({ accessGroup: 'group.appname', service: 'com.example.appname' })`
