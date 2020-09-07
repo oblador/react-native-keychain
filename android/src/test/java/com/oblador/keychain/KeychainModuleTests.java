@@ -84,11 +84,16 @@ public class KeychainModuleTests {
    */
   private FakeProvider provider = new FakeProvider();
 
+  private KeychainModuleBuilder builder;
+
   @Before
   public void setUp() throws Exception {
     provider.configuration.clear();
 
     Security.insertProviderAt(provider, 0);
+
+    builder = new KeychainModuleBuilder(getRNContext())
+                    .usingWarmUp(false);
   }
 
   @After
@@ -106,7 +111,7 @@ public class KeychainModuleTests {
   public void testFingerprintNoHardware_api21() throws Exception {
     // GIVEN: API21 android version
     ReactApplicationContext context = getRNContext();
-    KeychainModule module = new KeychainModule(context);
+    final KeychainModule module = builder.build();
 
     // WHEN: verify availability
     final int result = BiometricManager.from(context).canAuthenticate();
@@ -127,7 +132,7 @@ public class KeychainModuleTests {
     //   fingerprint api available but not configured properly
     //   API23 android version
     ReactApplicationContext context = getRNContext();
-    KeychainModule module = new KeychainModule(context);
+    final KeychainModule module = builder.build();
 
     // set that hardware is available
     FingerprintManager fm = (FingerprintManager) context.getSystemService(Context.FINGERPRINT_SERVICE);
@@ -158,7 +163,7 @@ public class KeychainModuleTests {
 
     // WHEN: check availability
     final int result = BiometricManager.from(context).canAuthenticate();
-    final KeychainModule module = new KeychainModule(context);
+    final KeychainModule module = builder.build();
     final boolean isFingerprintWorking = module.isFingerprintAuthAvailable();
 
     // THEN: biometric works
@@ -183,7 +188,7 @@ public class KeychainModuleTests {
 
     // WHEN: verify availability
     final int result = BiometricManager.from(context).canAuthenticate();
-    final KeychainModule module = new KeychainModule(context);
+    final KeychainModule module = builder.build();
     final boolean isFingerprintWorking = module.isFingerprintAuthAvailable();
 
     // THEN: biometrics works
@@ -199,7 +204,7 @@ public class KeychainModuleTests {
     final ReactApplicationContext context = getRNContext();
 
     // WHEN: ask keychain for secured storage
-    final KeychainModule module = new KeychainModule(context);
+    final KeychainModule module = builder.build();
     final CipherStorage storage = module.getCipherStorageForCurrentAPILevel();
 
     // THEN: expected Facebook cipher storage, its the only one that supports API19
@@ -219,7 +224,7 @@ public class KeychainModuleTests {
     final ReactApplicationContext context = getRNContext();
 
     // WHEN: get the best secured storage
-    final KeychainModule module = new KeychainModule(context);
+    final KeychainModule module = builder.build();
     final CipherStorage storage = module.getCipherStorageForCurrentAPILevel();
 
     // THEN:
@@ -247,7 +252,7 @@ public class KeychainModuleTests {
     shadowOf(fm).setDefaultFingerprints(5); // 5 fingerprints are available
 
     // WHEN: fingerprint availability influence on storage selection
-    final KeychainModule module = new KeychainModule(context);
+    final KeychainModule module = builder.build();
     final boolean isFingerprintWorking = module.isFingerprintAuthAvailable();
     final CipherStorage storage = module.getCipherStorageForCurrentAPILevel();
 
@@ -278,7 +283,7 @@ public class KeychainModuleTests {
 
     // WHEN: get secured storage
     final int result = BiometricManager.from(context).canAuthenticate();
-    final KeychainModule module = new KeychainModule(context);
+    final KeychainModule module = builder.build();
     final boolean isFingerprintWorking = module.isFingerprintAuthAvailable();
     final CipherStorage storage = module.getCipherStorageForCurrentAPILevel();
 
@@ -304,7 +309,7 @@ public class KeychainModuleTests {
 
     final CipherStorage.DecryptionResult decrypted = new CipherStorage.DecryptionResult("user", "password");
     final CipherStorage.EncryptionResult encrypted = new CipherStorage.EncryptionResult("user".getBytes(), "password".getBytes(), rsa);
-    final KeychainModule module = new KeychainModule(context);
+    final KeychainModule module = builder.build();
     final SharedPreferences prefs = context.getSharedPreferences(PrefsStorage.KEYCHAIN_DATA, Context.MODE_PRIVATE);
 
     when(
@@ -334,7 +339,7 @@ public class KeychainModuleTests {
   public void testGetSecurityLevel_Unspecified_api28() throws Exception {
     // GIVE:
     final ReactApplicationContext context = getRNContext();
-    final KeychainModule module = new KeychainModule(context);
+    final KeychainModule module = builder.build();
     final Promise mockPromise = mock(Promise.class);
 
     // WHEN:
@@ -349,7 +354,7 @@ public class KeychainModuleTests {
   public void testGetSecurityLevel_Unspecified_api23() throws Exception {
     // GIVE:
     final ReactApplicationContext context = getRNContext();
-    final KeychainModule module = new KeychainModule(context);
+    final KeychainModule module = builder.build();
     final Promise mockPromise = mock(Promise.class);
 
     // WHEN:
@@ -364,7 +369,7 @@ public class KeychainModuleTests {
   public void testGetSecurityLevel_Unspecified_api21() throws Exception {
     // GIVE:
     final ReactApplicationContext context = getRNContext();
-    final KeychainModule module = new KeychainModule(context);
+    final KeychainModule module = builder.build();
     final Promise mockPromise = mock(Promise.class);
 
     // WHEN:
@@ -379,7 +384,7 @@ public class KeychainModuleTests {
   public void testGetSecurityLevel_Unspecified_api19() throws Exception {
     // GIVE:
     final ReactApplicationContext context = getRNContext();
-    final KeychainModule module = new KeychainModule(context);
+    final KeychainModule module = builder.build();
     final Promise mockPromise = mock(Promise.class);
 
     // WHEN:
@@ -394,7 +399,7 @@ public class KeychainModuleTests {
   public void testGetSecurityLevel_NoBiometry_api28() throws Exception {
     // GIVE:
     final ReactApplicationContext context = getRNContext();
-    final KeychainModule module = new KeychainModule(context);
+    final KeychainModule module = builder.build();
     final Promise mockPromise = mock(Promise.class);
 
     // WHEN:
@@ -412,7 +417,7 @@ public class KeychainModuleTests {
   public void testGetSecurityLevel_NoBiometry_NoSecuredHardware_api28() throws Exception {
     // GIVE:
     final ReactApplicationContext context = getRNContext();
-    final KeychainModule module = new KeychainModule(context);
+    final KeychainModule module = builder.build();
     final Promise mockPromise = mock(Promise.class);
 
     // set key info - software method
@@ -438,7 +443,7 @@ public class KeychainModuleTests {
   public void testDowngradeBiometricToAes_api28() throws Exception {
     // GIVEN:
     final ReactApplicationContext context = getRNContext();
-    final KeychainModule module = new KeychainModule(context);
+    final KeychainModule module = builder.build();
     final PrefsStorage prefs = new PrefsStorage(context);
     final Cipher mockCipher = Mockito.mock(Cipher.class);
     final KeyStore mockKeyStore = Mockito.mock(KeyStore.class);
