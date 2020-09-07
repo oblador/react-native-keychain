@@ -526,7 +526,7 @@ abstract public class CipherStorageBase implements CipherStorage {
     public static IvParameterSpec readIv(@NonNull final byte[] bytes) throws IOException {
       final byte[] iv = new byte[IV_LENGTH];
 
-      if (IV_LENGTH <= bytes.length)
+      if (IV_LENGTH >= bytes.length)
         throw new IOException("Insufficient length of input data for IV extracting.");
 
       System.arraycopy(bytes, 0, iv, 0, IV_LENGTH);
