@@ -190,7 +190,7 @@ export function setGenericPassword(
  */
 export function getGenericPassword(
   serviceOrOptions?: string | Options
-): Promise<false | SharedWebCredentials> {
+): Promise<false | UserCredentials> {
   const options = normalizeOptions(serviceOrOptions);
   return RNKeychainManager.getGenericPasswordForOptions(options);
 }
