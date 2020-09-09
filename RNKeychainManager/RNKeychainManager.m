@@ -12,7 +12,9 @@
 #import <React/RCTBridge.h>
 #import <React/RCTUtils.h>
 
+#if TARGET_OS_IOS
 #import <LocalAuthentication/LAContext.h>
+#endif
 #import <UIKit/UIKit.h>
 
 @implementation RNKeychainManager
@@ -152,6 +154,7 @@ NSString *authenticationPromptValue(NSDictionary *options)
 #define kBiometryTypeTouchID @"TouchID"
 #define kBiometryTypeFaceID @"FaceID"
 
+#if TARGET_OS_IOS
 LAPolicy authPolicy(NSDictionary *options)
 {
   if (options && options[kAuthenticationType]) {
@@ -161,6 +164,7 @@ LAPolicy authPolicy(NSDictionary *options)
   }
   return LAPolicyDeviceOwnerAuthentication;
 }
+#endif
 
 SecAccessControlCreateFlags accessControlValue(NSDictionary *options)
 {
@@ -202,11 +206,13 @@ SecAccessControlCreateFlags accessControlValue(NSDictionary *options)
   NSMutableDictionary *mAttributes = attributes.mutableCopy;
 
   if (accessControl) {
-    NSError *aerr = nil;
+    NSError *aerr = nil
+#if TARGET_OS_IOS
     BOOL canAuthenticate = [[LAContext new] canEvaluatePolicy:LAPolicyDeviceOwnerAuthentication error:&aerr];
     if (aerr || !canAuthenticate) {
       return rejectWithError(reject, aerr);
     }
+#endif
 
     CFErrorRef error = NULL;
     SecAccessControlRef sacRef = SecAccessControlCreateWithFlags(kCFAllocatorDefault,
