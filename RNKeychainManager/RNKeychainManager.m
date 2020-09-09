@@ -206,7 +206,7 @@ SecAccessControlCreateFlags accessControlValue(NSDictionary *options)
   NSMutableDictionary *mAttributes = attributes.mutableCopy;
 
   if (accessControl) {
-    NSError *aerr = nil
+    NSError *aerr = nil;
 #if TARGET_OS_IOS
     BOOL canAuthenticate = [[LAContext new] canEvaluatePolicy:LAPolicyDeviceOwnerAuthentication error:&aerr];
     if (aerr || !canAuthenticate) {
