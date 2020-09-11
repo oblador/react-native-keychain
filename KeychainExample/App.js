@@ -118,6 +118,15 @@ export default class KeychainExample extends Component {
     }
   }
 
+  async getAll() {
+    try {
+      const result = await Keychain.getAllGenericPasswordServices();
+      this.setState({ status: `All keys successfully fetched! Found: ${result.length} keys.` });
+    } catch (err) {
+      this.setState({ status: 'Could not get all keys. ' + err });
+    }
+  }
+
   async ios_specifics() {
     try {
       const reply = await Keychain.setSharedWebCredentials(
@@ -265,6 +274,17 @@ export default class KeychainExample extends Component {
             >
               <View style={styles.reset}>
                 <Text style={styles.buttonText}>Reset</Text>
+              </View>
+            </TouchableHighlight>
+          </View>
+
+          <View style={[styles.buttons, styles.centerButtons]}>
+            <TouchableHighlight
+              onPress={() => this.getAll()}
+              style={styles.button}
+            >
+              <View style={styles.reset}>
+                <Text style={styles.buttonText}>Get All Keychain Data</Text>
               </View>
             </TouchableHighlight>
           </View>

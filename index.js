@@ -331,6 +331,16 @@ export function setSharedWebCredentials(
   );
 }
 
+export async function getAllGenericPasswordServices(): Promise<string[]> {
+  if (Platform.OS !== 'ios') {
+    return Promise.reject(
+      new Error(`deleteAll() is not supported on ${Platform.OS} yet`)
+    );
+  }
+  const services = await RNKeychainManager.getAllGenericPasswordServices(); // returns array of strings
+  return Promise.resolve(services);
+}
+
 /**
  * Inquire if the type of local authentication policy (LAPolicy) is supported
  * on this device with the device settings the user chose.
@@ -379,6 +389,7 @@ export default {
   resetInternetCredentials,
   setGenericPassword,
   getGenericPassword,
+  getAllGenericPasswordServices,
   resetGenericPassword,
   requestSharedWebCredentials,
   setSharedWebCredentials,
