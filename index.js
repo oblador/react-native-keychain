@@ -332,11 +332,6 @@ export function setSharedWebCredentials(
 }
 
 export async function getAllGenericPasswordServices(): Promise<string[]> {
-  if (Platform.OS !== 'ios') {
-    return Promise.reject(
-      new Error(`deleteAll() is not supported on ${Platform.OS} yet`)
-    );
-  }
   const services = await RNKeychainManager.getAllGenericPasswordServices(); // returns array of strings
   return Promise.resolve(services);
 }

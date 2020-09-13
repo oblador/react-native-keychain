@@ -35,13 +35,19 @@ import com.oblador.keychain.exceptions.CryptoFailedException;
 import com.oblador.keychain.exceptions.EmptyParameterException;
 import com.oblador.keychain.exceptions.KeyStoreAccessException;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import javax.crypto.Cipher;
+
+import static com.facebook.react.bridge.Arguments.makeNativeArray;
 
 @SuppressWarnings({"unused", "WeakerAccess", "SameParameterValue"})
 public class KeychainModule extends ReactContextBaseJavaModule {
@@ -314,6 +320,35 @@ public class KeychainModule extends ReactContextBaseJavaModule {
 
       promise.reject(Errors.E_UNKNOWN_ERROR, fail);
     }
+  }
+
+  @ReactMethod
+  public void getAllGenericPasswordServices(@NonNull final Promise promise) {
+    try {
+      Collection<String> services = doGetAllGenericPasswordServices();
+      promise.resolve(makeNativeArray(services.toArray()));
+
+    } catch (KeyStoreAccessException e) {
+      promise.reject(Errors.E_KEYSTORE_ACCESS_ERROR, e);
+    }
+  }
+
+  private Collection<String> doGetAllGenericPasswordServices() throws KeyStoreAccessException {
+    final Set<String> cipherNames = prefsStorage.getUsedCipherNames();
+
+    Collection<CipherStorage> ciphers = new ArrayList<>(cipherNames.size());
+    for (String storageName : cipherNames) {
+      final CipherStorage cipherStorage = getCipherStorageByName(storageName);
+      ciphers.add(cipherStorage);
+    }
+
+    Set<String> result = new HashSet<>();
+    for (CipherStorage cipher : ciphers) {
+      Set<String> aliases = cipher.getAllKeys();
+      result.addAll(aliases);
+    }
+
+    return result;
   }
 
   @ReactMethod
