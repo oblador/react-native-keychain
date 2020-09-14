@@ -582,10 +582,15 @@ RCT_EXPORT_METHOD(setSharedWebCredentialsForServer:(NSString *)server
 
 RCT_EXPORT_METHOD(getAllGenericPasswordServices:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
 {
-  NSArray *secItemClasses = [NSArray arrayWithObjects:
-                              (__bridge id)kSecClassGenericPassword];
-  NSArray *servivces = [self getAllServicesForSecurityClasses:secItemClasses]
-  resolve(services);
+  @try {
+    NSArray *secItemClasses = [NSArray arrayWithObjects:
+                              (__bridge id)kSecClassGenericPassword,
+                              nil];
+    NSArray *services = [self getAllServicesForSecurityClasses:secItemClasses];
+    return resolve(services);
+  } @catch (NSError *nsError) {
+    return rejectWithError(reject, nsError);
+  }
 }
 
 @end
