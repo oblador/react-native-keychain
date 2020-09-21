@@ -278,28 +278,27 @@ SecAccessControlCreateFlags accessControlValue(NSDictionary *options)
                                 (__bridge id)kCFBooleanTrue, (__bridge id)kSecReturnAttributes,
                                 (__bridge id)kSecMatchLimitAll, (__bridge id)kSecMatchLimit,
                                 nil];
-  NSMutableArray<NSString*> services* = [NSMutableArray<NSString*> new];
+  NSMutableArray<NSString*> *services = [NSMutableArray<NSString*> new];
   for (id secItemClass in secItemClasses) {
     [query setObject:secItemClass forKey:(__bridge id)kSecClass];
     NSArray *result = nil;
     CFTypeRef resultRef = NULL;
-    OSStatus osStatus = SecItemCopyMatching((__bridge CFDictionaryRef)query, (CFTypeRef*)&foundTypeRef);
+    OSStatus osStatus = SecItemCopyMatching((__bridge CFDictionaryRef)query, (CFTypeRef*)&resultRef);
     if (osStatus != noErr && osStatus != errSecItemNotFound) {
       NSError *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:osStatus userInfo:nil];
-      @throw error
+      @throw error;
     } else if (osStatus != errSecItemNotFound) {
       result = (__bridge NSArray*)(resultRef);
       if (result != NULL) {
-        for (id index in result) {
-          NSDictionary entry = [result objectAtIndex:index];
-          NSString service = [entry objectFor:(__bridge NSString *)kSecAttrService];
-          [services addObject:service]
+        for (id entry in result) {
+          NSString *service = [entry objectForKey:(__bridge NSString *)kSecAttrService];
+          [services addObject:service];
         }
       }
     }
   }
   
-  return services
+  return services;
 }
 
 #pragma mark - RNKeychain
