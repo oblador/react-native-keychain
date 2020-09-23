@@ -78,9 +78,14 @@ declare module 'react-native-keychain' {
     authenticationPrompt?: string | AuthenticationPrompt;
     authenticationType?: AUTHENTICATION_TYPE;
     service?: string;
+    creator?: string;
     securityLevel?: SECURITY_LEVEL;
     storage?: STORAGE_TYPE;
     rules?: SECURITY_RULES;
+  }
+
+  export interface PurgeOptions {
+    creator: string;
   }
 
   function setGenericPassword(
@@ -94,6 +99,8 @@ declare module 'react-native-keychain' {
   ): Promise<false | UserCredentials>;
 
   function resetGenericPassword(options?: Options): Promise<boolean>;
+
+  function resetGenericPasswords(options: PurgeOptions): Promise<boolean>;
 
   function getAllGenericPasswordServices(): Promise<string[]>;
 

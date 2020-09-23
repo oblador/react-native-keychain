@@ -210,6 +210,17 @@ export function resetGenericPassword(
 }
 
 /**
+ * Purges all generic password keychain entries for `creator`.
+ * @param {object} options An options object specifying search terms for which to purge.
+ * @return {Promise} Resolves to `true` when successful
+ */
+export function resetGenericPasswords(searchOptions: {
+  creator: string,
+}): Promise<boolean> {
+  return RNKeychainManager.resetGenericPasswordForOptions(searchOptions);
+}
+
+/**
  * Gets all `service` keys used in keychain entries.
  * @return {Promise} Resolves to an array of strings
  */

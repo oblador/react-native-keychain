@@ -39,8 +39,12 @@ const SECURITY_STORAGE_MAP = [
   Keychain.STORAGE_TYPE.RSA,
 ];
 
+const DEFAULT_CREATOR = 'KeychainExample';
+
 export default class KeychainExample extends Component {
   state = {
+    creator: DEFAULT_CREATOR,
+    service: '',
     username: '',
     password: '',
     status: '',
@@ -67,6 +71,8 @@ export default class KeychainExample extends Component {
           accessControl: this.state.accessControl,
           securityLevel: this.state.securityLevel,
           storage: this.state.storageSelection,
+          service: this.state.service !== '' ? this.state.service : undefined,
+          creator: this.state.creator !== '' ? this.state.creator : undefined,
         }
       );
 
@@ -93,6 +99,7 @@ export default class KeychainExample extends Component {
           description: 'Some descriptive text',
           cancel: 'Cancel',
         },
+        service: this.state.service !== '' ? this.state.service : undefined,
       };
       const credentials = await Keychain.getGenericPassword(options);
       if (credentials) {
@@ -107,7 +114,9 @@ export default class KeychainExample extends Component {
 
   async reset() {
     try {
-      await Keychain.resetGenericPassword();
+      await Keychain.resetGenericPassword({
+        service: this.state.service !== '' ? this.state.service : undefined,
+      });
       this.setState({
         status: 'Credentials Reset!',
         username: '',
@@ -126,6 +135,20 @@ export default class KeychainExample extends Component {
       });
     } catch (err) {
       this.setState({ status: 'Could not get all keys. ' + err });
+    }
+  }
+
+  async purgeAllGenericPasswords() {
+    try {
+      await Keychain.resetGenericPasswords({
+        creator: this.state.creator,
+      });
+      this.setState({
+        status: `All keys for ${this.state.creator} successfully purged!`,
+      });
+    } catch (err) {
+      console.error(err);
+      this.setState({ status: 'Could not purge all keys. ' + err });
     }
   }
 
@@ -167,6 +190,45 @@ export default class KeychainExample extends Component {
         <View style={styles.content}>
           <Text style={styles.title}>Keychain Example</Text>
           <View style={styles.field}>
+            <Text style={styles.label}>Creator</Text>
+            <TextInput
+              style={styles.input}
+              autoFocus={true}
+              autoCapitalize="none"
+              value={this.state.creator}
+              onSubmitEditing={() => {
+                this.serviceTextInput.focus();
+              }}
+              onChange={(event) =>
+                this.setState({ creator: event.nativeEvent.text })
+              }
+              underlineColorAndroid="transparent"
+              blurOnSubmit={false}
+              returnKeyType="next"
+            />
+          </View>
+          <View style={styles.field}>
+            <Text style={styles.label}>Service</Text>
+            <TextInput
+              style={styles.input}
+              autoFocus={true}
+              autoCapitalize="none"
+              value={this.state.service}
+              onSubmitEditing={() => {
+                this.usernameTextInput.focus();
+              }}
+              ref={(input) => {
+                this.serviceTextInput = input;
+              }}
+              onChange={(event) =>
+                this.setState({ service: event.nativeEvent.text })
+              }
+              underlineColorAndroid="transparent"
+              blurOnSubmit={false}
+              returnKeyType="next"
+            />
+          </View>
+          <View style={styles.field}>
             <Text style={styles.label}>Username</Text>
             <TextInput
               style={styles.input}
@@ -174,6 +236,9 @@ export default class KeychainExample extends Component {
               value={this.state.username}
               onSubmitEditing={() => {
                 this.passwordTextInput.focus();
+              }}
+              ref={(input) => {
+                this.usernameTextInput = input;
               }}
               onChange={(event) =>
                 this.setState({ username: event.nativeEvent.text })
@@ -298,6 +363,18 @@ export default class KeychainExample extends Component {
               >
                 <View style={styles.load}>
                   <Text style={styles.buttonText}>Get security level</Text>
+                </View>
+              </TouchableHighlight>
+            )}
+            {Platform.OS === 'ios' && (
+              <TouchableHighlight
+                onPress={() => this.purgeAllGenericPasswords()}
+                style={styles.button}
+              >
+                <View style={styles.reset}>
+                  <Text style={styles.buttonText}>
+                    Purge for Creator: {this.state.creator}
+                  </Text>
                 </View>
               </TouchableHighlight>
             )}

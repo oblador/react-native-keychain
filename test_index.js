@@ -12,6 +12,7 @@ import {
   hasInternetCredentials,
   requestSharedWebCredentials,
   resetGenericPassword,
+  resetGenericPasswords,
   resetInternetCredentials,
   setGenericPassword,
   setInternetCredentials,
@@ -111,6 +112,14 @@ resetGenericPassword().then((result) => {
 });
 resetGenericPassword(simpleOptions);
 resetGenericPassword('service');
+
+// $FlowExpectedError - First two arguments are required
+resetGenericPasswords();
+// $FlowExpectedError - Must pass creator
+resetGenericPasswords({ service: 'service' });
+resetGenericPasswords({ creator: 'creator' }).then((result) => {
+  (result: boolean);
+});
 
 requestSharedWebCredentials().then((result) => {
   if (result) {

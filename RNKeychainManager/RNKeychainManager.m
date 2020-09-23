@@ -351,12 +351,16 @@ RCT_EXPORT_METHOD(setGenericPasswordForOptions:(NSDictionary *)options
                   rejecter:(RCTPromiseRejectBlock)reject)
 {
   NSString *service = serviceValue(options);
-  NSDictionary *attributes = attributes = @{
-    (__bridge NSString *)kSecClass: (__bridge id)(kSecClassGenericPassword),
-    (__bridge NSString *)kSecAttrService: service,
-    (__bridge NSString *)kSecAttrAccount: username,
-    (__bridge NSString *)kSecValueData: [password dataUsingEncoding:NSUTF8StringEncoding]
-  };
+  NSString *creator = creatorValue(options);
+  NSMutableDictionary *attributes = [NSMutableDictionary dictionaryWithObjectsAndKeys:
+                               (__bridge id)kSecClassGenericPassword, (__bridge id)kSecClass,
+                               service, (__bridge id)kSecAttrService,
+                               username, (__bridge id)kSecAttrAccount,
+                               [password dataUsingEncoding:NSUTF8StringEncoding], (__bridge id)kSecValueData,
+                               nil];
+  if (creator != nil) {
+    [attributes setObject:creator forKey:(__bridge id)kSecAttrCreator];
+  }
 
   [self deletePasswordsForService:service];
 
@@ -421,6 +425,28 @@ RCT_EXPORT_METHOD(resetGenericPasswordForOptions:(NSDictionary *)options
   }
 
   return resolve(@(YES));
+}
+
+RCT_EXPORT_METHOD(purgeGenericPasswordForOptions:(NSDictionary *)options
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+{
+  NSString *creator = creatorValue(options);
+  if (creator == nil || [creator length] == 0) {
+    return reject(@"creator is a required option", @"Please, specify the creator for which to delete items.", nil);
+  }
+  NSDictionary *deleteQuery = @{
+    (__bridge NSString *)kSecClass: (__bridge id)(kSecClassGenericPassword),
+    (__bridge NSString *)kSecAttrCreator: creator,
+  };
+  OSStatus deleteStatus = SecItemDelete((__bridge CFDictionaryRef) deleteQuery);
+  
+  if (deleteStatus == errSecSuccess || deleteStatus == errSecItemNotFound) {
+      return resolve(@(YES));
+  }
+  
+  NSError *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:deleteStatus userInfo:nil];
+  return rejectWithError(reject, error);
 }
 
 RCT_EXPORT_METHOD(setInternetCredentialsForServer:(NSString *)server
