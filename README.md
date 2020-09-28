@@ -7,6 +7,7 @@
 </p>
 
 [![Travis](https://img.shields.io/travis/oblador/react-native-keychain.svg)](https://travis-ci.org/oblador/react-native-keychain) [![npm](https://img.shields.io/npm/v/react-native-keychain.svg)](https://npmjs.com/package/react-native-keychain) [![npm](https://img.shields.io/npm/dm/react-native-keychain.svg)](https://npmjs.com/package/react-native-keychain)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Foblador%2Freact-native-keychain.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Foblador%2Freact-native-keychain?ref=badge_shield)
 
 # Keychain/Keystore Access for React Native
 
@@ -56,6 +57,9 @@
   - [Maintainers](#maintainers)
   - [For Developers / Contributors](#for-developers--contributors)
   - [License](#license)
+
+
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Foblador%2Freact-native-keychain.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Foblador%2Freact-native-keychain?ref=badge_large)
 
 ## Installation
 
