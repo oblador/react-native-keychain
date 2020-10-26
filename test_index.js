@@ -93,7 +93,7 @@ setGenericPassword('username', 'password', simpleOptions);
 setGenericPassword('username', 'password', 'service');
 
 getGenericPassword().then(result => {
-  (result: boolean | SharedWebCredentials);
+  (result: boolean | UserCredentials);
 });
 getGenericPassword(simpleOptions);
 getGenericPassword({
