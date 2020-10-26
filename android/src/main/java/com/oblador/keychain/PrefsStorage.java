@@ -3,6 +3,7 @@ package com.oblador.keychain;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Base64;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -19,10 +20,12 @@ public class PrefsStorage {
   static public class ResultSet extends CipherStorage.CipherResult<byte[]> {
     @KnownCiphers
     public final String cipherStorageName;
+    public final byte[] vector;
 
-    public ResultSet(@KnownCiphers final String cipherStorageName, final byte[] usernameBytes, final byte[] passwordBytes) {
+    public ResultSet(@KnownCiphers final String cipherStorageName, final byte[] usernameBytes, final byte[] passwordBytes, final byte[] vectorBytes) {
       super(usernameBytes, passwordBytes);
 
+      this.vector = vectorBytes;
       this.cipherStorageName = cipherStorageName;
     }
   }
@@ -38,6 +41,7 @@ public class PrefsStorage {
   public ResultSet getEncryptedEntry(@NonNull final String service) {
     byte[] bytesForUsername = getBytesForUsername(service);
     byte[] bytesForPassword = getBytesForPassword(service);
+    byte[] bytesForVector = getBytesForVector(service);
     String cipherStorageName = getCipherStorageName(service);
 
     // in case of wrong password or username
@@ -51,7 +55,7 @@ public class PrefsStorage {
       cipherStorageName = KnownCiphers.FB;
     }
 
-    return new ResultSet(cipherStorageName, bytesForUsername, bytesForPassword);
+    return new ResultSet(cipherStorageName, bytesForUsername, bytesForPassword, bytesForVector);
 
   }
 
@@ -70,11 +74,14 @@ public class PrefsStorage {
   public void storeEncryptedEntry(@NonNull final String service, @NonNull final EncryptionResult encryptionResult) {
     final String keyForUsername = getKeyForUsername(service);
     final String keyForPassword = getKeyForPassword(service);
+    final String keyForVector = getKeyForVector(service);
     final String keyForCipherStorage = getKeyForCipherStorage(service);
+    final byte[] usernameBytes = encryptionResult.username == null ? new byte[0] : encryptionResult.username;
 
     prefs.edit()
-      .putString(keyForUsername, Base64.encodeToString(encryptionResult.username, Base64.DEFAULT))
+      .putString(keyForUsername, Base64.encodeToString(usernameBytes, Base64.DEFAULT))
       .putString(keyForPassword, Base64.encodeToString(encryptionResult.password, Base64.DEFAULT))
+            .putString(keyForVector, Base64.encodeToString(encryptionResult.vector, Base64.DEFAULT))
       .putString(keyForCipherStorage, encryptionResult.cipherName)
       .apply();
   }
@@ -93,6 +100,12 @@ public class PrefsStorage {
   }
 
   @Nullable
+  private byte[] getBytesForVector(@NonNull final String service) {
+    String key = getKeyForVector(service);
+    return getBytes(key);
+  }
+
+  @Nullable
   private String getCipherStorageName(@NonNull final String service) {
     String key = getKeyForCipherStorage(service);
 
@@ -107,6 +120,11 @@ public class PrefsStorage {
   @NonNull
   public static String getKeyForPassword(@NonNull final String service) {
     return service + ":" + "p";
+  }
+
+  @NonNull
+  public static String getKeyForVector(@NonNull final String service) {
+    return service + ":" + "v";
   }
 
   @NonNull
