@@ -568,7 +568,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
       promptInfoBuilder.setNegativeButtonText(promptInfoNegativeButton);
     }
 
-    /* Bypass confirmation to avoid KeyStore unlock timeout being exceeded when using Face biometrics */
+    /* Bypass confirmation to avoid KeyStore unlock timeout being exceeded when using passive biometrics */
     promptInfoBuilder.setConfirmationRequired(false);
 
     final PromptInfo promptInfo = promptInfoBuilder.build();
