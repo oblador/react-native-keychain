@@ -298,7 +298,7 @@ RCT_EXPORT_METHOD(getSupportedBiometryType:(RCTPromiseResolveBlock)resolve
 {
   NSError *aerr = nil;
   LAContext *context = [LAContext new];
-  BOOL canBeProtected = [context canEvaluatePolicy:LAPolicyDeviceOwnerAuthentication error:&aerr];
+  BOOL canBeProtected = [context canEvaluatePolicy:LAPolicyDeviceOwnerAuthenticationWithBiometrics error:&aerr];
 
   if (!aerr && canBeProtected) {
     if (@available(iOS 11, *)) {
