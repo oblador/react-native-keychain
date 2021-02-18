@@ -97,6 +97,48 @@ export type Options = {
   ...BaseOptions,
 };
 
+export type keychainAccessControlOptions =
+  | 'kSecAccessControlApplicationPassword'
+  | 'kSecAccessControlPrivateKeyUsage'
+  | 'kSecAccessControlDevicePasscode'
+  | 'kSecAccessControlTouchIDAny'
+  | 'kSecAccessControlTouchIDCurrentSet'
+  | 'kSecAccessControlUserPresence'
+  | 'kSecAccessControlBiometryAny'
+  | 'kSecAccessControlBiometryCurrentSet';
+
+export type keychainAttrAccessibleOptions =
+  | 'kSecAttrAccessibleAfterFirstUnlock'
+  | 'kSecAttrAccessibleAlways'
+  | 'kSecAttrAccessibleWhenPasscodeSetThisDeviceOnly'
+  | 'kSecAttrAccessibleWhenUnlockedThisDeviceOnly'
+  | 'kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly'
+  | 'kSecAttrAccessibleAlwaysThisDeviceOnly'
+  | 'kSecAttrAccessibleWhenUnlocked';
+
+export type keychainOptions = {|
+  +kSecAccessControl?: keychainAccessControlOptions,
+  +kSecAttrAccessible?: keychainAttrAccessibleOptions,
+  +kSecAttrSynchronizable?: boolean,
+  +keychainService?: string,
+  +sharedPreferencesName?: string,
+  +touchID?: boolean,
+  +showModal?: boolean,
+  +kSecUseOperationPrompt?: string,
+  +kLocalizedFallbackTitle?: string,
+  +strings?: keychainAndroidDialogStrings,
+|};
+
+export type keychainAndroidDialogStrings = {|
+  +header?: string,
+  +description?: string,
+  +hint?: string,
+  +success?: string,
+  +notRecognized?: string,
+  +cancel?: string,
+  +cancelled?: string,
+|};
+
 export type Result = {|
   +service: string,
   +storage: string,
@@ -133,7 +175,7 @@ function normalizeServiceOption(serviceOrOptions?: string | Options) {
 }
 
 function normalizeOptions(
-  serviceOrOptions?: string | Options
+  serviceOrOptions?: any
 ): NormalizedOptions {
   let options = { ...normalizeServiceOption(serviceOrOptions) };
   const { authenticationPrompt } = options;
@@ -183,6 +225,19 @@ export function setGenericPassword(
   );
 }
 
+export function setItem(
+  key: string,
+  value: string,
+  serviceOrOptions: keychainOptions
+): Promise<string> {
+  const options = normalizeOptions(serviceOrOptions);
+  return RNKeychainManager.setItem(   
+    key,
+    value,
+    options,
+  );
+}
+
 /**
  * Fetches login combination for `service`.
  * @param {object} options A keychain options object.
@@ -193,6 +248,22 @@ export function getGenericPassword(
 ): Promise<false | UserCredentials> {
   const options = normalizeOptions(serviceOrOptions);
   return RNKeychainManager.getGenericPasswordForOptions(options);
+}
+
+export function getItem(
+  key:string,
+  serviceOrOptions: keychainOptions
+): Promise<string> {
+  const options = normalizeOptions(serviceOrOptions);
+  return RNKeychainManager.getItem(key,options);
+}
+
+export function deleteItem(
+  key:string,
+  serviceOrOptions: keychainOptions
+): Promise<string> {
+  const options = normalizeOptions(serviceOrOptions);
+  return RNKeychainManager.deleteItem(key,options);
 }
 
 /**
@@ -377,6 +448,9 @@ export default {
   resetInternetCredentials,
   setGenericPassword,
   getGenericPassword,
+  getItem,
+  setItem,
+  deleteItem,
   resetGenericPassword,
   requestSharedWebCredentials,
   setSharedWebCredentials,
