@@ -497,15 +497,6 @@ RCT_EXPORT_METHOD(deleteItem:(NSString *)key options:(NSDictionary *)options res
     NSNumber *sync = options[@"kSecAttrSynchronizable"];
     if (sync == NULL)
         sync = (__bridge id)kSecAttrSynchronizableAny;
-
-    // Create dictionary of search parameters
-//    NSDictionary* query = [NSDictionary dictionaryWithObjectsAndKeys:
-//                          (__bridge id)(kSecClassGenericPassword), kSecClass,
-//                          sync, kSecAttrSynchronizable,
-//                          keychainService, kSecAttrService,
-//                          key, kSecAttrAccount,
-//                          kCFBooleanTrue, kSecReturnAttributes,
-//                          kCFBooleanTrue, kSecReturnData, nil];
     
     NSDictionary *query = @{
       (__bridge NSString *)kSecClass: (__bridge id)(kSecClassGenericPassword),
