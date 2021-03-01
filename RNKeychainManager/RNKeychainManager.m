@@ -306,7 +306,9 @@ RCT_EXPORT_METHOD(getSupportedBiometryType:(RCTPromiseResolveBlock)resolve
         return resolve(kBiometryTypeFaceID);
       }
     }
-    return resolve(kBiometryTypeTouchID);
+    if (context.biometryType == LABiometryTypeTouchID) {
+      return resolve(kBiometryTypeTouchID);
+    }
   }
 
   return resolve([NSNull null]);
