@@ -458,9 +458,10 @@ The `setInternetCredentials(server, username, password)` call will be resolved a
 
 #### Configuring the Android-specific behavior
 
-Android implementation has behavioural specifics incurred by existing inconsistency between implementations by different vendors. E.g., some Samsung devices show very slow startup of crypto system. To alleviate this, a warm-up strategy is introduced in Android implementation of this library. 
+Android implementation has behavioural specifics incurred by existing inconsistency between implementations by different vendors. E.g., some Samsung devices show very slow startup of crypto system. To alleviate this, a warm-up strategy is introduced in Android implementation of this library.
 
 Using default constructor you get default behaviour, i.e. with the warming up on.
+
 ```java
     private List<ReactPackage> createPackageList() {
       return Arrays.asList(
@@ -469,8 +470,10 @@ Using default constructor you get default behaviour, i.e. with the warming up on
         ...
       )
 
-``` 
+```
+
 Those who want finer control are required to use constructor with a builder which can be configured as they like:
+
 ```java
     private List<ReactPackage> createPackageList() {
       return Arrays.asList(
