@@ -13,7 +13,7 @@
   "scripts": {
     "format": "prettier '{,typings/,KeychainExample/}*.{md,js,json,ts,tsx}' --write",
     "lint": "eslint .",
-    "test": "flow"
+    "flow": "flow"
   },
   "keywords": [
     "react-native",
