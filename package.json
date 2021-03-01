@@ -5,6 +5,7 @@
   "main": "index.js",
   "files": [
     "android",
+    "!android/src/test",
     "RNKeychain.xcodeproj",
     "RNKeychainManager",
     "typings",
@@ -45,9 +46,9 @@
   "devDependencies": {
     "@react-native-community/eslint-config": "^2.0.0",
     "eslint": "^7.2.0",
-    "flow-bin": "^0.107.0",
+    "flow-bin": "^0.122.0",
     "prettier": "^2.2.1",
-    "react-native": "^0.61.2",
+    "react-native": "^0.63.3",
     "typescript": "^4.2.2"
   }
 }

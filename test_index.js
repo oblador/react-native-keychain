@@ -19,7 +19,7 @@ import {
   type Result,
   type UserCredentials,
   type SharedWebCredentials, // eslint-disable-line no-unused-vars
-} from 'react-native-keychain';
+} from '.';
 
 canImplyAuthentication().then((result) => {
   (result: boolean);
