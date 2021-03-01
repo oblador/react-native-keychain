@@ -5,8 +5,10 @@ const { RNKeychainManager } = NativeModules;
 
 export const SECURITY_LEVEL = Object.freeze({
   ANY: RNKeychainManager && RNKeychainManager.SECURITY_LEVEL_ANY,
-  SECURE_SOFTWARE: RNKeychainManager && RNKeychainManager.SECURITY_LEVEL_SECURE_SOFTWARE,
-  SECURE_HARDWARE: RNKeychainManager && RNKeychainManager.SECURITY_LEVEL_SECURE_HARDWARE,
+  SECURE_SOFTWARE:
+    RNKeychainManager && RNKeychainManager.SECURITY_LEVEL_SECURE_SOFTWARE,
+  SECURE_HARDWARE:
+    RNKeychainManager && RNKeychainManager.SECURITY_LEVEL_SECURE_HARDWARE,
 });
 
 export const ACCESSIBLE = Object.freeze({
@@ -118,7 +120,7 @@ const AUTH_PROMPT_DEFAULTS = {
   cancel: 'Cancel',
 };
 
-function normalizeServiceOption(serviceOrOptions?: string | Options) {
+function normalizeServiceOption(serviceOrOptions?: string | Options): Options {
   if (typeof serviceOrOptions === 'string') {
     console.warn(
       `You passed a service string as an argument to one of the react-native-keychain functions.
