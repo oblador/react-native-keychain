@@ -210,6 +210,14 @@ export function resetGenericPassword(
 }
 
 /**
+ * Gets all `service` keys used in keychain entries.
+ * @return {Promise} Resolves to an array of strings
+ */
+export async function getAllGenericPasswordServices(): Promise<string[]> {
+  return RNKeychainManager.getAllGenericPasswordServices();
+}
+
+/**
  * Checks if we have a login combination for `server`.
  * @param {string} server URL to server.
  * @return {Promise} Resolves to `{service, storage}` when successful
@@ -379,6 +387,7 @@ export default {
   resetInternetCredentials,
   setGenericPassword,
   getGenericPassword,
+  getAllGenericPasswordServices,
   resetGenericPassword,
   requestSharedWebCredentials,
   setSharedWebCredentials,

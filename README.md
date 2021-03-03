@@ -15,8 +15,9 @@
   - [Usage](#usage)
   - [API](#api)
     - [`setGenericPassword(username, password, [{ accessControl, accessible, accessGroup, service, securityLevel }])`](#setgenericpasswordusername-password--accesscontrol-accessible-accessgroup-service-securitylevel-)
-    - [`getGenericPassword([{ authenticationPrompt, service, accessControl }])`](#getgenericpassword-authenticationprompt-service-accessControl-)
+    - [`getGenericPassword([{ authenticationPrompt, service, accessControl }])`](#getgenericpassword-authenticationprompt-service-accesscontrol-)
     - [`resetGenericPassword([{ service }])`](#resetgenericpassword-service-)
+    - [`getAllGenericPasswordServices()`](#getallgenericpasswordservices)
     - [`setInternetCredentials(server, username, password, [{ accessControl, accessible, accessGroup, securityLevel }])`](#setinternetcredentialsserver-username-password--accesscontrol-accessible-accessgroup-securitylevel-)
     - [`hasInternetCredentials(server)`](#hasinternetcredentialsserver)
     - [`getInternetCredentials(server, [{ authenticationPrompt }])`](#getinternetcredentialsserver--authenticationprompt-)
@@ -28,18 +29,19 @@
     - [`getSecurityLevel([{ accessControl }])` (Android only)](#getsecuritylevel-accesscontrol--android-only)
     - [Options](#options)
       - [Data Structure Properties/Fields](#data-structure-propertiesfields)
+        - [`authenticationPrompt` Properties](#authenticationprompt-properties)
       - [`Keychain.ACCESS_CONTROL` enum](#keychainaccess_control-enum)
       - [`Keychain.ACCESSIBLE` enum](#keychainaccessible-enum)
       - [`Keychain.AUTHENTICATION_TYPE` enum](#keychainauthentication_type-enum)
       - [`Keychain.BIOMETRY_TYPE` enum](#keychainbiometry_type-enum)
       - [`Keychain.SECURITY_LEVEL` enum (Android only)](#keychainsecurity_level-enum-android-only)
       - [`Keychain.STORAGE_TYPE` enum (Android only)](#keychainstorage_type-enum-android-only)
-      - [`Keychain.SECURITY_RULES` enum (Android only)](#keychainrules-enum-android-only)
+      - [`Keychain.SECURITY_RULES` enum (Android only)](#keychainsecurity_rules-enum-android-only)
   - [Important Behavior](#important-behavior)
     - [Rule 1: Automatic Security Level Upgrade](#rule-1-automatic-security-level-upgrade)
   - [Manual Installation](#manual-installation)
     - [iOS](#ios)
-      - [Option: Manually](#option--manually-)
+      - [Option: Manually](#option-manually)
       - [Option: With CocoaPods](#option-with-cocoapods)
       - [Enable `Keychain Sharing` entitlement for iOS 10+](#enable-keychain-sharing-entitlement-for-ios-10)
     - [Android](#android)
@@ -50,6 +52,7 @@
     - [Using a Jest Setup File](#using-a-jest-setup-file)
   - [Notes](#notes)
     - [Android Notes](#android-notes)
+      - [Configuring the Android-specific behavior](#configuring-the-android-specific-behavior)
     - [iOS Notes](#ios-notes)
     - [macOS Catalyst](#macos-catalyst)
     - [Security](#security)
@@ -113,6 +116,12 @@ Will retrieve the username/password combination from the secure storage. Resolve
 ### `resetGenericPassword([{ service }])`
 
 Will remove the username/password combination from the secure storage. Resolves to `true` in case of success.
+
+### `getAllGenericPasswordServices()`
+
+Will retrieve all known service names for which a generic password has been stored (e.g., `setGenericPassword`).
+
+_Note_: on iOS this will actully read the encrypted entries, so it will trigger an authentication UI if you have encrypted any entries with password/biometry.
 
 ### `setInternetCredentials(server, username, password, [{ accessControl, accessible, accessGroup, securityLevel }])`
 

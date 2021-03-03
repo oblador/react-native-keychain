@@ -118,6 +118,17 @@ export default class KeychainExample extends Component {
     }
   }
 
+  async getAll() {
+    try {
+      const result = await Keychain.getAllGenericPasswordServices();
+      this.setState({
+        status: `All keys successfully fetched! Found: ${result.length} keys.`,
+      });
+    } catch (err) {
+      this.setState({ status: 'Could not get all keys. ' + err });
+    }
+  }
+
   async ios_specifics() {
     try {
       const reply = await Keychain.setSharedWebCredentials(
@@ -159,7 +170,6 @@ export default class KeychainExample extends Component {
             <Text style={styles.label}>Username</Text>
             <TextInput
               style={styles.input}
-              autoFocus={true}
               autoCapitalize="none"
               value={this.state.username}
               onSubmitEditing={() => {
@@ -269,8 +279,16 @@ export default class KeychainExample extends Component {
             </TouchableHighlight>
           </View>
 
-          {Platform.OS === 'android' && (
-            <View style={styles.buttons}>
+          <View style={[styles.buttons, styles.centerButtons]}>
+            <TouchableHighlight
+              onPress={() => this.getAll()}
+              style={styles.button}
+            >
+              <View style={styles.load}>
+                <Text style={styles.buttonText}>Get Used Keys</Text>
+              </View>
+            </TouchableHighlight>
+            {Platform.OS === 'android' && (
               <TouchableHighlight
                 onPress={async () => {
                   const level = await Keychain.getSecurityLevel();
@@ -282,11 +300,8 @@ export default class KeychainExample extends Component {
                   <Text style={styles.buttonText}>Get security level</Text>
                 </View>
               </TouchableHighlight>
-            </View>
-          )}
-
-          {Platform.OS === 'ios' && (
-            <View style={styles.buttons}>
+            )}
+            {Platform.OS === 'ios' && (
               <TouchableHighlight
                 onPress={() => this.ios_specifics()}
                 style={styles.button}
@@ -295,8 +310,8 @@ export default class KeychainExample extends Component {
                   <Text style={styles.buttonText}>Test Other APIs</Text>
                 </View>
               </TouchableHighlight>
-            </View>
-          )}
+            )}
+          </View>
         </View>
       </KeyboardAvoidingView>
     );

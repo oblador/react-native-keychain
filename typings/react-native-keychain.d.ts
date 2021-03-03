@@ -95,6 +95,8 @@ declare module 'react-native-keychain' {
 
   function resetGenericPassword(options?: Options): Promise<boolean>;
 
+  function getAllGenericPasswordServices(): Promise<string[]>;
+
   function hasInternetCredentials(server: string): Promise<false | Result>;
 
   function setInternetCredentials(

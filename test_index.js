@@ -6,6 +6,7 @@ import {
   BIOMETRY_TYPE, // eslint-disable-line no-unused-vars
   canImplyAuthentication,
   getGenericPassword,
+  getAllGenericPasswordServices,
   getInternetCredentials,
   getSupportedBiometryType,
   hasInternetCredentials,
@@ -101,6 +102,9 @@ getGenericPassword({
   authenticationPrompt: 'authenticationPrompt',
 });
 getGenericPassword('service');
+getAllGenericPasswordServices().then((result) => {
+  (result: string[]);
+});
 
 resetGenericPassword().then((result) => {
   (result: boolean);

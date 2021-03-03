@@ -24,9 +24,14 @@ import java.nio.charset.Charset;
 import java.security.GeneralSecurityException;
 import java.security.Key;
 import java.security.KeyStore;
+import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.ProviderException;
 import java.security.UnrecoverableKeyException;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -140,6 +145,18 @@ abstract public class CipherStorageBase implements CipherStorage {
       }
     } catch (GeneralSecurityException ignored) {
       /* only one exception can be raised by code: 'KeyStore is not loaded' */
+    }
+  }
+
+  @Override
+  public Set<String> getAllKeys() throws KeyStoreAccessException {
+    final KeyStore ks = getKeyStoreAndLoad();
+    try {
+      Enumeration<String> aliases = ks.aliases();
+      return new HashSet<>(Collections.list(aliases));
+
+    } catch (KeyStoreException e) {
+      throw new KeyStoreAccessException("Error accessing aliases in keystore " + ks, e);
     }
   }
 

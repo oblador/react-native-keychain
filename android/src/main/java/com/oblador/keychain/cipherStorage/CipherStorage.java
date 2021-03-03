@@ -8,6 +8,7 @@ import com.oblador.keychain.exceptions.CryptoFailedException;
 import com.oblador.keychain.exceptions.KeyStoreAccessException;
 
 import java.security.Key;
+import java.util.Set;
 
 @SuppressWarnings({"unused", "WeakerAccess"})
 public interface CipherStorage {
@@ -132,6 +133,13 @@ public interface CipherStorage {
 
   /** Remove key (by alias) from storage. */
   void removeKey(@NonNull final String alias) throws KeyStoreAccessException;
+
+  /**
+   * Return all keys present in this storage.
+   * @return key aliases
+   */
+  Set<String> getAllKeys() throws KeyStoreAccessException;
+
   //endregion
 
   //region Configuration
