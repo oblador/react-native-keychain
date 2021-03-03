@@ -121,6 +121,8 @@ Will remove the username/password combination from the secure storage. Resolves 
 
 Will retrieve all known service names for which a generic password has been stored (e.g., `setGenericPassword`).
 
+_Note_: on iOS this will actully read the encrypted entries, so it will trigger an authentication UI if you have encrypted any entries with password/biometry.
+
 ### `setInternetCredentials(server, username, password, [{ accessControl, accessible, accessGroup, securityLevel }])`
 
 Will store the server/username/password combination in the secure storage. Resolves to `{ username, password, service, storage }`;
