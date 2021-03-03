@@ -121,6 +121,14 @@ NSString *serviceValue(NSDictionary *options)
   return [[NSBundle mainBundle] bundleIdentifier];
 }
 
+NSString *creatorValue(NSDictionary *options)
+{
+  if (options && options[@"creator"] != nil) {
+    return options[@"creator"];
+  }
+  return nil;
+}
+
 NSString *accessGroupValue(NSDictionary *options)
 {
   if (options && options[@"accessGroup"] != nil) {
@@ -297,7 +305,7 @@ SecAccessControlCreateFlags accessControlValue(NSDictionary *options)
       }
     }
   }
-  
+
   return services;
 }
 
@@ -427,7 +435,7 @@ RCT_EXPORT_METHOD(resetGenericPasswordForOptions:(NSDictionary *)options
   return resolve(@(YES));
 }
 
-RCT_EXPORT_METHOD(purgeGenericPasswordForOptions:(NSDictionary *)options
+RCT_EXPORT_METHOD(resetGenericPasswordsForOptions:(NSDictionary *)options
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
 {
@@ -440,11 +448,11 @@ RCT_EXPORT_METHOD(purgeGenericPasswordForOptions:(NSDictionary *)options
     (__bridge NSString *)kSecAttrCreator: creator,
   };
   OSStatus deleteStatus = SecItemDelete((__bridge CFDictionaryRef) deleteQuery);
-  
+
   if (deleteStatus == errSecSuccess || deleteStatus == errSecItemNotFound) {
-      return resolve(@(YES));
+    return resolve(@(YES));
   }
-  
+
   NSError *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:deleteStatus userInfo:nil];
   return rejectWithError(reject, error);
 }

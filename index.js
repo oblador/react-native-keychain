@@ -217,7 +217,14 @@ export function resetGenericPassword(
 export function resetGenericPasswords(searchOptions: {
   creator: string,
 }): Promise<boolean> {
-  return RNKeychainManager.resetGenericPasswordForOptions(searchOptions);
+  if (Platform.OS !== 'ios') {
+    return Promise.reject(
+      new Error(
+        `resetGenericPasswords() is not supported on ${Platform.OS} yet`
+      )
+    );
+  }
+  return RNKeychainManager.resetGenericPasswordsForOptions(searchOptions);
 }
 
 /**

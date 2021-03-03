@@ -138,7 +138,7 @@ export default class KeychainExample extends Component {
     }
   }
 
-  async purgeAllGenericPasswords() {
+  async resetCreator() {
     try {
       await Keychain.resetGenericPasswords({
         creator: this.state.creator,
@@ -335,6 +335,15 @@ export default class KeychainExample extends Component {
             </TouchableHighlight>
 
             <TouchableHighlight
+              onPress={() => this.getAll()}
+              style={styles.button}
+            >
+              <View style={styles.load}>
+                <Text style={styles.buttonText}>Get Keys</Text>
+              </View>
+            </TouchableHighlight>
+
+            <TouchableHighlight
               onPress={() => this.reset()}
               style={styles.button}
             >
@@ -345,14 +354,6 @@ export default class KeychainExample extends Component {
           </View>
 
           <View style={[styles.buttons, styles.centerButtons]}>
-            <TouchableHighlight
-              onPress={() => this.getAll()}
-              style={styles.button}
-            >
-              <View style={styles.load}>
-                <Text style={styles.buttonText}>Get Used Keys</Text>
-              </View>
-            </TouchableHighlight>
             {Platform.OS === 'android' && (
               <TouchableHighlight
                 onPress={async () => {
@@ -368,13 +369,11 @@ export default class KeychainExample extends Component {
             )}
             {Platform.OS === 'ios' && (
               <TouchableHighlight
-                onPress={() => this.purgeAllGenericPasswords()}
+                onPress={() => this.resetCreator()}
                 style={styles.button}
               >
                 <View style={styles.reset}>
-                  <Text style={styles.buttonText}>
-                    Purge for Creator: {this.state.creator}
-                  </Text>
+                  <Text style={styles.buttonText}>Reset creator</Text>
                 </View>
               </TouchableHighlight>
             )}

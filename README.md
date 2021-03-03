@@ -14,9 +14,10 @@
   - [Installation](#installation)
   - [Usage](#usage)
   - [API](#api)
-    - [`setGenericPassword(username, password, [{ accessControl, accessible, accessGroup, service, securityLevel }])`](#setgenericpasswordusername-password--accesscontrol-accessible-accessgroup-service-securitylevel-)
+    - [`setGenericPassword(username, password, [{ accessControl, accessible, accessGroup, service, creator, securityLevel }])`](#setgenericpasswordusername-password--accesscontrol-accessible-accessgroup-service-creator-securitylevel-)
     - [`getGenericPassword([{ authenticationPrompt, service, accessControl }])`](#getgenericpassword-authenticationprompt-service-accesscontrol-)
     - [`resetGenericPassword([{ service }])`](#resetgenericpassword-service-)
+    - [`resetGenericPasswords({ creator })` (iOS only)](#resetgenericpasswords-creator-ios-only)
     - [`getAllGenericPasswordServices()`](#getallgenericpasswordservices)
     - [`setInternetCredentials(server, username, password, [{ accessControl, accessible, accessGroup, securityLevel }])`](#setinternetcredentialsserver-username-password--accesscontrol-accessible-accessgroup-securitylevel-)
     - [`hasInternetCredentials(server)`](#hasinternetcredentialsserver)
@@ -105,9 +106,9 @@ Both `setGenericPassword` and `setInternetCredentials` are limited to strings on
 
 ## API
 
-### `setGenericPassword(username, password, [{ accessControl, accessible, accessGroup, service, securityLevel }])`
+### `setGenericPassword(username, password, [{ accessControl, accessible, accessGroup, service, creator, securityLevel }])`
 
-Will store the username/password combination in the secure storage. Resolves to `{service, storage}` or rejects in case of an error. `storage` - is a name of used internal cipher for saving secret; `service` - name used for storing secret in internal storage (empty string resolved to valid default name).
+Will store the username/password combination in the secure storage. Resolves to `{service, storage}` or rejects in case of an error. `storage` - is a name of used internal cipher for saving secret; `service` - name used for storing secret in internal storage (empty string resolved to valid default name); `creator` - name used for later deleting keychain entries in bulk.
 
 ### `getGenericPassword([{ authenticationPrompt, service, accessControl }])`
 
@@ -116,6 +117,10 @@ Will retrieve the username/password combination from the secure storage. Resolve
 ### `resetGenericPassword([{ service }])`
 
 Will remove the username/password combination from the secure storage. Resolves to `true` in case of success.
+
+### `resetGenericPasswords({ creator })` (iOS only)
+
+Will remove all username/password entries from the secure storage that were created with the `creator` option. Resolves to `true` in case of success.
 
 ### `getAllGenericPasswordServices()`
 
