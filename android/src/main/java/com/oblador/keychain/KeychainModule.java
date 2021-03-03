@@ -57,6 +57,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
   public static final String FACE_SUPPORTED_NAME = "Face";
   public static final String IRIS_SUPPORTED_NAME = "Iris";
   public static final String EMPTY_STRING = "";
+  public static final String WARMING_UP_ALIAS = "warmingUp";
 
   private static final String LOG_TAG = KeychainModule.class.getSimpleName();
 
@@ -176,7 +177,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
       final Cipher instance = best.getCachedInstance();
       final boolean isSecure = best.supportsSecureHardware();
       final SecurityLevel requiredLevel = isSecure ? SecurityLevel.SECURE_HARDWARE : SecurityLevel.SECURE_SOFTWARE;
-      best.generateKeyAndStoreUnderAlias("warmingUp", requiredLevel);
+      best.generateKeyAndStoreUnderAlias(WARMING_UP_ALIAS, requiredLevel);
       best.getKeyStoreAndLoad();
 
       Log.v(KEYCHAIN_MODULE, "warming up takes: " +
@@ -345,7 +346,11 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     Set<String> result = new HashSet<>();
     for (CipherStorage cipher : ciphers) {
       Set<String> aliases = cipher.getAllKeys();
-      result.addAll(aliases);
+      for (String alias : aliases) {
+          if (!alias.equals(WARMING_UP_ALIAS)) {
+              result.add(alias);
+          }
+      }
     }
 
     return result;
