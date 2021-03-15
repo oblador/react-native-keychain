@@ -53,7 +53,7 @@ public class DecryptionResultHandlerInteractiveBiometricManualRetry extends Decr
   /** Called when a biometric (e.g. fingerprint, face, etc.) is presented but not recognized as belonging to the user. */
   @Override
   public void onAuthenticationFailed() {
-    Log.d(LOG_TAG, "Authentication failed: biometric not recognized. " + (presentedPrompt == null));
+    Log.d(LOG_TAG, "Authentication failed: biometric not recognized.");
     if (presentedPrompt != null) {
       this.didFailBiometric = true;
       cancelPresentedAuthentication();
