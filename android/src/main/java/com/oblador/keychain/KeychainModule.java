@@ -672,12 +672,9 @@ public class KeychainModule extends ReactContextBaseJavaModule {
   /** Get instance of handler that resolves access to the keystore on system request. */
   @NonNull
   protected DecryptionResultHandler getInteractiveHandler(@NonNull final CipherStorage current, @NonNull final PromptInfo promptInfo) {
-    final FragmentActivity activity = (FragmentActivity) getCurrentActivity();
-    if (null == activity) throw new NullPointerException("Not assigned current activity");
-
     ReactApplicationContext reactContext = getReactApplicationContext();
 
-    return DecryptionResultHandlerProvider.getHandler(activity, reactContext, current, promptInfo);
+    return DecryptionResultHandlerProvider.getHandler(reactContext, current, promptInfo);
   }
 
   /** Remove key from old storage and add it to the new storage. */

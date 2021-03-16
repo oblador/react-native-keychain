@@ -23,7 +23,7 @@ import java.util.concurrent.Executors;
 public class DecryptionResultHandlerInteractiveBiometric extends BiometricPrompt.AuthenticationCallback implements DecryptionResultHandler {
   protected CipherStorage.DecryptionResult result;
   protected Throwable error;
-  protected final FragmentActivity activity;
+  protected FragmentActivity activity;
   protected final ReactApplicationContext reactContext;
   protected final CipherStorageBase storage;
   protected final Executor executor = Executors.newSingleThreadExecutor();
@@ -33,11 +33,10 @@ public class DecryptionResultHandlerInteractiveBiometric extends BiometricPrompt
   /** Logging tag. */
   protected static final String LOG_TAG = DecryptionResultHandlerInteractiveBiometric.class.getSimpleName();
 
-  public DecryptionResultHandlerInteractiveBiometric(@NonNull final FragmentActivity activity,
+  public DecryptionResultHandlerInteractiveBiometric(
                                                      @NonNull ReactApplicationContext reactContext,
                                                      @NonNull final CipherStorage storage,
                                                      @NonNull final BiometricPrompt.PromptInfo promptInfo) {
-    this.activity = activity;
     this.reactContext = reactContext;
     this.storage = (CipherStorageBase) storage;
     this.promptInfo = promptInfo;
@@ -106,6 +105,8 @@ public class DecryptionResultHandlerInteractiveBiometric extends BiometricPrompt
 
   /** trigger interactive authentication. */
   public void startAuthentication() {
+    FragmentActivity activity = getCurrentActivity();
+
     // code can be executed only from MAIN thread
     if (Thread.currentThread() != Looper.getMainLooper().getThread()) {
       activity.runOnUiThread(this::startAuthentication);
@@ -113,10 +114,17 @@ public class DecryptionResultHandlerInteractiveBiometric extends BiometricPrompt
       return;
     }
 
-    authenticateWithPrompt();
+    authenticateWithPrompt(activity);
   }
 
-  protected BiometricPrompt authenticateWithPrompt() {
+  protected FragmentActivity getCurrentActivity() {
+    final FragmentActivity activity = (FragmentActivity) reactContext.getCurrentActivity();
+    if (null == activity) throw new NullPointerException("Not assigned current activity");
+
+    return activity;
+  }
+
+  protected BiometricPrompt authenticateWithPrompt(@NonNull final FragmentActivity activity) {
     final BiometricPrompt prompt = new BiometricPrompt(activity, executor, this);
     prompt.authenticate(this.promptInfo);
 

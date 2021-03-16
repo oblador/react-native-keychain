@@ -14,11 +14,10 @@ public class DecryptionResultHandlerInteractiveBiometricManualRetry extends Decr
   private BiometricPrompt presentedPrompt;
   private Boolean didFailBiometric = false;
 
-  public DecryptionResultHandlerInteractiveBiometricManualRetry(@NonNull FragmentActivity activity,
-                                                                @NonNull ReactApplicationContext reactContext,
+  public DecryptionResultHandlerInteractiveBiometricManualRetry(@NonNull ReactApplicationContext reactContext,
                                                                 @NonNull CipherStorage storage,
                                                                 @NonNull BiometricPrompt.PromptInfo promptInfo) {
-    super(activity, reactContext, storage, promptInfo);
+    super(reactContext, storage, promptInfo);
   }
 
   /** Manually cancel current (invisible) authentication to clear the fragment. */
@@ -72,6 +71,8 @@ public class DecryptionResultHandlerInteractiveBiometricManualRetry extends Decr
   /** trigger interactive authentication. */
   @Override
   public void startAuthentication() {
+    FragmentActivity activity = getCurrentActivity();
+
     // code can be executed only from MAIN thread
     if (Thread.currentThread() != Looper.getMainLooper().getThread()) {
       activity.runOnUiThread(this::startAuthentication);
@@ -79,12 +80,15 @@ public class DecryptionResultHandlerInteractiveBiometricManualRetry extends Decr
       return;
     }
 
-    this.presentedPrompt = authenticateWithPrompt();
+    this.presentedPrompt = authenticateWithPrompt(activity);
   }
 
   /** trigger interactive authentication without invoking another waitResult() */
   private void retryAuthentication() {
     Log.d(LOG_TAG, "Retrying biometric authentication.");
+
+    FragmentActivity activity = getCurrentActivity();
+
     if (Thread.currentThread() != Looper.getMainLooper().getThread()) {
       try {
         /*
@@ -100,6 +104,6 @@ public class DecryptionResultHandlerInteractiveBiometricManualRetry extends Decr
       return;
     }
 
-    this.presentedPrompt = authenticateWithPrompt();
+    this.presentedPrompt = authenticateWithPrompt(activity);
   }
 }

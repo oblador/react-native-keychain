@@ -31,16 +31,15 @@ public class DecryptionResultHandlerProvider {
       !Arrays.asList(ONE_PLUS_MODELS_WITHOUT_BIOMETRIC_BUG).contains(Build.MODEL);
   }
 
-  public static DecryptionResultHandler getHandler(@NonNull final FragmentActivity activity,
-                                                   @NonNull ReactApplicationContext reactContext,
+  public static DecryptionResultHandler getHandler(@NonNull ReactApplicationContext reactContext,
                                                    @NonNull final CipherStorage storage,
                                                    @NonNull final BiometricPrompt.PromptInfo promptInfo) {
     if (storage.isBiometrySupported()) {
       if (hasOnePlusBiometricBug()) {
-        return new DecryptionResultHandlerInteractiveBiometricManualRetry(activity, reactContext, storage, promptInfo);
+        return new DecryptionResultHandlerInteractiveBiometricManualRetry(reactContext, storage, promptInfo);
       }
 
-      return new DecryptionResultHandlerInteractiveBiometric(activity, reactContext, storage, promptInfo);
+      return new DecryptionResultHandlerInteractiveBiometric(reactContext, storage, promptInfo);
     }
 
     return new DecryptionResultHandlerNonInteractive();
