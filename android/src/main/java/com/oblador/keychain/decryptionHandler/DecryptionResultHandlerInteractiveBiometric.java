@@ -23,7 +23,6 @@ import java.util.concurrent.Executors;
 public class DecryptionResultHandlerInteractiveBiometric extends BiometricPrompt.AuthenticationCallback implements DecryptionResultHandler {
   protected CipherStorage.DecryptionResult result;
   protected Throwable error;
-  protected FragmentActivity activity;
   protected final ReactApplicationContext reactContext;
   protected final CipherStorageBase storage;
   protected final Executor executor = Executors.newSingleThreadExecutor();

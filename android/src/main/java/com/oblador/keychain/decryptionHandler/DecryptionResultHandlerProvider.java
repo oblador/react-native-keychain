@@ -4,7 +4,6 @@ import android.os.Build;
 
 import androidx.annotation.NonNull;
 import androidx.biometric.BiometricPrompt;
-import androidx.fragment.app.FragmentActivity;
 
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.oblador.keychain.cipherStorage.CipherStorage;
