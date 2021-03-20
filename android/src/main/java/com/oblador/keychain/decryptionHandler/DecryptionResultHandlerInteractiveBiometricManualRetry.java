@@ -84,7 +84,7 @@ public class DecryptionResultHandlerInteractiveBiometricManualRetry extends Decr
   }
 
   /** trigger interactive authentication without invoking another waitResult() */
-  private void retryAuthentication() {
+  protected void retryAuthentication() {
     Log.d(LOG_TAG, "Retrying biometric authentication.");
 
     FragmentActivity activity = getCurrentActivity();
