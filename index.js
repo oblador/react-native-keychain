@@ -293,6 +293,24 @@ export function getSupportedBiometryType(): Promise<null | SecBiometryType> {
   return RNKeychainManager.getSupportedBiometryType();
 }
 
+/**
+ * Get what type of Class 3 (strong) biometry support the device has.
+ * @param {object} options An Keychain options object.
+ * @return {Promise} Resolves to a `BIOMETRY_TYPE` when supported, otherwise `null`
+ */
+export function getSupportedStrongBiometryType(): Promise<null | SecBiometryType> {
+  if (!RNKeychainManager.getSupportedStrongBiometryType) {
+    return Promise.resolve(null);
+  }
+
+  // All types of biometrics on iOS are strong
+  if (Platform.OS === 'ios') {
+    return RNKeychainManager.getSupportedBiometryType();
+  }
+
+  return RNKeychainManager.getSupportedStrongBiometryType();
+}
+
 //* IOS ONLY */
 
 /**

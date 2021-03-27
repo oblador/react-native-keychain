@@ -9,6 +9,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.StringDef;
 import androidx.biometric.BiometricPrompt;
+import androidx.biometric.BiometricManager;
 import androidx.biometric.BiometricPrompt.PromptInfo;
 import androidx.fragment.app.FragmentActivity;
 
@@ -74,6 +75,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     String USER_PRESENCE = "UserPresence";
     String BIOMETRY_ANY = "BiometryAny";
     String BIOMETRY_CURRENT_SET = "BiometryCurrentSet";
+    String BIOMETRY_STRONG = "BiometryStrong";
     String DEVICE_PASSCODE = "DevicePasscode";
     String APPLICATION_PASSWORD = "ApplicationPassword";
     String BIOMETRY_ANY_OR_DEVICE_PASSCODE = "BiometryAnyOrDevicePasscode";
@@ -465,6 +467,35 @@ public class KeychainModule extends ReactContextBaseJavaModule {
   }
 
   @ReactMethod
+  public void getSupportedStrongBiometryType(@NonNull final Promise promise) {
+    try {
+      String reply = null;
+
+      if (!DeviceAvailability.isStrongBiometricAuthAvailable(getReactApplicationContext())) {
+        reply = null;
+      } else {
+        if (isFingerprintAuthAvailable()) {
+          reply = FINGERPRINT_SUPPORTED_NAME;
+        } else if (isFaceAuthAvailable()) {
+          reply = FACE_SUPPORTED_NAME;
+        } else if (isIrisAuthAvailable()) {
+          reply = IRIS_SUPPORTED_NAME;
+        }
+      }
+
+      promise.resolve(reply);
+    } catch (Exception e) {
+      Log.e(KEYCHAIN_MODULE, e.getMessage(), e);
+
+      promise.reject(Errors.E_SUPPORTED_BIOMETRY_ERROR, e);
+    } catch (Throwable fail) {
+      Log.e(KEYCHAIN_MODULE, fail.getMessage(), fail);
+
+      promise.reject(Errors.E_UNKNOWN_ERROR, fail);
+    }
+  }
+
+  @ReactMethod
   public void getSecurityLevel(@Nullable final ReadableMap options,
                                @NonNull final Promise promise) {
     // DONE (olku): if forced biometry than we should return security level = HARDWARE if it supported
@@ -577,6 +608,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
   public static boolean getUseBiometry(@AccessControl @Nullable final String accessControl) {
     return AccessControl.BIOMETRY_ANY.equals(accessControl)
       || AccessControl.BIOMETRY_CURRENT_SET.equals(accessControl)
+      || AccessControl.BIOMETRY_STRONG.equals(accessControl)
       || AccessControl.BIOMETRY_ANY_OR_DEVICE_PASSCODE.equals(accessControl)
       || AccessControl.BIOMETRY_CURRENT_SET_OR_DEVICE_PASSCODE.equals(accessControl);
   }
@@ -589,6 +621,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
   @NonNull
   private static PromptInfo getPromptInfo(@Nullable final ReadableMap options) {
     final ReadableMap promptInfoOptionsMap = (options != null && options.hasKey(Maps.AUTH_PROMPT)) ? options.getMap(Maps.AUTH_PROMPT) : null;
+    final String accessControl = getAccessControlOrDefault(options);
 
     final PromptInfo.Builder promptInfoBuilder = new PromptInfo.Builder();
     if (null != promptInfoOptionsMap && promptInfoOptionsMap.hasKey(AuthPromptOptions.TITLE)) {
@@ -606,6 +639,10 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     if (null != promptInfoOptionsMap && promptInfoOptionsMap.hasKey(AuthPromptOptions.CANCEL)) {
       String promptInfoNegativeButton = promptInfoOptionsMap.getString(AuthPromptOptions.CANCEL);
       promptInfoBuilder.setNegativeButtonText(promptInfoNegativeButton);
+    }
+
+    if (AccessControl.BIOMETRY_STRONG.equals(accessControl)) {
+      promptInfoBuilder.setAllowedAuthenticators(BiometricManager.Authenticators.BIOMETRIC_STRONG);
     }
 
     /* Bypass confirmation to avoid KeyStore unlock timeout being exceeded when using passive biometrics */
