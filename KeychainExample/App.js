@@ -22,7 +22,7 @@ const ACCESS_CONTROL_MAP = [
 ];
 const ACCESS_CONTROL_MAP_ANDROID = [
   null,
-  Keychain.ACCESS_CONTROL.BIOMETRY_CURRENT_SET,
+  Keychain.ACCESS_CONTROL.BIOMETRY_STRONG,
 ];
 const SECURITY_LEVEL_OPTIONS = ['Any', 'Software', 'Hardware'];
 const SECURITY_LEVEL_MAP = [
@@ -51,7 +51,7 @@ export default class KeychainExample extends Component {
   };
 
   componentDidMount() {
-    Keychain.getSupportedBiometryType({}).then((biometryType) => {
+    Keychain.getSupportedStrongBiometryType({}).then((biometryType) => {
       this.setState({ biometryType });
     });
   }
