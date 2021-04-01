@@ -150,6 +150,7 @@ public class KeychainModuleTests {
     //   Fingerprints are configured
     //   fingerprint feature is ignored by android os
     ReactApplicationContext context = getRNContext();
+    shadowOf(context.getPackageManager()).setSystemFeature(PackageManager.FEATURE_FINGERPRINT, true);
 
     // set that hardware is available
     FingerprintManager fm = (FingerprintManager) context.getSystemService(Context.FINGERPRINT_SERVICE);
@@ -240,6 +241,7 @@ public class KeychainModuleTests {
     //   API23 android version
     //   fingerprints configured
     final ReactApplicationContext context = getRNContext();
+    shadowOf(context.getPackageManager()).setSystemFeature(PackageManager.FEATURE_FINGERPRINT, true);
 
     // set that hardware is available and fingerprints configured
     final FingerprintManager fm = (FingerprintManager) context.getSystemService(Context.FINGERPRINT_SERVICE);
@@ -447,6 +449,11 @@ public class KeychainModuleTests {
     final Promise mockPromise = mock(Promise.class);
     final JavaOnlyMap options = new JavaOnlyMap();
     options.putString(Maps.SERVICE, "dummy");
+
+    final JavaOnlyMap promptOptions = new JavaOnlyMap();
+    promptOptions.putString(KeychainModule.AuthPromptOptions.TITLE, "Title");
+    promptOptions.putString(KeychainModule.AuthPromptOptions.CANCEL, "Cancel");
+    options.putMap(Maps.AUTH_PROMPT, promptOptions);
 
     // store record done with RSA/Biometric cipher
     prefs.storeEncryptedEntry("dummy", result);

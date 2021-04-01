@@ -12,6 +12,7 @@ import androidx.annotation.Nullable;
 
 import com.oblador.keychain.KeychainModule.KnownCiphers;
 import com.oblador.keychain.SecurityLevel;
+import com.oblador.keychain.decryptionHandler.DecryptionResultHandler;
 import com.oblador.keychain.exceptions.CryptoFailedException;
 import com.oblador.keychain.exceptions.KeyStoreAccessException;
 
