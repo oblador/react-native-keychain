@@ -81,6 +81,10 @@ public interface CipherStorage {
     @Nullable
     DecryptionResult getResult();
 
+    /** Get reference on results. */
+    @Nullable
+    EncryptionResult getEncryptionResult();
+
     /** Get reference on capture error. */
     @Nullable
     Throwable getError();
@@ -98,6 +102,7 @@ public interface CipherStorage {
      *
      */
     void onDecrypt(@Nullable final DecryptionResult decryptionResult, @Nullable final Throwable error);
+    void onEncrypt(@Nullable final EncryptionResult decryptionResult, @Nullable final Throwable error);
   }
   //endregion
 
@@ -106,6 +111,15 @@ public interface CipherStorage {
   /** Encrypt credentials with provided key (by alias) and required security level. */
   @NonNull
   EncryptionResult encrypt(@NonNull final String alias,
+                           @NonNull final String username,
+                           @NonNull final String password,
+                           @NonNull final SecurityLevel level)
+    throws CryptoFailedException;
+
+  /** Encrypt credentials with provided key (by alias) and required security level. - biometry needed */
+  @NonNull
+  EncryptionResult encrypt(@NonNull final DecryptionResultHandler handler,
+                           @NonNull final String alias,
                            @NonNull final String username,
                            @NonNull final String password,
                            @NonNull final SecurityLevel level)

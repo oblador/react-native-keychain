@@ -93,6 +93,17 @@ public class CipherStorageFacebookConceal extends CipherStorageBase {
     }
   }
 
+  @Override
+  
+  public EncryptionResult encrypt(@NonNull final DecryptionResultHandler handler,
+                                  @NonNull final String alias,
+                                  @NonNull final String username,
+                                  @NonNull final String password,
+                                  @NonNull final SecurityLevel level)
+    throws CryptoFailedException {
+      return null;
+    }
+
   @NonNull
   @Override
   public DecryptionResult decrypt(@NonNull final String alias,

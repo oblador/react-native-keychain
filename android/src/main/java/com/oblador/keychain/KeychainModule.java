@@ -223,10 +223,13 @@ public class KeychainModule extends ReactContextBaseJavaModule {
 
       final SecurityLevel level = getSecurityLevelOrDefault(options);
       final CipherStorage storage = getSelectedStorage(options);
-
+      System.out.println("ABSA_LOG : setGenericPassword before exception : ");
       throwIfInsufficientLevel(storage, level);
-
-      final EncryptionResult result = storage.encrypt(alias, username, password, level);
+      System.out.println("ABSA_LOG : setGenericPassword after exception : ");
+      final PromptInfo promptInfo = getPromptInfo(options);
+      final DecryptionResultHandler handler = getInteractiveHandler(storage, promptInfo, BioPromptReason.ENCRYPT);
+      System.out.println("ABSA_LOG : setGenericPassword after handler created : ");
+      final EncryptionResult result = storage.encrypt(handler, alias, username, password, level);
       prefsStorage.storeEncryptedEntry(alias, result);
 
       final WritableMap results = Arguments.createMap();
@@ -276,6 +279,12 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     if (null == result) {
       result = getCipherStorageForCurrentAPILevel(useBiometry);
     }
+
+
+    System.out.println("ABSA_LOG : accessControl is : " + accessControl);
+    System.out.println("ABSA_LOG : useBiometry is : " + useBiometry);
+    System.out.println("ABSA_LOG : cipherName is : " + cipherName);
+    System.out.println("ABSA_LOG : result is : " + result);
 
     return result;
   }
@@ -663,7 +672,8 @@ public class KeychainModule extends ReactContextBaseJavaModule {
                                            @NonNull final ResultSet resultSet,
                                            @NonNull final PromptInfo promptInfo)
     throws CryptoFailedException {
-    final DecryptionResultHandler handler = getInteractiveHandler(storage, promptInfo);
+    final DecryptionResultHandler handler = getInteractiveHandler(storage, promptInfo, BioPromptReason.DECRYPT);
+    System.out.println("ABSA_LOG : storage to decrypt is : " + storage.toString());
     storage.decrypt(handler, alias, resultSet.username, resultSet.password, SecurityLevel.ANY);
 
     CryptoFailedException.reThrowOnError(handler.getError());
@@ -677,11 +687,16 @@ public class KeychainModule extends ReactContextBaseJavaModule {
 
   /** Get instance of handler that resolves access to the keystore on system request. */
   @NonNull
-  protected DecryptionResultHandler getInteractiveHandler(@NonNull final CipherStorage current, @NonNull final PromptInfo promptInfo) {
+  protected DecryptionResultHandler getInteractiveHandler(
+      @NonNull final CipherStorage current,
+      @NonNull final PromptInfo promptInfo,
+      @NonNull final BioPromptReason bioPromptReason) {
     if (current.isBiometrySupported() /*&& isFingerprintAuthAvailable()*/) {
-      return new InteractiveBiometric(current, promptInfo);
+      System.out.println("ABSA_LOG : returning interactive");
+      return new InteractiveBiometric(current, promptInfo, bioPromptReason);
     }
 
+    System.out.println("ABSA_LOG : returning NON interactive");
     return new NonInteractiveHandler();
   }
 
@@ -842,15 +857,18 @@ public class KeychainModule extends ReactContextBaseJavaModule {
   /** Interactive user questioning for biometric data providing. */
   private class InteractiveBiometric extends BiometricPrompt.AuthenticationCallback implements DecryptionResultHandler {
     private DecryptionResult result;
+    private EncryptionResult encryptionResult;
     private Throwable error;
     private final CipherStorageBase storage;
     private final Executor executor = Executors.newSingleThreadExecutor();
     private DecryptionContext context;
     private PromptInfo promptInfo;
+    private BioPromptReason bioPromptReason;
 
-    private InteractiveBiometric(@NonNull final CipherStorage storage, @NonNull final PromptInfo promptInfo) {
+    private InteractiveBiometric(@NonNull final CipherStorage storage, @NonNull final PromptInfo promptInfo, BioPromptReason bioPromptReason) {
       this.storage = (CipherStorageBase) storage;
       this.promptInfo = promptInfo;
+      this.bioPromptReason = bioPromptReason;
     }
 
     @Override
@@ -877,10 +895,26 @@ public class KeychainModule extends ReactContextBaseJavaModule {
       }
     }
 
+    @Override
+    public void onEncrypt(@Nullable final EncryptionResult encryptionResult, @Nullable final Throwable error) {
+      this.encryptionResult = encryptionResult;
+      this.error = error;
+
+      synchronized (this) {
+        notifyAll();
+      }
+    }
+
     @Nullable
     @Override
     public DecryptionResult getResult() {
       return result;
+    }
+
+    @Nullable
+    @Override
+    public DecryptionResult getEncryptionResult() {
+      return encryptionResult;
     }
 
     @Nullable
@@ -901,16 +935,34 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     @Override
     public void onAuthenticationSucceeded(@NonNull final BiometricPrompt.AuthenticationResult result) {
       try {
-        if (null == context) throw new NullPointerException("Decrypt context is not assigned yet.");
+        if (bioPromptReason == BioPromptReason.DECRYPT) {
+          if (null == context) throw new NullPointerException("Decrypt context is not assigned yet.");
 
-        final DecryptionResult decrypted = new DecryptionResult(
-          storage.decryptBytes(context.key, context.username),
-          storage.decryptBytes(context.key, context.password)
-        );
+          final DecryptionResult decrypted = new DecryptionResult(
+            storage.decryptBytes(context.key, context.username),
+            storage.decryptBytes(context.key, context.password)
+          );
 
-        onDecrypt(decrypted, null);
+          onDecrypt(decrypted, null);
+        } else if (bioPromptReason == BioPromptReason.ENCRYPT) {
+          final String safeAlias = storage.getDefaultAliasIfEmpty("", getDefaultAliasServiceName());
+          final AtomicInteger retries = new AtomicInteger(1);
+
+          final Key key = extractGeneratedKey(safeAlias, level, retries);
+
+          final EncryptionResult encrypted = EncryptionResult(
+            storage.encryptString(key, username),
+            storage.encryptString(key, password),
+            storage);
+          onEncrypt(encrypted, null);
+          //important part of our project -> then we re done
+        }
       } catch (Throwable fail) {
-        onDecrypt(null, fail);
+        if (bioPromptReason == BioPromptReason.DECRYPT) {
+          onDecrypt(null, fail);
+        } else if (bioPromptReason == BioPromptReason.ENCRYPT) {
+          onEncrypt(null, fail);
+        }
       }
     }
 
@@ -949,6 +1001,11 @@ public class KeychainModule extends ReactContextBaseJavaModule {
 
       Log.i(KEYCHAIN_MODULE, "unblocking thread.");
     }
+  }
+
+  public enum BioPromptReason {
+    ENCRYPT,
+    DECRYPT
   }
   //endregion
 }
