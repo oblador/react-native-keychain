@@ -9,7 +9,6 @@ import androidx.biometric.BiometricPrompt;
 import androidx.fragment.app.FragmentActivity;
 
 import com.facebook.react.bridge.ReactApplicationContext;
-import com.oblador.keychain.cipherStorage.CipherStorage;
 import com.oblador.keychain.cipherStorage.CipherStorageBase;
 import com.oblador.keychain.cipherStorage.CipherStorageKeystoreRsaEcb;
 
@@ -18,15 +17,10 @@ import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
-import java.io.IOException;
-import java.security.GeneralSecurityException;
-import java.security.Key;
-
 import static android.content.pm.PackageManager.PERMISSION_GRANTED;
-import static androidx.biometric.BiometricConstants.ERROR_USER_CANCELED;
+import static androidx.biometric.BiometricPrompt.ERROR_USER_CANCELED;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;

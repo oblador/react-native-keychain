@@ -24,7 +24,7 @@ import java.security.GeneralSecurityException;
 import java.security.Key;
 
 import static android.content.pm.PackageManager.PERMISSION_GRANTED;
-import static androidx.biometric.BiometricConstants.ERROR_USER_CANCELED;
+import static androidx.biometric.BiometricPrompt.ERROR_USER_CANCELED;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
