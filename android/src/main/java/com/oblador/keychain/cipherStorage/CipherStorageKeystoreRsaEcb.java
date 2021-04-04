@@ -9,11 +9,12 @@ import android.security.keystore.UserNotAuthenticatedException;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
 import com.oblador.keychain.KeychainModule;
 import com.oblador.keychain.SecurityLevel;
+import com.oblador.keychain.decryptionHandler.DecryptionResultHandler;
+import com.oblador.keychain.decryptionHandler.DecryptionResultHandlerNonInteractive;
 import com.oblador.keychain.exceptions.CryptoFailedException;
 import com.oblador.keychain.exceptions.KeyStoreAccessException;
 
@@ -89,7 +90,7 @@ public class CipherStorageKeystoreRsaEcb extends CipherStorageBase {
                                   @NonNull final SecurityLevel level)
     throws CryptoFailedException {
 
-    final NonInteractiveHandler handler = new NonInteractiveHandler();
+    final DecryptionResultHandlerNonInteractive handler = new DecryptionResultHandlerNonInteractive();
     decrypt(handler, alias, username, password, level);
 
     CryptoFailedException.reThrowOnError(handler.getError());
@@ -256,46 +257,5 @@ public class CipherStorageKeystoreRsaEcb extends CipherStorageBase {
     return generator.generateKeyPair().getPrivate();
   }
 
-  //endregion
-
-  //region Nested classes
-
-  /** Non interactive handler for decrypting the credentials. */
-  public static class NonInteractiveHandler implements DecryptionResultHandler {
-    private DecryptionResult result;
-    private Throwable error;
-
-    @Override
-    public void askAccessPermissions(@NonNull final DecryptionContext context) {
-      final CryptoFailedException failure = new CryptoFailedException(
-        "Non interactive decryption mode.");
-
-      onDecrypt(null, failure);
-    }
-
-    @Override
-    public void onDecrypt(@Nullable final DecryptionResult decryptionResult,
-                          @Nullable final Throwable error) {
-      this.result = decryptionResult;
-      this.error = error;
-    }
-
-    @Nullable
-    @Override
-    public DecryptionResult getResult() {
-      return result;
-    }
-
-    @Nullable
-    @Override
-    public Throwable getError() {
-      return error;
-    }
-
-    @Override
-    public void waitResult() {
-      /* do nothing, expected synchronized call in one thread */
-    }
-  }
   //endregion
 }

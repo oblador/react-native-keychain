@@ -17,6 +17,7 @@ import com.facebook.react.bridge.AssertionException;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.oblador.keychain.KeychainModule.KnownCiphers;
 import com.oblador.keychain.SecurityLevel;
+import com.oblador.keychain.decryptionHandler.DecryptionResultHandler;
 import com.oblador.keychain.exceptions.CryptoFailedException;
 
 import java.security.GeneralSecurityException;
