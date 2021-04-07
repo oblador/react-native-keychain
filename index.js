@@ -60,6 +60,7 @@ type Options = {
   authenticationPrompt?: string,
   authenticationType?: LAPolicy,
   service?: string,
+  synchronized?: boolean,
 };
 
 /**
@@ -113,9 +114,7 @@ export function setInternetCredentials(
  * @param {string} server URL to server.
  * @return {Promise} Resolves to `true` when successful
  */
-export function hasInternetCredentials(
-  server: string,
-): Promise {
+export function hasInternetCredentials(server: string): Promise {
   return RNKeychainManager.hasInternetCredentialsForServer(server);
 }
 
@@ -172,7 +171,7 @@ export function setGenericPassword(
     getOptionsArgument(serviceOrOptions),
     username,
     password,
-    serviceOrOptions,
+    serviceOrOptions
   );
 }
 
@@ -186,7 +185,7 @@ export function getGenericPassword(
 ): Promise {
   return RNKeychainManager.getGenericPasswordForOptions(
     getOptionsArgument(serviceOrOptions),
-    serviceOrOptions,
+    serviceOrOptions
   );
 }
 
