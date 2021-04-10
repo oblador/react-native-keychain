@@ -7,10 +7,8 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.StringDef;
-import androidx.biometric.BiometricPrompt;
 import androidx.biometric.BiometricManager;
 import androidx.biometric.BiometricPrompt.PromptInfo;
-import androidx.fragment.app.FragmentActivity;
 
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.Promise;
@@ -61,6 +59,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     , AccessControl.USER_PRESENCE
     , AccessControl.BIOMETRY_ANY
     , AccessControl.BIOMETRY_CURRENT_SET
+    , AccessControl.BIOMETRY_STRONG
     , AccessControl.DEVICE_PASSCODE
     , AccessControl.APPLICATION_PASSWORD
     , AccessControl.BIOMETRY_ANY_OR_DEVICE_PASSCODE

@@ -87,6 +87,9 @@ export default class KeychainExample extends Component {
   async load() {
     try {
       const options = {
+        accessControl: this.state.accessControl,
+        securityLevel: this.state.securityLevel,
+        storage: this.state.storageSelection,
         authenticationPrompt: {
           title: 'Authentication needed',
           subtitle: 'Subtitle',
