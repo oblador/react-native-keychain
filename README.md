@@ -151,11 +151,20 @@ Sets a shared web credential. Resolves to `true` when successful.
 
 Inquire if the type of local authentication policy is supported on this device with the device settings the user chose. Should be used in combination with `accessControl` option in the setter functions. Resolves to `true` if supported.
 
-### `getSupportedBiometryType()`
+### `getSupportedBiometryType()` _(deprecated)_
 
 Get what type of hardware biometry support the device has. Resolves to a `Keychain.BIOMETRY_TYPE` value when supported, otherwise `null`.
+This method is deprecated, please use `getSupportedStrongBiometryType` instead.
 
 > This method returns `null`, if the device haven't enrolled into fingerprint/FaceId. Even though it has hardware for it.
+
+### `getSupportedStrongBiometryType()`
+
+**On iOS:** This method works the same as `getSupportedBiometryType`.
+
+**On Android:** Get what type of Class 3 (strong) biometry support the device has. Resolves to a `Keychain.BIOMETRY_TYPE` value when supported, otherwise `null`. In most devices this will return `FINGERPRINT` (except for Pixel 4 or similar where fingerprint sensor is not present).
+
+> This method returns `null`, if the device haven't enrolled any Class 3 biometrics. Even though it has hardware for it.
 
 ### `getSecurityLevel([{ accessControl }])` (Android only)
 
@@ -192,12 +201,13 @@ Get security level that is supported on the current device with the current OS. 
 | **`USER_PRESENCE`**                           | Constraint to access an item with either Touch ID or passcode.                         |
 | **`BIOMETRY_ANY`**                            | Constraint to access an item with Touch ID for any enrolled fingers.                   |
 | **`BIOMETRY_CURRENT_SET`**                    | Constraint to access an item with Touch ID for currently enrolled fingers.             |
+| **`BIOMETRY_STRONG`**                         | Constraint to access an item with Class 3 (strong) biometrics only.                    |
 | **`DEVICE_PASSCODE`**                         | Constraint to access an item with a passcode.                                          |
 | **`APPLICATION_PASSWORD`**                    | Constraint to use an application-provided password for data encryption key generation. |
 | **`BIOMETRY_ANY_OR_DEVICE_PASSCODE`**         | Constraint to access an item with Touch ID for any enrolled fingers or passcode.       |
 | **`BIOMETRY_CURRENT_SET_OR_DEVICE_PASSCODE`** | Constraint to access an item with Touch ID for currently enrolled fingers or passcode. |
 
-> Note #1: `BIOMETRY_ANY`, `BIOMETRY_CURRENT_SET`, `BIOMETRY_ANY_OR_DEVICE_PASSCODE`, `BIOMETRY_CURRENT_SET_OR_DEVICE_PASSCODE` - recognized by Android as a requirement for Biometric enabled storage (Till we got a better implementation);
+> Note #1: `BIOMETRY_ANY`, `BIOMETRY_CURRENT_SET`, `BIOMETRY_STRONG`, `BIOMETRY_ANY_OR_DEVICE_PASSCODE`, `BIOMETRY_CURRENT_SET_OR_DEVICE_PASSCODE` - recognized by Android as a requirement for Biometric enabled storage (Till we got a better implementation);
 >
 > Note #2: For Android we support only two states: `None` (default) and `Fingerprint` (use only biometric protected storage); `Face` recognition fails with "User not authenticated" exception, see issue #318
 
@@ -308,6 +318,12 @@ Q: How to force a specific level of encryption during saving the secret?
 A: Do call `setGenericPassword({ ...otherProps, storage: "AES" })` with forced storage.
 
 > Note: attempt to force storage `RSA` when biometrics is not available will force code to reject call with errors specific to device biometric configuration state.
+
+---
+
+Q: How to force Fingerprint biometric type when reading the secret?
+
+A: Use `RSA` storageType to call `setGenericPassword`. Later, when calling `getGenericPassword`, use `accessControl: BIOMETRY_STRONG` for Class 3 biometrics enforcement.
 
 ## Manual Installation
 
