@@ -287,10 +287,6 @@ export function getSupportedBiometryType(): Promise<null | SecBiometryType> {
     return Promise.resolve(null);
   }
 
-  if (Platform.OS === 'ios') {
-    return RNKeychainManager.getSupportedBiometryType();
-  }
-
   return RNKeychainManager.getSupportedBiometryType();
 }
 
@@ -300,10 +296,6 @@ export function getSupportedBiometryType(): Promise<null | SecBiometryType> {
  * @return {Promise} Resolves to a `BIOMETRY_TYPE` when supported, otherwise `null`
  */
 export function getSupportedStrongBiometryType(): Promise<null | SecBiometryType> {
-  if (!RNKeychainManager.getSupportedStrongBiometryType) {
-    return Promise.resolve(null);
-  }
-
   // All types of biometrics on iOS are strong
   if (Platform.OS === 'ios') {
     return RNKeychainManager.getSupportedBiometryType();
