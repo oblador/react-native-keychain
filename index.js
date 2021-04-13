@@ -277,7 +277,7 @@ export function resetInternetCredentials(server: string): Promise<void> {
 }
 
 /**
- * Get what type of hardware biometry support the device has.
+ * Get what type of Class 3 (strong) biometry support the device has.
  * @param {object} options An Keychain options object.
  * @return {Promise} Resolves to a `BIOMETRY_TYPE` when supported, otherwise `null`
  */
@@ -287,20 +287,6 @@ export function getSupportedBiometryType(): Promise<null | SecBiometryType> {
   }
 
   return RNKeychainManager.getSupportedBiometryType();
-}
-
-/**
- * Get what type of Class 3 (strong) biometry support the device has.
- * @param {object} options An Keychain options object.
- * @return {Promise} Resolves to a `BIOMETRY_TYPE` when supported, otherwise `null`
- */
-export function getSupportedStrongBiometryType(): Promise<null | SecBiometryType> {
-  // All types of biometrics on iOS are strong
-  if (Platform.OS === 'ios') {
-    return RNKeychainManager.getSupportedBiometryType();
-  }
-
-  return RNKeychainManager.getSupportedStrongBiometryType();
 }
 
 //* IOS ONLY */

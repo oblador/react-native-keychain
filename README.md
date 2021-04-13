@@ -151,20 +151,13 @@ Sets a shared web credential. Resolves to `true` when successful.
 
 Inquire if the type of local authentication policy is supported on this device with the device settings the user chose. Should be used in combination with `accessControl` option in the setter functions. Resolves to `true` if supported.
 
-### `getSupportedBiometryType()` _(deprecated)_
+### `getSupportedBiometryType()`
 
-Get what type of hardware biometry support the device has. Resolves to a `Keychain.BIOMETRY_TYPE` value when supported, otherwise `null`.
-This method is deprecated, please use `getSupportedStrongBiometryType` instead.
-
-> This method returns `null`, if the device haven't enrolled into fingerprint/FaceId. Even though it has hardware for it.
-
-### `getSupportedStrongBiometryType()`
-
-**On iOS:** This method works the same as `getSupportedBiometryType`.
+**On iOS:** Get what type of hardware biometry support the device has. Resolves to a `Keychain.BIOMETRY_TYPE` value when supported, otherwise `null`.
 
 **On Android:** Get what type of Class 3 (strong) biometry support the device has. Resolves to a `Keychain.BIOMETRY_TYPE` value when supported, otherwise `null`. In most devices this will return `FINGERPRINT` (except for Pixel 4 or similar where fingerprint sensor is not present).
 
-> This method returns `null`, if the device haven't enrolled any Class 3 biometrics. Even though it has hardware for it.
+> This method returns `null`, if the device haven't enrolled into fingerprint/FaceId. Even though it has hardware for it.
 
 ### `getSecurityLevel([{ accessControl }])` (Android only)
 

@@ -51,7 +51,7 @@ export default class KeychainExample extends Component {
   };
 
   componentDidMount() {
-    Keychain.getSupportedStrongBiometryType({}).then((biometryType) => {
+    Keychain.getSupportedBiometryType({}).then((biometryType) => {
       this.setState({ biometryType });
     });
   }
