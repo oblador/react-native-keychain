@@ -153,7 +153,7 @@ Inquire if the type of local authentication policy is supported on this device w
 
 ### `getSupportedBiometryType()`
 
-**On iOS:** Get what type of hardware biometry support the device has. Resolves to a `Keychain.BIOMETRY_TYPE` value when supported, otherwise `null`.
+**On iOS:** Get what type of hardware biometry support the device can use for biometric encryption. Resolves to a `Keychain.BIOMETRY_TYPE` value when supported and enrolled, otherwise `null`.
 
 **On Android:** Get what type of Class 3 (strong) biometry support the device has. Resolves to a `Keychain.BIOMETRY_TYPE` value when supported, otherwise `null`. In most devices this will return `FINGERPRINT` (except for Pixel 4 or similar where fingerprint sensor is not present).
 
