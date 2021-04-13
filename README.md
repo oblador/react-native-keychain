@@ -311,12 +311,6 @@ A: Do call `setGenericPassword({ ...otherProps, storage: "AES" })` with forced s
 
 > Note: attempt to force storage `RSA` when biometrics is not available will force code to reject call with errors specific to device biometric configuration state.
 
----
-
-Q: How to force Fingerprint biometric type when reading the secret?
-
-A: Use `RSA` storageType to call `setGenericPassword`. Later, when calling `getGenericPassword`, use `accessControl: BIOMETRY_STRONG` for Class 3 biometrics enforcement.
-
 ## Manual Installation
 
 ### iOS
