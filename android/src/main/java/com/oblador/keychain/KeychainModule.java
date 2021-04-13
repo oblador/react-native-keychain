@@ -588,7 +588,6 @@ public class KeychainModule extends ReactContextBaseJavaModule {
   @NonNull
   private static PromptInfo getPromptInfo(@Nullable final ReadableMap options) {
     final ReadableMap promptInfoOptionsMap = (options != null && options.hasKey(Maps.AUTH_PROMPT)) ? options.getMap(Maps.AUTH_PROMPT) : null;
-    final String accessControl = getAccessControlOrDefault(options);
 
     final PromptInfo.Builder promptInfoBuilder = new PromptInfo.Builder();
     if (null != promptInfoOptionsMap && promptInfoOptionsMap.hasKey(AuthPromptOptions.TITLE)) {
