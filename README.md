@@ -113,8 +113,6 @@ Will store the username/password combination in the secure storage. Resolves to 
 
 Will retrieve the username/password combination from the secure storage. Resolves to `{ username, password, service, storage }` if an entry exists or `false` if it doesn't. It will reject only if an unexpected error is encountered like lacking entitlements or permission.
 
-_NOTE: On Android when using RSA storage type, accessControl must be set to one of `BIOMETRY_ANY`, `BIOMETRY_ANY_OR_DEVICE_PASSCODE`, `BIOMETRY_CURRENT_SET` or `BIOMETRY_CURRENT_SET_OR_DEVICE_PASSCODE` to correctly handle the user authentication when unlocking the Keystore._
-
 ### `resetGenericPassword([{ service }])`
 
 Will remove the username/password combination from the secure storage. Resolves to `true` in case of success.

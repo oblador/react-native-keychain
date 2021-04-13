@@ -632,9 +632,8 @@ public class KeychainModule extends ReactContextBaseJavaModule {
       promptInfoBuilder.setNegativeButtonText(promptInfoNegativeButton);
     }
 
-    if (getUseBiometry(accessControl)) {
-      promptInfoBuilder.setAllowedAuthenticators(BiometricManager.Authenticators.BIOMETRIC_STRONG);
-    }
+    /* PromptInfo is only used in Biometric-enabled RSA storage and can only be unlocked by a strong biometric */
+    promptInfoBuilder.setAllowedAuthenticators(BiometricManager.Authenticators.BIOMETRIC_STRONG);
 
     /* Bypass confirmation to avoid KeyStore unlock timeout being exceeded when using passive biometrics */
     promptInfoBuilder.setConfirmationRequired(false);
