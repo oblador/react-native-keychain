@@ -27,7 +27,6 @@ declare module 'react-native-keychain' {
     USER_PRESENCE = 'UserPresence',
     BIOMETRY_ANY = 'BiometryAny',
     BIOMETRY_CURRENT_SET = 'BiometryCurrentSet',
-    BIOMETRY_STRONG = 'BiometryStrong',
     DEVICE_PASSCODE = 'DevicePasscode',
     APPLICATION_PASSWORD = 'ApplicationPassword',
     BIOMETRY_ANY_OR_DEVICE_PASSCODE = 'BiometryAnyOrDevicePasscode',

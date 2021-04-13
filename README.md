@@ -113,6 +113,8 @@ Will store the username/password combination in the secure storage. Resolves to 
 
 Will retrieve the username/password combination from the secure storage. Resolves to `{ username, password, service, storage }` if an entry exists or `false` if it doesn't. It will reject only if an unexpected error is encountered like lacking entitlements or permission.
 
+_NOTE: On Android when using RSA storage type, accessControl must be set to one of `BIOMETRY_ANY`, `BIOMETRY_ANY_OR_DEVICE_PASSCODE`, `BIOMETRY_CURRENT_SET` or `BIOMETRY_CURRENT_SET_OR_DEVICE_PASSCODE` to correctly handle the user authentication when unlocking the Keystore._
+
 ### `resetGenericPassword([{ service }])`
 
 Will remove the username/password combination from the secure storage. Resolves to `true` in case of success.
@@ -201,13 +203,12 @@ Get security level that is supported on the current device with the current OS. 
 | **`USER_PRESENCE`**                           | Constraint to access an item with either Touch ID or passcode.                         |
 | **`BIOMETRY_ANY`**                            | Constraint to access an item with Touch ID for any enrolled fingers.                   |
 | **`BIOMETRY_CURRENT_SET`**                    | Constraint to access an item with Touch ID for currently enrolled fingers.             |
-| **`BIOMETRY_STRONG`**                         | Constraint to access an item with Class 3 (strong) biometrics only.                    |
 | **`DEVICE_PASSCODE`**                         | Constraint to access an item with a passcode.                                          |
 | **`APPLICATION_PASSWORD`**                    | Constraint to use an application-provided password for data encryption key generation. |
 | **`BIOMETRY_ANY_OR_DEVICE_PASSCODE`**         | Constraint to access an item with Touch ID for any enrolled fingers or passcode.       |
 | **`BIOMETRY_CURRENT_SET_OR_DEVICE_PASSCODE`** | Constraint to access an item with Touch ID for currently enrolled fingers or passcode. |
 
-> Note #1: `BIOMETRY_ANY`, `BIOMETRY_CURRENT_SET`, `BIOMETRY_STRONG`, `BIOMETRY_ANY_OR_DEVICE_PASSCODE`, `BIOMETRY_CURRENT_SET_OR_DEVICE_PASSCODE` - recognized by Android as a requirement for Biometric enabled storage (Till we got a better implementation);
+> Note #1: `BIOMETRY_ANY`, `BIOMETRY_CURRENT_SET`, `BIOMETRY_ANY_OR_DEVICE_PASSCODE`, `BIOMETRY_CURRENT_SET_OR_DEVICE_PASSCODE` - recognized by Android as a requirement for Biometric enabled storage (Till we got a better implementation);
 >
 > Note #2: For Android we support only two states: `None` (default) and `Fingerprint` (use only biometric protected storage); `Face` recognition fails with "User not authenticated" exception, see issue #318
 

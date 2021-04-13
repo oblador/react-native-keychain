@@ -22,7 +22,7 @@ const ACCESS_CONTROL_MAP = [
 ];
 const ACCESS_CONTROL_MAP_ANDROID = [
   null,
-  Keychain.ACCESS_CONTROL.BIOMETRY_STRONG,
+  Keychain.ACCESS_CONTROL.BIOMETRY_CURRENT_SET,
 ];
 const SECURITY_LEVEL_OPTIONS = ['Any', 'Software', 'Hardware'];
 const SECURITY_LEVEL_MAP = [
@@ -88,8 +88,6 @@ export default class KeychainExample extends Component {
     try {
       const options = {
         accessControl: this.state.accessControl,
-        securityLevel: this.state.securityLevel,
-        storage: this.state.storageSelection,
         authenticationPrompt: {
           title: 'Authentication needed',
           subtitle: 'Subtitle',

@@ -59,7 +59,6 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     , AccessControl.USER_PRESENCE
     , AccessControl.BIOMETRY_ANY
     , AccessControl.BIOMETRY_CURRENT_SET
-    , AccessControl.BIOMETRY_STRONG
     , AccessControl.DEVICE_PASSCODE
     , AccessControl.APPLICATION_PASSWORD
     , AccessControl.BIOMETRY_ANY_OR_DEVICE_PASSCODE
@@ -69,7 +68,6 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     String USER_PRESENCE = "UserPresence";
     String BIOMETRY_ANY = "BiometryAny";
     String BIOMETRY_CURRENT_SET = "BiometryCurrentSet";
-    String BIOMETRY_STRONG = "BiometryStrong";
     String DEVICE_PASSCODE = "DevicePasscode";
     String APPLICATION_PASSWORD = "ApplicationPassword";
     String BIOMETRY_ANY_OR_DEVICE_PASSCODE = "BiometryAnyOrDevicePasscode";
@@ -602,7 +600,6 @@ public class KeychainModule extends ReactContextBaseJavaModule {
   public static boolean getUseBiometry(@AccessControl @Nullable final String accessControl) {
     return AccessControl.BIOMETRY_ANY.equals(accessControl)
       || AccessControl.BIOMETRY_CURRENT_SET.equals(accessControl)
-      || AccessControl.BIOMETRY_STRONG.equals(accessControl)
       || AccessControl.BIOMETRY_ANY_OR_DEVICE_PASSCODE.equals(accessControl)
       || AccessControl.BIOMETRY_CURRENT_SET_OR_DEVICE_PASSCODE.equals(accessControl);
   }
@@ -635,7 +632,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
       promptInfoBuilder.setNegativeButtonText(promptInfoNegativeButton);
     }
 
-    if (AccessControl.BIOMETRY_STRONG.equals(accessControl)) {
+    if (getUseBiometry(accessControl)) {
       promptInfoBuilder.setAllowedAuthenticators(BiometricManager.Authenticators.BIOMETRIC_STRONG);
     }
 
