@@ -7,8 +7,8 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.StringDef;
+import androidx.biometric.BiometricManager;
 import androidx.biometric.BiometricPrompt.PromptInfo;
-import androidx.fragment.app.FragmentActivity;
 
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.Promise;
@@ -438,12 +438,17 @@ public class KeychainModule extends ReactContextBaseJavaModule {
   public void getSupportedBiometryType(@NonNull final Promise promise) {
     try {
       String reply = null;
-      if(isFaceAuthAvailable()){
-        reply = FACE_SUPPORTED_NAME;
-      } else if(isIrisAuthAvailable()) {
-        reply = IRIS_SUPPORTED_NAME;
-      } else if(isFingerprintAuthAvailable()) {
-        reply = FINGERPRINT_SUPPORTED_NAME;
+
+      if (!DeviceAvailability.isStrongBiometricAuthAvailable(getReactApplicationContext())) {
+        reply = null;
+      } else {
+        if (isFingerprintAuthAvailable()) {
+          reply = FINGERPRINT_SUPPORTED_NAME;
+        } else if (isFaceAuthAvailable()) {
+          reply = FACE_SUPPORTED_NAME;
+        } else if (isIrisAuthAvailable()) {
+          reply = IRIS_SUPPORTED_NAME;
+        }
       }
 
       promise.resolve(reply);
@@ -601,6 +606,9 @@ public class KeychainModule extends ReactContextBaseJavaModule {
       String promptInfoNegativeButton = promptInfoOptionsMap.getString(AuthPromptOptions.CANCEL);
       promptInfoBuilder.setNegativeButtonText(promptInfoNegativeButton);
     }
+
+    /* PromptInfo is only used in Biometric-enabled RSA storage and can only be unlocked by a strong biometric */
+    promptInfoBuilder.setAllowedAuthenticators(BiometricManager.Authenticators.BIOMETRIC_STRONG);
 
     /* Bypass confirmation to avoid KeyStore unlock timeout being exceeded when using passive biometrics */
     promptInfoBuilder.setConfirmationRequired(false);
@@ -779,17 +787,17 @@ public class KeychainModule extends ReactContextBaseJavaModule {
 
   /** True - if fingerprint hardware available and configured, otherwise false. */
   /* package */ boolean isFingerprintAuthAvailable() {
-    return DeviceAvailability.isBiometricAuthAvailable(getReactApplicationContext()) && DeviceAvailability.isFingerprintAuthAvailable(getReactApplicationContext());
+    return DeviceAvailability.isStrongBiometricAuthAvailable(getReactApplicationContext()) && DeviceAvailability.isFingerprintAuthAvailable(getReactApplicationContext());
   }
 
   /** True - if face recognition hardware available and configured, otherwise false. */
   /* package */ boolean isFaceAuthAvailable() {
-    return DeviceAvailability.isBiometricAuthAvailable(getReactApplicationContext()) && DeviceAvailability.isFaceAuthAvailable(getReactApplicationContext());
+    return DeviceAvailability.isStrongBiometricAuthAvailable(getReactApplicationContext()) && DeviceAvailability.isFaceAuthAvailable(getReactApplicationContext());
   }
 
   /** True - if iris recognition hardware available and configured, otherwise false. */
   /* package */ boolean isIrisAuthAvailable() {
-    return DeviceAvailability.isBiometricAuthAvailable(getReactApplicationContext()) && DeviceAvailability.isIrisAuthAvailable(getReactApplicationContext());
+    return DeviceAvailability.isStrongBiometricAuthAvailable(getReactApplicationContext()) && DeviceAvailability.isIrisAuthAvailable(getReactApplicationContext());
   }
 
   /** Is secured hardware a part of current storage or not. */
