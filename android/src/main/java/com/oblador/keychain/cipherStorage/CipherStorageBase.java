@@ -234,6 +234,10 @@ abstract public class CipherStorageBase implements CipherStorage {
       key = extractKey(keyStore, safeAlias, retries);
     } while (null == key);
 
+    if (!validateKeySecurityLevel(level, key)) {
+      throw new CryptoFailedException("Cannot generate keys with required security guarantees");
+    }
+
     return key;
   }
 
