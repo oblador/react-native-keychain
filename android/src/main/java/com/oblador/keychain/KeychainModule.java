@@ -728,19 +728,20 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     for (CipherStorage variant : cipherStorageMap.values()) {
       Log.d(KEYCHAIN_MODULE, "Probe cipher storage: " + variant.getClass().getSimpleName());
 
+      // if biometric supported but not configured properly than skip
+      if (variant.isBiometrySupported() && !isBiometry) continue;
+
       // Is the cipherStorage supported on the current API level?
       final int minApiLevel = variant.getMinSupportedApiLevel();
-      final int capabilityLevel = variant.getCapabilityLevel();
       final boolean isSupportedApi = (minApiLevel <= currentApiLevel);
 
       // API not supported
       if (!isSupportedApi) continue;
 
+      final int capabilityLevel = variant.getCapabilityLevel();
+
       // Is the API level better than the one we previously selected (if any)?
       if (foundCipher != null && capabilityLevel < foundCipher.getCapabilityLevel()) continue;
-
-      // if biometric supported but not configured properly than skip
-      if (variant.isBiometrySupported() && !isBiometry) continue;
 
       // remember storage with the best capabilities
       foundCipher = variant;
