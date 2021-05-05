@@ -3,7 +3,7 @@ package com.oblador.keychain;
 import com.facebook.react.bridge.ReactApplicationContext;
 
 public class KeychainModuleBuilder {
-  public static final boolean DEFAULT_USE_WARM_UP = true;
+  public static final boolean DEFAULT_USE_WARM_UP = false;
 
   private ReactApplicationContext reactContext;
   private boolean useWarmUp = DEFAULT_USE_WARM_UP;
