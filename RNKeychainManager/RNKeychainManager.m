@@ -297,7 +297,7 @@ SecAccessControlCreateFlags accessControlValue(NSDictionary *options)
       }
     }
   }
-  
+
   return services;
 }
 
@@ -478,12 +478,14 @@ RCT_EXPORT_METHOD(getInternetCredentialsForServer:(NSString *)server
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
 {
+  NSString *authenticationPrompt = authenticationPromptValue(options);
   NSDictionary *query = @{
     (__bridge NSString *)kSecClass: (__bridge id)(kSecClassInternetPassword),
     (__bridge NSString *)kSecAttrServer: server,
     (__bridge NSString *)kSecReturnAttributes: (__bridge id)kCFBooleanTrue,
     (__bridge NSString *)kSecReturnData: (__bridge id)kCFBooleanTrue,
     (__bridge NSString *)kSecMatchLimit: (__bridge NSString *)kSecMatchLimitOne
+    (__bridge NSString *)kSecUseOperationPrompt: authenticationPrompt
   };
 
   // Look up server in the keychain
