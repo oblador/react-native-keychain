@@ -320,8 +320,11 @@ SecAccessControlCreateFlags accessControlValue(NSDictionary *options)
     result = (__bridge NSArray*)(resultRef);
     if (result != NULL) {
       for (id entry in result) {
-        NSString *server = [entry objectForKey:(__bridge NSString *)kSecAttrServer];
-        [servers addObject:server];
+        NSMutableData *serverData = [entry objectForKey:(__bridge NSString *)kSecAttrServer];
+        if (serverData != NULL) {
+          NSString *server = [[NSString alloc] initWithData:serverData encoding:NSUTF8StringEncoding];
+          [servers addObject:server];
+        }
       }
     }
   }
