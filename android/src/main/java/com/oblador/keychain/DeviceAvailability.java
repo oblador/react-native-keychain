@@ -1,5 +1,6 @@
 package com.oblador.keychain;
 
+import java.lang.reflect.Field;
 import android.Manifest;
 import android.annotation.TargetApi;
 import android.app.KeyguardManager;
@@ -23,16 +24,16 @@ public class DeviceAvailability {
   }
 
   public static boolean isFingerprintAuthAvailable(@NonNull final Context context) {
-    return context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_FINGERPRINT);
+    return isFeatureAvailable(context, "FEATURE_FINGERPRINT");
   }
 
   public static boolean isFaceAuthAvailable(@NonNull final Context context) {
-    return context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_FACE);
+    return isFeatureAvailable(context, "FEATURE_FACE");
   }
 
-    public static boolean isIrisAuthAvailable(@NonNull final Context context) {
-        return context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_IRIS);
-    }
+  public static boolean isIrisAuthAvailable(@NonNull final Context context) {
+    return isFeatureAvailable(context, "FEATURE_IRIS");
+  }
 
   /** Check is permissions granted for biometric things. */
   public static boolean isPermissionsGranted(@NonNull final Context context) {
@@ -52,5 +53,15 @@ public class DeviceAvailability {
 
     // before api28
     return context.checkSelfPermission(Manifest.permission.USE_FINGERPRINT) == PERMISSION_GRANTED;
+  }
+
+  private static boolean isFeatureAvailable(@NonNull final Context context, String featureName) {
+    try {
+      Field field = PackageManager.class.getField(featureName);
+      String feature = (String)field.get(PackageManager.class);
+      return context.getPackageManager().hasSystemFeature(feature);
+    } catch (NoSuchFieldException | IllegalAccessException e) {
+      return false;
+    }
   }
 }
