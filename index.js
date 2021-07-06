@@ -220,7 +220,7 @@ export async function getAllGenericPasswordServices(): Promise<string[]> {
 /**
  * Get all items
  * @param {object} options A keychain options object.
- * @return {Promise} Resolves to `{ service, username, password, storage }` when successful
+ * @return {Promise} Resolves to an array of `{ service, username, password, storage }` when successful
  */
 export function getAllGenericPasswords(
   serviceOrOptions?: string | Options
