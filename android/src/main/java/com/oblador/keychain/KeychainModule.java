@@ -17,6 +17,8 @@ import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.WritableMap;
+import com.facebook.react.bridge.WritableArray;
+import com.facebook.react.bridge.WritableNativeArray;
 import com.oblador.keychain.PrefsStorage.ResultSet;
 import com.oblador.keychain.cipherStorage.CipherStorage;
 import com.oblador.keychain.cipherStorage.CipherStorage.DecryptionResult;
@@ -348,6 +350,64 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     }
 
     return result;
+  }
+
+  @ReactMethod
+  public void getAllGenericPasswords(@Nullable final ReadableMap options,
+                          @NonNull final Promise promise) {
+    try {
+      Collection<String> services = doGetAllGenericPasswordServices();
+      WritableArray array = new WritableNativeArray();
+
+      // get the best storage
+      final String accessControl = getAccessControlOrDefault(options);
+      final boolean useBiometry = getUseBiometry(accessControl);
+      final CipherStorage current = getCipherStorageForCurrentAPILevel(useBiometry);
+      final String rules = getSecurityRulesOrDefault(options);
+
+      final PromptInfo promptInfo = getPromptInfo(options);
+
+      for (String service : services) {
+        try {
+          if (service.equals(current.getDefaultAliasServiceName())) {
+            service = EMPTY_STRING;
+          }
+
+          final ResultSet resultSet = prefsStorage.getEncryptedEntry(service);
+
+          if (resultSet == null) {
+            Log.e(KEYCHAIN_MODULE, "No entry found for service: " + service);
+            continue;
+          }
+
+          final DecryptionResult decryptionResult = decryptCredentials(service, current, resultSet, rules, promptInfo);
+
+          final WritableMap credentials = Arguments.createMap();
+          credentials.putString(Maps.SERVICE, service);
+          credentials.putString(Maps.USERNAME, decryptionResult.username);
+          credentials.putString(Maps.PASSWORD, decryptionResult.password);
+          credentials.putString(Maps.STORAGE, current.getCipherStorageName());
+
+          array.pushMap(credentials);
+        } catch (Throwable fail) {
+          Log.e(KEYCHAIN_MODULE, fail.getMessage(), fail);
+        }
+      }
+
+      promise.resolve(array);
+    } catch (KeyStoreAccessException e) {
+      Log.e(KEYCHAIN_MODULE, e.getMessage());
+
+      promise.reject(Errors.E_KEYSTORE_ACCESS_ERROR, e);
+    } catch (CryptoFailedException e) {
+      Log.e(KEYCHAIN_MODULE, e.getMessage());
+
+      promise.reject(Errors.E_CRYPTO_FAILED, e);
+    } catch (Throwable fail) {
+      Log.e(KEYCHAIN_MODULE, fail.getMessage(), fail);
+
+      promise.reject(Errors.E_UNKNOWN_ERROR, fail);
+    }
   }
 
   @ReactMethod
