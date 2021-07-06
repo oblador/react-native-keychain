@@ -616,10 +616,6 @@ RCT_EXPORT_METHOD(getAllGenericPasswords:(NSDictionary * __nullable)options
   
   NSArray *secItemClasses = [NSArray arrayWithObjects:
                               (__bridge id)kSecClassGenericPassword,
-                              (__bridge id)kSecClassInternetPassword,
-                              (__bridge id)kSecClassCertificate,
-                              (__bridge id)kSecClassKey,
-                              (__bridge id)kSecClassIdentity,
                               nil];
 
   for (id secItemClass in secItemClasses) {
