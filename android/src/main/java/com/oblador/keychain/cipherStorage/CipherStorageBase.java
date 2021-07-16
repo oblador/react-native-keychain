@@ -523,7 +523,7 @@ abstract public class CipherStorageBase implements CipherStorage {
   /** Initialization vector support. */
   public static final class IV {
     /** Encryption/Decryption initialization vector length. */
-    public static final int IV_LENGTH = 16;
+    public static final int IV_LENGTH = 128;
 
     /** Save Initialization vector to output stream. */
     public static final EncryptStringHandler encrypt = (cipher, key, output) -> {
