@@ -28,6 +28,7 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.ProviderException;
 import java.security.UnrecoverableKeyException;
+import java.security.SecureRandom;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashSet;
@@ -523,14 +524,25 @@ abstract public class CipherStorageBase implements CipherStorage {
   /** Initialization vector support. */
   public static final class IV {
     /** Encryption/Decryption initialization vector length. */
-    public static final int IV_LENGTH = 128;
+    public static final int IV_LENGTH = 16;
 
     /** Save Initialization vector to output stream. */
     public static final EncryptStringHandler encrypt = (cipher, key, output) -> {
-      cipher.init(Cipher.ENCRYPT_MODE, key);
+      int bsize = cipher.getBlockSize();
+      byte[] iv = new byte[cipher.getBlockSize()];
+      new SecureRandom().nextBytes(iv);
+      IvParameterSpec ivSpec = new IvParameterSpec(iv);
+      cipher.init(Cipher.ENCRYPT_MODE, key, ivSpec);
+      
+      // cipher.init(Cipher.ENCRYPT_MODE, key);
 
-      final byte[] iv = cipher.getIV();
+      // final byte[] iv = cipher.getIV();
       output.write(iv, 0, iv.length);
+      
+      String outstring = "";
+      outstring = output.toString();
+      System.out.println(outstring.length());
+      System.out.println(outstring);
     };
     /** Read initialization vector from input stream and configure cipher by it. */
     public static final DecryptBytesHandler decrypt = (cipher, key, input) -> {

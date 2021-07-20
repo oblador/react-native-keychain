@@ -187,7 +187,8 @@ public class CipherStorageKeystoreAesCbc extends CipherStorageBase {
     return new KeyGenParameterSpec.Builder(alias, purposes)
       .setBlockModes(BLOCK_MODE_CBC)
       .setEncryptionPaddings(PADDING_PKCS7)
-      .setRandomizedEncryptionRequired(true)
+      // .setRandomizedEncryptionRequired(true)
+      .setRandomizedEncryptionRequired(false)
       .setKeySize(ENCRYPTION_KEY_SIZE);
   }
 
