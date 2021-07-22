@@ -29,6 +29,8 @@ import java.security.NoSuchAlgorithmException;
 import java.security.ProviderException;
 import java.security.UnrecoverableKeyException;
 import java.security.SecureRandom;
+import java.security.DrbgParameters;
+import java.security.NoSuchAlgorithmException;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashSet;
@@ -529,6 +531,20 @@ abstract public class CipherStorageBase implements CipherStorage {
     public static final int IV_LENGTH = 12;
     public static int TAG_LENGTH = 16 ;
 
+    public static final SecureRandom drbgSecureRandom() {
+      SecureRandom drbgSecureRandom = null;
+      try {
+          drbgSecureRandom = SecureRandom.getInstance("DRBG" , // Uses default configured DRBG mechanism which is usually SHA-256 Hash. Good idea to check in your java.security file.
+                  DrbgParameters.instantiation(256, // Security strength, default is 128 as configured in java.security
+                                                  PR_AND_RESEED, // prediction resistance, and re-seeding support.
+                                                              // Prediction Resistance ==  compromise of the DRBG internal state has no effect on the security of future DRBG outputs.
+                                                              // Reseeding == Periodic reseeding, to avoid too many output from a seed
+                                                  "any_hardcoded_string".getBytes()));
+      } catch (NoSuchAlgorithmException e) { System.out.println("DRBG algorithm for generating CSPRNG is not supported"); }
+
+      return drbgSecureRandom;
+    }
+
     /** Save Initialization vector to output stream. */
     public static final EncryptStringHandler encrypt = (cipher, key, output) -> {
       // int bsize = cipher.getBlockSize();
@@ -536,7 +552,10 @@ abstract public class CipherStorageBase implements CipherStorage {
       byte[] aadData = "random".getBytes() ;
       
       byte[] iv = new byte[IV_LENGTH];
-      new SecureRandom().nextBytes(iv);
+      // new SecureRandom().nextBytes(iv);
+      // SecureRandom secRandom = drbgSecureRandom();
+      SecureRandom secRandom = SecureRandom.getInstanceStrong();
+      secRandom.nextBytes(iv);
       GCMParameterSpec gcmParamSpec = new GCMParameterSpec(TAG_LENGTH*8, iv);
       // IvParameterSpec ivSpec = new IvParameterSpec(iv);
       // cipher.init(Cipher.ENCRYPT_MODE, key, ivSpec);
