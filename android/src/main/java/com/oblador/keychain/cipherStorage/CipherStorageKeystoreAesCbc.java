@@ -27,6 +27,7 @@ import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.GCMParameterSpec;
 
 /**
  * @see <a href="https://proandroiddev.com/secure-data-in-android-initialization-vector-6ca1c659762c">Secure Data in Android</a>
@@ -39,12 +40,15 @@ public class CipherStorageKeystoreAesCbc extends CipherStorageBase {
   /** AES */
   public static final String ALGORITHM_AES = KeyProperties.KEY_ALGORITHM_AES;
   /** CBC */
-  public static final String BLOCK_MODE_CBC = KeyProperties.BLOCK_MODE_CBC;
+//  public static final String BLOCK_MODE_CBC = KeyProperties.BLOCK_MODE_CBC;
+  public static final String BLOCK_MODE_GCM = KeyProperties.BLOCK_MODE_GCM;
   /** PKCS7 */
-  public static final String PADDING_PKCS7 = KeyProperties.ENCRYPTION_PADDING_PKCS7;
+//  public static final String PADDING_PKCS7 = KeyProperties.ENCRYPTION_PADDING_PKCS7;
+  public static final String PADDING_NONE = KeyProperties.ENCRYPTION_PADDING_NONE;
   /** Transformation path. */
   public static final String ENCRYPTION_TRANSFORMATION =
-    ALGORITHM_AES + "/" + BLOCK_MODE_CBC + "/" + PADDING_PKCS7;
+//    ALGORITHM_AES + "/" + BLOCK_MODE_CBC + "/" + PADDING_PKCS7;
+    ALGORITHM_AES + "/" + BLOCK_MODE_GCM + "/" + PADDING_NONE;
   /** Key size. */
   public static final int ENCRYPTION_KEY_SIZE = 256;
 
@@ -185,9 +189,11 @@ public class CipherStorageKeystoreAesCbc extends CipherStorageBase {
     final int purposes = KeyProperties.PURPOSE_DECRYPT | KeyProperties.PURPOSE_ENCRYPT;
 
     return new KeyGenParameterSpec.Builder(alias, purposes)
-      .setBlockModes(BLOCK_MODE_CBC)
-      .setEncryptionPaddings(PADDING_PKCS7)
+//      .setBlockModes(BLOCK_MODE_CBC)
+//      .setEncryptionPaddings(PADDING_PKCS7)
       // .setRandomizedEncryptionRequired(true)
+      .setBlockModes(BLOCK_MODE_GCM)
+      .setEncryptionPaddings(PADDING_NONE)
       .setRandomizedEncryptionRequired(false)
       .setKeySize(ENCRYPTION_KEY_SIZE);
   }
@@ -232,8 +238,11 @@ public class CipherStorageKeystoreAesCbc extends CipherStorageBase {
 
     try {
       // read the initialization vector from bytes array
-      final IvParameterSpec iv = IV.readIv(bytes);
+      // final IvParameterSpec iv = IV.readIv(bytes);
+      byte[] aadData = "random".getBytes() ;
+      final GCMParameterSpec iv = IV.readIv(bytes);
       cipher.init(Cipher.DECRYPT_MODE, key, iv);
+      cipher.updateAAD(aadData);
 
       // decrypt the bytes using cipher.doFinal(). Using a CipherInputStream for decryption has historically led to issues
       // on the Pixel family of devices.

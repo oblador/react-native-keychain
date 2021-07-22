@@ -41,6 +41,7 @@ import javax.crypto.CipherInputStream;
 import javax.crypto.CipherOutputStream;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.GCMParameterSpec ;
 
 import static com.oblador.keychain.SecurityLevel.SECURE_HARDWARE;
 
@@ -524,16 +525,25 @@ abstract public class CipherStorageBase implements CipherStorage {
   /** Initialization vector support. */
   public static final class IV {
     /** Encryption/Decryption initialization vector length. */
-    public static final int IV_LENGTH = 16;
+    // public static final int IV_LENGTH = 16;
+    public static final int IV_LENGTH = 12;
+    public static int TAG_LENGTH = 16 ;
 
     /** Save Initialization vector to output stream. */
     public static final EncryptStringHandler encrypt = (cipher, key, output) -> {
-      int bsize = cipher.getBlockSize();
-      byte[] iv = new byte[cipher.getBlockSize()];
-      new SecureRandom().nextBytes(iv);
-      IvParameterSpec ivSpec = new IvParameterSpec(iv);
-      cipher.init(Cipher.ENCRYPT_MODE, key, ivSpec);
+      // int bsize = cipher.getBlockSize();
+      // byte[] iv = new byte[cipher.getBlockSize()];
+      byte[] aadData = "random".getBytes() ;
       
+      byte[] iv = new byte[IV_LENGTH];
+      new SecureRandom().nextBytes(iv);
+      GCMParameterSpec gcmParamSpec = new GCMParameterSpec(TAG_LENGTH*8, iv);
+      // IvParameterSpec ivSpec = new IvParameterSpec(iv);
+      // cipher.init(Cipher.ENCRYPT_MODE, key, ivSpec);
+      // AES GCM requires GCMParameterSpec, instead of IvParameterSpec
+
+      cipher.init(Cipher.ENCRYPT_MODE, key, gcmParamSpec);
+      cipher.updateAAD(aadData);
       // cipher.init(Cipher.ENCRYPT_MODE, key);
 
       // final byte[] iv = cipher.getIV();
@@ -546,13 +556,18 @@ abstract public class CipherStorageBase implements CipherStorage {
     };
     /** Read initialization vector from input stream and configure cipher by it. */
     public static final DecryptBytesHandler decrypt = (cipher, key, input) -> {
-      final IvParameterSpec iv = readIv(input);
-      cipher.init(Cipher.DECRYPT_MODE, key, iv);
+      // final IvParameterSpec iv = readIv(input);
+      // cipher.init(Cipher.DECRYPT_MODE, key, iv);
+
+      byte[] aadData = "random".getBytes() ;
+      final GCMParameterSpec gcmParamSpec = readIv(input);
+      cipher.init(Cipher.ENCRYPT_MODE, key, gcmParamSpec);
+      cipher.updateAAD(aadData);
     };
 
     /** Extract initialization vector from provided bytes array. */
     @NonNull
-    public static IvParameterSpec readIv(@NonNull final byte[] bytes) throws IOException {
+    public static GCMParameterSpec readIv(@NonNull final byte[] bytes) throws IOException {
       final byte[] iv = new byte[IV_LENGTH];
 
       if (IV_LENGTH >= bytes.length)
@@ -560,19 +575,21 @@ abstract public class CipherStorageBase implements CipherStorage {
 
       System.arraycopy(bytes, 0, iv, 0, IV_LENGTH);
 
-      return new IvParameterSpec(iv);
+      // return new IvParameterSpec(iv);
+      return new GCMParameterSpec(TAG_LENGTH*8, iv);
     }
 
     /** Extract initialization vector from provided input stream. */
     @NonNull
-    public static IvParameterSpec readIv(@NonNull final InputStream inputStream) throws IOException {
+    public static GCMParameterSpec readIv(@NonNull final InputStream inputStream) throws IOException {
       final byte[] iv = new byte[IV_LENGTH];
       final int result = inputStream.read(iv, 0, IV_LENGTH);
 
       if (result != IV_LENGTH)
         throw new IOException("Input stream has insufficient data.");
 
-      return new IvParameterSpec(iv);
+      // return new IvParameterSpec(iv);
+      return new GCMParameterSpec(TAG_LENGTH*8, iv);
     }
   }
 
