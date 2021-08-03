@@ -1,0 +1,18 @@
+require_relative '../node_modules/react-native-macos/scripts/react_native_pods'
+require_relative '../node_modules/@react-native-community/cli-platform-ios/native_modules'
+
+target 'KeychainExample-macOS' do
+  platform :macos, '10.13'
+  use_native_modules!
+  use_react_native!(
+    :path => '../node_modules/react-native-macos',
+
+    # To use Hermes, install the `hermes-engine-darwin` npm package, e.g.:
+    #   $ yarn add 'hermes-engine-darwin@~0.5.3'
+    #
+    # Then enable this option:
+    #   :hermes_enabled => true
+  )
+
+  # Pods specifically for macOS target
+end
