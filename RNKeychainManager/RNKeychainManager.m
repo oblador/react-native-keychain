@@ -15,7 +15,6 @@
 #if TARGET_OS_IOS
 #import <LocalAuthentication/LAContext.h>
 #endif
-#import <UIKit/UIKit.h>
 
 @implementation RNKeychainManager
 
@@ -484,7 +483,7 @@ RCT_EXPORT_METHOD(getInternetCredentialsForServer:(NSString *)server
     (__bridge NSString *)kSecAttrServer: server,
     (__bridge NSString *)kSecReturnAttributes: (__bridge id)kCFBooleanTrue,
     (__bridge NSString *)kSecReturnData: (__bridge id)kCFBooleanTrue,
-    (__bridge NSString *)kSecMatchLimit: (__bridge NSString *)kSecMatchLimitOne
+    (__bridge NSString *)kSecMatchLimit: (__bridge NSString *)kSecMatchLimitOne,
     (__bridge NSString *)kSecUseOperationPrompt: authenticationPrompt
   };
 
