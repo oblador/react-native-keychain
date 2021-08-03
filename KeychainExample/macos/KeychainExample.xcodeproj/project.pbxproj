@@ -228,7 +228,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "export NODE_BINARY=node\n../node_modules/react-native-macos/scripts/react-native-xcode.sh\n";
+			shellScript = "export ENTRY_FILE=./index.js\nexport NODE_BINARY=$(which node)\n../node_modules/react-native-macos/scripts/react-native-xcode.sh\n";
 		};
 		381D8A6F24576A6C00465D17 /* Start Packager */ = {
 			isa = PBXShellScriptBuildPhase;
