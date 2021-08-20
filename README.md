@@ -105,15 +105,15 @@ Both `setGenericPassword` and `setInternetCredentials` are limited to strings on
 
 ## API
 
-### `setGenericPassword(username, password, [{ accessControl, accessible, accessGroup, service, securityLevel }])`
+### `setGenericPassword(username, password, [{ accessControl, accessible, accessGroup, service, securityLevel, synchronized }])`
 
 Will store the username/password combination in the secure storage. Resolves to `{service, storage}` or rejects in case of an error. `storage` - is a name of used internal cipher for saving secret; `service` - name used for storing secret in internal storage (empty string resolved to valid default name).
 
-### `getGenericPassword([{ authenticationPrompt, service, accessControl }])`
+### `getGenericPassword([{ authenticationPrompt, service, accessControl, synchronized }])`
 
 Will retrieve the username/password combination from the secure storage. Resolves to `{ username, password, service, storage }` if an entry exists or `false` if it doesn't. It will reject only if an unexpected error is encountered like lacking entitlements or permission.
 
-### `resetGenericPassword([{ service }])`
+### `resetGenericPassword([{ service, synchronized }])`
 
 Will remove the username/password combination from the secure storage. Resolves to `true` in case of success.
 
@@ -123,19 +123,19 @@ Will retrieve all known service names for which a generic password has been stor
 
 _Note_: on iOS this will actully read the encrypted entries, so it will trigger an authentication UI if you have encrypted any entries with password/biometry.
 
-### `setInternetCredentials(server, username, password, [{ accessControl, accessible, accessGroup, securityLevel }])`
+### `setInternetCredentials(server, username, password, [{ accessControl, accessible, accessGroup, securityLevel, synchronized }])`
 
 Will store the server/username/password combination in the secure storage. Resolves to `{ username, password, service, storage }`;
 
-### `hasInternetCredentials(server)`
+### `hasInternetCredentials(server, { synchronized })`
 
 Will check if the username/password combination for server is available in the secure storage. Resolves to `true` if an entry exists or `false` if it doesn't.
 
-### `getInternetCredentials(server, [{ authenticationPrompt }])`
+### `getInternetCredentials(server, [{ authenticationPrompt, synchronized }])`
 
 Will retrieve the server/username/password combination from the secure storage. Resolves to `{ username, password }` if an entry exists or `false` if it doesn't. It will reject only if an unexpected error is encountered like lacking entitlements or permission.
 
-### `resetInternetCredentials(server)`
+### `resetInternetCredentials(server, { synchronized })`
 
 Will remove the server/username/password combination from the secure storage.
 
@@ -177,6 +177,7 @@ Get security level that is supported on the current device with the current OS. 
 | **`service`**              | All          | Reverse domain name qualifier for the service associated with password.                          | _App bundle ID_                                                           |
 | **`storage`**              | Android only | Force specific cipher storage usage during saving the password                                   | Select best available storage                                             |
 | **`rules`**                | Android only | Force following to a specific security rules                                                     | `Keychain.RULES.AUTOMATIC_UPGRADE`                                        |
+| **`synchronized`**         | iOS only     | Synchronize keychain item from and to iCloud                                                     | `false`                                        |
 
 ##### `authenticationPrompt` Properties
 
