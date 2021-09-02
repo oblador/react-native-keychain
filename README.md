@@ -277,7 +277,7 @@ If set, `securityLevel` parameter specifies minimum security level that the encr
 
 ### Rule 1: Automatic Security Level Upgrade
 
-As a rule library try to apply the best possible encryption and access method for storing secrets.
+As a rule the library will try to apply the best possible encryption and access method for storing secrets.
 
 What does it mean in practical use case?
 
