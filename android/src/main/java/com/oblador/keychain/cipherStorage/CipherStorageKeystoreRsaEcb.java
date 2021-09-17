@@ -51,6 +51,8 @@ public class CipherStorageKeystoreRsaEcb extends CipherStorageBase {
     ALGORITHM_RSA + "/" + BLOCK_MODE_ECB + "/" + PADDING_PKCS1;
   /** Selected encryption key size. */
   public static final int ENCRYPTION_KEY_SIZE = 3072;
+  public static final int ENCRYPTION_KEY_SIZE_WHEN_TESTING = 512;
+
   //endregion
 
   //region Overrides
@@ -209,11 +211,21 @@ public class CipherStorageKeystoreRsaEcb extends CipherStorageBase {
       this);
   }
 
+
   /** Get builder for encryption and decryption operations with required user Authentication. */
   @NonNull
   @Override
   @SuppressLint("NewApi")
-  protected KeyGenParameterSpec.Builder getKeyGenSpecBuilder(@NonNull final String alias)
+  protected KeyGenParameterSpec.Builder getKeyGenSpecBuilder(@NonNull final String alias) throws GeneralSecurityException{
+    return getKeyGenSpecBuilder(alias, false);
+  }
+
+
+  /** Get builder for encryption and decryption operations with required user Authentication. */
+  @NonNull
+  @Override
+  @SuppressLint("NewApi")
+  protected KeyGenParameterSpec.Builder getKeyGenSpecBuilder(@NonNull final String alias, @NonNull final boolean isForTesting)
     throws GeneralSecurityException {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
       throw new KeyStoreAccessException("Unsupported API" + Build.VERSION.SDK_INT + " version detected.");
@@ -221,13 +233,18 @@ public class CipherStorageKeystoreRsaEcb extends CipherStorageBase {
 
     final int purposes = KeyProperties.PURPOSE_DECRYPT | KeyProperties.PURPOSE_ENCRYPT;
 
+    int keySize = ENCRYPTION_KEY_SIZE;
+    if (isForTesting){
+      keySize =  ENCRYPTION_KEY_SIZE_WHEN_TESTING;
+    }
+
     return new KeyGenParameterSpec.Builder(alias, purposes)
       .setBlockModes(BLOCK_MODE_ECB)
       .setEncryptionPaddings(PADDING_PKCS1)
       .setRandomizedEncryptionRequired(true)
       .setUserAuthenticationRequired(true)
       .setUserAuthenticationValidityDurationSeconds(5)
-      .setKeySize(ENCRYPTION_KEY_SIZE);
+      .setKeySize(keySize);
   }
 
   /** Get information about provided key. */
