@@ -180,7 +180,6 @@ public class CipherStorageKeystoreAesCbc extends CipherStorageBase {
     return getKeyGenSpecBuilder(alias, false);
   }
 
-
   /** Get encryption algorithm specification builder instance. */
   @NonNull
   @Override

@@ -211,7 +211,6 @@ public class CipherStorageKeystoreRsaEcb extends CipherStorageBase {
       this);
   }
 
-
   /** Get builder for encryption and decryption operations with required user Authentication. */
   @NonNull
   @Override
@@ -219,7 +218,6 @@ public class CipherStorageKeystoreRsaEcb extends CipherStorageBase {
   protected KeyGenParameterSpec.Builder getKeyGenSpecBuilder(@NonNull final String alias) throws GeneralSecurityException{
     return getKeyGenSpecBuilder(alias, false);
   }
-
 
   /** Get builder for encryption and decryption operations with required user Authentication. */
   @NonNull
@@ -233,10 +231,7 @@ public class CipherStorageKeystoreRsaEcb extends CipherStorageBase {
 
     final int purposes = KeyProperties.PURPOSE_DECRYPT | KeyProperties.PURPOSE_ENCRYPT;
 
-    int keySize = ENCRYPTION_KEY_SIZE;
-    if (isForTesting){
-      keySize =  ENCRYPTION_KEY_SIZE_WHEN_TESTING;
-    }
+    final int keySize = isForTesting ? ENCRYPTION_KEY_SIZE_WHEN_TESTING : ENCRYPTION_KEY_SIZE;
 
     return new KeyGenParameterSpec.Builder(alias, purposes)
       .setBlockModes(BLOCK_MODE_ECB)

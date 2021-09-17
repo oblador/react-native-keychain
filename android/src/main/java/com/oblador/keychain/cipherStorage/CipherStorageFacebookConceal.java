@@ -159,7 +159,6 @@ public class CipherStorageFacebookConceal extends CipherStorageBase {
     throw new CryptoFailedException("Not designed for a call");
   }
 
-
   @NonNull
   @Override
   protected KeyInfo getKeyInfo(@NonNull final Key key) throws GeneralSecurityException {
