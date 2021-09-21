@@ -430,8 +430,6 @@ public class KeychainModuleTests {
     // expected AesCbc usage
     assertThat(provider.mocks.get("KeyGenerator"), notNullValue());
     assertThat(provider.mocks.get("KeyGenerator").get("AES"), notNullValue());
-    assertThat(provider.mocks.get("KeyPairGenerator"), notNullValue());
-    assertThat(provider.mocks.get("KeyPairGenerator").get("RSA"), notNullValue());
     verify(mockPromise).resolve(SecurityLevel.SECURE_SOFTWARE.name());
   }
 
