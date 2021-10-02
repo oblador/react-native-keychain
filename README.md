@@ -268,21 +268,16 @@ If set, `securityLevel` parameter specifies minimum security level that the encr
 
 #### `Keychain.SECURITY_RULES` enum (Android only)
 
-| Key                 | Description                                                                                                                                                 |
-| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `NONE`              | No rules. Be dummy, developer control everything                                                                                                            |
-| `AUTOMATIC_UPGRADE` | Upgrade secret to the best available storage as soon as it is available and user request secret extraction. Upgrade not applied till we request the secret. |
+| Key                 | Description                                                                                                                                                                                                                |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `NONE`              | No rules. Be dummy, developer control everything                                                                                                                                                                           |
+| `AUTOMATIC_UPGRADE` | Upgrade secret to the best available storage as soon as it is available and user request secret extraction. Upgrade not applied till we request the secret. This rule only applies to secrets stored with FacebookConseal. |
 
 ## Important Behavior
 
-### Rule 1: Automatic Security Level Upgrade
+### Rule 1: Automatic Security Level
 
-As a rule library try to apply the best possible encryption and access method for storing secrets.
-
-What does it mean in practical use case?
-
-> Scenario #1: User has a new phone and run on it an application with this module and store secret on device.
-> Several days later user configures biometrics on the device and run application again. When the user will try to access the secret, the library will detect security enhancement and will upgrade secret storage to the best possible.
+As a rule the library will try to apply the best possible encryption for storing secrets. Once the secret is stored however its does not try to upgrade it unless FacebookConseal was used and the option 'SECURITY_RULES' is set to 'AUTOMATIC_UPGRADE'
 
 ---
 
@@ -299,9 +294,9 @@ Developer should implement own logic to allow downgrade and deal with "security 
 
 ---
 
-Q: How to disable automatic upgrade?
+Q: How to enable automatic upgrade for FacebookConseal?
 
-A: Do call `getGenericPassword({ ...otherProps, rules: "none" })` with extra property `rules` set to `none` string value.
+A: Do call `getGenericPassword({ ...otherProps, rules: "AUTOMATIC_UPGRADE" })` with extra property `rules` set to `AUTOMATIC_UPGRADE` string value.
 
 ---
 
