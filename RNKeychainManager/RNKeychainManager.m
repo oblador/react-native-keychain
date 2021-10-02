@@ -15,7 +15,6 @@
 #if TARGET_OS_IOS
 #import <LocalAuthentication/LAContext.h>
 #endif
-#import <UIKit/UIKit.h>
 
 @implementation RNKeychainManager
 
@@ -399,12 +398,17 @@ RCT_EXPORT_METHOD(getGenericPasswordForOptions:(NSDictionary * __nullable)option
   NSString *password = [[NSString alloc] initWithData:[found objectForKey:(__bridge id)(kSecValueData)] encoding:NSUTF8StringEncoding];
 
   CFRelease(foundTypeRef);
-  return resolve(@{
-    @"service": service,
-    @"username": username,
-    @"password": password,
-    @"storage": @"keychain"
-  });
+  NSMutableDictionary* result = [@{@"storage": @"keychain"} mutableCopy];
+  if (service) {
+      result[@"service"] = service;
+  }
+  if (username) {
+      result[@"username"] = username;
+  }
+  if (password) {
+      result[@"password"] = password;
+  }
+  return resolve([result copy]);
 }
 
 RCT_EXPORT_METHOD(resetGenericPasswordForOptions:(NSDictionary *)options
@@ -484,7 +488,7 @@ RCT_EXPORT_METHOD(getInternetCredentialsForServer:(NSString *)server
     (__bridge NSString *)kSecAttrServer: server,
     (__bridge NSString *)kSecReturnAttributes: (__bridge id)kCFBooleanTrue,
     (__bridge NSString *)kSecReturnData: (__bridge id)kCFBooleanTrue,
-    (__bridge NSString *)kSecMatchLimit: (__bridge NSString *)kSecMatchLimitOne
+    (__bridge NSString *)kSecMatchLimit: (__bridge NSString *)kSecMatchLimitOne,
     (__bridge NSString *)kSecUseOperationPrompt: authenticationPrompt
   };
 

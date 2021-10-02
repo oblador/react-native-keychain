@@ -5,6 +5,7 @@
   "scripts": {
     "android": "react-native run-android",
     "ios": "react-native run-ios",
+    "macos": "react-native run-macos",
     "start": "react-native start",
     "test": "jest",
     "postinstall": "DESTINATION='node_modules/react-native-keychain' LIB_FILE=`cd .. && echo \\`pwd\\`/\\`npm pack\\`` && (rm -rf $DESTINATION || true) && mkdir $DESTINATION && tar -xvzf $LIB_FILE -C $DESTINATION --strip-components 1 && rm $LIB_FILE"
@@ -13,6 +14,7 @@
     "react": "16.13.1",
     "react-native": "0.63.4",
     "react-native-keychain": "*",
+    "react-native-macos": "^0.63.37",
     "react-native-segmented-control-tab": "^3.4.1"
   },
   "devDependencies": {
