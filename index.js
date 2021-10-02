@@ -3,7 +3,11 @@ import { NativeModules, Platform } from 'react-native';
 
 const { RNKeychainManager } = NativeModules;
 
-export const SECURITY_LEVEL = Object.freeze({
+export const SECURITY_LEVEL: {
+  ANY: string,
+  SECURE_SOFTWARE: string,
+  SECURE_HARDWARE: string,
+} = Object.freeze({
   ANY: RNKeychainManager && RNKeychainManager.SECURITY_LEVEL_ANY,
   SECURE_SOFTWARE:
     RNKeychainManager && RNKeychainManager.SECURITY_LEVEL_SECURE_SOFTWARE,
