@@ -193,26 +193,6 @@ public class KeychainModuleTests {
   }
 
   @Test
-  @Config(sdk = Build.VERSION_CODES.KITKAT)
-  public void testExtractFacebookConceal_NoHardware_api19() throws Exception {
-    // GIVEN:
-    //  API19, minimal Android version
-    final ReactApplicationContext context = getRNContext();
-
-    // WHEN: ask keychain for secured storage
-    final KeychainModule module = new KeychainModule(context);
-    final CipherStorage storage = module.getCipherStorageForCurrentAPILevel();
-
-    // THEN: expected Facebook cipher storage, its the only one that supports API19
-    assertThat(storage, notNullValue());
-    assertThat(storage, instanceOf(CipherStorageFacebookConceal.class));
-    assertThat(storage.isBiometrySupported(), is(false));
-    assertThat(storage.securityLevel(), is(SecurityLevel.ANY));
-    assertThat(storage.getMinSupportedApiLevel(), is(Build.VERSION_CODES.JELLY_BEAN));
-    assertThat(storage.supportsSecureHardware(), is(false));
-  }
-
-  @Test
   @Config(sdk = Build.VERSION_CODES.M)
   public void testExtractAesCbc_NoFingerprintConfigured_api23() throws Exception {
     // GIVEN:
@@ -364,21 +344,6 @@ public class KeychainModuleTests {
   @Test
   @Config(sdk = Build.VERSION_CODES.LOLLIPOP)
   public void testGetSecurityLevel_Unspecified_api21() throws Exception {
-    // GIVE:
-    final ReactApplicationContext context = getRNContext();
-    final KeychainModule module = new KeychainModule(context);
-    final Promise mockPromise = mock(Promise.class);
-
-    // WHEN:
-    module.getSecurityLevel(null, mockPromise);
-
-    // THEN:
-    verify(mockPromise).resolve(SecurityLevel.ANY.name());
-  }
-
-  @Test
-  @Config(sdk = Build.VERSION_CODES.KITKAT)
-  public void testGetSecurityLevel_Unspecified_api19() throws Exception {
     // GIVE:
     final ReactApplicationContext context = getRNContext();
     final KeychainModule module = new KeychainModule(context);
