@@ -540,11 +540,6 @@ abstract public class CipherStorageBaseGcm implements CipherStorage {
 
       cipher.init(Cipher.ENCRYPT_MODE, key, gcmParamSpec);
       output.write(iv, 0, iv.length);
-      
-      String outstring = "";
-      outstring = output.toString();
-      System.out.println(outstring.length());
-      System.out.println(outstring);
     };
 
     /** Read initialization vector from input stream and configure cipher by it. */
