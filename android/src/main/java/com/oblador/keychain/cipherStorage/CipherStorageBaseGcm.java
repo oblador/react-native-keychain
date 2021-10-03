@@ -28,6 +28,8 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.ProviderException;
 import java.security.UnrecoverableKeyException;
+import java.security.SecureRandom;
+import java.security.NoSuchAlgorithmException;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashSet;
@@ -40,6 +42,7 @@ import javax.crypto.CipherInputStream;
 import javax.crypto.CipherOutputStream;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.GCMParameterSpec ;
 
 import static com.oblador.keychain.SecurityLevel.SECURE_HARDWARE;
 
@@ -94,6 +97,7 @@ abstract public class CipherStorageBase implements CipherStorage {
 
     return
       (1000 * (isBiometrySupported() ? 1 : 0)) + // 0..1000
+        (100 * (supportsSecureHardware() ? 1 : 0)) + // 0..100
         (getMinSupportedApiLevel()); // 19..29
   }
 
@@ -167,12 +171,6 @@ abstract public class CipherStorageBase implements CipherStorage {
   @NonNull
   protected abstract KeyGenParameterSpec.Builder getKeyGenSpecBuilder(@NonNull final String alias)
     throws GeneralSecurityException;
-
-  /** Get encryption algorithm specification builder instance. */
-  @NonNull
-  protected abstract KeyGenParameterSpec.Builder getKeyGenSpecBuilder(@NonNull final String alias, @NonNull final boolean isforTesting)
-    throws GeneralSecurityException;
-
 
   /** Get information about provided key. */
   @NonNull
@@ -437,18 +435,14 @@ abstract public class CipherStorageBase implements CipherStorage {
 
   /** Try to get secured keystore instance. */
   @NonNull
-  protected Key tryGenerateRegularSecurityKey(@NonNull final String alias) throws GeneralSecurityException {
-    return tryGenerateRegularSecurityKey(alias, false);
-  }
-  @NonNull
-  protected Key tryGenerateRegularSecurityKey(@NonNull final String alias, @NonNull final boolean isForTesting)
+  protected Key tryGenerateRegularSecurityKey(@NonNull final String alias)
     throws GeneralSecurityException {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
       throw new KeyStoreAccessException("Regular security keystore is not supported " +
         "for old API" + Build.VERSION.SDK_INT + ".");
     }
 
-    final KeyGenParameterSpec specification = getKeyGenSpecBuilder(alias, isForTesting)
+    final KeyGenParameterSpec specification = getKeyGenSpecBuilder(alias)
       .build();
 
     return generateKey(specification);
@@ -456,19 +450,14 @@ abstract public class CipherStorageBase implements CipherStorage {
 
   /** Try to get strong secured keystore instance. (StrongBox security chip) */
   @NonNull
-  protected Key tryGenerateStrongBoxSecurityKey(@NonNull final String alias) throws GeneralSecurityException{
-    return tryGenerateStrongBoxSecurityKey(alias,false);
-  }
-
-  @NonNull
-  protected Key tryGenerateStrongBoxSecurityKey(@NonNull final String alias, @NonNull final boolean isForTesting)
+  protected Key tryGenerateStrongBoxSecurityKey(@NonNull final String alias)
     throws GeneralSecurityException {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
       throw new KeyStoreAccessException("Strong box security keystore is not supported " +
         "for old API" + Build.VERSION.SDK_INT + ".");
     }
 
-    final KeyGenParameterSpec specification = getKeyGenSpecBuilder(alias, isForTesting)
+    final KeyGenParameterSpec specification = getKeyGenSpecBuilder(alias)
       .setIsStrongBoxBacked(true)
       .build();
 
@@ -538,23 +527,35 @@ abstract public class CipherStorageBase implements CipherStorage {
   public static final class IV {
     /** Encryption/Decryption initialization vector length. */
     public static final int IV_LENGTH = 16;
+    public static int TAG_LENGTH = 16 ;
 
     /** Save Initialization vector to output stream. */
     public static final EncryptStringHandler encrypt = (cipher, key, output) -> {
-      cipher.init(Cipher.ENCRYPT_MODE, key);
+      int bsize = cipher.getBlockSize();
+      byte[] iv = new byte[cipher.getBlockSize()];
+      
+      SecureRandom secRandom = SecureRandom.getInstanceStrong();
+      secRandom.nextBytes(iv);
+      GCMParameterSpec gcmParamSpec = new GCMParameterSpec(TAG_LENGTH*8, iv);
 
-      final byte[] iv = cipher.getIV();
+      cipher.init(Cipher.ENCRYPT_MODE, key, gcmParamSpec);
       output.write(iv, 0, iv.length);
+      
+      String outstring = "";
+      outstring = output.toString();
+      System.out.println(outstring.length());
+      System.out.println(outstring);
     };
+
     /** Read initialization vector from input stream and configure cipher by it. */
     public static final DecryptBytesHandler decrypt = (cipher, key, input) -> {
-      final IvParameterSpec iv = readIv(input);
-      cipher.init(Cipher.DECRYPT_MODE, key, iv);
+      final GCMParameterSpec gcmParamSpec = readIv(input);
+      cipher.init(Cipher.ENCRYPT_MODE, key, gcmParamSpec);
     };
 
     /** Extract initialization vector from provided bytes array. */
     @NonNull
-    public static IvParameterSpec readIv(@NonNull final byte[] bytes) throws IOException {
+    public static GCMParameterSpec readIv(@NonNull final byte[] bytes) throws IOException {
       final byte[] iv = new byte[IV_LENGTH];
 
       if (IV_LENGTH >= bytes.length)
@@ -562,19 +563,19 @@ abstract public class CipherStorageBase implements CipherStorage {
 
       System.arraycopy(bytes, 0, iv, 0, IV_LENGTH);
 
-      return new IvParameterSpec(iv);
+      return new GCMParameterSpec(TAG_LENGTH*8, iv);
     }
 
     /** Extract initialization vector from provided input stream. */
     @NonNull
-    public static IvParameterSpec readIv(@NonNull final InputStream inputStream) throws IOException {
+    public static GCMParameterSpec readIv(@NonNull final InputStream inputStream) throws IOException {
       final byte[] iv = new byte[IV_LENGTH];
       final int result = inputStream.read(iv, 0, IV_LENGTH);
 
       if (result != IV_LENGTH)
         throw new IOException("Input stream has insufficient data.");
 
-      return new IvParameterSpec(iv);
+      return new GCMParameterSpec(TAG_LENGTH*8, iv);
     }
   }
 
@@ -596,7 +597,7 @@ abstract public class CipherStorageBase implements CipherStorage {
     public final Key key;
 
     public SelfDestroyKey(@NonNull final String name) throws GeneralSecurityException {
-      this(name, tryGenerateRegularSecurityKey(name, true));
+      this(name, tryGenerateRegularSecurityKey(name));
     }
 
     public SelfDestroyKey(@NonNull final String name, @NonNull final Key key) {

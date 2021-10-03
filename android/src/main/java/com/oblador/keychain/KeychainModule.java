@@ -23,7 +23,7 @@ import com.oblador.keychain.cipherStorage.CipherStorage.DecryptionResult;
 import com.oblador.keychain.cipherStorage.CipherStorage.EncryptionResult;
 import com.oblador.keychain.cipherStorage.CipherStorageBase;
 import com.oblador.keychain.cipherStorage.CipherStorageFacebookConceal;
-import com.oblador.keychain.cipherStorage.CipherStorageKeystoreAesCbc;
+import com.oblador.keychain.cipherStorage.CipherStorageKeystoreAesGcm;
 import com.oblador.keychain.cipherStorage.CipherStorageKeystoreRsaEcb;
 import com.oblador.keychain.decryptionHandler.DecryptionResultHandler;
 import com.oblador.keychain.decryptionHandler.DecryptionResultHandlerProvider;
@@ -141,7 +141,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     prefsStorage = new PrefsStorage(reactContext);
 
     addCipherStorageToMap(new CipherStorageFacebookConceal(reactContext));
-    addCipherStorageToMap(new CipherStorageKeystoreAesCbc());
+    addCipherStorageToMap(new CipherStorageKeystoreAesGcm());
 
     // we have a references to newer api that will fail load of app classes in old androids OS
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
