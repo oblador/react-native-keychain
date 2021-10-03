@@ -526,13 +526,13 @@ abstract public class CipherStorageBaseGcm implements CipherStorage {
   /** Initialization vector support. */
   public static final class IV {
     /** Encryption/Decryption initialization vector length. */
-    public static final int IV_LENGTH = 16;
+    public static final int IV_LENGTH = 12;
     public static int TAG_LENGTH = 16 ;
 
     /** Save Initialization vector to output stream. */
     public static final EncryptStringHandler encrypt = (cipher, key, output) -> {
       int bsize = cipher.getBlockSize();
-      byte[] iv = new byte[cipher.getBlockSize()];
+      byte[] iv = new byte[IV_LENGTH];
       
       SecureRandom secRandom = SecureRandom.getInstanceStrong();
       secRandom.nextBytes(iv);
