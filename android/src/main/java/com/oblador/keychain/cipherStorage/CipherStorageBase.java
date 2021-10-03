@@ -94,6 +94,7 @@ abstract public class CipherStorageBase implements CipherStorage {
 
     return
       (1000 * (isBiometrySupported() ? 1 : 0)) + // 0..1000
+        (100 * (supportsSecureHardware() ? 1 : 0)) + // 0..100
         (getMinSupportedApiLevel()); // 19..29
   }
 
@@ -167,12 +168,6 @@ abstract public class CipherStorageBase implements CipherStorage {
   @NonNull
   protected abstract KeyGenParameterSpec.Builder getKeyGenSpecBuilder(@NonNull final String alias)
     throws GeneralSecurityException;
-
-  /** Get encryption algorithm specification builder instance. */
-  @NonNull
-  protected abstract KeyGenParameterSpec.Builder getKeyGenSpecBuilder(@NonNull final String alias, @NonNull final boolean isforTesting)
-    throws GeneralSecurityException;
-
 
   /** Get information about provided key. */
   @NonNull
@@ -437,18 +432,14 @@ abstract public class CipherStorageBase implements CipherStorage {
 
   /** Try to get secured keystore instance. */
   @NonNull
-  protected Key tryGenerateRegularSecurityKey(@NonNull final String alias) throws GeneralSecurityException {
-    return tryGenerateRegularSecurityKey(alias, false);
-  }
-  @NonNull
-  protected Key tryGenerateRegularSecurityKey(@NonNull final String alias, @NonNull final boolean isForTesting)
+  protected Key tryGenerateRegularSecurityKey(@NonNull final String alias)
     throws GeneralSecurityException {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
       throw new KeyStoreAccessException("Regular security keystore is not supported " +
         "for old API" + Build.VERSION.SDK_INT + ".");
     }
 
-    final KeyGenParameterSpec specification = getKeyGenSpecBuilder(alias, isForTesting)
+    final KeyGenParameterSpec specification = getKeyGenSpecBuilder(alias)
       .build();
 
     return generateKey(specification);
@@ -456,19 +447,14 @@ abstract public class CipherStorageBase implements CipherStorage {
 
   /** Try to get strong secured keystore instance. (StrongBox security chip) */
   @NonNull
-  protected Key tryGenerateStrongBoxSecurityKey(@NonNull final String alias) throws GeneralSecurityException{
-    return tryGenerateStrongBoxSecurityKey(alias,false);
-  }
-
-  @NonNull
-  protected Key tryGenerateStrongBoxSecurityKey(@NonNull final String alias, @NonNull final boolean isForTesting)
+  protected Key tryGenerateStrongBoxSecurityKey(@NonNull final String alias)
     throws GeneralSecurityException {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
       throw new KeyStoreAccessException("Strong box security keystore is not supported " +
         "for old API" + Build.VERSION.SDK_INT + ".");
     }
 
-    final KeyGenParameterSpec specification = getKeyGenSpecBuilder(alias, isForTesting)
+    final KeyGenParameterSpec specification = getKeyGenSpecBuilder(alias)
       .setIsStrongBoxBacked(true)
       .build();
 
@@ -596,7 +582,7 @@ abstract public class CipherStorageBase implements CipherStorage {
     public final Key key;
 
     public SelfDestroyKey(@NonNull final String name) throws GeneralSecurityException {
-      this(name, tryGenerateRegularSecurityKey(name, true));
+      this(name, tryGenerateRegularSecurityKey(name));
     }
 
     public SelfDestroyKey(@NonNull final String name, @NonNull final Key key) {
