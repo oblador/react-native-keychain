@@ -11,6 +11,7 @@ Pod::Spec.new do |s|
   s.author         = { "Joel Arvidsson" => "joel@oblador.se" }
   s.ios.deployment_target = '9.0'
   s.tvos.deployment_target = '9.0'
+  s.osx.deployment_target = '10.13'
   s.source         = { :git => "https://github.com/oblador/react-native-keychain.git", :tag => "v#{s.version}" }
   s.source_files   = 'RNKeychainManager/**/*.{h,m}'
   s.preserve_paths = "**/*.js"
