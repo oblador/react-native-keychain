@@ -173,10 +173,17 @@ public class CipherStorageKeystoreAesCbc extends CipherStorageBase {
 
   //region Implementation
 
+  /** Get builder for encryption and decryption operations with required user Authentication. */
+  @NonNull
+  @Override
+  protected KeyGenParameterSpec.Builder getKeyGenSpecBuilder(@NonNull final String alias) throws GeneralSecurityException {
+    return getKeyGenSpecBuilder(alias, false);
+  }
+
   /** Get encryption algorithm specification builder instance. */
   @NonNull
   @Override
-  protected KeyGenParameterSpec.Builder getKeyGenSpecBuilder(@NonNull final String alias)
+  protected KeyGenParameterSpec.Builder getKeyGenSpecBuilder(@NonNull final String alias, @NonNull final boolean isForTesting)
     throws GeneralSecurityException {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
       throw new KeyStoreAccessException("Unsupported API" + Build.VERSION.SDK_INT + " version detected.");
