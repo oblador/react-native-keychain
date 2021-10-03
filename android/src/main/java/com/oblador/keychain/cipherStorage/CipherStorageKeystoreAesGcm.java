@@ -34,7 +34,7 @@ import javax.crypto.spec.GCMParameterSpec;
  */
 @TargetApi(Build.VERSION_CODES.M)
 @SuppressWarnings({"unused", "WeakerAccess"})
-public class CipherStorageKeystoreAesCbc extends CipherStorageBaseGcm {
+public class CipherStorageKeystoreAesGcm extends CipherStorageBaseGcm {
   //region Constants
   /** AES */
   public static final String ALGORITHM_AES = KeyProperties.KEY_ALGORITHM_AES;

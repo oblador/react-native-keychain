@@ -47,10 +47,10 @@ import javax.crypto.spec.GCMParameterSpec ;
 import static com.oblador.keychain.SecurityLevel.SECURE_HARDWARE;
 
 @SuppressWarnings({"unused", "WeakerAccess", "CharsetObjectCanBeUsed", "UnusedReturnValue"})
-abstract public class CipherStorageBase implements CipherStorage {
+abstract public class CipherStorageBaseGcm implements CipherStorage {
   //region Constants
   /** Logging tag. */
-  protected static final String LOG_TAG = CipherStorageBase.class.getSimpleName();
+  protected static final String LOG_TAG = CipherStorageBaseGcm.class.getSimpleName();
   /** Default key storage type/name. */
   public static final String KEYSTORE_TYPE = "AndroidKeyStore";
   /** Key used for testing storage capabilities. */
@@ -470,14 +470,14 @@ abstract public class CipherStorageBase implements CipherStorage {
 
   /** Override internal cipher instance cache. */
   @VisibleForTesting
-  public CipherStorageBase setCipher(final Cipher cipher) {
+  public CipherStorageBaseGcm setCipher(final Cipher cipher) {
     cachedCipher = cipher;
     return this;
   }
 
   /** Override the keystore instance cache. */
   @VisibleForTesting
-  public CipherStorageBase setKeyStore(final KeyStore keystore) {
+  public CipherStorageBaseGcm setKeyStore(final KeyStore keystore) {
     cachedKeyStore = keystore;
     return this;
   }
