@@ -21,6 +21,7 @@ import com.oblador.keychain.cipherStorage.CipherStorage;
 import com.oblador.keychain.cipherStorage.CipherStorageBase;
 import com.oblador.keychain.cipherStorage.CipherStorageFacebookConceal;
 import com.oblador.keychain.cipherStorage.CipherStorageKeystoreAesCbc;
+import com.oblador.keychain.cipherStorage.CipherStorageKeystoreAesGcm;
 import com.oblador.keychain.cipherStorage.CipherStorageKeystoreRsaEcb;
 import com.oblador.keychain.exceptions.CryptoFailedException;
 import com.oblador.keychain.exceptions.KeyStoreAccessException;
@@ -227,7 +228,7 @@ public class KeychainModuleTests {
     //   expected AES cipher storage due no fingerprint available
     //   AES win and returned instead of facebook cipher
     assertThat(storage, notNullValue());
-    assertThat(storage, instanceOf(CipherStorageKeystoreAesCbc.class));
+    assertThat(storage, instanceOf(CipherStorageKeystoreAesGcm.class));
     assertThat(storage.isBiometrySupported(), is(false));
     assertThat(storage.securityLevel(), is(SecurityLevel.SECURE_HARDWARE));
     assertThat(storage.getMinSupportedApiLevel(), is(Build.VERSION_CODES.M));
