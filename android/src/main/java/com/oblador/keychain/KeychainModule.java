@@ -21,7 +21,7 @@ import com.oblador.keychain.PrefsStorage.ResultSet;
 import com.oblador.keychain.cipherStorage.CipherStorage;
 import com.oblador.keychain.cipherStorage.CipherStorage.DecryptionResult;
 import com.oblador.keychain.cipherStorage.CipherStorage.EncryptionResult;
-import com.oblador.keychain.cipherStorage.CipherStorageBase;
+import com.oblador.keychain.cipherStorage.CipherStorageBaseGcm;
 import com.oblador.keychain.cipherStorage.CipherStorageFacebookConceal;
 import com.oblador.keychain.cipherStorage.CipherStorageKeystoreAesGcm;
 import com.oblador.keychain.cipherStorage.CipherStorageKeystoreRsaEcb;
@@ -167,7 +167,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
       final long startTime = System.nanoTime();
 
       Log.v(KEYCHAIN_MODULE, "warming up started at " + startTime);
-      final CipherStorageBase best = (CipherStorageBase) getCipherStorageForCurrentAPILevel();
+      final CipherStorageBaseGcm best = (CipherStorageBaseGcm) getCipherStorageForCurrentAPILevel();
       final Cipher instance = best.getCachedInstance();
       final boolean isSecure = best.supportsSecureHardware();
       final SecurityLevel requiredLevel = isSecure ? SecurityLevel.SECURE_HARDWARE : SecurityLevel.SECURE_SOFTWARE;
