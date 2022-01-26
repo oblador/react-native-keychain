@@ -513,7 +513,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     String rules = null;
 
     if (null != options && options.hasKey(Maps.RULES)) {
-      rules = options.getString(Maps.ACCESS_CONTROL);
+      rules = options.getString(Maps.RULES);
     }
 
     if (null == rules) return rule;
