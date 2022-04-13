@@ -22,7 +22,7 @@ import javax.crypto.SecretKey;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.isNull;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.withSettings;
 
 @SuppressWarnings({"WeakerAccess"})
@@ -59,35 +59,38 @@ public final class MocksForProvider {
 
   private void innerConfiguration(@NonNull final String type, @NonNull final Provider provider, @Nullable final Map<String, Object> configuration)
     throws InvalidKeySpecException, NoSuchAlgorithmException, UnrecoverableKeyException {
-    when(service.getProvider()).thenReturn(provider);
-    when(kpgSpi.generateKeyPair()).thenReturn(keyPair);
-    when(keyPair.getPrivate()).thenReturn(privateKey);
 
-    when(keyInfo.isInsideSecureHardware()).thenReturn(returnForIsInsideSecureHardware(configuration));
+    // JDK 11 introduced null checks inside the getInstance methods
+    doReturn("").when(secretKey).getAlgorithm();
+    doReturn("").when(privateKey).getAlgorithm();
 
-    when(kgSpi.engineGenerateKey()).thenReturn(secretKey);
-    when(skfSpi.engineGetKeySpec(any(), any())).thenReturn(keyInfo);
-    when(kfSpi.engineGetKeySpec(any(), any())).thenReturn(keyInfo);
-    when(ksSpi.engineGetKey(any(), any())).thenReturn(key);
+    doReturn(provider).when(service).getProvider();
+    doReturn(keyPair).when(kpgSpi).generateKeyPair();
+    doReturn(privateKey).when(keyPair).getPrivate();
+    doReturn(returnForIsInsideSecureHardware(configuration)).when(keyInfo).isInsideSecureHardware();
+    doReturn(secretKey).when(kgSpi).engineGenerateKey();
+    doReturn(keyInfo).when(skfSpi).engineGetKeySpec(any(), any());
+    doReturn(keyInfo).when(kfSpi).engineGetKeySpec(any(), any());
+    doReturn(key).when(ksSpi).engineGetKey(any(), any());
 
     switch (type) {
       case KEY_GENERATOR:
-        when(service.newInstance(any())).thenReturn(kgSpi);
+        doReturn(kgSpi).when(service).newInstance(any());
         break;
       case KEY_PAIR_GENERATOR:
-        when(service.newInstance(any())).thenReturn(kpgSpi);
+        doReturn(kpgSpi).when(service).newInstance(any());
         break;
       case KEY_FACTORY:
-        when(service.newInstance(isNull())).thenReturn(kfSpi);
+        doReturn(kfSpi).when(service).newInstance(isNull());
         break;
       case KEY_STORE:
-        when(service.newInstance(isNull())).thenReturn(ksSpi);
+        doReturn(ksSpi).when(service).newInstance(isNull());
         break;
       case SECRET_KEY_FACTORY:
-        when(service.newInstance(isNull())).thenReturn(skfSpi);
+        doReturn(skfSpi).when(service).newInstance(isNull());
         break;
       case KEY_CIPHER:
-        when(service.newInstance(isNull())).thenReturn(cSpi);
+        doReturn(cSpi).when(service).newInstance(isNull());
         break;
       default:
         System.err.println("requested unsupported type: " + type);
