@@ -11,79 +11,65 @@ import com.facebook.react.bridge.ReactApplicationContext;
 import com.oblador.keychain.cipherStorage.CipherStorage;
 
 public class DecryptionResultHandlerInteractiveBiometricManualRetry extends DecryptionResultHandlerInteractiveBiometric implements DecryptionResultHandler {
-  private BiometricPrompt presentedPrompt;
-  private Boolean didFailBiometric = false;
-
   public DecryptionResultHandlerInteractiveBiometricManualRetry(@NonNull ReactApplicationContext reactContext,
                                                                 @NonNull CipherStorage storage,
                                                                 @NonNull BiometricPrompt.PromptInfo promptInfo) {
     super(reactContext, storage, promptInfo);
   }
 
-  /** Manually cancel current (invisible) authentication to clear the fragment. */
-  private void cancelPresentedAuthentication() {
-    Log.d(LOG_TAG, "Cancelling authentication");
-    if (presentedPrompt == null) {
-      return;
-    }
-
-    try {
-      presentedPrompt.cancelAuthentication();
-    } catch (Exception e) {
-      e.printStackTrace();
-    } finally {
-      this.presentedPrompt = null;
-    }
+  @Override
+  protected InteractiveBiometryHandlers provideHandlers() {
+    return new InteractiveManualRetryBiometryHandlers();
   }
 
-  /** Called when an unrecoverable error has been encountered and the operation is complete. */
-  @Override
-  public void onAuthenticationError(final int errorCode, @NonNull final CharSequence errString) {
-    if (didFailBiometric) {
-      this.presentedPrompt = null;
+  class InteractiveManualRetryBiometryHandlers extends DecryptionResultHandlerInteractiveBiometric.InteractiveBiometryHandlers {
+    private Boolean didFailBiometric = false;
+
+    /** Manually cancel current (invisible) authentication to clear the fragment. */
+    private void cancelPresentedAuthentication() {
+      Log.d(LOG_TAG, "Cancelling authentication");
+      if (prompt == null) {
+        return;
+      }
+
+      try {
+        prompt.cancelAuthentication();
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+    }
+
+    /** Called when an unrecoverable error has been encountered and the operation is complete. */
+    @Override
+    public void onAuthenticationError(final int errorCode, @NonNull final CharSequence errString) {
+      if (didFailBiometric) {
+        this.didFailBiometric = false;
+        retryAuthentication();
+        return;
+      }
+
+      super.onAuthenticationError(errorCode, errString);
+    }
+
+    /** Called when a biometric (e.g. fingerprint, face, etc.) is presented but not recognized as belonging to the user. */
+    @Override
+    public void onAuthenticationFailed() {
+      Log.d(LOG_TAG, "Authentication failed: biometric not recognized.");
+      if (prompt != null) {
+        this.didFailBiometric = true;
+        cancelPresentedAuthentication();
+      }
+    }
+
+    /** Called when a biometric is recognized. */
+    @Override
+    public void onAuthenticationSucceeded(@NonNull final BiometricPrompt.AuthenticationResult result) {
       this.didFailBiometric = false;
-      retryAuthentication();
-      return;
-    }
 
-    super.onAuthenticationError(errorCode, errString);
-  }
-
-  /** Called when a biometric (e.g. fingerprint, face, etc.) is presented but not recognized as belonging to the user. */
-  @Override
-  public void onAuthenticationFailed() {
-    Log.d(LOG_TAG, "Authentication failed: biometric not recognized.");
-    if (presentedPrompt != null) {
-      this.didFailBiometric = true;
-      cancelPresentedAuthentication();
+      super.onAuthenticationSucceeded(result);
     }
   }
 
-  /** Called when a biometric is recognized. */
-  @Override
-  public void onAuthenticationSucceeded(@NonNull final BiometricPrompt.AuthenticationResult result) {
-    this.presentedPrompt = null;
-    this.didFailBiometric = false;
-
-    super.onAuthenticationSucceeded(result);
-  }
-
-  /** trigger interactive authentication. */
-  @Override
-  public void startAuthentication() {
-    FragmentActivity activity = getCurrentActivity();
-
-    // code can be executed only from MAIN thread
-    if (Thread.currentThread() != Looper.getMainLooper().getThread()) {
-      activity.runOnUiThread(this::startAuthentication);
-      waitResult();
-      return;
-    }
-
-    this.presentedPrompt = authenticateWithPrompt(activity);
-  }
-
-  /** trigger interactive authentication without invoking another waitResult() */
   protected void retryAuthentication() {
     Log.d(LOG_TAG, "Retrying biometric authentication.");
 
@@ -104,6 +90,6 @@ public class DecryptionResultHandlerInteractiveBiometricManualRetry extends Decr
       return;
     }
 
-    this.presentedPrompt = authenticateWithPrompt(activity);
+    startAuthentication();
   }
 }

@@ -10,6 +10,7 @@ import com.oblador.keychain.exceptions.KeyStoreAccessException;
 
 import java.security.Key;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 
 @SuppressWarnings({"unused", "WeakerAccess"})
 public interface CipherStorage {
@@ -92,19 +93,21 @@ public interface CipherStorage {
    * That can happens during migration from one version of library to another.
    */
   @NonNull
-  DecryptionResult decrypt(@NonNull final String alias,
-                           @NonNull final byte[] username,
-                           @NonNull final byte[] password,
-                           @NonNull final SecurityLevel level)
-    throws CryptoFailedException;
+  CompletableFuture<DecryptionResult> decrypt(@NonNull final String alias,
+                                              @NonNull final byte[] username,
+                                              @NonNull final byte[] password,
+                                              @NonNull final SecurityLevel level)
+            throws CryptoFailedException;
 
-  /** Decrypt the credentials but redirect results of operation to handler. */
-  void decrypt(@NonNull final DecryptionResultHandler handler,
-               @NonNull final String alias,
-               @NonNull final byte[] username,
-               @NonNull final byte[] password,
-               @NonNull final SecurityLevel level)
-    throws CryptoFailedException;
+  /**
+   * Decrypt the credentials but redirect results of operation to handler.
+   */
+  CompletableFuture<DecryptionResult> decrypt(@NonNull final DecryptionResultHandler handler,
+                                              @NonNull final String alias,
+                                              @NonNull final byte[] username,
+                                              @NonNull final byte[] password,
+                                              @NonNull final SecurityLevel level)
+            throws CryptoFailedException;
 
   /** Remove key (by alias) from storage. */
   void removeKey(@NonNull final String alias) throws KeyStoreAccessException;
