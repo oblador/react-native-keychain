@@ -20,6 +20,8 @@ import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.security.Key;
 import java.security.spec.KeySpec;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.crypto.Cipher;
@@ -128,10 +130,10 @@ public class CipherStorageKeystoreAesCbc extends CipherStorageBase {
 
   @Override
   @NonNull
-  public DecryptionResult decrypt(@NonNull final String alias,
-                                  @NonNull final byte[] username,
-                                  @NonNull final byte[] password,
-                                  @NonNull final SecurityLevel level)
+  public CompletableFuture<DecryptionResult> decrypt(@NonNull final String alias,
+                                                    @NonNull final byte[] username,
+                                                    @NonNull final byte[] password,
+                                                    @NonNull final SecurityLevel level)
     throws CryptoFailedException {
 
     throwIfInsufficientLevel(level);
@@ -139,35 +141,33 @@ public class CipherStorageKeystoreAesCbc extends CipherStorageBase {
     final String safeAlias = getDefaultAliasIfEmpty(alias, getDefaultAliasServiceName());
     final AtomicInteger retries = new AtomicInteger(1);
 
-    try {
-      final Key key = extractGeneratedKey(safeAlias, level, retries);
-
-      return new DecryptionResult(
-        decryptBytes(key, username),
-        decryptBytes(key, password),
-        getSecurityLevel(key));
-    } catch (GeneralSecurityException e) {
-      throw new CryptoFailedException("Could not decrypt data with alias: " + alias, e);
-    } catch (Throwable fail) {
-      throw new CryptoFailedException("Unknown error with alias: " + alias +
-        ", error: " + fail.getMessage(), fail);
-    }
+    return CompletableFuture.supplyAsync(() -> {
+      try {
+        return extractGeneratedKey(safeAlias, level, retries);
+      } catch (GeneralSecurityException e) {
+        throw new CompletionException(new CryptoFailedException("Could not decrypt data with alias: " + alias, e));
+      }
+    }).thenApply(key -> {
+      try {
+        return new DecryptionResult(
+                decryptBytes(key, username),
+                decryptBytes(key, password),
+                getSecurityLevel(key));
+      } catch (Throwable fail) {
+        throw new CompletionException(new CryptoFailedException("Unknown error with alias: " + alias +
+                ", error: " + fail.getMessage(), fail));
+      }
+    });
   }
 
   /** Redirect call to {@link #decrypt(String, byte[], byte[], SecurityLevel)} method. */
   @Override
-  public void decrypt(@NonNull final DecryptionResultHandler handler,
+  public CompletableFuture<DecryptionResult> decrypt(@NonNull final DecryptionResultHandler handler,
                       @NonNull final String service,
                       @NonNull final byte[] username,
                       @NonNull final byte[] password,
-                      @NonNull final SecurityLevel level) {
-    try {
-      final DecryptionResult results = decrypt(service, username, password, level);
-
-      handler.onDecrypt(results, null);
-    } catch (Throwable fail) {
-      handler.onDecrypt(null, fail);
-    }
+                      @NonNull final SecurityLevel level) throws CryptoFailedException {
+    return decrypt(service, username, password, level);
   }
   //endregion
 

@@ -7,39 +7,19 @@ import com.oblador.keychain.cipherStorage.CipherStorage.DecryptionContext;
 import com.oblador.keychain.cipherStorage.CipherStorage.DecryptionResult;
 import com.oblador.keychain.exceptions.CryptoFailedException;
 
+import java.io.IOException;
+import java.security.GeneralSecurityException;
+import java.util.concurrent.CompletableFuture;
+
 public class DecryptionResultHandlerNonInteractive implements DecryptionResultHandler {
-  private DecryptionResult result;
-  private Throwable error;
-
   @Override
-  public void askAccessPermissions(@NonNull final DecryptionContext context) {
-    final CryptoFailedException failure = new CryptoFailedException(
-      "Non interactive decryption mode.");
-
-    onDecrypt(null, failure);
-  }
-
-  @Override
-  public void onDecrypt(@Nullable final DecryptionResult decryptionResult,
-                        @Nullable final Throwable error) {
-    this.result = decryptionResult;
-    this.error = error;
-  }
-
-  @Nullable
-  @Override
-  public DecryptionResult getResult() {
+  public CompletableFuture<DecryptionResult> authenticate(@NonNull DecryptionResultJob job) {
+    final CompletableFuture<DecryptionResult> result = new CompletableFuture<>();
+    try {
+      result.complete(job.get());
+    } catch (final Throwable fail) {
+      result.completeExceptionally(fail);
+    }
     return result;
-  }
-
-  @Nullable
-  @Override
-  public Throwable getError() {
-    return error;
-  }
-
-  @Override
-  public void waitResult() {
-    /* do nothing, expected synchronized call in one thread */
   }
 }
