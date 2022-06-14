@@ -34,7 +34,6 @@ import javax.crypto.SecretKey;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.mockito.Mockito.doReturn;
 import static org.robolectric.Shadows.shadowOf;
 
 @RunWith(RobolectricTestRunner.class)
@@ -72,8 +71,6 @@ public class CipherStorageKeystoreRsaEcbTests {
   public void testGetSecurityLevel_api23() throws Exception {
     final CipherStorageKeystoreAesCbc instance = new CipherStorageKeystoreAesCbc();
     final Key mock = Mockito.mock(SecretKey.class);
-
-    doReturn("").when(mock).getAlgorithm(); // JDK 11 introduced null checks inside the getInstance methods
 
     final SecurityLevel level = instance.getSecurityLevel(mock);
 
