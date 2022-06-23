@@ -6,9 +6,9 @@
 buildscript {
   extra.apply {
     set("minSdkVersion", 21)
-    set("compileSdkVersion", 30)
-    set("targetSdkVersion", 30)
-    set("buildToolsVersion", "30.0.2")
+    set("compileSdkVersion", 31)
+    set("targetSdkVersion", 31)
+    set("buildToolsVersion", "31.0.0")
   }
   repositories {
     mavenLocal()
@@ -18,7 +18,7 @@ buildscript {
   }
   dependencies {
     /* https://mvnrepository.com/artifact/com.android.tools.build/gradle?repo=google */
-    classpath("com.android.tools.build:gradle:7.0.4")
+    classpath("com.android.tools.build:gradle:7.1.1")
     classpath("com.facebook.react:react-native-gradle-plugin")
 
     /* https://github.com/radarsh/gradle-test-logger-plugin */
