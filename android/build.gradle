@@ -17,13 +17,13 @@ def safeExtGet(prop, fallback) {
 }
 
 android {
-  compileSdkVersion safeExtGet('compileSdkVersion', 30)
-  buildToolsVersion safeExtGet('buildToolsVersion', '30.0.2')
+  compileSdkVersion safeExtGet('compileSdkVersion', 31)
+  buildToolsVersion safeExtGet('buildToolsVersion', '31.0.0')
 
   defaultConfig {
     minSdkVersion safeExtGet('minSdkVersion', 21)
-    compileSdkVersion safeExtGet('compileSdkVersion', 30)
-    targetSdkVersion safeExtGet('targetSdkVersion', 30)
+    compileSdkVersion safeExtGet('compileSdkVersion', 31)
+    targetSdkVersion safeExtGet('targetSdkVersion', 31)
     versionCode 1
     versionName "1.0"
   }
@@ -46,7 +46,7 @@ repositories {
 dependencies {
   implementation 'com.facebook.react:react-native:+'
 
-  implementation 'androidx.appcompat:appcompat:1.1.0'
+  implementation 'androidx.appcompat:appcompat:1.4.2'
   implementation 'androidx.legacy:legacy-support-v4:1.0.0'
 
   // https://mvnrepository.com/artifact/androidx.biometric/biometric

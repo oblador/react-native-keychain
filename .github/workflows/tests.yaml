@@ -53,4 +53,4 @@ jobs:
         run: yarn --frozen-lockfile --non-interactive --silent
         working-directory: KeychainExample
       - name: Run Android unit tests
-        run: ./gradlew test
+        run: yarn test
