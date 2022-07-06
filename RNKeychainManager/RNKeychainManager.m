@@ -204,7 +204,11 @@ SecAccessControlCreateFlags accessControlValue(NSDictionary *options)
   NSMutableDictionary *mAttributes = attributes.mutableCopy;
 
   if (@available(macOS 10.15, *)) {
-    mAttributes[(__bridge NSString *)kSecUseDataProtectionKeychain] = @(YES);
+      if (@available(iOS 13.0, *)) {
+          mAttributes[(__bridge NSString *)kSecUseDataProtectionKeychain] = @(YES);
+      } else {
+          // Fallback on earlier versions
+      }
   }
 
   if (accessControl) {
