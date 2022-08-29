@@ -298,7 +298,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
         // get the best storage
         final String accessControl = getAccessControlOrDefault(options);
         final boolean useBiometry = getUseBiometry(accessControl);
-        cipher = getCipherStorageForCurrentAPILevel(useBiometry);
+        cipher = getSelectedStorage(options);
       } else {
         cipher = getCipherStorageByName(storageName);
       }
