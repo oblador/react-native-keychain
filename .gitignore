@@ -70,3 +70,5 @@ KeychainExample/ios/Pods/
 
 # Merge backups kdiff3
 *.orig
+RNKeychain.xcodeproj/project.xcworkspace/contents.xcworkspacedata
+RNKeychain.xcodeproj/project.xcworkspace/xcshareddata/IDEWorkspaceChecks.plist
