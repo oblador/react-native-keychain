@@ -6,9 +6,9 @@
 buildscript {
   extra.apply {
     set("minSdkVersion", 21)
-    set("compileSdkVersion", 31)
-    set("targetSdkVersion", 31)
-    set("buildToolsVersion", "31.0.0")
+    set("compileSdkVersion", 30)
+    set("targetSdkVersion", 30)
+    set("buildToolsVersion", "30.0.2")
   }
   repositories {
     mavenLocal()
@@ -18,8 +18,7 @@ buildscript {
   }
   dependencies {
     /* https://mvnrepository.com/artifact/com.android.tools.build/gradle?repo=google */
-    classpath("com.android.tools.build:gradle:7.1.1")
-    classpath("com.facebook.react:react-native-gradle-plugin")
+    classpath("com.android.tools.build:gradle:4.2.2")
 
     /* https://github.com/radarsh/gradle-test-logger-plugin */
     classpath("com.adarshr:gradle-test-logger-plugin:2.0.0")
@@ -32,24 +31,12 @@ buildscript {
 
 allprojects {
   repositories {
+    mavenLocal()
+    google()
+    mavenCentral()
     // All of React Native (JS, Obj-C sources, Android binaries) is installed from npm
     maven {
       url = uri("$rootDir/KeychainExample/node_modules/react-native/android")
-    }
-    // Android JSC is installed from npm
-    maven {
-      url = uri("$rootDir/KeychainExample/node_modules/jsc-android/dist")
-    }
-    mavenCentral {
-        // We don't want to fetch react-native from Maven Central as there are
-        // older versions over there.
-        content {
-            excludeGroup("com.facebook.react")
-        }
-    }
-    google()
-    maven {
-      url = uri("https://www.jitpack.io")
     }
   }
 }

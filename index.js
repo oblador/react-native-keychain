@@ -23,6 +23,7 @@ export const ACCESSIBLE = Object.freeze({
   WHEN_UNLOCKED_THIS_DEVICE_ONLY: 'AccessibleWhenUnlockedThisDeviceOnly',
   AFTER_FIRST_UNLOCK_THIS_DEVICE_ONLY:
     'AccessibleAfterFirstUnlockThisDeviceOnly',
+  ALWAYS_THIS_DEVICE_ONLY: 'AccessibleAlwaysThisDeviceOnly',
 });
 
 export const ACCESS_CONTROL = Object.freeze({

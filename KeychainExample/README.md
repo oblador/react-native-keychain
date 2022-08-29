@@ -1,6 +1,6 @@
 # Example App
 
-First run
+first run
 
 ```
 $ yarn
@@ -14,13 +14,16 @@ To run the app on iOS starting from the KeychainExample folder execute
 the following commands:
 
 ```bash
+cd ios
+
 # verify updates: pod install --clean-install --repo-update --deployment
 # forced updates: pod install --clean-install --repo-update
 #
 # Or regular usage:
-pod install --project-directory=ios
+pod install
 
-yarn ios
+cd ..
+react-native run-ios
 ```
 
 ## macOS
@@ -29,14 +32,15 @@ To run the app on macOS starting from the KeychainExample folder execute
 the following commands:
 
 ```bash
-yarn add react-native-macos
+cd macos
 
 # verify updates: pod install --clean-install --repo-update --deployment
 # forced updates: pod install --clean-install --repo-update
 #
 # Or regular usage:
-pod install --project-directory=macos
+pod install
 
+cd ..
 react-native run-macos
 ```
 
@@ -45,5 +49,5 @@ react-native run-macos
 just run
 
 ```bash
-yarn android
+react-native run-android
 ```
