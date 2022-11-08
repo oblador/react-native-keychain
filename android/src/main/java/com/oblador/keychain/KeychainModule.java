@@ -3,13 +3,11 @@ package com.oblador.keychain;
 import android.os.Build;
 import android.text.TextUtils;
 import android.util.Log;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.StringDef;
 import androidx.biometric.BiometricManager;
 import androidx.biometric.BiometricPrompt.PromptInfo;
-
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
@@ -30,7 +28,6 @@ import com.oblador.keychain.decryptionHandler.DecryptionResultHandlerProvider;
 import com.oblador.keychain.exceptions.CryptoFailedException;
 import com.oblador.keychain.exceptions.EmptyParameterException;
 import com.oblador.keychain.exceptions.KeyStoreAccessException;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -38,9 +35,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-
 import javax.crypto.Cipher;
-
 import static com.facebook.react.bridge.Arguments.makeNativeArray;
 
 @SuppressWarnings({"unused", "WeakerAccess", "SameParameterValue"})
@@ -351,9 +346,9 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     for (CipherStorage cipher : ciphers) {
       Set<String> aliases = cipher.getAllKeys();
       for (String alias : aliases) {
-          if (!alias.equals(WARMING_UP_ALIAS)) {
-              result.add(alias);
-          }
+        if (!alias.equals(WARMING_UP_ALIAS)) {
+          result.add(alias);
+        }
       }
     }
 
@@ -513,7 +508,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     String rules = null;
 
     if (null != options && options.hasKey(Maps.RULES)) {
-      rules = options.getString(Maps.ACCESS_CONTROL);
+      rules = options.getString(Maps.RULES);
     }
 
     if (null == rules) return rule;
