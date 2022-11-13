@@ -14,7 +14,7 @@ import androidx.annotation.RequiresApi;
 import com.oblador.keychain.KeychainModule;
 import com.oblador.keychain.SecurityLevel;
 import com.oblador.keychain.decryptionHandler.DecryptionResultHandler;
-import com.oblador.keychain.decryptionHandler.DecryptionResultHandlerNonInteractive;
+import com.oblador.keychain.decryptionHandler.DecryptionResultListener;
 import com.oblador.keychain.exceptions.CryptoFailedException;
 import com.oblador.keychain.exceptions.KeyStoreAccessException;
 
@@ -84,33 +84,13 @@ public class CipherStorageKeystoreRsaEcb extends CipherStorageBase {
     }
   }
 
-  @NonNull
   @Override
-  public DecryptionResult decrypt(@NonNull String alias,
-                                  @NonNull byte[] username,
-                                  @NonNull byte[] password,
-                                  @NonNull final SecurityLevel level)
-    throws CryptoFailedException {
-
-    final DecryptionResultHandlerNonInteractive handler = new DecryptionResultHandlerNonInteractive();
-    decrypt(handler, alias, username, password, level);
-
-    CryptoFailedException.reThrowOnError(handler.getError());
-
-    if (null == handler.getResult()) {
-      throw new CryptoFailedException("No decryption results and no error. Something deeply wrong!");
-    }
-
-    return handler.getResult();
-  }
-
-  @Override
-  @SuppressLint("NewApi")
-  public void decrypt(@NonNull DecryptionResultHandler handler,
+  public void decrypt(@NonNull final DecryptionResultHandler handler,
                       @NonNull String alias,
                       @NonNull byte[] username,
                       @NonNull byte[] password,
-                      @NonNull final SecurityLevel level)
+                      @NonNull final SecurityLevel level,
+                      @NonNull final DecryptionResultListener listener)
     throws CryptoFailedException {
 
     throwIfInsufficientLevel(level);
@@ -130,7 +110,7 @@ public class CipherStorageKeystoreRsaEcb extends CipherStorageBase {
         decryptBytes(key, password)
       );
 
-      handler.onDecrypt(results, null);
+      listener.onDecrypt(results);
     } catch (final UserNotAuthenticatedException ex) {
       Log.d(LOG_TAG, "Unlock of keystore is needed. Error: " + ex.getMessage(), ex);
 
@@ -138,10 +118,10 @@ public class CipherStorageKeystoreRsaEcb extends CipherStorageBase {
       @SuppressWarnings("ConstantConditions") final DecryptionContext context =
         new DecryptionContext(safeAlias, key, password, username);
 
-      handler.askAccessPermissions(context);
+      handler.askAccessPermissions(context, listener);
     } catch (final Throwable fail) {
       // any other exception treated as a failure
-      handler.onDecrypt(null, fail);
+      listener.onError(fail);
     }
   }
 

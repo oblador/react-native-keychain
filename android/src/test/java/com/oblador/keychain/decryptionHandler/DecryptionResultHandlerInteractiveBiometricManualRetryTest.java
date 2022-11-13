@@ -1,5 +1,18 @@
 package com.oblador.keychain.decryptionHandler;
 
+import static android.content.pm.PackageManager.PERMISSION_GRANTED;
+import static androidx.biometric.BiometricPrompt.ERROR_USER_CANCELED;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.nullValue;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import android.Manifest;
 import android.app.KeyguardManager;
 import android.content.Context;
@@ -15,20 +28,9 @@ import com.oblador.keychain.cipherStorage.CipherStorageKeystoreRsaEcb;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
+import org.robolectric.Shadows;
 import org.robolectric.annotation.Config;
-
-import static android.content.pm.PackageManager.PERMISSION_GRANTED;
-import static androidx.biometric.BiometricPrompt.ERROR_USER_CANCELED;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.nullValue;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import org.robolectric.shadows.ShadowLooper;
 
 @RunWith(RobolectricTestRunner.class)
 public class DecryptionResultHandlerInteractiveBiometricManualRetryTest {
@@ -91,6 +93,8 @@ public class DecryptionResultHandlerInteractiveBiometricManualRetryTest {
     final BiometricPrompt.AuthenticationResult mockAuthResult = mock(BiometricPrompt.AuthenticationResult.class);
 
     DecryptionResultHandlerInteractiveBiometricManualRetry handler = new DecryptionResultHandlerInteractiveBiometricManualRetry(mockContext, storage, promptInfo);
+    MockDecryptionHandlerListener listener = new MockDecryptionHandlerListener();
+    handler.listener = listener;
 
     // WHEN
     DecryptionResultHandlerInteractiveBiometricManualRetry spy = spy(handler);
@@ -100,11 +104,14 @@ public class DecryptionResultHandlerInteractiveBiometricManualRetryTest {
     spy.onAuthenticationFailed();
     spy.onAuthenticationError(ERROR_USER_CANCELED, "Authentication cancelled.");
 
+    ShadowLooper shadowLooper = Shadows.shadowOf(handler.handler.getLooper());
+    shadowLooper.runToEndOfTasks();
+
     //THEN
     verify(mockBiometricPrompt, times(1)).cancelAuthentication();
     verify(spy, times(2)).authenticateWithPrompt(mockActivity);
 
-    assertThat(spy.getResult(), is(nullValue()));
-    assertThat(spy.getError(), is(nullValue()));
+    assertThat(listener.getResult(), is(nullValue()));
+    assertThat(listener.getError(), is(nullValue()));
   }
 }

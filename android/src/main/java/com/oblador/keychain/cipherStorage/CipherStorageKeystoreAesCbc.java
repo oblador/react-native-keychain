@@ -13,6 +13,7 @@ import androidx.annotation.Nullable;
 import com.oblador.keychain.KeychainModule.KnownCiphers;
 import com.oblador.keychain.SecurityLevel;
 import com.oblador.keychain.decryptionHandler.DecryptionResultHandler;
+import com.oblador.keychain.decryptionHandler.DecryptionResultListener;
 import com.oblador.keychain.exceptions.CryptoFailedException;
 import com.oblador.keychain.exceptions.KeyStoreAccessException;
 
@@ -127,11 +128,12 @@ public class CipherStorageKeystoreAesCbc extends CipherStorageBase {
   }
 
   @Override
-  @NonNull
-  public DecryptionResult decrypt(@NonNull final String alias,
-                                  @NonNull final byte[] username,
-                                  @NonNull final byte[] password,
-                                  @NonNull final SecurityLevel level)
+  public void decrypt(@NonNull final DecryptionResultHandler handler,
+                      @NonNull final String alias,
+                      @NonNull final byte[] username,
+                      @NonNull final byte[] password,
+                      @NonNull final SecurityLevel level,
+                      @NonNull final DecryptionResultListener listener)
     throws CryptoFailedException {
 
     throwIfInsufficientLevel(level);
@@ -142,31 +144,16 @@ public class CipherStorageKeystoreAesCbc extends CipherStorageBase {
     try {
       final Key key = extractGeneratedKey(safeAlias, level, retries);
 
-      return new DecryptionResult(
-        decryptBytes(key, username),
-        decryptBytes(key, password),
-        getSecurityLevel(key));
+      final DecryptionResult result =
+          new DecryptionResult(
+              decryptBytes(key, username), decryptBytes(key, password), getSecurityLevel(key));
+      listener.onDecrypt(result);
     } catch (GeneralSecurityException e) {
-      throw new CryptoFailedException("Could not decrypt data with alias: " + alias, e);
+      listener.onError(new CryptoFailedException("Could not decrypt data with alias: " + alias, e));
     } catch (Throwable fail) {
-      throw new CryptoFailedException("Unknown error with alias: " + alias +
-        ", error: " + fail.getMessage(), fail);
-    }
-  }
-
-  /** Redirect call to {@link #decrypt(String, byte[], byte[], SecurityLevel)} method. */
-  @Override
-  public void decrypt(@NonNull final DecryptionResultHandler handler,
-                      @NonNull final String service,
-                      @NonNull final byte[] username,
-                      @NonNull final byte[] password,
-                      @NonNull final SecurityLevel level) {
-    try {
-      final DecryptionResult results = decrypt(service, username, password, level);
-
-      handler.onDecrypt(results, null);
-    } catch (Throwable fail) {
-      handler.onDecrypt(null, fail);
+      listener.onError(
+          new CryptoFailedException(
+              "Unknown error with alias: " + alias + ", error: " + fail.getMessage(), fail));
     }
   }
   //endregion
