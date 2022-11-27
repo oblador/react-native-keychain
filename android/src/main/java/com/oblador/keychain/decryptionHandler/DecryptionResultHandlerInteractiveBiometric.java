@@ -57,7 +57,7 @@ public class DecryptionResultHandlerInteractiveBiometric extends BiometricPrompt
   /** Called when an unrecoverable error has been encountered and the operation is complete. */
   @Override
   public void onAuthenticationError(final int errorCode, @NonNull final CharSequence errString) {
-    handler.post(
+    handler.postAtFrontOfQueue(
         () -> {
           final CryptoFailedException error =
               new CryptoFailedException("code: " + errorCode + ", msg: " + errString);
@@ -69,7 +69,7 @@ public class DecryptionResultHandlerInteractiveBiometric extends BiometricPrompt
   @Override
   public void onAuthenticationSucceeded(
       @NonNull final BiometricPrompt.AuthenticationResult result) {
-    handler.post(
+    handler.postAtFrontOfQueue(
         () -> {
           try {
             if (null == context)
