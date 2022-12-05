@@ -88,7 +88,6 @@ export default class KeychainExample extends Component {
     try {
       const isAndroid = Platform.OS === 'android';
       const accessControl = isAndroid ? this.state.accessControl : undefined;
-      console.log('>>> accessControl = ',this.state.accessControl);
       const options = {
         accessControl,
         authenticationPrompt: {
