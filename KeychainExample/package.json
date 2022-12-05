@@ -11,21 +11,23 @@
     "postinstall": "DESTINATION='node_modules/react-native-keychain' LIB_FILE=`cd .. && echo \\`pwd\\`/\\`npm pack\\`` && (rm -rf $DESTINATION || true) && mkdir $DESTINATION && tar -xvzf $LIB_FILE -C $DESTINATION --strip-components 1 && rm $LIB_FILE"
   },
   "dependencies": {
-    "react": "17.0.2",
-    "react-native": "0.66.0",
+    "react": "18.0.0",
+    "react-native": "0.69.0",
     "react-native-keychain": "*",
-    "react-native-macos": "^0.63.37",
-    "react-native-segmented-control-tab": "^3.4.1"
+    "react-native-segmented-control-tab": "^4.0.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.15.5",
-    "@babel/runtime": "^7.15.4",
-    "babel-jest": "^27.2.4",
-    "jest": "^27.2.4",
-    "metro-react-native-babel-preset": "^0.66.2",
-    "react-test-renderer": "17.0.2"
+    "@babel/core": "^7.12.9",
+    "@babel/runtime": "^7.12.5",
+    "babel-jest": "^26.6.3",
+    "jest": "^26.6.3",
+    "metro-react-native-babel-preset": "^0.70.3",
+    "react-test-renderer": "18.0.0"
   },
   "jest": {
     "preset": "react-native"
+  },
+  "volta": {
+    "node": "16.14.2"
   }
 }

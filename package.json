@@ -1,6 +1,6 @@
 {
   "name": "react-native-keychain",
-  "version": "8.0.0",
+  "version": "8.1.1",
   "description": "Keychain Access for React Native",
   "main": "index.js",
   "files": [
@@ -14,7 +14,8 @@
   "scripts": {
     "format": "prettier '{,typings/,KeychainExample/}*.{md,js,json,ts,tsx}' --write",
     "lint": "eslint .",
-    "flow": "flow"
+    "flow": "flow",
+    "test": "./gradlew test"
   },
   "keywords": [
     "react-native",
@@ -44,11 +45,14 @@
   },
   "license": "MIT",
   "devDependencies": {
-    "@react-native-community/eslint-config": "^2.0.0",
+    "@react-native-community/eslint-config": "^3.0.1",
     "eslint": "^7.2.0",
-    "flow-bin": "^0.158.0",
+    "flow-bin": "^0.176.3",
     "prettier": "^2.2.1",
-    "react-native": "^0.66.0",
+    "react-native": "^0.69.0",
     "typescript": "^4.2.2"
+  },
+  "volta": {
+    "node": "16.14.2"
   }
 }

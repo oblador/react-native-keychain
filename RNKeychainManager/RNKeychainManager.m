@@ -101,8 +101,7 @@ CFStringRef accessibleValue(NSDictionary *options)
       @"AccessibleAlways": (__bridge NSString *)kSecAttrAccessibleAlways,
       @"AccessibleWhenPasscodeSetThisDeviceOnly": (__bridge NSString *)kSecAttrAccessibleWhenPasscodeSetThisDeviceOnly,
       @"AccessibleWhenUnlockedThisDeviceOnly": (__bridge NSString *)kSecAttrAccessibleWhenUnlockedThisDeviceOnly,
-      @"AccessibleAfterFirstUnlockThisDeviceOnly": (__bridge NSString *)kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly,
-      @"AccessibleAlwaysThisDeviceOnly": (__bridge NSString *)kSecAttrAccessibleAlwaysThisDeviceOnly
+      @"AccessibleAfterFirstUnlockThisDeviceOnly": (__bridge NSString *)kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
     };
     NSString *result = keyMap[options[@"accessible"]];
     if (result) {
@@ -203,6 +202,10 @@ SecAccessControlCreateFlags accessControlValue(NSDictionary *options)
   SecAccessControlCreateFlags accessControl = accessControlValue(options);
 
   NSMutableDictionary *mAttributes = attributes.mutableCopy;
+
+  if (@available(macOS 10.15, iOS 13.0, *)) {
+      mAttributes[(__bridge NSString *)kSecUseDataProtectionKeychain] = @(YES);
+  }
 
   if (accessControl) {
     NSError *aerr = nil;
