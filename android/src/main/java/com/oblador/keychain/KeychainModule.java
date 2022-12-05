@@ -609,8 +609,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     }
 
     final String accessControl = getAccessControlOrDefault(options);
-    final boolean isBiometryOrPasscode = accessControl.equals(AccessControl.BIOMETRY_CURRENT_SET_OR_DEVICE_PASSCODE) | accessControl.equals(AccessControl.BIOMETRY_ANY_OR_DEVICE_PASSCODE);
-
+    final boolean isBiometryOrPasscode = accessControl.equals(AccessControl.BIOMETRY_CURRENT_SET_OR_DEVICE_PASSCODE) || accessControl.equals(AccessControl.BIOMETRY_ANY_OR_DEVICE_PASSCODE);
     if (null != promptInfoOptionsMap && promptInfoOptionsMap.hasKey(AuthPromptOptions.CANCEL) && !isBiometryOrPasscode) {
       String promptInfoNegativeButton = promptInfoOptionsMap.getString(AuthPromptOptions.CANCEL);
       promptInfoBuilder.setNegativeButtonText(promptInfoNegativeButton);
