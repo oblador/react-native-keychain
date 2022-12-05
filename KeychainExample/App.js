@@ -23,6 +23,7 @@ const ACCESS_CONTROL_MAP = [
 const ACCESS_CONTROL_MAP_ANDROID = [
   null,
   Keychain.ACCESS_CONTROL.BIOMETRY_CURRENT_SET,
+  Keychain.ACCESS_CONTROL.BIOMETRY_CURRENT_SET_OR_DEVICE_PASSCODE,
 ];
 const SECURITY_LEVEL_OPTIONS = ['Any', 'Software', 'Hardware'];
 const SECURITY_LEVEL_MAP = [
@@ -59,7 +60,6 @@ export default class KeychainExample extends Component {
   async save() {
     try {
       let start = new Date();
-
       await Keychain.setGenericPassword(
         this.state.username,
         this.state.password,
@@ -86,7 +86,10 @@ export default class KeychainExample extends Component {
 
   async load() {
     try {
+      const isAndroid = Platform.OS === 'android';
+      const accessControl = isAndroid ? this.state.accessControl : undefined;
       const options = {
+        accessControl,
         authenticationPrompt: {
           title: 'Authentication needed',
           subtitle: 'Subtitle',
@@ -205,7 +208,7 @@ export default class KeychainExample extends Component {
               selectedIndex={this.state.selectedIndex}
               values={
                 this.state.biometryType
-                  ? [...VALUES, this.state.biometryType]
+                  ? [...VALUES, this.state.biometryType, 'BioOrPasscode']
                   : VALUES
               }
               onTabPress={(index) =>
