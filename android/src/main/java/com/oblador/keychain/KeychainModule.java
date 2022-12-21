@@ -616,8 +616,23 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     }
 
     /* PromptInfo is only used in Biometric-enabled RSA storage and can only be unlocked by a strong biometric */
-    int allowedAuthenticators = isBiometryOrPasscode ? BiometricManager.Authenticators.BIOMETRIC_STRONG | BiometricManager.Authenticators.DEVICE_CREDENTIAL : BiometricManager.Authenticators.BIOMETRIC_STRONG;
-    promptInfoBuilder.setAllowedAuthenticators(allowedAuthenticators);
+    if (isBiometryOrPasscode) {
+      /* fix reference https://developer.android.com/reference/androidx/biometric/BiometricPrompt.PromptInfo.Builder#setAllowedAuthenticators(int) */
+      final int currentApiLevel = Build.VERSION.SDK_INT;
+      switch(currentApiLevel) {
+        // DEVICE_CREDENTIAL 在 28/29 不能組合使用
+        case Build.VERSION_CODES.P:
+        case Build.VERSION_CODES.Q:
+          promptInfoBuilder.setAllowedAuthenticators(BiometricManager.Authenticators.BIOMETRIC_STRONG).setDeviceCredentialAllowed(true);
+          break;
+        // DEVICE_CREDENTIAL 在 30 以前不能單獨指定
+        default:
+          promptInfoBuilder.setAllowedAuthenticators(BiometricManager.Authenticators.BIOMETRIC_STRONG | BiometricManager.Authenticators.DEVICE_CREDENTIAL);
+          break;
+      }
+    } else {
+      promptInfoBuilder.setAllowedAuthenticators(BiometricManager.Authenticators.BIOMETRIC_STRONG);
+    }
 
     /* Bypass confirmation to avoid KeyStore unlock timeout being exceeded when using passive biometrics */
     promptInfoBuilder.setConfirmationRequired(false);
