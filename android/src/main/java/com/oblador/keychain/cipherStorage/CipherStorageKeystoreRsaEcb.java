@@ -125,18 +125,8 @@ public class CipherStorageKeystoreRsaEcb extends CipherStorageBase {
       // key is always NOT NULL otherwise GeneralSecurityException raised
       key = extractGeneratedKey(safeAlias, level, retries);
 
-      final DecryptionResult results = new DecryptionResult(
-        decryptBytes(key, username),
-        decryptBytes(key, password)
-      );
-
-      handler.onDecrypt(results, null);
-    } catch (final UserNotAuthenticatedException ex) {
-      Log.d(LOG_TAG, "Unlock of keystore is needed. Error: " + ex.getMessage(), ex);
-
-      // expected that KEY instance is extracted and we caught exception on decryptBytes operation
       @SuppressWarnings("ConstantConditions") final DecryptionContext context =
-        new DecryptionContext(safeAlias, key, password, username);
+      new DecryptionContext(safeAlias, key, password, username);
 
       handler.askAccessPermissions(context);
     } catch (final Throwable fail) {
@@ -238,7 +228,7 @@ public class CipherStorageKeystoreRsaEcb extends CipherStorageBase {
       .setEncryptionPaddings(PADDING_PKCS1)
       .setRandomizedEncryptionRequired(true)
       .setUserAuthenticationRequired(true)
-      .setUserAuthenticationValidityDurationSeconds(5)
+      .setUserAuthenticationParameters(5, KeyProperties.AUTH_BIOMETRIC_STRONG)
       .setKeySize(keySize);
   }
 
