@@ -17,6 +17,7 @@ def safeExtGet(prop, fallback) {
 }
 
 android {
+  namespace = "com.oblador.keychain"
   compileSdkVersion safeExtGet('compileSdkVersion', 31)
   buildToolsVersion safeExtGet('buildToolsVersion', '31.0.0')
 
