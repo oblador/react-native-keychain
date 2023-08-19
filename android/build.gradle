@@ -5,7 +5,7 @@ buildscript {
     }
   }
   dependencies {
-    classpath 'com.adarshr:gradle-test-logger-plugin:2.0.0'
+    classpath 'com.adarshr:gradle-test-logger-plugin:3.2.0'
   }
 }
 
