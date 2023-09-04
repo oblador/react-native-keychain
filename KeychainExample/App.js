@@ -13,7 +13,7 @@ import SegmentedControlTab from 'react-native-segmented-control-tab';
 import * as Keychain from 'react-native-keychain';
 
 const ACCESS_CONTROL_OPTIONS = ['None', 'Passcode', 'Password'];
-const ACCESS_CONTROL_OPTIONS_ANDROID = ['None'];
+const ACCESS_CONTROL_OPTIONS_ANDROID = ['None', 'Fallback'];
 const ACCESS_CONTROL_MAP = [
   null,
   Keychain.ACCESS_CONTROL.DEVICE_PASSCODE,
@@ -22,6 +22,7 @@ const ACCESS_CONTROL_MAP = [
 ];
 const ACCESS_CONTROL_MAP_ANDROID = [
   null,
+  Keychain.ACCESS_CONTROL.BIOMETRY_ANY_OR_DEVICE_PASSCODE,
   Keychain.ACCESS_CONTROL.BIOMETRY_CURRENT_SET,
 ];
 const SECURITY_LEVEL_OPTIONS = ['Any', 'Software', 'Hardware'];
@@ -38,6 +39,13 @@ const SECURITY_STORAGE_MAP = [
   Keychain.STORAGE_TYPE.AES,
   Keychain.STORAGE_TYPE.RSA,
 ];
+
+const ACCESS_CTRL_TO_AUTH_TYPE = {
+  [Keychain.ACCESS_CONTROL.BIOMETRY_ANY]:
+    Keychain.AUTHENTICATION_TYPE.BIOMETRICS,
+  [Keychain.ACCESS_CONTROL.BIOMETRY_ANY_OR_DEVICE_PASSCODE]:
+    Keychain.AUTHENTICATION_TYPE.DEVICE_PASSCODE_OR_BIOMETRICS,
+};
 
 export default class KeychainExample extends Component {
   state = {
@@ -94,6 +102,18 @@ export default class KeychainExample extends Component {
           cancel: 'Cancel',
         },
       };
+      if (this.state.accessControl) {
+        options.authenticationType =
+          ACCESS_CTRL_TO_AUTH_TYPE[this.state.accessControl];
+        options.accessControl = this.state.accessControl;
+      }
+      if (
+        Platform.OS === 'android' &&
+        options.authenticationType ===
+          Keychain.AUTHENTICATION_TYPE.DEVICE_PASSCODE_OR_BIOMETRICS
+      ) {
+        options.authenticationPrompt.cancel = '';
+      }
       const credentials = await Keychain.getGenericPassword(options);
       if (credentials) {
         this.setState({ ...credentials, status: 'Credentials loaded!' });
@@ -340,6 +360,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     fontSize: 15,
     marginBottom: 5,
+    color: 'black',
   },
   input: {
     color: '#000',
