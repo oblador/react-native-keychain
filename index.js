@@ -90,6 +90,7 @@ type BaseOptions = {|
   securityLevel?: SecMinimumLevel,
   storage?: SecStorageType,
   rules?: SecSecurityRules,
+  synchronized?: boolean,
 |};
 
 type NormalizedOptions = {
@@ -223,12 +224,14 @@ export function getAllGenericPasswordServices(): Promise<string[]> {
 /**
  * Checks if we have a login combination for `server`.
  * @param {string} server URL to server.
+ * @param {object} options An Keychain options object.
  * @return {Promise} Resolves to `{service, storage}` when successful
  */
 export function hasInternetCredentials(
-  server: string
+  server: string,
+  options?: Options
 ): Promise<false | Result> {
-  return RNKeychainManager.hasInternetCredentialsForServer(server);
+  return RNKeychainManager.hasInternetCredentialsForServer(server, normalizeOptions(options));
 }
 
 /**
@@ -275,8 +278,14 @@ export function getInternetCredentials(
  * @param {object} options Keychain options, iOS only
  * @return {Promise} Resolves to `true` when successful
  */
-export function resetInternetCredentials(server: string): Promise<void> {
-  return RNKeychainManager.resetInternetCredentialsForServer(server);
+export function resetInternetCredentials(
+  server: string,
+  options?: Options
+): Promise<void> {
+  return RNKeychainManager.resetInternetCredentialsForServer(
+    server,
+    normalizeOptions(options)
+  );
 }
 
 /**

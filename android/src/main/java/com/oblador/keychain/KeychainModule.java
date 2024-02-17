@@ -440,6 +440,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
 
   @ReactMethod
   public void resetInternetCredentialsForServer(@NonNull final String server,
+                                                @Nullable final ReadableMap options,
                                                 @NonNull final Promise promise) {
     resetGenericPassword(server, promise);
   }

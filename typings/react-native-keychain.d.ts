@@ -80,6 +80,7 @@ declare module 'react-native-keychain' {
     securityLevel?: SECURITY_LEVEL;
     storage?: STORAGE_TYPE;
     rules?: SECURITY_RULES;
+    synchronized?: boolean;
   }
 
   function setGenericPassword(
@@ -96,7 +97,7 @@ declare module 'react-native-keychain' {
 
   function getAllGenericPasswordServices(): Promise<string[]>;
 
-  function hasInternetCredentials(server: string): Promise<false | Result>;
+  function hasInternetCredentials(server: string, options?: Options): Promise<false | Result>;
 
   function setInternetCredentials(
     server: string,
