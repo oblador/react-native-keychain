@@ -12,7 +12,7 @@
 #import <React/RCTBridge.h>
 #import <React/RCTUtils.h>
 
-#if TARGET_OS_IOS
+#if TARGET_OS_IOS || TARGET_OS_VISION
 #import <LocalAuthentication/LAContext.h>
 #endif
 
@@ -151,8 +151,9 @@ NSString *authenticationPromptValue(NSDictionary *options)
 
 #define kBiometryTypeTouchID @"TouchID"
 #define kBiometryTypeFaceID @"FaceID"
+#define kBiometryTypeOpticID @"OpticID"
 
-#if TARGET_OS_IOS
+#if TARGET_OS_IOS || TARGET_OS_VISION
 LAPolicy authPolicy(NSDictionary *options)
 {
   if (options && options[kAuthenticationType]) {
@@ -209,7 +210,7 @@ SecAccessControlCreateFlags accessControlValue(NSDictionary *options)
 
   if (accessControl) {
     NSError *aerr = nil;
-#if TARGET_OS_IOS
+#if TARGET_OS_IOS || TARGET_OS_VISION
     BOOL canAuthenticate = [[LAContext new] canEvaluatePolicy:LAPolicyDeviceOwnerAuthentication error:&aerr];
     if (aerr || !canAuthenticate) {
       return rejectWithError(reject, aerr);
@@ -305,7 +306,7 @@ SecAccessControlCreateFlags accessControlValue(NSDictionary *options)
 
 #pragma mark - RNKeychain
 
-#if TARGET_OS_IOS
+#if TARGET_OS_IOS || TARGET_OS_VISION
 RCT_EXPORT_METHOD(canCheckAuthentication:(NSDictionary * __nullable)options
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
@@ -323,7 +324,7 @@ RCT_EXPORT_METHOD(canCheckAuthentication:(NSDictionary * __nullable)options
 }
 #endif
 
-#if TARGET_OS_IOS
+#if TARGET_OS_IOS || TARGET_OS_VISION
 RCT_EXPORT_METHOD(getSupportedBiometryType:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
 {
@@ -332,6 +333,11 @@ RCT_EXPORT_METHOD(getSupportedBiometryType:(RCTPromiseResolveBlock)resolve
   BOOL canBeProtected = [context canEvaluatePolicy:LAPolicyDeviceOwnerAuthenticationWithBiometrics error:&aerr];
 
   if (!aerr && canBeProtected) {
+    if (@available(visionOS 1, *)) {
+      if (context.biometryType == LABiometryTypeOpticID) {
+        return resolve(kBiometryTypeOpticID);
+      }
+    }
     if (@available(iOS 11, *)) {
       if (context.biometryType == LABiometryTypeFaceID) {
         return resolve(kBiometryTypeFaceID);
@@ -538,7 +544,7 @@ RCT_EXPORT_METHOD(resetInternetCredentialsForServer:(NSString *)server
   return resolve(@(YES));
 }
 
-#if TARGET_OS_IOS && !TARGET_OS_UIKITFORMAC
+#if (TARGET_OS_IOS || TARGET_OS_VISION) && !TARGET_OS_UIKITFORMAC
 RCT_EXPORT_METHOD(requestSharedWebCredentials:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
 {
   SecRequestSharedWebCredential(NULL, NULL, ^(CFArrayRef credentials, CFErrorRef error) {
