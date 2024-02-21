@@ -22,9 +22,9 @@
     - [`hasInternetCredentials(server)`](#hasinternetcredentialsserver)
     - [`getInternetCredentials(server, [{ authenticationPrompt }])`](#getinternetcredentialsserver--authenticationprompt-)
     - [`resetInternetCredentials(server)`](#resetinternetcredentialsserver)
-    - [`requestSharedWebCredentials()` (iOS only)](#requestsharedwebcredentials-ios-only)
-    - [`setSharedWebCredentials(server, username, password)` (iOS only)](#setsharedwebcredentialsserver-username-password-ios-only)
-    - [`canImplyAuthentication([{ authenticationType }])` (iOS only)](#canimplyauthentication-authenticationtype--ios-only)
+    - [`requestSharedWebCredentials()` (iOS and visionOS only)](#requestsharedwebcredentials-ios-and-visionos-only)
+    - [`setSharedWebCredentials(server, username, password)` (iOS and visionOS only)](#setsharedwebcredentialsserver-username-password-ios-and-visionos-only)
+    - [`canImplyAuthentication([{ authenticationType }])` (iOS and visionOS only)](#canimplyauthentication-authenticationtype--ios-and-visionos-only)
     - [`getSupportedBiometryType()`](#getsupportedbiometrytype)
     - [`getSecurityLevel([{ accessControl }])` (Android only)](#getsecuritylevel-accesscontrol--android-only)
     - [Options](#options)
@@ -139,21 +139,21 @@ Will retrieve the server/username/password combination from the secure storage. 
 
 Will remove the server/username/password combination from the secure storage.
 
-### `requestSharedWebCredentials()` (iOS only)
+### `requestSharedWebCredentials()` (iOS and visionOS only)
 
 Asks the user for a shared web credential. Requires additional setup both in the app and server side, see [Apple documentation](https://developer.apple.com/documentation/security/shared_web_credentials). Resolves to `{ server, username, password }` if approved and `false` if denied and throws an error if not supported on platform or there's no shared credentials.
 
-### `setSharedWebCredentials(server, username, password)` (iOS only)
+### `setSharedWebCredentials(server, username, password)` (iOS and visionOS only)
 
 Sets a shared web credential. Resolves to `true` when successful.
 
-### `canImplyAuthentication([{ authenticationType }])` (iOS only)
+### `canImplyAuthentication([{ authenticationType }])` (iOS and visionOS only)
 
 Inquire if the type of local authentication policy is supported on this device with the device settings the user chose. Should be used in combination with `accessControl` option in the setter functions. Resolves to `true` if supported.
 
 ### `getSupportedBiometryType()`
 
-**On iOS:** Get what type of hardware biometry support the device can use for biometric encryption. Resolves to a `Keychain.BIOMETRY_TYPE` value when supported and enrolled, otherwise `null`.
+**On iOS and visionOS:** Get what type of hardware biometry support the device can use for biometric encryption. Resolves to a `Keychain.BIOMETRY_TYPE` value when supported and enrolled, otherwise `null`.
 
 **On Android:** Get what type of Class 3 (strong) biometry support the device has. Resolves to a `Keychain.BIOMETRY_TYPE` value when supported, otherwise `null`. In most devices this will return `FINGERPRINT` (except for Pixel 4 or similar where fingerprint sensor is not present).
 
@@ -167,16 +167,16 @@ Get security level that is supported on the current device with the current OS. 
 
 #### Data Structure Properties/Fields
 
-| Key                        | Platform     | Description                                                                                      | Default                                                                   |
-| -------------------------- | ------------ | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------- |
-| **`accessControl`**        | All          | This dictates how a keychain item may be used, see possible values in `Keychain.ACCESS_CONTROL`. | _None_                                                                    |
-| **`accessible`**           | iOS only     | This dictates when a keychain item is accessible, see possible values in `Keychain.ACCESSIBLE`.  | _`Keychain.ACCESSIBLE.WHEN_UNLOCKED`_                                     |
-| **`accessGroup`**          | iOS only     | In which App Group to share the keychain. Requires additional setup with entitlements.           | _None_                                                                    |
-| **`authenticationPrompt`** | All          | What to prompt the user when unlocking the keychain with biometry or device password.            | See [`authenticationPrompt` Properties](#authenticationprompt-properties) |
-| **`authenticationType`**   | iOS only     | Policies specifying which forms of authentication are acceptable.                                | `Keychain.AUTHENTICATION_TYPE.DEVICE_PASSCODE_OR_BIOMETRICS`              |
-| **`service`**              | All          | Reverse domain name qualifier for the service associated with password.                          | _App bundle ID_                                                           |
-| **`storage`**              | Android only | Force specific cipher storage usage during saving the password                                   | Select best available storage                                             |
-| **`rules`**                | Android only | Force following to a specific security rules                                                     | `Keychain.RULES.AUTOMATIC_UPGRADE`                                        |
+| Key                        | Platform      | Description                                                                                      | Default                                                                   |
+| -------------------------- |---------------| ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------- |
+| **`accessControl`**        | All           | This dictates how a keychain item may be used, see possible values in `Keychain.ACCESS_CONTROL`. | _None_                                                                    |
+| **`accessible`**           | iOS, visionOS | This dictates when a keychain item is accessible, see possible values in `Keychain.ACCESSIBLE`.  | _`Keychain.ACCESSIBLE.WHEN_UNLOCKED`_                                     |
+| **`accessGroup`**          | iOS, visionOS | In which App Group to share the keychain. Requires additional setup with entitlements.           | _None_                                                                    |
+| **`authenticationPrompt`** | All           | What to prompt the user when unlocking the keychain with biometry or device password.            | See [`authenticationPrompt` Properties](#authenticationprompt-properties) |
+| **`authenticationType`**   | iOS, visionOS | Policies specifying which forms of authentication are acceptable.                                | `Keychain.AUTHENTICATION_TYPE.DEVICE_PASSCODE_OR_BIOMETRICS`              |
+| **`service`**              | All           | Reverse domain name qualifier for the service associated with password.                          | _App bundle ID_                                                           |
+| **`storage`**              | Android only  | Force specific cipher storage usage during saving the password                                   | Select best available storage                                             |
+| **`rules`**                | Android only  | Force following to a specific security rules                                                     | `Keychain.RULES.AUTOMATIC_UPGRADE`                                        |
 
 ##### `authenticationPrompt` Properties
 
@@ -236,9 +236,10 @@ Refs:
 #### `Keychain.BIOMETRY_TYPE` enum
 
 | Key               | Description                                                          |
-| ----------------- | -------------------------------------------------------------------- |
+|-------------------|----------------------------------------------------------------------|
 | **`TOUCH_ID`**    | Device supports authentication with Touch ID. (iOS only)             |
 | **`FACE_ID`**     | Device supports authentication with Face ID. (iOS only)              |
+| **`OPTIC_ID`**    | Device supports authentication with Optic ID. (visionOS only)        |
 | **`FINGERPRINT`** | Device supports authentication with Fingerprint. (Android only)      |
 | **`FACE`**        | Device supports authentication with Face Recognition. (Android only) |
 | **`IRIS`**        | Device supports authentication with Iris Recognition. (Android only) |
@@ -502,6 +503,10 @@ Refs:
 ### macOS Catalyst
 
 This package supports macOS Catalyst.
+
+### visionOS
+
+This package supports visionOS.
 
 ### Security
 
