@@ -46,6 +46,7 @@ declare module 'react-native-keychain' {
   export enum BIOMETRY_TYPE {
     TOUCH_ID = 'TouchID',
     FACE_ID = 'FaceID',
+    OPTIC_ID = 'OpticID',
     FINGERPRINT = 'Fingerprint',
     FACE = 'Face',
     IRIS = 'Iris',
@@ -119,7 +120,7 @@ declare module 'react-native-keychain' {
     options?: Options
   ): Promise<null | BIOMETRY_TYPE>;
 
-  /** IOS ONLY */
+  /** IOS AND VISIONOS ONLY */
 
   function requestSharedWebCredentials(): Promise<false | SharedWebCredentials>;
 
