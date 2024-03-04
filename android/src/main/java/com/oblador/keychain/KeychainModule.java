@@ -52,6 +52,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
   public static final String IRIS_SUPPORTED_NAME = "Iris";
   public static final String EMPTY_STRING = "";
   public static final String WARMING_UP_ALIAS = "warmingUp";
+  public static final String AUTHENTICATION_TYPE = "authenticationType";
 
   private static final String LOG_TAG = KeychainModule.class.getSimpleName();
 
@@ -72,6 +73,13 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     String APPLICATION_PASSWORD = "ApplicationPassword";
     String BIOMETRY_ANY_OR_DEVICE_PASSCODE = "BiometryAnyOrDevicePasscode";
     String BIOMETRY_CURRENT_SET_OR_DEVICE_PASSCODE = "BiometryCurrentSetOrDevicePasscode";
+  }
+
+  @StringDef({AuthenticateType.BIOMETRICS
+  , AuthenticateType.DEVICE_PASSCODE_OR_BIOMETRICS})
+  @interface AuthenticateType {
+    String DEVICE_PASSCODE_OR_BIOMETRICS = "AuthenticationWithBiometricsDevicePasscode";
+    String BIOMETRICS = "AuthenticationWithBiometrics";
   }
 
   @interface AuthPromptOptions {
@@ -618,7 +626,11 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     }
 
     /* PromptInfo is only used in Biometric-enabled RSA storage and can only be unlocked by a strong biometric */
-    promptInfoBuilder.setAllowedAuthenticators(BiometricManager.Authenticators.BIOMETRIC_STRONG);
+    int allowedAuthenticators = BiometricManager.Authenticators.BIOMETRIC_STRONG;
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && options.hasKey(AUTHENTICATION_TYPE) && options.getString(AUTHENTICATION_TYPE).equals(AuthenticateType.DEVICE_PASSCODE_OR_BIOMETRICS)) {
+      allowedAuthenticators = BiometricManager.Authenticators.BIOMETRIC_STRONG | BiometricManager.Authenticators.DEVICE_CREDENTIAL;
+    }
+    promptInfoBuilder.setAllowedAuthenticators(allowedAuthenticators);
 
     /* Bypass confirmation to avoid KeyStore unlock timeout being exceeded when using passive biometrics */
     promptInfoBuilder.setConfirmationRequired(false);
