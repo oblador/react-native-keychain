@@ -37,6 +37,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import javax.crypto.Cipher;
@@ -212,35 +214,41 @@ public class KeychainModule extends ReactContextBaseJavaModule {
                                     @NonNull final String password,
                                     @Nullable final ReadableMap options,
                                     @NonNull final Promise promise) {
-    try {
-      throwIfEmptyLoginPassword(username, password);
 
-      final SecurityLevel level = getSecurityLevelOrDefault(options);
-      final CipherStorage storage = getSelectedStorage(options);
+    Executor executor = Executors.newSingleThreadExecutor();
 
-      throwIfInsufficientLevel(storage, level);
+    executor.execute(() -> {
+      try {
+        throwIfEmptyLoginPassword(username, password);
 
-      final EncryptionResult result = storage.encrypt(alias, username, password, level);
-      prefsStorage.storeEncryptedEntry(alias, result);
+        final SecurityLevel level = getSecurityLevelOrDefault(options);
+        final CipherStorage storage = getSelectedStorage(options);
 
-      final WritableMap results = Arguments.createMap();
-      results.putString(Maps.SERVICE, alias);
-      results.putString(Maps.STORAGE, storage.getCipherStorageName());
+        throwIfInsufficientLevel(storage, level);
 
-      promise.resolve(results);
-    } catch (EmptyParameterException e) {
-      Log.e(KEYCHAIN_MODULE, e.getMessage(), e);
+        final EncryptionResult result = storage.encrypt(alias, username, password, level);
+        prefsStorage.storeEncryptedEntry(alias, result);
 
-      promise.reject(Errors.E_EMPTY_PARAMETERS, e);
-    } catch (CryptoFailedException e) {
-      Log.e(KEYCHAIN_MODULE, e.getMessage(), e);
+        final WritableMap results = Arguments.createMap();
+        results.putString(Maps.SERVICE, alias);
+        results.putString(Maps.STORAGE, storage.getCipherStorageName());
 
-      promise.reject(Errors.E_CRYPTO_FAILED, e);
-    } catch (Throwable fail) {
-      Log.e(KEYCHAIN_MODULE, fail.getMessage(), fail);
+        promise.resolve(results);
+      } catch (EmptyParameterException e) {
+        Log.e(KEYCHAIN_MODULE, e.getMessage(), e);
 
-      promise.reject(Errors.E_UNKNOWN_ERROR, fail);
-    }
+        promise.reject(Errors.E_EMPTY_PARAMETERS, e);
+      } catch (CryptoFailedException e) {
+        Log.e(KEYCHAIN_MODULE, e.getMessage(), e);
+
+        promise.reject(Errors.E_CRYPTO_FAILED, e);
+      } catch (Throwable fail) {
+        Log.e(KEYCHAIN_MODULE, fail.getMessage(), fail);
+
+        promise.reject(Errors.E_UNKNOWN_ERROR, fail);
+      }
+    });
+
   }
 
   @ReactMethod
