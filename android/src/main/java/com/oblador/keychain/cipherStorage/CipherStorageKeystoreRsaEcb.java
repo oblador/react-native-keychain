@@ -31,6 +31,8 @@ import java.security.PublicKey;
 import java.security.cert.Certificate;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.crypto.NoSuchPaddingException;
@@ -86,63 +88,46 @@ public class CipherStorageKeystoreRsaEcb extends CipherStorageBase {
 
   @NonNull
   @Override
-  public DecryptionResult decrypt(@NonNull String alias,
-                                  @NonNull byte[] username,
-                                  @NonNull byte[] password,
-                                  @NonNull final SecurityLevel level)
+  public CompletableFuture<DecryptionResult> decrypt(@NonNull String alias,
+                                                     @NonNull byte[] username,
+                                                     @NonNull byte[] password,
+                                                     @NonNull final SecurityLevel level)
     throws CryptoFailedException {
 
     final DecryptionResultHandlerNonInteractive handler = new DecryptionResultHandlerNonInteractive();
-    decrypt(handler, alias, username, password, level);
-
-    CryptoFailedException.reThrowOnError(handler.getError());
-
-    if (null == handler.getResult()) {
-      throw new CryptoFailedException("No decryption results and no error. Something deeply wrong!");
-    }
-
-    return handler.getResult();
+    return decrypt(handler, alias, username, password, level);
   }
 
   @Override
   @SuppressLint("NewApi")
-  public void decrypt(@NonNull DecryptionResultHandler handler,
-                      @NonNull String alias,
-                      @NonNull byte[] username,
-                      @NonNull byte[] password,
-                      @NonNull final SecurityLevel level)
+  public CompletableFuture<DecryptionResult> decrypt(final @NonNull DecryptionResultHandler handler,
+                                                     @NonNull String alias,
+                                                     @NonNull byte[] username,
+                                                     @NonNull byte[] password,
+                                                     @NonNull SecurityLevel level)
     throws CryptoFailedException {
-
     throwIfInsufficientLevel(level);
 
     final String safeAlias = getDefaultAliasIfEmpty(alias, getDefaultAliasServiceName());
     final AtomicInteger retries = new AtomicInteger(1);
-    boolean shouldAskPermissions = false;
 
-    Key key = null;
+    return CompletableFuture.supplyAsync(() -> {
+        try {
+            return extractGeneratedKey(safeAlias, level, retries);
+        } catch (GeneralSecurityException e) {
+            throw new CompletionException(e);
+        }
+    }).thenCompose(key -> {
+        // key is always NOT NULL otherwise GeneralSecurityException raised
+        // expected that KEY instance is extracted and we caught exception on decryptBytes operation
 
-    try {
-      // key is always NOT NULL otherwise GeneralSecurityException raised
-      key = extractGeneratedKey(safeAlias, level, retries);
+        final DecryptionContext ctx = new DecryptionContext(safeAlias, key, password, username);
 
-      final DecryptionResult results = new DecryptionResult(
-        decryptBytes(key, username),
-        decryptBytes(key, password)
-      );
-
-      handler.onDecrypt(results, null);
-    } catch (final UserNotAuthenticatedException ex) {
-      Log.d(LOG_TAG, "Unlock of keystore is needed. Error: " + ex.getMessage(), ex);
-
-      // expected that KEY instance is extracted and we caught exception on decryptBytes operation
-      @SuppressWarnings("ConstantConditions") final DecryptionContext context =
-        new DecryptionContext(safeAlias, key, password, username);
-
-      handler.askAccessPermissions(context);
-    } catch (final Throwable fail) {
-      // any other exception treated as a failure
-      handler.onDecrypt(null, fail);
-    }
+        return handler.authenticate(() -> new DecryptionResult(
+                decryptBytes(ctx.key, ctx.username),
+                decryptBytes(ctx.key, ctx.password)
+        ));
+    });
   }
 
   //endregion

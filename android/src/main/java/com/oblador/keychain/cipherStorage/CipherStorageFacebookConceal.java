@@ -22,6 +22,7 @@ import com.oblador.keychain.exceptions.CryptoFailedException;
 
 import java.security.GeneralSecurityException;
 import java.security.Key;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * @see <a href="https://github.com/facebook/conceal">Conceal Project</a>
@@ -96,10 +97,10 @@ public class CipherStorageFacebookConceal extends CipherStorageBase {
 
   @NonNull
   @Override
-  public DecryptionResult decrypt(@NonNull final String alias,
-                                  @NonNull final byte[] username,
-                                  @NonNull final byte[] password,
-                                  @NonNull final SecurityLevel level)
+  public CompletableFuture<DecryptionResult> decrypt(@NonNull final String alias,
+                                                     @NonNull final byte[] username,
+                                                     @NonNull final byte[] password,
+                                                     @NonNull final SecurityLevel level)
     throws CryptoFailedException {
 
     throwIfInsufficientLevel(level);
@@ -112,30 +113,25 @@ public class CipherStorageFacebookConceal extends CipherStorageBase {
       final byte[] decryptedUsername = crypto.decrypt(username, usernameEntity);
       final byte[] decryptedPassword = crypto.decrypt(password, passwordEntity);
 
-      return new DecryptionResult(
+      return CompletableFuture.supplyAsync(() -> new DecryptionResult(
         new String(decryptedUsername, UTF8),
         new String(decryptedPassword, UTF8),
-        SecurityLevel.ANY);
+        SecurityLevel.ANY));
     } catch (Throwable fail) {
       throw new CryptoFailedException("Decryption failed for alias: " + alias, fail);
     }
   }
 
-  /** redirect call to default {@link #decrypt(String, byte[], byte[], SecurityLevel)} method. */
+  /**
+   * redirect call to default {@link #decrypt(String, byte[], byte[], SecurityLevel)} method.
+   */
   @Override
-  public void decrypt(@NonNull DecryptionResultHandler handler,
-                      @NonNull String service,
-                      @NonNull byte[] username,
-                      @NonNull byte[] password,
-                      @NonNull final SecurityLevel level) {
-
-    try {
-      final DecryptionResult results = decrypt(service, username, password, level);
-
-      handler.onDecrypt(results, null);
-    } catch (Throwable fail) {
-      handler.onDecrypt(null, fail);
-    }
+  public CompletableFuture<DecryptionResult> decrypt(@NonNull DecryptionResultHandler handler,
+                                                     @NonNull String service,
+                                                     @NonNull byte[] username,
+                                                     @NonNull byte[] password,
+                                                     @NonNull final SecurityLevel level) throws CryptoFailedException {
+    return decrypt(service, username, password, level);
   }
 
   @Override
