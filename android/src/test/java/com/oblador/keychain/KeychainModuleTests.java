@@ -5,6 +5,7 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.hardware.fingerprint.FingerprintManager;
 import android.os.Build;
+import android.util.Base64;
 
 import androidx.annotation.NonNull;
 import androidx.biometric.BiometricManager;
@@ -19,7 +20,6 @@ import com.oblador.keychain.KeychainModule.KnownCiphers;
 import com.oblador.keychain.KeychainModule.Maps;
 import com.oblador.keychain.cipherStorage.CipherStorage;
 import com.oblador.keychain.cipherStorage.CipherStorageBase;
-import com.oblador.keychain.cipherStorage.CipherStorageFacebookConceal;
 import com.oblador.keychain.cipherStorage.CipherStorageKeystoreAesCbc;
 import com.oblador.keychain.cipherStorage.CipherStorageKeystoreRsaEcb;
 import com.oblador.keychain.exceptions.CryptoFailedException;
@@ -287,7 +287,6 @@ public class KeychainModuleTests {
     final CipherStorage.DecryptionResult decrypted = new CipherStorage.DecryptionResult("user", "password");
     final CipherStorage.EncryptionResult encrypted = new CipherStorage.EncryptionResult("user".getBytes(), "password".getBytes(), rsa);
     final KeychainModule module = new KeychainModule(context);
-    final SharedPreferences prefs = context.getSharedPreferences(PrefsStorage.KEYCHAIN_DATA, Context.MODE_PRIVATE);
 
     when(
       rsa.encrypt(eq("dummy"), eq("user"), eq("password"), any())
@@ -295,9 +294,11 @@ public class KeychainModuleTests {
 
     // WHEN:
     module.migrateCipherStorage("dummy", rsa, aes, decrypted);
-    final String username = prefs.getString(PrefsStorage.getKeyForUsername("dummy"), "");
-    final String password = prefs.getString(PrefsStorage.getKeyForPassword("dummy"), "");
-    final String cipherName = prefs.getString(PrefsStorage.getKeyForCipherStorage("dummy"), "");
+    final PrefsStorageBase.ResultSet result = module.prefsStorage.getEncryptedEntry("dummy");
+    assert result != null;
+    final String username = Base64.encodeToString(result.username, Base64.DEFAULT);
+    final String password = Base64.encodeToString(result.password, Base64.DEFAULT);
+    final String cipherName = result.cipherStorageName;
 
     // THEN:
     //   delete of key from old storage

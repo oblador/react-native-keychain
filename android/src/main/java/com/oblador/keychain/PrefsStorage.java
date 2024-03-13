@@ -1,5 +1,10 @@
 package com.oblador.keychain;
 
+import static com.oblador.keychain.PrefsStorageBase.getKeyForCipherStorage;
+import static com.oblador.keychain.PrefsStorageBase.getKeyForPassword;
+import static com.oblador.keychain.PrefsStorageBase.getKeyForUsername;
+import static com.oblador.keychain.PrefsStorageBase.isKeyForCipherStorage;
+
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Base64;
@@ -9,27 +14,13 @@ import androidx.annotation.Nullable;
 
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.oblador.keychain.KeychainModule.KnownCiphers;
-import com.oblador.keychain.cipherStorage.CipherStorage;
 import com.oblador.keychain.cipherStorage.CipherStorage.EncryptionResult;
 
 import java.util.HashSet;
 import java.util.Set;
 
 @SuppressWarnings({"unused", "WeakerAccess"})
-public class PrefsStorage {
-  public static final String KEYCHAIN_DATA = "RN_KEYCHAIN";
-
-  static public class ResultSet extends CipherStorage.CipherResult<byte[]> {
-    @KnownCiphers
-    public final String cipherStorageName;
-
-    public ResultSet(@KnownCiphers final String cipherStorageName, final byte[] usernameBytes, final byte[] passwordBytes) {
-      super(usernameBytes, passwordBytes);
-
-      this.cipherStorageName = cipherStorageName;
-    }
-  }
-
+public class PrefsStorage implements PrefsStorageBase {
   @NonNull
   private final SharedPreferences prefs;
 
@@ -37,6 +28,7 @@ public class PrefsStorage {
     this.prefs = reactContext.getSharedPreferences(KEYCHAIN_DATA, Context.MODE_PRIVATE);
   }
 
+  @Override
   @Nullable
   public ResultSet getEncryptedEntry(@NonNull final String service) {
     byte[] bytesForUsername = getBytesForUsername(service);
@@ -58,6 +50,7 @@ public class PrefsStorage {
 
   }
 
+  @Override
   public void removeEntry(@NonNull final String service) {
     final String keyForUsername = getKeyForUsername(service);
     final String keyForPassword = getKeyForPassword(service);
@@ -70,6 +63,7 @@ public class PrefsStorage {
       .apply();
   }
 
+  @Override
   public void storeEncryptedEntry(@NonNull final String service, @NonNull final EncryptionResult encryptionResult) {
     final String keyForUsername = getKeyForUsername(service);
     final String keyForPassword = getKeyForPassword(service);
@@ -91,6 +85,7 @@ public class PrefsStorage {
    *
    * @return set of cipher names
    */
+  @Override
   public Set<String> getUsedCipherNames() {
     Set<String> result = new HashSet<>();
 
@@ -123,25 +118,6 @@ public class PrefsStorage {
     String key = getKeyForCipherStorage(service);
 
     return this.prefs.getString(key, null);
-  }
-
-  @NonNull
-  public static String getKeyForUsername(@NonNull final String service) {
-    return service + ":" + "u";
-  }
-
-  @NonNull
-  public static String getKeyForPassword(@NonNull final String service) {
-    return service + ":" + "p";
-  }
-
-  @NonNull
-  public static String getKeyForCipherStorage(@NonNull final String service) {
-    return service + ":" + "c";
-  }
-
-  public static boolean isKeyForCipherStorage(@NonNull final String key) {
-    return key.endsWith(":c");
   }
 
   @Nullable

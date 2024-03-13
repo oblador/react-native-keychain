@@ -7,6 +7,7 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.StringDef;
+import androidx.annotation.VisibleForTesting;
 import androidx.biometric.BiometricManager;
 import androidx.biometric.BiometricPrompt.PromptInfo;
 
@@ -17,7 +18,7 @@ import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.WritableMap;
-import com.oblador.keychain.PrefsStorage.ResultSet;
+import com.oblador.keychain.PrefsStorageBase.ResultSet;
 import com.oblador.keychain.cipherStorage.CipherStorage;
 import com.oblador.keychain.cipherStorage.CipherStorage.DecryptionResult;
 import com.oblador.keychain.cipherStorage.CipherStorage.EncryptionResult;
@@ -129,8 +130,9 @@ public class KeychainModule extends ReactContextBaseJavaModule {
   //region Members
   /** Name-to-instance lookup  map. */
   private final Map<String, CipherStorage> cipherStorageMap = new HashMap<>();
-  /** Shared preferences storage. */
-  private final PrefsStorage prefsStorage;
+  /** Preferences storage. */
+  @VisibleForTesting
+  public final PrefsStorageBase prefsStorage;
   //endregion
 
   //region Initialization
