@@ -1,7 +1,6 @@
 package com.oblador.keychain;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.hardware.fingerprint.FingerprintManager;
 import android.os.Build;
@@ -405,7 +404,6 @@ public class KeychainModuleTests {
     // GIVEN:
     final ReactApplicationContext context = getRNContext();
     final KeychainModule module = new KeychainModule(context);
-    final PrefsStorage prefs = new PrefsStorage(context);
     final Cipher mockCipher = Mockito.mock(Cipher.class);
     final KeyStore mockKeyStore = Mockito.mock(KeyStore.class);
     final CipherStorage storage = module.getCipherStorageByName(KnownCiphers.RSA);
@@ -420,7 +418,7 @@ public class KeychainModuleTests {
     options.putMap(Maps.AUTH_PROMPT, promptOptions);
 
     // store record done with RSA/Biometric cipher
-    prefs.storeEncryptedEntry("dummy", result);
+    module.prefsStorage.storeEncryptedEntry("dummy", result);
 
     assertThat(storage, instanceOf(CipherStorage.class));
     ((CipherStorageBase)storage).setCipher(mockCipher).setKeyStore(mockKeyStore);

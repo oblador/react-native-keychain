@@ -11,6 +11,7 @@ buildscript {
 
 apply plugin: 'com.android.library'
 apply plugin: "com.adarshr.test-logger"
+apply plugin: 'org.jetbrains.kotlin.android'
 
 def safeExtGet(prop, fallback) {
   rootProject.ext.has(prop) ? rootProject.ext.get(prop) : fallback
@@ -73,6 +74,9 @@ dependencies {
   /* version higher 1.1.3 has problems with included soloader packages,
       https://github.com/facebook/conceal/releases */
   implementation "com.facebook.conceal:conceal:1.1.3@aar"
+
+  /* Drop-in replacement for shared preferences */
+  implementation("androidx.datastore:datastore-preferences:1.0.0")
 
   /* Unit Testing Frameworks */
   testImplementation 'junit:junit:4.13.2'
