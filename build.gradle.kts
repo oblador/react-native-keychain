@@ -10,6 +10,8 @@ buildscript {
     set("targetSdkVersion", 31)
     set("buildToolsVersion", "31.0.0")
   }
+  val kotlinVersion by extra("1.8.20")
+
   repositories {
     mavenLocal()
     google()
@@ -23,6 +25,7 @@ buildscript {
 
     /* https://github.com/radarsh/gradle-test-logger-plugin */
     classpath("com.adarshr:gradle-test-logger-plugin:2.0.0")
+    classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
   }
 }
 
