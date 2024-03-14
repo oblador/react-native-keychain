@@ -101,7 +101,6 @@ class DataStorePrefsStorage(reactContext: ReactApplicationContext) : PrefsStorag
   }
 
   private fun <T> callSuspendable(block: suspend () -> T): T {
-    // TODO actually use concurrency to prevent blocking the ui thread
     return runBlocking {
       block()
     }
