@@ -28,6 +28,14 @@ public interface PrefsStorageBase {
 
   void storeEncryptedEntry(@NonNull final String service, @NonNull final CipherStorage.EncryptionResult encryptionResult);
 
+  /**
+   * List all types of cipher which are involved in en/decryption of the data stored herein.
+   * A cipher type is stored together with the datum upon encryption so the datum can later be decrypted using correct
+   * cipher. This way, a [PrefsStorageBase] can involve different ciphers for different data. This method returns all
+   * ciphers involved with this storage.
+   *
+   * @return set of cipher names
+   */
   Set<String> getUsedCipherNames();
 
   @NonNull

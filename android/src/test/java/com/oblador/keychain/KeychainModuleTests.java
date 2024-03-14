@@ -448,7 +448,7 @@ public class KeychainModuleTests {
     final CipherStorage.EncryptionResult result = new CipherStorage.EncryptionResult(BYTES_USERNAME, BYTES_PASSWORD, aes);
     final KeychainModule module = new KeychainModule(context);
     // add encrypted data in shared preferences
-    final SharedPreferences sharedPrefs = context.getSharedPreferences(PrefsStorage.KEYCHAIN_DATA, Context.MODE_PRIVATE);
+    final SharedPreferences sharedPrefs = context.getSharedPreferences(PrefsStorageBase.KEYCHAIN_DATA, Context.MODE_PRIVATE);
     sharedPrefs.edit()
       .putString(PrefsStorageBase.getKeyForUsername("dummy"), Base64.encodeToString(BYTES_USERNAME, Base64.DEFAULT))
       .putString(PrefsStorageBase.getKeyForPassword("dummy"), Base64.encodeToString(BYTES_PASSWORD, Base64.DEFAULT))

@@ -79,15 +79,6 @@ class DataStorePrefsStorage(reactContext: ReactApplicationContext) : PrefsStorag
     }
   }
 
-  /**
-   * List all types of cipher which are involved in en/decryption of the data stored herein.
-   *
-   * A cipher type is stored together with the datum upon encryption so the datum can later be decrypted using correct
-   * cipher. This way, a [DataStorePrefsStorage] can involve different ciphers for different data. This method returns all
-   * ciphers involved with this storage.
-   *
-   * @return set of cipher names
-   */
   override fun getUsedCipherNames(): Set<String?> {
     val result: MutableSet<String?> = HashSet()
     val keys = prefsData.asMap().keys.map { it.name }
