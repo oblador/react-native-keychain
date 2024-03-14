@@ -382,7 +382,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
           cipherStorage.removeKey(alias);
         }
       }
-      // And then we remove the entry in the shared preferences
+      // And then we remove the entry in the preferences
       prefsStorage.removeEntry(alias);
 
       promise.resolve(true);

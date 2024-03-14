@@ -75,7 +75,7 @@ dependencies {
       https://github.com/facebook/conceal/releases */
   implementation "com.facebook.conceal:conceal:1.1.3@aar"
 
-  /* Drop-in replacement for shared preferences */
+  // Used to store encrypted data
   implementation("androidx.datastore:datastore-preferences:1.0.0")
 
   /* Unit Testing Frameworks */
