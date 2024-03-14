@@ -2,15 +2,17 @@ package com.oblador.keychain
 
 import android.content.Context
 import android.util.Base64
+import androidx.datastore.core.DataMigration
 import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.SharedPreferencesMigration
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.facebook.react.bridge.ReactApplicationContext
-import com.oblador.keychain.PrefsStorageBase.ResultSet
 import com.oblador.keychain.KeychainModule.KnownCiphers
 import com.oblador.keychain.PrefsStorageBase.KEYCHAIN_DATA
+import com.oblador.keychain.PrefsStorageBase.ResultSet
 import com.oblador.keychain.PrefsStorageBase.getKeyForCipherStorage
 import com.oblador.keychain.PrefsStorageBase.getKeyForPassword
 import com.oblador.keychain.PrefsStorageBase.getKeyForUsername
@@ -20,12 +22,18 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 
 @Suppress("unused")
-class DataStorePrefsStorage(reactContext: ReactApplicationContext) :
-  PrefsStorageBase {
+class DataStorePrefsStorage(reactContext: ReactApplicationContext) : PrefsStorageBase {
 
-  private val Context.prefs: DataStore<Preferences> by preferencesDataStore(name = KEYCHAIN_DATA)
+  private val Context.prefs: DataStore<Preferences> by preferencesDataStore(
+    name = KEYCHAIN_DATA,
+    produceMigrations = ::sharedPreferencesMigration
+  )
   private val prefs: DataStore<Preferences> = reactContext.prefs
-  private val prefsData: Preferences get() = runBlocking { prefs.data.first() }
+  private val prefsData: Preferences get() = callSuspendable { prefs.data.first() }
+
+  private fun sharedPreferencesMigration(context: Context): List<DataMigration<Preferences>> {
+    return listOf(SharedPreferencesMigration(context, KEYCHAIN_DATA))
+  }
 
   override fun getEncryptedEntry(service: String): ResultSet? {
     val bytesForUsername = getBytesForUsername(service)
@@ -33,9 +41,7 @@ class DataStorePrefsStorage(reactContext: ReactApplicationContext) :
     var cipherStorageName = getCipherStorageName(service)
 
     // in case of wrong password or username
-    if (bytesForUsername == null || bytesForPassword == null) {
-      return null
-    }
+    if (bytesForUsername == null || bytesForPassword == null) return null
     if (cipherStorageName == null) {
       // If the CipherStorage name is not found, we assume it is because the entry was written by an older
       // version of this library. The older version used Facebook Conceal, so we default to that.
@@ -94,9 +100,9 @@ class DataStorePrefsStorage(reactContext: ReactApplicationContext) :
     return result
   }
 
-  private fun callSuspendable(block: suspend () -> Unit) {
-    // TODO actually use concurrency
-    runBlocking {
+  private fun <T> callSuspendable(block: suspend () -> T): T {
+    // TODO actually use concurrency to prevent blocking the ui thread
+    return runBlocking {
       block()
     }
   }
