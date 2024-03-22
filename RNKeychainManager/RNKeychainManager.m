@@ -333,11 +333,11 @@ RCT_EXPORT_METHOD(getSupportedBiometryType:(RCTPromiseResolveBlock)resolve
   BOOL canBeProtected = [context canEvaluatePolicy:LAPolicyDeviceOwnerAuthenticationWithBiometrics error:&aerr];
 
   if (!aerr && canBeProtected) {
-    if (@available(visionOS 1, *)) {
+    #if TARGET_OS_VISION
       if (context.biometryType == LABiometryTypeOpticID) {
         return resolve(kBiometryTypeOpticID);
       }
-    }
+    #endif
     if (@available(iOS 11, *)) {
       if (context.biometryType == LABiometryTypeFaceID) {
         return resolve(kBiometryTypeFaceID);
