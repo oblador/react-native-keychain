@@ -27,6 +27,7 @@ import com.oblador.keychain.cipherStorage.CipherStorageKeystoreAesCbc;
 import com.oblador.keychain.cipherStorage.CipherStorageKeystoreRsaEcb;
 import com.oblador.keychain.decryptionHandler.DecryptionResultHandler;
 import com.oblador.keychain.decryptionHandler.DecryptionResultHandlerProvider;
+import com.oblador.keychain.decryptionHandler.DecryptionResultListener;
 import com.oblador.keychain.exceptions.CryptoFailedException;
 import com.oblador.keychain.exceptions.EmptyParameterException;
 import com.oblador.keychain.exceptions.KeyStoreAccessException;
@@ -290,7 +291,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
       final String rules = getSecurityRulesOrDefault(options);
       final PromptInfo promptInfo = getPromptInfo(options);
 
-      CipherStorage cipher = null;
+      final CipherStorage cipher;
 
       // Only check for upgradable ciphers for FacebookConseal as that
       // is the only cipher that can be upgraded
@@ -303,15 +304,34 @@ public class KeychainModule extends ReactContextBaseJavaModule {
         cipher = getCipherStorageByName(storageName);
       }
 
-      final DecryptionResult decryptionResult = decryptCredentials(alias, cipher, resultSet, rules, promptInfo);
+      final DecryptionResultListener listener =
+          new DecryptionResultListener() {
+            @Override
+            public void onDecrypt(@NonNull DecryptionResult decryptionResult) {
+              final WritableMap credentials = Arguments.createMap();
+              credentials.putString(Maps.SERVICE, alias);
+              credentials.putString(Maps.USERNAME, decryptionResult.username);
+              credentials.putString(Maps.PASSWORD, decryptionResult.password);
+              credentials.putString(Maps.STORAGE, cipher.getCipherStorageName());
 
-      final WritableMap credentials = Arguments.createMap();
-      credentials.putString(Maps.SERVICE, alias);
-      credentials.putString(Maps.USERNAME, decryptionResult.username);
-      credentials.putString(Maps.PASSWORD, decryptionResult.password);
-      credentials.putString(Maps.STORAGE, cipher.getCipherStorageName());
+              promise.resolve(credentials);
+            }
 
-      promise.resolve(credentials);
+            @Override
+            public void onError(@NonNull Throwable error) {
+              Log.e(KEYCHAIN_MODULE, error.getMessage());
+
+              if (error instanceof KeyStoreAccessException) {
+                promise.reject(Errors.E_KEYSTORE_ACCESS_ERROR, error);
+              } else if (error instanceof CryptoFailedException) {
+                promise.reject(Errors.E_CRYPTO_FAILED, error);
+              } else {
+                promise.reject(Errors.E_UNKNOWN_ERROR, error);
+              }
+            }
+          };
+
+      decryptCredentials(alias, cipher, resultSet, rules, promptInfo, listener);
     } catch (KeyStoreAccessException e) {
       Log.e(KEYCHAIN_MODULE, e.getMessage());
 
@@ -632,18 +652,19 @@ public class KeychainModule extends ReactContextBaseJavaModule {
    * Extract credentials from current storage. In case if current storage is not matching
    * results set then executed migration.
    */
-  @NonNull
-  private DecryptionResult decryptCredentials(@NonNull final String alias,
-                                              @NonNull final CipherStorage current,
-                                              @NonNull final ResultSet resultSet,
-                                              @Rules @NonNull final String rules,
-                                              @NonNull final PromptInfo promptInfo)
+  private void decryptCredentials(@NonNull final String alias,
+                                  @NonNull final CipherStorage current,
+                                  @NonNull final ResultSet resultSet,
+                                  @Rules @NonNull final String rules,
+                                  @NonNull final PromptInfo promptInfo,
+                                  @NonNull final DecryptionResultListener listener)
     throws CryptoFailedException, KeyStoreAccessException {
     final String storageName = resultSet.cipherStorageName;
 
     // The encrypted data is encrypted using the current CipherStorage, so we just decrypt and return
     if (storageName.equals(current.getCipherStorageName())) {
-      return decryptToResult(alias, current, resultSet, promptInfo);
+      decryptToResult(alias, current, resultSet, promptInfo, listener);
+      return;
     }
 
     // The encrypted data is encrypted using an older CipherStorage, so we need to decrypt the data first,
@@ -653,38 +674,46 @@ public class KeychainModule extends ReactContextBaseJavaModule {
       throw new KeyStoreAccessException("Wrong cipher storage name '" + storageName + "' or cipher not available");
     }
 
+    final DecryptionResultListener wrappedListener =
+        new DecryptionResultListener() {
+          @Override
+          public void onDecrypt(@NonNull DecryptionResult decryptionResult) {
+            if (Rules.AUTOMATIC_UPGRADE.equals(rules)) {
+              try {
+                // encrypt using the current cipher storage
+                migrateCipherStorage(alias, current, oldStorage, decryptionResult);
+              } catch (CryptoFailedException e) {
+                Log.w(
+                    KEYCHAIN_MODULE,
+                    "Migrating to a less safe storage is not allowed. Keeping the old one");
+              } catch (Throwable t) {
+                listener.onError(t);
+                return;
+              }
+            }
+
+            listener.onDecrypt(decryptionResult);
+          }
+
+          @Override
+          public void onError(@NonNull Throwable error) {
+            listener.onError(error);
+          }
+        };
+
     // decrypt using the older cipher storage
-    final DecryptionResult decryptionResult = decryptToResult(alias, oldStorage, resultSet, promptInfo);
-
-    if (Rules.AUTOMATIC_UPGRADE.equals(rules)) {
-      try {
-        // encrypt using the current cipher storage
-        migrateCipherStorage(alias, current, oldStorage, decryptionResult);
-      } catch (CryptoFailedException e) {
-        Log.w(KEYCHAIN_MODULE, "Migrating to a less safe storage is not allowed. Keeping the old one");
-      }
-    }
-
-    return decryptionResult;
+    decryptToResult(alias, oldStorage, resultSet, promptInfo, wrappedListener);
   }
 
   /** Try to decrypt with provided storage. */
-  @NonNull
-  private DecryptionResult decryptToResult(@NonNull final String alias,
-                                           @NonNull final CipherStorage storage,
-                                           @NonNull final ResultSet resultSet,
-                                           @NonNull final PromptInfo promptInfo)
+  private void decryptToResult(@NonNull final String alias,
+                               @NonNull final CipherStorage storage,
+                               @NonNull final ResultSet resultSet,
+                               @NonNull final PromptInfo promptInfo,
+                               @NonNull final DecryptionResultListener listener)
     throws CryptoFailedException {
     final DecryptionResultHandler handler = getInteractiveHandler(storage, promptInfo);
-    storage.decrypt(handler, alias, resultSet.username, resultSet.password, SecurityLevel.ANY);
-
-    CryptoFailedException.reThrowOnError(handler.getError());
-
-    if (null == handler.getResult()) {
-      throw new CryptoFailedException("No decryption results and no error. Something deeply wrong!");
-    }
-
-    return handler.getResult();
+    storage.decrypt(handler, alias, resultSet.username, resultSet.password, SecurityLevel.ANY, listener);
   }
 
   /** Get instance of handler that resolves access to the keystore on system request. */

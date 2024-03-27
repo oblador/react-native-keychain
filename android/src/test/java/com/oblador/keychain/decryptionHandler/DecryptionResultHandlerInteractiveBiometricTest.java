@@ -17,7 +17,9 @@ import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
+import org.robolectric.Shadows;
 import org.robolectric.annotation.Config;
+import org.robolectric.shadows.ShadowLooper;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -53,11 +55,12 @@ public class DecryptionResultHandlerInteractiveBiometricTest {
 
     // WHEN
     DecryptionResultHandlerInteractiveBiometric handler = new DecryptionResultHandlerInteractiveBiometric(mockContext, storage, promptInfo);
-    handler.askAccessPermissions(decryptionContext);
+    MockDecryptionHandlerListener listener = new MockDecryptionHandlerListener();
+    handler.askAccessPermissions(decryptionContext, listener);
 
     //THEN
-    assertThat(handler.getResult(), is(nullValue()));
-    assertThat(handler.getError(), Matchers.instanceOf(CryptoFailedException.class));
+    assertThat(listener.getResult(), is(nullValue()));
+    assertThat(listener.getError(), Matchers.instanceOf(CryptoFailedException.class));
   }
 
   @Test(expected= NullPointerException.class)
@@ -77,7 +80,8 @@ public class DecryptionResultHandlerInteractiveBiometricTest {
 
     // WHEN
     DecryptionResultHandlerInteractiveBiometric handler = new DecryptionResultHandlerInteractiveBiometric(mockContext, storage, promptInfo);
-    handler.askAccessPermissions(decryptionContext);
+    MockDecryptionHandlerListener listener = new MockDecryptionHandlerListener();
+    handler.askAccessPermissions(decryptionContext, listener);
   }
 
   @Test
@@ -96,11 +100,16 @@ public class DecryptionResultHandlerInteractiveBiometricTest {
 
     // WHEN
     DecryptionResultHandlerInteractiveBiometric handler = new DecryptionResultHandlerInteractiveBiometric(mockContext, storage, promptInfo);
+    MockDecryptionHandlerListener listener = new MockDecryptionHandlerListener();
+    handler.listener = listener;
     handler.onAuthenticationError(ERROR_USER_CANCELED, "Authentication cancelled.");
 
+    ShadowLooper shadowLooper = Shadows.shadowOf(handler.handler.getLooper());
+    shadowLooper.runToEndOfTasks();
+
     //THEN
-    assertThat(handler.getResult(), is(nullValue()));
-    assertThat(handler.getError(), Matchers.instanceOf(CryptoFailedException.class));
+    assertThat(listener.getResult(), is(nullValue()));
+    assertThat(listener.getError(), Matchers.instanceOf(CryptoFailedException.class));
   }
 
   @Test
@@ -121,11 +130,16 @@ public class DecryptionResultHandlerInteractiveBiometricTest {
 
     // WHEN
     DecryptionResultHandlerInteractiveBiometric handler = new DecryptionResultHandlerInteractiveBiometric(mockContext, storage, promptInfo);
+    MockDecryptionHandlerListener listener = new MockDecryptionHandlerListener();
+    handler.listener = listener;
     handler.onAuthenticationSucceeded(mockAuthResult);
 
+    ShadowLooper shadowLooper = Shadows.shadowOf(handler.handler.getLooper());
+    shadowLooper.runToEndOfTasks();
+
     //THEN
-    assertThat(handler.getResult(), is(nullValue()));
-    assertThat(handler.getError(), Matchers.instanceOf(NullPointerException.class));
+    assertThat(listener.getResult(), is(nullValue()));
+    assertThat(listener.getError(), Matchers.instanceOf(NullPointerException.class));
   }
 
   @Test
@@ -156,21 +170,24 @@ public class DecryptionResultHandlerInteractiveBiometricTest {
     final BiometricPrompt.AuthenticationResult mockAuthResult = mock(BiometricPrompt.AuthenticationResult.class);
 
     DecryptionResultHandlerInteractiveBiometric handler = new DecryptionResultHandlerInteractiveBiometric(mockContext, storage, promptInfo);
-
+    MockDecryptionHandlerListener listener = new MockDecryptionHandlerListener();
     // WHEN
     DecryptionResultHandlerInteractiveBiometric spy = spy(handler);
     // Can't mock BiometricPrompt stack at the moment
     doNothing().when(spy).startAuthentication();
 
-    spy.askAccessPermissions(decryptionContext);
+    spy.askAccessPermissions(decryptionContext, listener);
     spy.onAuthenticationSucceeded(mockAuthResult);
 
+    ShadowLooper shadowLooper = Shadows.shadowOf(handler.handler.getLooper());
+    shadowLooper.runToEndOfTasks();
+
     //THEN
-    CipherStorage.DecryptionResult result = spy.getResult();
+    CipherStorage.DecryptionResult result = listener.getResult();
 
     assertThat(result, is(notNullValue()));
     assertThat(result.username, is(decryptedUsername));
     assertThat(result.password, is(decryptedPassword));
-    assertThat(spy.getError(), is(nullValue()));
+    assertThat(listener.getError(), is(nullValue()));
   }
 }

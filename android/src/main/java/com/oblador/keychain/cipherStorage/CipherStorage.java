@@ -1,10 +1,10 @@
 package com.oblador.keychain.cipherStorage;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import com.oblador.keychain.SecurityLevel;
 import com.oblador.keychain.decryptionHandler.DecryptionResultHandler;
+import com.oblador.keychain.decryptionHandler.DecryptionResultListener;
 import com.oblador.keychain.exceptions.CryptoFailedException;
 import com.oblador.keychain.exceptions.KeyStoreAccessException;
 
@@ -91,20 +91,13 @@ public interface CipherStorage {
    * In case of key stored in weaker security level than required will be raised exception.
    * That can happens during migration from one version of library to another.
    */
-  @NonNull
-  DecryptionResult decrypt(@NonNull final String alias,
-                           @NonNull final byte[] username,
-                           @NonNull final byte[] password,
-                           @NonNull final SecurityLevel level)
-    throws CryptoFailedException;
-
-  /** Decrypt the credentials but redirect results of operation to handler. */
   void decrypt(@NonNull final DecryptionResultHandler handler,
                @NonNull final String alias,
                @NonNull final byte[] username,
                @NonNull final byte[] password,
-               @NonNull final SecurityLevel level)
-    throws CryptoFailedException;
+               @NonNull final SecurityLevel level,
+               @NonNull final DecryptionResultListener listener)
+          throws CryptoFailedException;
 
   /** Remove key (by alias) from storage. */
   void removeKey(@NonNull final String alias) throws KeyStoreAccessException;
