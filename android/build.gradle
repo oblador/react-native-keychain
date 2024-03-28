@@ -60,6 +60,8 @@ dependencies {
   implementation 'androidx.appcompat:appcompat:1.4.2'
   implementation 'androidx.legacy:legacy-support-v4:1.0.0'
 
+  implementation(platform("org.jetbrains.kotlin:kotlin-bom:${kotlinVersion}"))
+
   // https://mvnrepository.com/artifact/androidx.biometric/biometric
   implementation 'androidx.biometric:biometric:1.1.0@aar'
 

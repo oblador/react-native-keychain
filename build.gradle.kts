@@ -10,7 +10,7 @@ buildscript {
     set("targetSdkVersion", 31)
     set("buildToolsVersion", "31.0.0")
   }
-  val kotlinVersion by extra("1.8.20")
+  val kotlinVersion by extra("1.8.0")
 
   repositories {
     mavenLocal()
