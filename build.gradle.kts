@@ -20,7 +20,7 @@ buildscript {
   }
   dependencies {
     /* https://mvnrepository.com/artifact/com.android.tools.build/gradle?repo=google */
-    classpath("com.android.tools.build:gradle:7.1.1")
+    classpath("com.android.tools.build:gradle:7.1.3")
     classpath("com.facebook.react:react-native-gradle-plugin")
 
     /* https://github.com/radarsh/gradle-test-logger-plugin */
