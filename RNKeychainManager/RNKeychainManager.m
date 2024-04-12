@@ -607,4 +607,60 @@ RCT_EXPORT_METHOD(getAllGenericPasswordServices:(RCTPromiseResolveBlock)resolve 
   }
 }
 
+// https://github.com/mCodex/react-native-sensitive-info/blob/495dd7f08c077f5744e56803e45f54787df3dab3/ios/RNSensitiveInfo/RNSensitiveInfo.m#L291
+RCT_EXPORT_METHOD(getAllGenericPasswords:(NSDictionary * __nullable)options
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+{
+  NSString * keychainService = [RCTConvert NSString:options[@"service"]];
+  
+  NSMutableArray* finalResult = [[NSMutableArray alloc] init];
+
+  NSMutableDictionary *query = [NSMutableDictionary dictionaryWithObjectsAndKeys:
+                                (__bridge id)kSecAttrSynchronizableAny, kSecAttrSynchronizable,
+                                (__bridge id)kCFBooleanTrue, (__bridge id)kSecReturnAttributes,
+                                (__bridge id)kSecMatchLimitAll, (__bridge id)kSecMatchLimit,
+                                (__bridge id)kCFBooleanTrue, (__bridge id)kSecReturnData,
+                                nil];
+  
+  if (keychainService) {
+    [query setObject:keychainService forKey:(NSString *)kSecAttrService];
+  }
+  
+  NSArray *secItemClasses = [NSArray arrayWithObjects:
+                              (__bridge id)kSecClassGenericPassword,
+                              nil];
+
+  for (id secItemClass in secItemClasses) {
+    [query setObject:secItemClass forKey:(__bridge id)kSecClass];
+
+    CFTypeRef result = NULL;
+
+    SecItemCopyMatching((__bridge CFDictionaryRef)query, &result);
+
+    if(result != NULL){
+      for (NSDictionary* item in (__bridge id)result) {
+        NSMutableDictionary *finalItem = [[NSMutableDictionary alloc] init];
+      
+        @try
+        {
+          [finalItem setObject:(NSString*)[item objectForKey:(__bridge id)(kSecAttrService)] forKey:@"service"];
+          [finalItem setObject:(NSString*)[item objectForKey:(__bridge id)(kSecAttrAccount)] forKey:@"key"];
+          [finalItem setObject:[[NSString alloc] initWithData:[item objectForKey:(__bridge id)(kSecValueData)] encoding:NSUTF8StringEncoding] forKey:@"value"];
+
+          [finalResult addObject: finalItem];
+        }
+        @catch(NSException *exception){} // Ignore items with weird keys or values
+      }
+    }
+  }
+
+  if(finalResult != nil){
+    resolve(finalResult);
+  } else {
+    reject(@"no_events", @"There were no events", @[[NSNull null]]);
+  }
+}
+
+
 @end

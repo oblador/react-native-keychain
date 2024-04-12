@@ -221,6 +221,18 @@ export function getAllGenericPasswordServices(): Promise<string[]> {
 }
 
 /**
+ * Get all items
+ * @param {object} options A keychain options object.
+ * @return {Promise} Resolves to an array of `{ service, username, password, storage }` when successful
+ */
+export function getAllGenericPasswords(
+  serviceOrOptions?: string | Options
+): Promise<UserCredentials[]> {
+  const options = normalizeOptions(serviceOrOptions);
+  return RNKeychainManager.getAllGenericPasswords(options);
+}
+
+/**
  * Checks if we have a login combination for `server`.
  * @param {string} server URL to server.
  * @return {Promise} Resolves to `{service, storage}` when successful
@@ -390,4 +402,5 @@ export default {
   resetGenericPassword,
   requestSharedWebCredentials,
   setSharedWebCredentials,
+  getAllGenericPasswords,
 };

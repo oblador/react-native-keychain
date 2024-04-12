@@ -7,6 +7,7 @@ import {
   canImplyAuthentication,
   getGenericPassword,
   getAllGenericPasswordServices,
+  getAllGenericPasswords,
   getInternetCredentials,
   getSupportedBiometryType,
   hasInternetCredentials,
@@ -105,6 +106,9 @@ getGenericPassword({
 getGenericPassword('service');
 getAllGenericPasswordServices().then((result) => {
   (result: string[]);
+});
+getAllGenericPasswords().then((result) => {
+  (result: UserCredentials[]);
 });
 
 resetGenericPassword().then((result) => {
