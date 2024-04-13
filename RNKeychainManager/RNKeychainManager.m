@@ -304,6 +304,37 @@ SecAccessControlCreateFlags accessControlValue(NSDictionary *options)
   return services;
 }
 
+-(NSArray<NSString*>*)getAllServersForInternetPasswords
+{
+  NSMutableDictionary *query = [NSMutableDictionary dictionaryWithObjectsAndKeys:
+                                (__bridge id)kCFBooleanTrue, (__bridge id)kSecReturnAttributes,
+                                (__bridge id)kSecMatchLimitAll, (__bridge id)kSecMatchLimit,
+                                nil];
+  NSMutableArray<NSString*> *servers = [NSMutableArray<NSString*> new];
+
+  [query setObject:(__bridge id)kSecClassInternetPassword forKey:(__bridge id)kSecClass];
+  NSArray *result = nil;
+  CFTypeRef resultRef = NULL;
+  OSStatus osStatus = SecItemCopyMatching((__bridge CFDictionaryRef)query, (CFTypeRef*)&resultRef);
+  if (osStatus != noErr && osStatus != errSecItemNotFound) {
+    NSError *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:osStatus userInfo:nil];
+    @throw error;
+  } else if (osStatus != errSecItemNotFound) {
+    result = (__bridge NSArray*)(resultRef);
+    if (result != NULL) {
+      for (id entry in result) {
+        NSMutableData *serverData = [entry objectForKey:(__bridge NSString *)kSecAttrServer];
+        if (serverData != NULL) {
+          NSString *server = [[NSString alloc] initWithData:serverData encoding:NSUTF8StringEncoding];
+          [servers addObject:server];
+        }
+      }
+    }
+  }
+  
+  return servers;
+}
+
 #pragma mark - RNKeychain
 
 #if TARGET_OS_IOS || TARGET_OS_VISION
@@ -602,6 +633,16 @@ RCT_EXPORT_METHOD(getAllGenericPasswordServices:(RCTPromiseResolveBlock)resolve 
                               nil];
     NSArray *services = [self getAllServicesForSecurityClasses:secItemClasses];
     return resolve(services);
+  } @catch (NSError *nsError) {
+    return rejectWithError(reject, nsError);
+  }
+}
+
+RCT_EXPORT_METHOD(getAllInternetPasswordServers:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
+{
+  @try {
+    NSArray *servers = [self getAllServersForInternetPasswords];
+    return resolve(servers);
   } @catch (NSError *nsError) {
     return rejectWithError(reject, nsError);
   }
