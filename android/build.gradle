@@ -1,5 +1,7 @@
 buildscript {
   repositories {
+    google()
+    mavenCentral()
     maven {
       url 'https://plugins.gradle.org/m2/'
     }
@@ -50,6 +52,7 @@ android {
 }
 
 repositories {
+  google()
   mavenCentral()
 }
 
@@ -88,6 +91,8 @@ dependencies {
 
   /* https://mvnrepository.com/artifact/androidx.test.ext/junit */
   testImplementation "androidx.test.ext:junit:1.1.4-alpha05"
+
+  implementation 'com.google.android.gms:play-services-auth-blockstore:16.2.0'
 
   /* https://mvnrepository.com/artifact/androidx.test/core */
   testImplementation 'androidx.test:core:1.4.1-alpha05'

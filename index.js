@@ -53,6 +53,7 @@ export const STORAGE_TYPE = Object.freeze({
   AES: 'KeystoreAESCBC',
   RSA: 'KeystoreRSAECB',
   KC: 'keychain', // <~ iOS only
+  BS: 'BlockStoreAPI', // <~ Android only
 });
 
 export const SECURITY_RULES = Object.freeze({

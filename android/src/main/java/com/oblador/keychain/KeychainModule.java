@@ -22,6 +22,7 @@ import com.oblador.keychain.cipherStorage.CipherStorage;
 import com.oblador.keychain.cipherStorage.CipherStorage.DecryptionResult;
 import com.oblador.keychain.cipherStorage.CipherStorage.EncryptionResult;
 import com.oblador.keychain.cipherStorage.CipherStorageBase;
+import com.oblador.keychain.cipherStorage.CipherStorageBlockStoreApi;
 import com.oblador.keychain.cipherStorage.CipherStorageFacebookConceal;
 import com.oblador.keychain.cipherStorage.CipherStorageKeystoreAesCbc;
 import com.oblador.keychain.cipherStorage.CipherStorageKeystoreRsaEcb;
@@ -108,7 +109,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
   }
 
   /** Supported ciphers. */
-  @StringDef({KnownCiphers.FB, KnownCiphers.AES, KnownCiphers.RSA})
+  @StringDef({KnownCiphers.FB, KnownCiphers.AES, KnownCiphers.RSA, KnownCiphers.BS})
   public @interface KnownCiphers {
     /** Facebook conceal compatibility lib in use. */
     String FB = "FacebookConceal";
@@ -116,6 +117,8 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     String AES = "KeystoreAESCBC";
     /** Biometric + RSA. */
     String RSA = "KeystoreRSAECB";
+    /** Block Store API. */
+    String BS = "BlockStoreAPI";
   }
 
   /** Secret manipulation rules. */
@@ -140,6 +143,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     super(reactContext);
     prefsStorage = new PrefsStorage(reactContext);
 
+    addCipherStorageToMap(new CipherStorageBlockStoreApi(reactContext));
     addCipherStorageToMap(new CipherStorageFacebookConceal(reactContext));
     addCipherStorageToMap(new CipherStorageKeystoreAesCbc());
 
@@ -167,6 +171,12 @@ public class KeychainModule extends ReactContextBaseJavaModule {
       final long startTime = System.nanoTime();
 
       Log.v(KEYCHAIN_MODULE, "warming up started at " + startTime);
+      CipherStorage bestStorage = getCipherStorageForCurrentAPILevel();
+      boolean isCipherBaseStorage = bestStorage instanceof CipherStorageBase;
+      if (!isCipherBaseStorage) {
+        Log.v(KEYCHAIN_MODULE, "Skipping warming up after " + TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startTime) + " ms as storage doesn't use crypto API");
+        return;
+      }
       final CipherStorageBase best = (CipherStorageBase) getCipherStorageForCurrentAPILevel();
       final Cipher instance = best.getCachedInstance();
       final boolean isSecure = best.supportsSecureHardware();
