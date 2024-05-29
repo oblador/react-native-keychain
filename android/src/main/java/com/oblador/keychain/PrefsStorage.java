@@ -16,19 +16,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 @SuppressWarnings({"unused", "WeakerAccess"})
-public class PrefsStorage {
+public class PrefsStorage implements KeyValueStorage {
   public static final String KEYCHAIN_DATA = "RN_KEYCHAIN";
-
-  static public class ResultSet extends CipherStorage.CipherResult<byte[]> {
-    @KnownCiphers
-    public final String cipherStorageName;
-
-    public ResultSet(@KnownCiphers final String cipherStorageName, final byte[] usernameBytes, final byte[] passwordBytes) {
-      super(usernameBytes, passwordBytes);
-
-      this.cipherStorageName = cipherStorageName;
-    }
-  }
 
   @NonNull
   private final SharedPreferences prefs;
