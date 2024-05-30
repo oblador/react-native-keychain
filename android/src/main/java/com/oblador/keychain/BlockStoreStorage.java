@@ -24,14 +24,29 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * Google BlockStore API storage.
+ * @see <a href="https://developers.google.com/identity/blockstore/android">BlockStore Docs</a>
+ * <p>
+ * IMPORANT NOTES:
+ * 1) Block Store data is persisted across the app uninstall/reinstall only when the user enables Backup services (it can be checked at Settings > Google > Backup)
+ * 2) Cloud backup and restore is enabled only when:
+ *      - End to End encryption is enabled
+ *      - Source device runs API 23+
+ *      - Target device runs API 31+ (API 29+ for Pixel phones)
+ * 3) E2E encryption is supported:
+ *      - on devices running Android 9 (API 29) and above
+ *      - when device have a screen lock set with a PIN, pattern, or password
+ **/
 @SuppressWarnings({"unused", "WeakerAccess"})
 public class BlockStoreStorage implements KeyValueStorage {
-  public static final String TAG = "BlockStoreStorage";
+  public static final String TAG = BlockStoreStorage.class.getSimpleName();
 
   @NonNull
   private final BlockstoreClient blockstoreClient;
-  private Boolean isE2EEncryptionAvailable = null;
 
+  // E2E flag will be updated async in the constructor and if still uninitialized, before the first saving request.
+  private volatile Boolean isE2EEncryptionAvailable = null;
 
   public BlockStoreStorage(@NonNull final ReactApplicationContext reactContext) {
     blockstoreClient = Blockstore.getClient(reactContext);
@@ -50,7 +65,7 @@ public class BlockStoreStorage implements KeyValueStorage {
       .addOnFailureListener(error -> Log.e(TAG, "getEncryptedEntry: Fetching keys=(" + usernameKey + "," + passwordKey + "," + cipherStorageKey + ") from BlockStore API FAILED: " + error.getMessage()));
 
     try {
-      Map<String, BlockstoreData> blockstoreData = Tasks.await(task).getBlockstoreDataMap();
+      Map<String, BlockstoreData> blockstoreData = Tasks.await(task).getBlockstoreDataMap(); // fetch data synchronously
 
       BlockstoreData usernameData = blockstoreData.get(usernameKey);
       BlockstoreData passwordData = blockstoreData.get(passwordKey);
@@ -90,7 +105,7 @@ public class BlockStoreStorage implements KeyValueStorage {
   }
 
   public void storeEncryptedEntry(@NonNull final String service, @NonNull final EncryptionResult encryptionResult) {
-    // Username
+    // Save username asynchronously
     final String keyForUsername = getKeyForUsername(service);
     final byte[] valueForUsername = encryptionResult.username;
     StoreBytesData usernameRequest = createSaveRequest(keyForUsername, valueForUsername);
@@ -99,7 +114,7 @@ public class BlockStoreStorage implements KeyValueStorage {
       .addOnSuccessListener(result -> Log.d(TAG, "Saving key=" + keyForUsername + " to BlockStore API SUCCEEDED, wrote " + result + " bytes."))
       .addOnFailureListener(error -> Log.e(TAG, "Saving key=" + keyForUsername + " to BlockStore API FAILED: " + error));
 
-    // Password
+    // Save password asynchronously
     final String keyForPassword = getKeyForPassword(service);
     final byte[] valueForPassword = encryptionResult.password;
     StoreBytesData passwordRequest = createSaveRequest(keyForPassword, valueForPassword);
@@ -108,7 +123,7 @@ public class BlockStoreStorage implements KeyValueStorage {
       .addOnSuccessListener(result -> Log.d(TAG, "Saving key=" + keyForPassword + " to BlockStore API SUCCEEDED, wrote " + result + " bytes."))
       .addOnFailureListener(error -> Log.e(TAG, "Saving key=" + keyForPassword + " to BlockStore API FAILED: " + error));
 
-    // Cipher Storage
+    // Save cipher storage asynchronously
     final String keyForCipherStorage = getKeyForCipherStorage(service);
     final byte[] valueForCipherStorage = encryptionResult.cipherName.getBytes(StandardCharsets.UTF_8);
     StoreBytesData cipherStorageRequest = createSaveRequest(keyForCipherStorage, valueForCipherStorage);
@@ -152,32 +167,14 @@ public class BlockStoreStorage implements KeyValueStorage {
     return keys;
   }
 
-  @NonNull
-  public static String getKeyForUsername(@NonNull final String service) {
-    return service + ":" + "u";
-  }
-
-  @NonNull
-  public static String getKeyForPassword(@NonNull final String service) {
-    return service + ":" + "p";
-  }
-
-  @NonNull
-  public static String getKeyForCipherStorage(@NonNull final String service) {
-    return service + ":" + "c";
-  }
-
-  public static boolean isKeyForCipherStorage(@NonNull final String key) {
-    return key.endsWith(":c");
-  }
-
   // --------
 
+  @NonNull
   private StoreBytesData createSaveRequest(String key, byte[] bytes) {
 
     // flag should have been already updated async in constructor, but just in case the request failed, update it again now
     if (isE2EEncryptionAvailable == null) {
-      updateE2EEncryptionAvailabilityFlag();
+      updateE2EEncryptionAvailabilityFlagSync();
     }
 
     boolean setShouldBackupToCloud = isE2EEncryptionAvailable != null && isE2EEncryptionAvailable;
@@ -189,18 +186,21 @@ public class BlockStoreStorage implements KeyValueStorage {
       .build();
   }
 
+  @NonNull
   private RetrieveBytesRequest createRetrieveRequest(String... keys) {
     return new RetrieveBytesRequest.Builder()
       .setKeys(Arrays.asList(keys))
       .build();
   }
 
+  @NonNull
   private RetrieveBytesRequest createRetrieveAllRequest() {
     return new RetrieveBytesRequest.Builder()
       .setRetrieveAll(true)
       .build();
   }
 
+  @NonNull
   private DeleteBytesRequest createDeleteRequest(String... keys) {
     return new DeleteBytesRequest.Builder()
       .setKeys(Arrays.asList(keys))
@@ -211,7 +211,7 @@ public class BlockStoreStorage implements KeyValueStorage {
     blockstoreClient.isEndToEndEncryptionAvailable().addOnSuccessListener(available -> isE2EEncryptionAvailable = available);
   }
 
-  private void updateE2EEncryptionAvailabilityFlag() {
+  private void updateE2EEncryptionAvailabilityFlagSync() {
     try {
       isE2EEncryptionAvailable = Tasks.await(blockstoreClient.isEndToEndEncryptionAvailable());
     } catch (Exception exception) {

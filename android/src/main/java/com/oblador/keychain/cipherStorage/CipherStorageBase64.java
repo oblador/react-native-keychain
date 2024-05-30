@@ -15,16 +15,15 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.Set;
 
-/** When using Google BlockStore API storage encrytpion is not required as data will be stored safely by BlockStore.
- * This storage just encode/decode data using Base64.
+/**
+ * When using Google BlockStore API storage encryption is not required as data will be stored safely by Google BlockStore API.
+ * This storage just encodes/decodes data using Base64.
  * @see <a href="https://developers.google.com/identity/blockstore/android">BlockStore Docs</a>
  * */
 public class CipherStorageBase64 implements CipherStorage {
 
   private static final String TAG = CipherStorageBase64.class.getSimpleName();
 
-
-  //region Overrides
   @Override
   @NonNull
   public EncryptionResult encrypt(@NonNull final String alias,
@@ -36,6 +35,7 @@ public class CipherStorageBase64 implements CipherStorage {
 
     byte[] usernameEncodedBytes = Base64.encode(usernameBytes, Base64.DEFAULT);
     byte[] passwordEncodedBytes = Base64.encode(passwordBytes, Base64.DEFAULT);
+
     return new EncryptionResult(usernameEncodedBytes, passwordEncodedBytes, this);
   }
 
@@ -44,13 +44,13 @@ public class CipherStorageBase64 implements CipherStorage {
   public DecryptionResult decrypt(@NonNull String alias,
                                   @NonNull byte[] username,
                                   @NonNull byte[] password,
-                                  @NonNull final SecurityLevel level)
-    throws CryptoFailedException {
+                                  @NonNull final SecurityLevel level) {
     byte[] usernameDecodedBytes = Base64.decode(username, Base64.DEFAULT);
     byte[] passwordDecodedBytes = Base64.decode(password, Base64.DEFAULT);
 
     String usernameDecoded = new String(usernameDecodedBytes, StandardCharsets.UTF_8);
     String passwordDecoded = new String(passwordDecodedBytes, StandardCharsets.UTF_8);
+
     return new DecryptionResult(usernameDecoded, passwordDecoded);
   }
 
@@ -107,10 +107,10 @@ public class CipherStorageBase64 implements CipherStorage {
     handler.onDecrypt(decrypt(alias, username, password, level), null);
   }
 
-  /** API28 is a requirement for End-to-end Google BlockStore encryption, so don't support lower levels. */
+  /** API23 is a min requirement for Cloud backup and restore source device, so don't support lower levels. */
   @Override
   public int getMinSupportedApiLevel() {
-    return Build.VERSION_CODES.P;
+    return Build.VERSION_CODES.M;
   }
 
   @Override

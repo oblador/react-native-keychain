@@ -1,5 +1,17 @@
 package com.oblador.keychain;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.instanceOf;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.robolectric.Shadows.shadowOf;
+
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -19,7 +31,6 @@ import com.oblador.keychain.KeychainModule.KnownCiphers;
 import com.oblador.keychain.KeychainModule.Maps;
 import com.oblador.keychain.cipherStorage.CipherStorage;
 import com.oblador.keychain.cipherStorage.CipherStorageBase;
-import com.oblador.keychain.cipherStorage.CipherStorageFacebookConceal;
 import com.oblador.keychain.cipherStorage.CipherStorageKeystoreAesCbc;
 import com.oblador.keychain.cipherStorage.CipherStorageKeystoreRsaEcb;
 import com.oblador.keychain.exceptions.CryptoFailedException;
@@ -45,18 +56,6 @@ import java.security.KeyStore;
 import java.security.Security;
 
 import javax.crypto.Cipher;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.instanceOf;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.notNullValue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.isNull;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.robolectric.Shadows.shadowOf;
 
 @RunWith(RobolectricTestRunner.class)
 public class KeychainModuleTests {
@@ -295,9 +294,10 @@ public class KeychainModuleTests {
 
     // WHEN:
     module.migrateCipherStorage("dummy", rsa, aes, decrypted);
-    final String username = prefs.getString(PrefsStorage.getKeyForUsername("dummy"), "");
-    final String password = prefs.getString(PrefsStorage.getKeyForPassword("dummy"), "");
-    final String cipherName = prefs.getString(PrefsStorage.getKeyForCipherStorage("dummy"), "");
+    final PrefsStorage prefsStorage = new PrefsStorage(context);
+    final String username = prefs.getString(prefsStorage.getKeyForUsername("dummy"), "");
+    final String password = prefs.getString(prefsStorage.getKeyForPassword("dummy"), "");
+    final String cipherName = prefs.getString(prefsStorage.getKeyForCipherStorage("dummy"), "");
 
     // THEN:
     //   delete of key from old storage

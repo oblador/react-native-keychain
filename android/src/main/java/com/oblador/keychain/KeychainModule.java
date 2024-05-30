@@ -1,5 +1,7 @@
 package com.oblador.keychain;
 
+import static com.facebook.react.bridge.Arguments.makeNativeArray;
+
 import android.os.Build;
 import android.text.TextUtils;
 import android.util.Log;
@@ -39,8 +41,6 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import javax.crypto.Cipher;
-
-import static com.facebook.react.bridge.Arguments.makeNativeArray;
 
 @SuppressWarnings({"unused", "WeakerAccess", "SameParameterValue"})
 public class KeychainModule extends ReactContextBaseJavaModule {
@@ -220,7 +220,6 @@ public class KeychainModule extends ReactContextBaseJavaModule {
                                     @NonNull final String password,
                                     @Nullable final ReadableMap options,
                                     @NonNull final Promise promise) {
-    Log.d("KeychainModule", "setGenericPassword alias="+ alias+", username="+username+", password="+password+", options="+options);
 
     try {
       throwIfEmptyLoginPassword(username, password);
@@ -258,7 +257,6 @@ public class KeychainModule extends ReactContextBaseJavaModule {
                                            @NonNull final String username,
                                            @NonNull final String password,
                                            @NonNull final Promise promise) {
-    Log.d("KeychainModule", "setGenericPasswordForOptions");
     final String service = getServiceOrDefault(options);
     setGenericPassword(service, username, password, options, promise);
   }
@@ -290,8 +288,6 @@ public class KeychainModule extends ReactContextBaseJavaModule {
                                     @NonNull final Promise promise) {
     try {
       final ResultSet resultSet = blockStoreStorage.getEncryptedEntry(alias);
-      Log.d("KeychainModule", "getGenericPassword alias="+ alias+", options="+options);
-
 
       if (resultSet == null) {
         Log.e(KEYCHAIN_MODULE, "No entry found for service: " + alias);
@@ -376,15 +372,12 @@ public class KeychainModule extends ReactContextBaseJavaModule {
   @ReactMethod
   public void getGenericPasswordForOptions(@Nullable final ReadableMap options,
                                            @NonNull final Promise promise) {
-    Log.d("KeychainModule", "getGenericPasswordForOptions options="+options);
     final String service = getServiceOrDefault(options);
     getGenericPassword(service, options, promise);
   }
 
   protected void resetGenericPassword(@NonNull final String alias,
                                       @NonNull final Promise promise) {
-    Log.d("KeychainModule", "resetGenericPassword alias="+ alias);
-
     try {
       // First we clean up the cipher storage (using the cipher storage that was used to store the entry)
       final ResultSet resultSet = blockStoreStorage.getEncryptedEntry(alias);
@@ -414,7 +407,6 @@ public class KeychainModule extends ReactContextBaseJavaModule {
   @ReactMethod
   public void resetGenericPasswordForOptions(@Nullable final ReadableMap options,
                                              @NonNull final Promise promise) {
-    Log.d("KeychainModule", "resetGenericPasswordForOptions");
     final String service = getServiceOrDefault(options);
     resetGenericPassword(service, promise);
   }
@@ -426,17 +418,6 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     final String alias = getAliasOrDefault(server);
 
     final ResultSet resultSet = blockStoreStorage.getEncryptedEntry(alias);
-
-    //todo: remove!
-    String storageName = null;
-    String username = null;
-    String password = null;
-    if (resultSet!=null) {
-      storageName = resultSet.cipherStorageName;
-      username = new String(resultSet.username);
-      password = new String(resultSet.password);
-    }
-    Log.d("KeychainModule", "hasInternetCredentialsForServer cipherStorageName="+ storageName+", username="+username + ", password="+password);
 
     if (resultSet == null) {
       Log.e(KEYCHAIN_MODULE, "No entry found for service: " + alias);
@@ -457,7 +438,6 @@ public class KeychainModule extends ReactContextBaseJavaModule {
                                               @NonNull final String password,
                                               @Nullable final ReadableMap options,
                                               @NonNull final Promise promise) {
-    Log.d("KeychainModule", "setInternetCredentialsForServer");
     setGenericPassword(server, username, password, options, promise);
   }
 
@@ -465,14 +445,12 @@ public class KeychainModule extends ReactContextBaseJavaModule {
   public void getInternetCredentialsForServer(@NonNull final String server,
                                               @Nullable final ReadableMap options,
                                               @NonNull final Promise promise) {
-    Log.d("KeychainModule", "getInternetCredentialsForServer server="+server+", options="+options);
     getGenericPassword(server, options, promise);
   }
 
   @ReactMethod
   public void resetInternetCredentialsForServer(@NonNull final String server,
                                                 @NonNull final Promise promise) {
-    Log.d("KeychainModule", "resetInternetCredentialsForServer");
     resetGenericPassword(server, promise);
   }
 

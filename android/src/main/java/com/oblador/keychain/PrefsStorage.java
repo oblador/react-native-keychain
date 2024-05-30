@@ -9,12 +9,15 @@ import androidx.annotation.Nullable;
 
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.oblador.keychain.KeychainModule.KnownCiphers;
-import com.oblador.keychain.cipherStorage.CipherStorage;
 import com.oblador.keychain.cipherStorage.CipherStorage.EncryptionResult;
 
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * Original storage based on shared preferences. Unused at the moment as we switched to BlockStoreStorage.
+ * @see com.oblador.keychain.BlockStoreStorage
+ */
 @SuppressWarnings({"unused", "WeakerAccess"})
 public class PrefsStorage implements KeyValueStorage {
   public static final String KEYCHAIN_DATA = "RN_KEYCHAIN";
@@ -80,6 +83,7 @@ public class PrefsStorage implements KeyValueStorage {
    *
    * @return set of cipher names
    */
+  @NonNull
   public Set<String> getUsedCipherNames() {
     Set<String> result = new HashSet<>();
 
@@ -112,25 +116,6 @@ public class PrefsStorage implements KeyValueStorage {
     String key = getKeyForCipherStorage(service);
 
     return this.prefs.getString(key, null);
-  }
-
-  @NonNull
-  public static String getKeyForUsername(@NonNull final String service) {
-    return service + ":" + "u";
-  }
-
-  @NonNull
-  public static String getKeyForPassword(@NonNull final String service) {
-    return service + ":" + "p";
-  }
-
-  @NonNull
-  public static String getKeyForCipherStorage(@NonNull final String service) {
-    return service + ":" + "c";
-  }
-
-  public static boolean isKeyForCipherStorage(@NonNull final String key) {
-    return key.endsWith(":c");
   }
 
   @Nullable
