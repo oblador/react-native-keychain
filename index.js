@@ -201,6 +201,17 @@ export function getGenericPassword(
 }
 
 /**
+ * Checks if we have generic password for `service`.
+ * @param {string} service Service to fetch generic password for.
+ * @return {Promise} Resolved to `true` when successful
+ */
+export function hasGenericPassword(
+  service: string
+): Promise<boolean> {
+  return RNKeychainManager.hasGenericPasswordForService(service);
+}
+
+/**
  * Deletes all generic password keychain entries for `service`.
  * @param {object} options An Keychain options object.
  * @return {Promise} Resolves to `true` when successful

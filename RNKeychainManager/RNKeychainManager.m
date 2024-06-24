@@ -486,6 +486,31 @@ RCT_EXPORT_METHOD(hasInternetCredentialsForServer:(NSString *)server
   return rejectWithError(reject, error);
 }
 
+RCT_EXPORT_METHOD(hasGenericPasswordForService:(NSString *)service
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+{
+  NSDictionary *query = @{
+    (__bridge NSString *)kSecClass: (__bridge id)(kSecClassGenericPassword),
+    (__bridge NSString *)kSecAttrService: service,
+    (__bridge id)kSecUseNoAuthenticationUI: @YES
+  };
+
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+      CFTypeRef dataTypeRef = NULL;
+      OSStatus status = SecItemCopyMatching((__bridge CFDictionaryRef)(query), &dataTypeRef);
+      if (status == errSecInteractionNotAllowed || status == errSecSuccess) {
+          resolve(@(YES));
+      } else if (status == errSecItemNotFound) {
+          resolve(@(NO));
+      } else {
+          NSError *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:status userInfo:nil];
+          rejectWithError(reject, error);
+      }
+  });
+
+}
+
 RCT_EXPORT_METHOD(getInternetCredentialsForServer:(NSString *)server
                   withOptions:(NSDictionary * __nullable)options
                   resolver:(RCTPromiseResolveBlock)resolve
