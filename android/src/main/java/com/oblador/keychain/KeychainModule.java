@@ -423,6 +423,20 @@ public class KeychainModule extends ReactContextBaseJavaModule {
   }
 
   @ReactMethod
+  public void hasGenericPasswordForService(@NonNull final String service,
+                                           @NonNull final Promise promise) {
+    final ResultSet resultSet = prefsStorage.getEncryptedEntry(service);
+
+    if (resultSet == null) {
+      Log.e(KEYCHAIN_MODULE, "No entry found for service: " + alias);
+      promise.resolve(false);
+      return;
+    }
+
+    promise.resolve(true);
+  }
+
+  @ReactMethod
   public void setInternetCredentialsForServer(@NonNull final String server,
                                               @NonNull final String username,
                                               @NonNull final String password,
