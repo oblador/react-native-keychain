@@ -409,6 +409,10 @@ abstract public class CipherStorageBase implements CipherStorage {
       if (null == isStrongboxAvailable || isStrongboxAvailable.get()) {
         if (null == isStrongboxAvailable) isStrongboxAvailable = new AtomicBoolean(false);
 
+        /*
+        * StrongBox is not supported on all devices and was causing slowliness on some devices.
+        * https://github.com/oblador/react-native-keychain/issues/630
+        * Disabling it for temporarily.
         try {
           secretKey = tryGenerateStrongBoxSecurityKey(alias);
 
@@ -416,6 +420,7 @@ abstract public class CipherStorageBase implements CipherStorage {
         } catch (GeneralSecurityException | ProviderException ex) {
           Log.w(LOG_TAG, "StrongBox security storage is not available.", ex);
         }
+        */
       }
     }
 
