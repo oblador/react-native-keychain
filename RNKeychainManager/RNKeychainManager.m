@@ -111,6 +111,14 @@ CFStringRef accessibleValue(NSDictionary *options)
   return kSecAttrAccessibleAfterFirstUnlock;
 }
 
+id accountValue(NSDictionary *options)
+{
+  if (options && options[@"account"] != nil) {
+    return options[@"account"];
+  }
+  return nil;
+}
+
 NSString *serviceValue(NSDictionary *options)
 {
   if (options && options[@"service"] != nil) {
@@ -375,18 +383,32 @@ RCT_EXPORT_METHOD(getGenericPasswordForOptions:(NSDictionary * __nullable)option
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
 {
+  NSString *account = accountValue(options);
   NSString *service = serviceValue(options);
   NSString *authenticationPrompt = authenticationPromptValue(options);
 
-  NSDictionary *query = @{
-    (__bridge NSString *)kSecClass: (__bridge id)(kSecClassGenericPassword),
-    (__bridge NSString *)kSecAttrService: service,
-    (__bridge NSString *)kSecReturnAttributes: (__bridge id)kCFBooleanTrue,
-    (__bridge NSString *)kSecReturnData: (__bridge id)kCFBooleanTrue,
-    (__bridge NSString *)kSecMatchLimit: (__bridge NSString *)kSecMatchLimitOne,
-    (__bridge NSString *)kSecUseOperationPrompt: authenticationPrompt
-  };
-
+  NSDictionary *query;
+  if (account) {
+    query = @{
+      (__bridge NSString *)kSecClass: (__bridge id)(kSecClassGenericPassword),
+      (__bridge NSString *)kSecAttrAccount: account,
+      (__bridge NSString *)kSecAttrService: service,
+      (__bridge NSString *)kSecReturnAttributes: (__bridge id)kCFBooleanTrue,
+      (__bridge NSString *)kSecReturnData: (__bridge id)kCFBooleanTrue,
+      (__bridge NSString *)kSecMatchLimit: (__bridge NSString *)kSecMatchLimitOne,
+      (__bridge NSString *)kSecUseOperationPrompt: authenticationPrompt
+    };
+  } else {
+    query = @{
+      (__bridge NSString *)kSecClass: (__bridge id)(kSecClassGenericPassword),
+      (__bridge NSString *)kSecAttrService: service,
+      (__bridge NSString *)kSecReturnAttributes: (__bridge id)kCFBooleanTrue,
+      (__bridge NSString *)kSecReturnData: (__bridge id)kCFBooleanTrue,
+      (__bridge NSString *)kSecMatchLimit: (__bridge NSString *)kSecMatchLimitOne,
+      (__bridge NSString *)kSecUseOperationPrompt: authenticationPrompt
+    };
+  }
+  
   // Look up service in the keychain
   NSDictionary *found = nil;
   CFTypeRef foundTypeRef = NULL;

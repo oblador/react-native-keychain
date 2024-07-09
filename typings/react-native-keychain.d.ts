@@ -75,6 +75,7 @@ declare module 'react-native-keychain' {
     accessControl?: ACCESS_CONTROL;
     accessGroup?: string;
     accessible?: ACCESSIBLE;
+    account?: string;
     authenticationPrompt?: string | AuthenticationPrompt;
     authenticationType?: AUTHENTICATION_TYPE;
     service?: string;

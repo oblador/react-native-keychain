@@ -109,7 +109,7 @@ Both `setGenericPassword` and `setInternetCredentials` are limited to strings on
 
 Will store the username/password combination in the secure storage. Resolves to `{service, storage}` or rejects in case of an error. `storage` - is a name of used internal cipher for saving secret; `service` - name used for storing secret in internal storage (empty string resolved to valid default name).
 
-### `getGenericPassword([{ authenticationPrompt, service, accessControl }])`
+### `getGenericPassword([{ accessControl, account, authenticationPrompt, service }])`
 
 Will retrieve the username/password combination from the secure storage. Resolves to `{ username, password, service, storage }` if an entry exists or `false` if it doesn't. It will reject only if an unexpected error is encountered like lacking entitlements or permission.
 
@@ -171,7 +171,8 @@ Get security level that is supported on the current device with the current OS. 
 | -------------------------- |---------------| ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------- |
 | **`accessControl`**        | All           | This dictates how a keychain item may be used, see possible values in `Keychain.ACCESS_CONTROL`. | _None_                                                                    |
 | **`accessible`**           | iOS, visionOS | This dictates when a keychain item is accessible, see possible values in `Keychain.ACCESSIBLE`.  | _`Keychain.ACCESSIBLE.WHEN_UNLOCKED`_                                     |
-| **`accessGroup`**          | iOS, visionOS | In which App Group to share the keychain. Requires additional setup with entitlements.           | _None_                                                                    |
+| **`accessGroup`**          | iOS, visionOS | In which App Group to share the keychain. Requires additional setup with entitlements.           | _None_
+| **`account`**              | iOS, visionOS | Account / username of keychain accounts. Maps to kSecAttrAccount on iOS.           | _None_                                                                    |
 | **`authenticationPrompt`** | All           | What to prompt the user when unlocking the keychain with biometry or device password.            | See [`authenticationPrompt` Properties](#authenticationprompt-properties) |
 | **`authenticationType`**   | iOS, visionOS | Policies specifying which forms of authentication are acceptable.                                | `Keychain.AUTHENTICATION_TYPE.DEVICE_PASSCODE_OR_BIOMETRICS`              |
 | **`service`**              | All           | Reverse domain name qualifier for the service associated with password.                          | _App bundle ID_                                                           |
