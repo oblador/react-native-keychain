@@ -18,6 +18,7 @@ import com.facebook.react.bridge.ReactApplicationContext;
 import com.oblador.keychain.KeychainModule.KnownCiphers;
 import com.oblador.keychain.SecurityLevel;
 import com.oblador.keychain.decryptionHandler.DecryptionResultHandler;
+import com.oblador.keychain.decryptionHandler.DecryptionResultListener;
 import com.oblador.keychain.exceptions.CryptoFailedException;
 
 import java.security.GeneralSecurityException;
@@ -94,12 +95,13 @@ public class CipherStorageFacebookConceal extends CipherStorageBase {
     }
   }
 
-  @NonNull
   @Override
-  public DecryptionResult decrypt(@NonNull final String alias,
-                                  @NonNull final byte[] username,
-                                  @NonNull final byte[] password,
-                                  @NonNull final SecurityLevel level)
+  public void decrypt(@NonNull final DecryptionResultHandler handler,
+                      @NonNull final String alias,
+                      @NonNull final byte[] username,
+                      @NonNull final byte[] password,
+                      @NonNull final SecurityLevel level,
+                      @NonNull final DecryptionResultListener listener)
     throws CryptoFailedException {
 
     throwIfInsufficientLevel(level);
@@ -112,29 +114,14 @@ public class CipherStorageFacebookConceal extends CipherStorageBase {
       final byte[] decryptedUsername = crypto.decrypt(username, usernameEntity);
       final byte[] decryptedPassword = crypto.decrypt(password, passwordEntity);
 
-      return new DecryptionResult(
-        new String(decryptedUsername, UTF8),
-        new String(decryptedPassword, UTF8),
-        SecurityLevel.ANY);
+      final DecryptionResult result =
+          new DecryptionResult(
+              new String(decryptedUsername, UTF8),
+              new String(decryptedPassword, UTF8),
+              SecurityLevel.ANY);
+      listener.onDecrypt(result);
     } catch (Throwable fail) {
-      throw new CryptoFailedException("Decryption failed for alias: " + alias, fail);
-    }
-  }
-
-  /** redirect call to default {@link #decrypt(String, byte[], byte[], SecurityLevel)} method. */
-  @Override
-  public void decrypt(@NonNull DecryptionResultHandler handler,
-                      @NonNull String service,
-                      @NonNull byte[] username,
-                      @NonNull byte[] password,
-                      @NonNull final SecurityLevel level) {
-
-    try {
-      final DecryptionResult results = decrypt(service, username, password, level);
-
-      handler.onDecrypt(results, null);
-    } catch (Throwable fail) {
-      handler.onDecrypt(null, fail);
+      listener.onError(new CryptoFailedException("Decryption failed for alias: " + alias, fail));
     }
   }
 
