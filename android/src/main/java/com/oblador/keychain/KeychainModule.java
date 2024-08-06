@@ -429,7 +429,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     final ResultSet resultSet = prefsStorage.getEncryptedEntry(service);
 
     if (resultSet == null) {
-      Log.e(KEYCHAIN_MODULE, "No entry found for service: " + alias);
+      Log.e(KEYCHAIN_MODULE, "No entry found for service: " + service);
       promise.resolve(false);
       return;
     }
