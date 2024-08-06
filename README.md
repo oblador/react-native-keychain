@@ -6,7 +6,7 @@
   />
 </p>
 
-[![Travis](https://img.shields.io/travis/oblador/react-native-keychain.svg)](https://travis-ci.org/oblador/react-native-keychain) [![npm](https://img.shields.io/npm/v/react-native-keychain.svg)](https://npmjs.com/package/react-native-keychain) [![npm](https://img.shields.io/npm/dm/react-native-keychain.svg)](https://npmjs.com/package/react-native-keychain)
+[![Tests](https://github.com/oblador/react-native-keychain/actions/workflows/tests.yaml/badge.svg)](https://github.com/oblador/react-native-keychain/actions/workflows/tests.yaml) [![npm](https://img.shields.io/npm/v/react-native-keychain.svg)](https://npmjs.com/package/react-native-keychain) [![npm](https://img.shields.io/npm/dm/react-native-keychain.svg)](https://npmjs.com/package/react-native-keychain)
 
 # Keychain/Keystore Access for React Native
 
