@@ -206,9 +206,10 @@ export function getGenericPassword(
  * @return {Promise} Resolved to `true` when successful
  */
 export function hasGenericPassword(
-  service: string
+  serviceOrOptions?: string | Options
 ): Promise<boolean> {
-  return RNKeychainManager.hasGenericPasswordForService(service);
+  const options = normalizeOptions(serviceOrOptions);
+  return RNKeychainManager.hasGenericPasswordForOptions(options);
 }
 
 /**

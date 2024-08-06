@@ -423,8 +423,9 @@ public class KeychainModule extends ReactContextBaseJavaModule {
   }
 
   @ReactMethod
-  public void hasGenericPasswordForService(@NonNull final String service,
+  public void hasGenericPasswordForOptions(@Nullable final ReadableMap options,
                                            @NonNull final Promise promise) {
+    final String service = getServiceOrDefault(options);
     final ResultSet resultSet = prefsStorage.getEncryptedEntry(service);
 
     if (resultSet == null) {

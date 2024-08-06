@@ -486,29 +486,37 @@ RCT_EXPORT_METHOD(hasInternetCredentialsForServer:(NSString *)server
   return rejectWithError(reject, error);
 }
 
-RCT_EXPORT_METHOD(hasGenericPasswordForService:(NSString *)service
+RCT_EXPORT_METHOD(hasGenericPasswordForOptions:(NSDictionary *)options
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
 {
-  NSDictionary *query = @{
-    (__bridge NSString *)kSecClass: (__bridge id)(kSecClassGenericPassword),
-    (__bridge NSString *)kSecAttrService: service,
-    (__bridge id)kSecUseNoAuthenticationUI: @YES
-  };
+  NSString *service = serviceValue(options);
 
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-      CFTypeRef dataTypeRef = NULL;
-      OSStatus status = SecItemCopyMatching((__bridge CFDictionaryRef)(query), &dataTypeRef);
-      if (status == errSecInteractionNotAllowed || status == errSecSuccess) {
-          resolve(@(YES));
-      } else if (status == errSecItemNotFound) {
-          resolve(@(NO));
-      } else {
-          NSError *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:status userInfo:nil];
-          rejectWithError(reject, error);
-      }
-  });
+  NSMutableDictionary *queryParts = [[NSMutableDictionary alloc] init];
+  queryParts[(__bridge NSString *)kSecClass] = (__bridge id)(kSecClassGenericPassword);
+  queryParts[(__bridge NSString *)kSecAttrServer] = service;
+  queryParts[(__bridge NSString *)kSecMatchLimit] = (__bridge NSString *)kSecMatchLimitOne;
 
+  if (@available(iOS 9, *)) {
+    queryParts[(__bridge NSString *)kSecUseAuthenticationUI] = (__bridge NSString *)kSecUseAuthenticationUIFail;
+  }
+
+  NSDictionary *query = [queryParts copy];
+
+  // Look up server in the keychain
+  OSStatus osStatus = SecItemCopyMatching((__bridge CFDictionaryRef) query, nil);
+
+  switch (osStatus) {
+    case noErr:
+    case errSecInteractionNotAllowed:
+      return resolve(@(YES));
+
+    case errSecItemNotFound:
+      return resolve(@(NO));
+  }
+
+  NSError *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:osStatus userInfo:nil];
+  return rejectWithError(reject, error);
 }
 
 RCT_EXPORT_METHOD(getInternetCredentialsForServer:(NSString *)server
