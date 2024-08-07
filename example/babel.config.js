@@ -1,10 +1,19 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
+const path = require('path');
+const pak = require('../package.json');
+
 module.exports = {
-  presets: (() => {
-    try {
-      return [require.resolve('@react-native/babel-preset')];
-    } catch (_) {
-      return ['module:metro-react-native-babel-preset'];
-    }
-  })(),
-  plugins: [[require('@rnx-kit/polyfills')]],
+  presets: ['module:@react-native/babel-preset'],
+  plugins: [
+    [require('@rnx-kit/polyfills')],
+    [
+      'module-resolver',
+      {
+        extensions: ['.tsx', '.ts', '.js', '.json'],
+        alias: {
+          [pak.name]: path.join(__dirname, '..', pak.source),
+        },
+      },
+    ],
+  ],
 };

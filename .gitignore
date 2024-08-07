@@ -63,7 +63,7 @@ buck-out/
 
 # CocoaPods
 ios/Pods/
-KeychainExample/ios/Pods/
+example/ios/Pods
 
 # Logs
 *.log
@@ -81,3 +81,9 @@ KeychainExample/ios/Pods/
 
 # React Native
 .watchman-*
+
+# Turborepo
+.turbo/
+
+# Ruby
+example/vendor/
