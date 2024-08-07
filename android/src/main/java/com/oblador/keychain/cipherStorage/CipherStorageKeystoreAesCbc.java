@@ -228,12 +228,32 @@ public class CipherStorageKeystoreAesCbc extends CipherStorageBase {
     return generator.generateKey();
   }
 
+  private static byte[] maybeRemovePKCS7Padding(byte[] paddedBytes, int maxPaddingLength) {
+    int paddingLength = paddedBytes[paddedBytes.length - 1];
+
+    // Validate the padding
+    if (paddingLength < 1 || paddingLength > paddedBytes.length || paddingLength > maxPaddingLength) {
+      return paddedBytes;
+    }
+    for (int i = paddedBytes.length - paddingLength; i < paddedBytes.length; i++) {
+      if (paddedBytes[i] != paddingLength) {
+        return paddedBytes;
+      }
+    }
+
+    // Remove the padding
+    byte[] unpaddedBytes = new byte[paddedBytes.length - paddingLength];
+    System.arraycopy(paddedBytes, 0, unpaddedBytes, 0, unpaddedBytes.length);
+
+    return unpaddedBytes;
+  }
+
   /** Decrypt provided bytes to a string. */
   @NonNull
   @Override
   protected String decryptBytes(@NonNull final Key key, @NonNull final byte[] bytes,
-                                @Nullable final DecryptBytesHandler handler)
-    throws GeneralSecurityException, IOException {
+      @Nullable final DecryptBytesHandler handler)
+      throws GeneralSecurityException, IOException {
     final Cipher cipher = getCachedInstance();
 
     try {
@@ -241,10 +261,16 @@ public class CipherStorageKeystoreAesCbc extends CipherStorageBase {
       final IvParameterSpec iv = IV.readIv(bytes);
       cipher.init(Cipher.DECRYPT_MODE, key, iv);
 
-      // decrypt the bytes using cipher.doFinal(). Using a CipherInputStream for decryption has historically led to issues
+      // decrypt the bytes using cipher.doFinal(). Using a CipherInputStream for
+      // decryption has historically led to issues
       // on the Pixel family of devices.
       // see https://github.com/oblador/react-native-keychain/issues/383
-      byte[] decryptedBytes = cipher.doFinal(bytes, IV.IV_LENGTH, bytes.length - IV.IV_LENGTH);
+      byte[] _decryptedBytes = cipher.doFinal(bytes, IV.IV_LENGTH, bytes.length - IV.IV_LENGTH);
+
+      // removing padding is required to work around a decryption padding issue with
+      // some Pixel devices e.g. for strings of length 256
+      byte[] decryptedBytes = maybeRemovePKCS7Padding(_decryptedBytes, IV.IV_LENGTH);
+
       return new String(decryptedBytes, UTF8);
     } catch (Throwable fail) {
       Log.w(LOG_TAG, fail.getMessage(), fail);
