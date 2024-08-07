@@ -1,7 +1,0 @@
-# Created by .ignore support plugin (hsz.mobi)
-*.keystore
-*.properties
-
-# Allow to store only DEBUG key
-!debug.keystore.properties
-!debug.keystore

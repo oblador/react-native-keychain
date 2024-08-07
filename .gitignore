@@ -63,10 +63,27 @@ buck-out/
 
 # CocoaPods
 ios/Pods/
-KeychainExample/ios/Pods/
+example/ios/Pods
 
 # Logs
 *.log
 
 # Merge backups kdiff3
 *.orig
+
+# Yarn
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+
+# React Native
+.watchman-*
+
+# Turborepo
+.turbo/
+
+# Ruby
+example/vendor/
