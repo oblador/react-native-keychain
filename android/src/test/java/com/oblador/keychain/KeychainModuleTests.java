@@ -5,6 +5,7 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.hardware.fingerprint.FingerprintManager;
 import android.os.Build;
+import android.util.Base64;
 
 import androidx.annotation.NonNull;
 import androidx.biometric.BiometricManager;
@@ -19,7 +20,6 @@ import com.oblador.keychain.KeychainModule.KnownCiphers;
 import com.oblador.keychain.KeychainModule.Maps;
 import com.oblador.keychain.cipherStorage.CipherStorage;
 import com.oblador.keychain.cipherStorage.CipherStorageBase;
-import com.oblador.keychain.cipherStorage.CipherStorageFacebookConceal;
 import com.oblador.keychain.cipherStorage.CipherStorageKeystoreAesCbc;
 import com.oblador.keychain.cipherStorage.CipherStorageKeystoreRsaEcb;
 import com.oblador.keychain.exceptions.CryptoFailedException;
@@ -60,8 +60,10 @@ import static org.robolectric.Shadows.shadowOf;
 
 @RunWith(RobolectricTestRunner.class)
 public class KeychainModuleTests {
-  public static final byte[] BYTES_USERNAME = "username".getBytes();
-  public static final byte[] BYTES_PASSWORD = "password".getBytes();
+  public static final String USERNAME = "username";
+  public static final String PASSWORD = "password";
+  public static final byte[] BYTES_USERNAME = USERNAME.getBytes();
+  public static final byte[] BYTES_PASSWORD = PASSWORD.getBytes();
   /**
    * Cancel test after 5 seconds.
    */
@@ -284,29 +286,30 @@ public class KeychainModuleTests {
     final CipherStorage rsa = Mockito.mock(CipherStorage.class);
     when(rsa.getCipherStorageName()).thenReturn("dummy");
 
-    final CipherStorage.DecryptionResult decrypted = new CipherStorage.DecryptionResult("user", "password");
-    final CipherStorage.EncryptionResult encrypted = new CipherStorage.EncryptionResult("user".getBytes(), "password".getBytes(), rsa);
+    final CipherStorage.DecryptionResult decrypted = new CipherStorage.DecryptionResult(USERNAME, PASSWORD);
+    final CipherStorage.EncryptionResult encrypted = new CipherStorage.EncryptionResult(BYTES_USERNAME, BYTES_PASSWORD, rsa);
     final KeychainModule module = new KeychainModule(context);
-    final SharedPreferences prefs = context.getSharedPreferences(PrefsStorage.KEYCHAIN_DATA, Context.MODE_PRIVATE);
 
     when(
-      rsa.encrypt(eq("dummy"), eq("user"), eq("password"), any())
+      rsa.encrypt(eq("dummy"), eq(USERNAME), eq(PASSWORD), any())
     ).thenReturn(encrypted);
 
     // WHEN:
     module.migrateCipherStorage("dummy", rsa, aes, decrypted);
-    final String username = prefs.getString(PrefsStorage.getKeyForUsername("dummy"), "");
-    final String password = prefs.getString(PrefsStorage.getKeyForPassword("dummy"), "");
-    final String cipherName = prefs.getString(PrefsStorage.getKeyForCipherStorage("dummy"), "");
+    final PrefsStorageBase.ResultSet result = module.prefsStorage.getEncryptedEntry("dummy");
+    assert result != null;
+    final String username = Base64.encodeToString(result.username, Base64.DEFAULT);
+    final String password = Base64.encodeToString(result.password, Base64.DEFAULT);
+    final String cipherName = result.cipherStorageName;
 
     // THEN:
     //   delete of key from old storage
     //   re-store of encrypted data in shared preferences
-    verify(rsa).encrypt("dummy", "user", "password", SecurityLevel.ANY);
+    verify(rsa).encrypt("dummy", USERNAME, PASSWORD, SecurityLevel.ANY);
     verify(aes).removeKey("dummy");
 
     // Base64.DEFAULT force '\n' char in the end of string
-    assertThat(username, is("dXNlcg==\n"));
+    assertThat(username, is("dXNlcm5hbWU=\n"));
     assertThat(password, is("cGFzc3dvcmQ=\n"));
     assertThat(cipherName, is("dummy"));
   }
@@ -404,7 +407,6 @@ public class KeychainModuleTests {
     // GIVEN:
     final ReactApplicationContext context = getRNContext();
     final KeychainModule module = new KeychainModule(context);
-    final PrefsStorage prefs = new PrefsStorage(context);
     final Cipher mockCipher = Mockito.mock(Cipher.class);
     final KeyStore mockKeyStore = Mockito.mock(KeyStore.class);
     final CipherStorage storage = module.getCipherStorageByName(KnownCiphers.RSA);
@@ -419,7 +421,7 @@ public class KeychainModuleTests {
     options.putMap(Maps.AUTH_PROMPT, promptOptions);
 
     // store record done with RSA/Biometric cipher
-    prefs.storeEncryptedEntry("dummy", result);
+    module.prefsStorage.storeEncryptedEntry("dummy", result);
 
     assertThat(storage, instanceOf(CipherStorage.class));
     ((CipherStorageBase)storage).setCipher(mockCipher).setKeyStore(mockKeyStore);
@@ -434,5 +436,42 @@ public class KeychainModuleTests {
     assertThat(exception.getValue(), instanceOf(CryptoFailedException.class));
     assertThat(exception.getValue().getCause(), instanceOf(KeyStoreAccessException.class));
     assertThat(exception.getValue().getMessage(), is("Wrapped error: Empty key extracted!"));
+  }
+
+  @Test
+  @Config(sdk = Build.VERSION_CODES.LOLLIPOP)
+  public void testMigrateSharedPreferencesToDataStore_api21() throws Exception {
+    // GIVEN:
+    final ReactApplicationContext context = getRNContext();
+    final CipherStorage aes = Mockito.mock(CipherStorage.class);
+    when(aes.getCipherStorageName()).thenReturn("dummy");
+    final CipherStorage.EncryptionResult result = new CipherStorage.EncryptionResult(BYTES_USERNAME, BYTES_PASSWORD, aes);
+    final KeychainModule module = new KeychainModule(context);
+    // add encrypted data in shared preferences
+    final SharedPreferences sharedPrefs = context.getSharedPreferences(PrefsStorageBase.KEYCHAIN_DATA, Context.MODE_PRIVATE);
+    sharedPrefs.edit()
+      .putString(PrefsStorageBase.getKeyForUsername("dummy"), Base64.encodeToString(BYTES_USERNAME, Base64.DEFAULT))
+      .putString(PrefsStorageBase.getKeyForPassword("dummy"), Base64.encodeToString(BYTES_PASSWORD, Base64.DEFAULT))
+      .putString(PrefsStorageBase.getKeyForCipherStorage("dummy"), result.cipherName)
+      .apply();
+
+    when(aes.encrypt(eq("dummy"), eq(USERNAME), eq(PASSWORD), any())).thenReturn(result);
+
+    // WHEN:
+    final PrefsStorageBase.ResultSet dataStoreResult = module.prefsStorage.getEncryptedEntry("dummy");
+
+    // THEN:
+    // data is persisted and available after auto-migration to DataStore
+    assert dataStoreResult != null;
+    final String username = Base64.encodeToString(dataStoreResult.username, Base64.DEFAULT);
+    final String password = Base64.encodeToString(dataStoreResult.password, Base64.DEFAULT);
+    final String cipherName = dataStoreResult.cipherStorageName;
+    // Base64.DEFAULT force '\n' char in the end of string
+    assertThat(username, is("dXNlcm5hbWU=\n"));
+    assertThat(password, is("cGFzc3dvcmQ=\n"));
+    assertThat(cipherName, is("dummy"));
+
+    // shared preference data is removed
+    assertThat(sharedPrefs.getAll().size(), is(0));
   }
 }

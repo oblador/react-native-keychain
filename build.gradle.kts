@@ -10,6 +10,8 @@ buildscript {
     set("targetSdkVersion", 31)
     set("buildToolsVersion", "31.0.0")
   }
+  val kotlinVersion by extra("1.8.0")
+
   repositories {
     mavenLocal()
     google()
@@ -18,11 +20,12 @@ buildscript {
   }
   dependencies {
     /* https://mvnrepository.com/artifact/com.android.tools.build/gradle?repo=google */
-    classpath("com.android.tools.build:gradle:7.1.1")
+    classpath("com.android.tools.build:gradle:7.1.3")
     classpath("com.facebook.react:react-native-gradle-plugin")
 
     /* https://github.com/radarsh/gradle-test-logger-plugin */
     classpath("com.adarshr:gradle-test-logger-plugin:2.0.0")
+    classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
   }
 }
 

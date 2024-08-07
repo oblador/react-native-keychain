@@ -458,7 +458,7 @@ The module will automatically use the appropriate CipherStorage implementation b
 - API level 16-22 will en/de crypt using Facebook Conceal
 - API level 23+ will en/de crypt using Android Keystore
 
-Encrypted data is stored in SharedPreferences.
+Encrypted data is stored in DataStore Preferences.
 
 The `setInternetCredentials(server, username, password)` call will be resolved as call to `setGenericPassword(username, password, server)`. Use the `server` argument to distinguish between multiple entries.
 
@@ -510,7 +510,7 @@ This package supports visionOS.
 
 ### Security
 
-On API levels that do not support Android keystore, Facebook Conceal is used to en/decrypt stored data. The encrypted data is then stored in SharedPreferences. Since Conceal itself stores its encryption key in SharedPreferences, it follows that if the device is rooted (or if an attacker can somehow access the filesystem), the key can be obtained and the stored data can be decrypted. Therefore, on such a device, the conceal encryption is only an obscurity. On API level 23+ the key is stored in the Android Keystore, which makes the key non-exportable and therefore makes the entire process more secure. Follow best practices and do not store user credentials on a device. Instead use tokens or other forms of authentication and re-ask for user credentials before performing sensitive operations.
+On API levels that do not support Android keystore, Facebook Conceal is used to en/decrypt stored data. The encrypted data is then stored in DataStore Preferences. Since Conceal itself stores its encryption key in DataStore Preferences, it follows that if the device is rooted (or if an attacker can somehow access the filesystem), the key can be obtained and the stored data can be decrypted. Therefore, on such a device, the conceal encryption is only an obscurity. On API level 23+ the key is stored in the Android Keystore, which makes the key non-exportable and therefore makes the entire process more secure. Follow best practices and do not store user credentials on a device. Instead use tokens or other forms of authentication and re-ask for user credentials before performing sensitive operations.
 
 ![Android Security Framework](https://source.android.com/security/images/authentication-flow.png)
 
