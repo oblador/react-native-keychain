@@ -1,11 +1,13 @@
 package com.oblador.keychain.decryptionHandler;
 
 import android.os.Looper;
+import android.security.keystore.UserNotAuthenticatedException;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.biometric.BiometricPrompt;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentActivity;
 
 import com.facebook.react.bridge.AssertionException;
@@ -17,103 +19,94 @@ import com.oblador.keychain.cipherStorage.CipherStorage.DecryptionContext;
 import com.oblador.keychain.cipherStorage.CipherStorageBase;
 import com.oblador.keychain.exceptions.CryptoFailedException;
 
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Consumer;
 
-public class DecryptionResultHandlerInteractiveBiometric extends BiometricPrompt.AuthenticationCallback implements DecryptionResultHandler {
-  protected CipherStorage.DecryptionResult result;
-  protected Throwable error;
+public class DecryptionResultHandlerInteractiveBiometric implements DecryptionResultHandler {
   protected final ReactApplicationContext reactContext;
   protected final CipherStorageBase storage;
-  protected final Executor executor = Executors.newSingleThreadExecutor();
-  protected CipherStorage.DecryptionContext context;
+  protected final Executor executor;
+
+  protected DecryptionResultJob job;
+
   protected BiometricPrompt.PromptInfo promptInfo;
+  protected BiometricPrompt prompt;
+  protected InteractiveBiometryHandlers handlers;
+
+  protected final AuthSerialQueue authQueue = new AuthSerialQueue();
 
   /** Logging tag. */
   protected static final String LOG_TAG = DecryptionResultHandlerInteractiveBiometric.class.getSimpleName();
 
-  public DecryptionResultHandlerInteractiveBiometric(
-                                                     @NonNull ReactApplicationContext reactContext,
+  public DecryptionResultHandlerInteractiveBiometric(@NonNull ReactApplicationContext reactContext,
                                                      @NonNull final CipherStorage storage,
                                                      @NonNull final BiometricPrompt.PromptInfo promptInfo) {
     this.reactContext = reactContext;
     this.storage = (CipherStorageBase) storage;
     this.promptInfo = promptInfo;
+
+    executor = ContextCompat.getMainExecutor(reactContext);
+    handlers = provideHandlers();
+    prompt = new BiometricPrompt(getCurrentActivity(), executor, handlers);
   }
 
-  @Override
-  public void askAccessPermissions(@NonNull final DecryptionContext context) {
-    this.context = context;
+  protected InteractiveBiometryHandlers provideHandlers() {
+    return new InteractiveBiometryHandlers();
+  }
 
+  public CompletableFuture<DecryptionResult> authenticate(@NonNull DecryptionResultJob job) {
+    return authQueue.add(asyncResult -> {
+      try {
+        asyncResult.complete(job.get());
+      } catch (final UserNotAuthenticatedException ex) {
+        Log.d(LOG_TAG, "Unlock of keystore is needed. Error: " + ex.getMessage(), ex);
+
+        // Since the queue is serial I think it's OK to reassign it here
+        this.job = job;
+
+        handlers.setOnAuth(() -> {
+          try {
+            asyncResult.complete(job.get());
+          } catch (final Throwable fail) {
+            // any other exception treated as a failure
+            asyncResult.completeExceptionally(fail);
+          }
+        }).setOnError(asyncResult::completeExceptionally);
+
+        askAccessPermissions(asyncResult);
+      } catch (final Throwable fail) {
+        // any other exception treated as a failure
+        asyncResult.completeExceptionally(fail);
+      }
+    });
+  }
+
+  protected void askAccessPermissions(CompletableFuture<DecryptionResult> asyncResult) {
     if (!DeviceAvailability.isPermissionsGranted(reactContext)) {
       final CryptoFailedException failure = new CryptoFailedException(
-        "Could not start fingerprint Authentication. No permissions granted.");
+              "Could not start fingerprint Authentication. No permissions granted.");
 
-      onDecrypt(null, failure);
+      asyncResult.completeExceptionally(failure);
     } else {
       startAuthentication();
     }
   }
 
-  @Override
-  public void onDecrypt(@Nullable final DecryptionResult decryptionResult, @Nullable final Throwable error) {
-    this.result = decryptionResult;
-    this.error = error;
-
-    synchronized (this) {
-      notifyAll();
-    }
-  }
-
-  @Nullable
-  @Override
-  public CipherStorage.DecryptionResult getResult() {
-    return result;
-  }
-
-  @Nullable
-  @Override
-  public Throwable getError() {
-    return error;
-  }
-
-  /** Called when an unrecoverable error has been encountered and the operation is complete. */
-  @Override
-  public void onAuthenticationError(final int errorCode, @NonNull final CharSequence errString) {
-    final CryptoFailedException error = new CryptoFailedException("code: " + errorCode + ", msg: " + errString);
-
-    onDecrypt(null, error);
-  }
-
-  /** Called when a biometric is recognized. */
-  @Override
-  public void onAuthenticationSucceeded(@NonNull final BiometricPrompt.AuthenticationResult result) {
-    try {
-      if (null == context) throw new NullPointerException("Decrypt context is not assigned yet.");
-
-      final CipherStorage.DecryptionResult decrypted = new CipherStorage.DecryptionResult(
-        storage.decryptBytes(context.key, context.username),
-        storage.decryptBytes(context.key, context.password)
-      );
-
-      onDecrypt(decrypted, null);
-    } catch (Throwable fail) {
-      onDecrypt(null, fail);
-    }
-  }
-
   /** trigger interactive authentication. */
-  public void startAuthentication() {
+  protected void startAuthentication() {
     FragmentActivity activity = getCurrentActivity();
 
     // code can be executed only from MAIN thread
     if (Thread.currentThread() != Looper.getMainLooper().getThread()) {
       activity.runOnUiThread(this::startAuthentication);
-      waitResult();
       return;
     }
 
-    authenticateWithPrompt(activity);
+    prompt.authenticate(promptInfo);
   }
 
   protected FragmentActivity getCurrentActivity() {
@@ -123,29 +116,36 @@ public class DecryptionResultHandlerInteractiveBiometric extends BiometricPrompt
     return activity;
   }
 
-  protected BiometricPrompt authenticateWithPrompt(@NonNull final FragmentActivity activity) {
-    final BiometricPrompt prompt = new BiometricPrompt(activity, executor, this);
-    prompt.authenticate(this.promptInfo);
+  static class InteractiveBiometryHandlers extends BiometricPrompt.AuthenticationCallback {
+    private Runnable cb;
+    private Consumer<Throwable> errCb;
 
-    return prompt;
-  }
-
-  /** Block current NON-main thread and wait for user authentication results. */
-  @Override
-  public void waitResult() {
-    if (Thread.currentThread() == Looper.getMainLooper().getThread())
-      throw new AssertionException("method should not be executed from MAIN thread");
-
-    Log.i(LOG_TAG, "blocking thread. waiting for done UI operation.");
-
-    try {
-      synchronized (this) {
-        wait();
-      }
-    } catch (InterruptedException ignored) {
-      /* shutdown sequence */
+    public InteractiveBiometryHandlers setOnAuth(Runnable cb) {
+      this.cb = cb;
+      return this;
     }
 
-    Log.i(LOG_TAG, "unblocking thread.");
+    public InteractiveBiometryHandlers setOnError(Consumer<Throwable> errCb) {
+      this.errCb = errCb;
+      return this;
+    }
+
+    /** Called when an unrecoverable error has been encountered and the operation is complete. */
+    @Override
+    public void onAuthenticationError(final int errorCode, @NonNull final CharSequence errString) {
+      super.onAuthenticationError(errorCode, errString);
+
+      final CryptoFailedException error = new CryptoFailedException("code: " + errorCode + ", msg: " + errString);
+
+      this.errCb.accept(error);
+    }
+
+    /** Called when a biometric is recognized. */
+    @Override
+    public void onAuthenticationSucceeded(@NonNull final BiometricPrompt.AuthenticationResult result) {
+      super.onAuthenticationSucceeded(result);
+
+      this.cb.run();
+    }
   }
 }

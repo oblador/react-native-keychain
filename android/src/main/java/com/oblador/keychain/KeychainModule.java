@@ -37,6 +37,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeUnit;
 
 import javax.crypto.Cipher;
@@ -303,23 +305,35 @@ public class KeychainModule extends ReactContextBaseJavaModule {
         cipher = getCipherStorageByName(storageName);
       }
 
-      final DecryptionResult decryptionResult = decryptCredentials(alias, cipher, resultSet, rules, promptInfo);
+      CipherStorage finalCipher = cipher;
+      decryptCredentials(alias, finalCipher, resultSet, rules, promptInfo).handle((decryptionResult, e) -> {
+        if (e == null) {
+          final WritableMap credentials = Arguments.createMap();
+          credentials.putString(Maps.SERVICE, alias);
+          credentials.putString(Maps.USERNAME, decryptionResult.username);
+          credentials.putString(Maps.PASSWORD, decryptionResult.password);
+          credentials.putString(Maps.STORAGE, finalCipher.getCipherStorageName());
 
-      final WritableMap credentials = Arguments.createMap();
-      credentials.putString(Maps.SERVICE, alias);
-      credentials.putString(Maps.USERNAME, decryptionResult.username);
-      credentials.putString(Maps.PASSWORD, decryptionResult.password);
-      credentials.putString(Maps.STORAGE, cipher.getCipherStorageName());
+          promise.resolve(credentials);
+          return null;
+        }
+        if(e instanceof CompletionException)
+          e = e.getCause();
+        if (e instanceof KeyStoreAccessException) {
+          Log.e(KEYCHAIN_MODULE, e.getMessage());
 
-      promise.resolve(credentials);
-    } catch (KeyStoreAccessException e) {
-      Log.e(KEYCHAIN_MODULE, e.getMessage());
+          promise.reject(Errors.E_KEYSTORE_ACCESS_ERROR, e);
+        } else if (e instanceof CryptoFailedException) {
+          Log.e(KEYCHAIN_MODULE, e.getMessage());
 
-      promise.reject(Errors.E_KEYSTORE_ACCESS_ERROR, e);
-    } catch (CryptoFailedException e) {
-      Log.e(KEYCHAIN_MODULE, e.getMessage());
+          promise.reject(Errors.E_CRYPTO_FAILED, e);
+        } else {
+          Log.e(KEYCHAIN_MODULE, e.getMessage(), e);
 
-      promise.reject(Errors.E_CRYPTO_FAILED, e);
+          promise.reject(Errors.E_UNKNOWN_ERROR, e);
+        }
+        return null;
+      });
     } catch (Throwable fail) {
       Log.e(KEYCHAIN_MODULE, fail.getMessage(), fail);
 
@@ -513,7 +527,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     String rules = null;
 
     if (null != options && options.hasKey(Maps.RULES)) {
-      rules = options.getString(Maps.RULES);
+      rules = options.getString(Maps.ACCESS_CONTROL);
     }
 
     if (null == rules) return rule;
@@ -633,7 +647,7 @@ public class KeychainModule extends ReactContextBaseJavaModule {
    * results set then executed migration.
    */
   @NonNull
-  private DecryptionResult decryptCredentials(@NonNull final String alias,
+  private CompletableFuture<DecryptionResult> decryptCredentials(@NonNull final String alias,
                                               @NonNull final CipherStorage current,
                                               @NonNull final ResultSet resultSet,
                                               @Rules @NonNull final String rules,
@@ -654,37 +668,37 @@ public class KeychainModule extends ReactContextBaseJavaModule {
     }
 
     // decrypt using the older cipher storage
-    final DecryptionResult decryptionResult = decryptToResult(alias, oldStorage, resultSet, promptInfo);
-
-    if (Rules.AUTOMATIC_UPGRADE.equals(rules)) {
-      try {
-        // encrypt using the current cipher storage
-        migrateCipherStorage(alias, current, oldStorage, decryptionResult);
-      } catch (CryptoFailedException e) {
-        Log.w(KEYCHAIN_MODULE, "Migrating to a less safe storage is not allowed. Keeping the old one");
+    return decryptToResult(alias, oldStorage, resultSet, promptInfo).thenApply(decryptionResult -> {
+      if (Rules.AUTOMATIC_UPGRADE.equals(rules)) {
+        try {
+          // encrypt using the current cipher storage
+          migrateCipherStorage(alias, current, oldStorage, decryptionResult);
+        } catch (CryptoFailedException e) {
+          Log.w(KEYCHAIN_MODULE, "Migrating to a less safe storage is not allowed. Keeping the old one");
+        } catch (KeyStoreAccessException e) {
+          throw new CompletionException(e);
+        }
       }
-    }
 
-    return decryptionResult;
+      return decryptionResult;
+    });
   }
 
   /** Try to decrypt with provided storage. */
   @NonNull
-  private DecryptionResult decryptToResult(@NonNull final String alias,
-                                           @NonNull final CipherStorage storage,
-                                           @NonNull final ResultSet resultSet,
-                                           @NonNull final PromptInfo promptInfo)
+  private CompletableFuture<DecryptionResult> decryptToResult(@NonNull final String alias,
+                                                             @NonNull final CipherStorage storage,
+                                                             @NonNull final ResultSet resultSet,
+                                                             @NonNull final PromptInfo promptInfo)
     throws CryptoFailedException {
     final DecryptionResultHandler handler = getInteractiveHandler(storage, promptInfo);
-    storage.decrypt(handler, alias, resultSet.username, resultSet.password, SecurityLevel.ANY);
+    return storage.decrypt(handler, alias, resultSet.username, resultSet.password, SecurityLevel.ANY).thenApply((decryptionResult) -> {
+      if (null == decryptionResult) {
+        throw new CompletionException(new CryptoFailedException("No decryption results and no error. Something deeply wrong!"));
+      }
 
-    CryptoFailedException.reThrowOnError(handler.getError());
-
-    if (null == handler.getResult()) {
-      throw new CryptoFailedException("No decryption results and no error. Something deeply wrong!");
-    }
-
-    return handler.getResult();
+      return decryptionResult;
+    });
   }
 
   /** Get instance of handler that resolves access to the keystore on system request. */
