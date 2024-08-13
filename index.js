@@ -351,6 +351,21 @@ export function canImplyAuthentication(options?: Options): Promise<boolean> {
   return RNKeychainManager.canCheckAuthentication(options);
 }
 
+/**
+ * Gets all `kSecAttrServer` values used with internet credentials for iOS.
+ * @return {Promise} Resolves to an array of strings
+ */
+ export async function getAllInternetPasswordServers(): Promise<string[]> {
+  if (Platform.OS !== 'ios') {
+    return Promise.reject(
+      new Error(
+        `getAllInternetPasswordServers() is not supported on ${Platform.OS}`
+      )
+    );
+  }
+  return RNKeychainManager.getAllInternetPasswordServers();
+}
+
 //* ANDROID ONLY */
 
 /**
