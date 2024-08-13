@@ -135,6 +135,14 @@ NSString *authenticationPromptValue(NSDictionary *options)
   return nil;
 }
 
+NSString *applicationPasswordValue(NSDictionary *options)
+{
+  if (options && options[@"applicationPassword"] != nil) {
+    return options[@"applicationPassword"];
+  }
+  return nil;
+}
+
 #pragma mark - Proposed functionality - Helpers
 
 #define kAuthenticationType @"authenticationType"
@@ -359,12 +367,21 @@ RCT_EXPORT_METHOD(setGenericPasswordForOptions:(NSDictionary *)options
                   rejecter:(RCTPromiseRejectBlock)reject)
 {
   NSString *service = serviceValue(options);
-  NSDictionary *attributes = attributes = @{
-    (__bridge NSString *)kSecClass: (__bridge id)(kSecClassGenericPassword),
-    (__bridge NSString *)kSecAttrService: service,
-    (__bridge NSString *)kSecAttrAccount: username,
-    (__bridge NSString *)kSecValueData: [password dataUsingEncoding:NSUTF8StringEncoding]
-  };
+  NSString *applicationPassword = applicationPasswordValue(options);
+    
+    NSMutableDictionary *attributes = [NSMutableDictionary dictionaryWithDictionary: @{
+        (__bridge NSString *)kSecClass: (__bridge id)(kSecClassGenericPassword),
+        (__bridge NSString *)kSecAttrService: service,
+        (__bridge NSString *)kSecAttrAccount: username,
+        (__bridge NSString *)kSecValueData: [password dataUsingEncoding:NSUTF8StringEncoding]
+      }];
+    
+    if (applicationPassword != nil) {
+        LAContext *context =  [LAContext new];
+        [context setCredential: [applicationPassword dataUsingEncoding: NSUTF8StringEncoding] type: LACredentialTypeApplicationPassword];
+        
+        attributes[(__bridge NSString *)kSecUseAuthenticationContext] = context;
+    }
 
   [self deletePasswordsForService:service];
 
@@ -377,15 +394,23 @@ RCT_EXPORT_METHOD(getGenericPasswordForOptions:(NSDictionary * __nullable)option
 {
   NSString *service = serviceValue(options);
   NSString *authenticationPrompt = authenticationPromptValue(options);
+  NSString *applicationPassword = applicationPasswordValue(options);
 
-  NSDictionary *query = @{
-    (__bridge NSString *)kSecClass: (__bridge id)(kSecClassGenericPassword),
-    (__bridge NSString *)kSecAttrService: service,
-    (__bridge NSString *)kSecReturnAttributes: (__bridge id)kCFBooleanTrue,
-    (__bridge NSString *)kSecReturnData: (__bridge id)kCFBooleanTrue,
-    (__bridge NSString *)kSecMatchLimit: (__bridge NSString *)kSecMatchLimitOne,
-    (__bridge NSString *)kSecUseOperationPrompt: authenticationPrompt
-  };
+  NSMutableDictionary *query = [NSMutableDictionary dictionaryWithDictionary: @{
+      (__bridge NSString *)kSecClass: (__bridge id)(kSecClassGenericPassword),
+      (__bridge NSString *)kSecAttrService: service,
+      (__bridge NSString *)kSecReturnAttributes: (__bridge id)kCFBooleanTrue,
+      (__bridge NSString *)kSecReturnData: (__bridge id)kCFBooleanTrue,
+      (__bridge NSString *)kSecMatchLimit: (__bridge NSString *)kSecMatchLimitOne,
+      (__bridge NSString *)kSecUseOperationPrompt: authenticationPrompt
+    }];
+    
+    if (applicationPassword != nil) {
+        LAContext *context =  [LAContext new];
+        [context setCredential: [applicationPassword dataUsingEncoding: NSUTF8StringEncoding] type: LACredentialTypeApplicationPassword];
+        
+        query[(__bridge NSString *)kSecUseAuthenticationContext] = context;
+    }
 
   // Look up service in the keychain
   NSDictionary *found = nil;
