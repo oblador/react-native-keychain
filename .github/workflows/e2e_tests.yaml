@@ -139,7 +139,6 @@ jobs:
 
   build-ios:
     name: Build iOS
-    needs: analyse
     runs-on: macos-13
     env:
       TURBO_CACHE_DIR: .turbo/ios
