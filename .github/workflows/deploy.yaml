@@ -16,6 +16,8 @@ jobs:
         with:
           node-version-file: .nvmrc
           registry-url: 'https://registry.npmjs.org'
+      - name: Enable corepack
+        run: corepack enable
       - name: Install dependencies
         run: yarn install --immutable
       - name: Preapre for release
