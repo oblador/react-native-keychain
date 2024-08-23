@@ -2,76 +2,56 @@ import { NativeModules, Platform } from 'react-native';
 
 const { RNKeychainManager } = NativeModules;
 
-export const SECURITY_LEVEL: {
-  ANY: string;
-  SECURE_SOFTWARE: string;
-  SECURE_HARDWARE: string;
-} = Object.freeze({
-  ANY: RNKeychainManager && RNKeychainManager.SECURITY_LEVEL_ANY,
-  SECURE_SOFTWARE:
-    RNKeychainManager && RNKeychainManager.SECURITY_LEVEL_SECURE_SOFTWARE,
-  SECURE_HARDWARE:
-    RNKeychainManager && RNKeychainManager.SECURITY_LEVEL_SECURE_HARDWARE,
-});
+export enum ACCESSIBLE {
+  WHEN_UNLOCKED = 'AccessibleWhenUnlocked',
+  AFTER_FIRST_UNLOCK = 'AccessibleAfterFirstUnlock',
+  ALWAYS = 'AccessibleAlways',
+  WHEN_PASSCODE_SET_THIS_DEVICE_ONLY = 'AccessibleWhenPasscodeSetThisDeviceOnly',
+  WHEN_UNLOCKED_THIS_DEVICE_ONLY = 'AccessibleWhenUnlockedThisDeviceOnly',
+  AFTER_FIRST_UNLOCK_THIS_DEVICE_ONLY = 'AccessibleAfterFirstUnlockThisDeviceOnly',
+}
 
-export const ACCESSIBLE = Object.freeze({
-  WHEN_UNLOCKED: 'AccessibleWhenUnlocked',
-  AFTER_FIRST_UNLOCK: 'AccessibleAfterFirstUnlock',
-  ALWAYS: 'AccessibleAlways',
-  WHEN_PASSCODE_SET_THIS_DEVICE_ONLY: 'AccessibleWhenPasscodeSetThisDeviceOnly',
-  WHEN_UNLOCKED_THIS_DEVICE_ONLY: 'AccessibleWhenUnlockedThisDeviceOnly',
-  AFTER_FIRST_UNLOCK_THIS_DEVICE_ONLY:
-    'AccessibleAfterFirstUnlockThisDeviceOnly',
-});
+export enum ACCESS_CONTROL {
+  USER_PRESENCE = 'UserPresence',
+  BIOMETRY_ANY = 'BiometryAny',
+  BIOMETRY_CURRENT_SET = 'BiometryCurrentSet',
+  DEVICE_PASSCODE = 'DevicePasscode',
+  APPLICATION_PASSWORD = 'ApplicationPassword',
+  BIOMETRY_ANY_OR_DEVICE_PASSCODE = 'BiometryAnyOrDevicePasscode',
+  BIOMETRY_CURRENT_SET_OR_DEVICE_PASSCODE = 'BiometryCurrentSetOrDevicePasscode',
+}
 
-export const ACCESS_CONTROL = Object.freeze({
-  USER_PRESENCE: 'UserPresence',
-  BIOMETRY_ANY: 'BiometryAny',
-  BIOMETRY_CURRENT_SET: 'BiometryCurrentSet',
-  DEVICE_PASSCODE: 'DevicePasscode',
-  APPLICATION_PASSWORD: 'ApplicationPassword',
-  BIOMETRY_ANY_OR_DEVICE_PASSCODE: 'BiometryAnyOrDevicePasscode',
-  BIOMETRY_CURRENT_SET_OR_DEVICE_PASSCODE: 'BiometryCurrentSetOrDevicePasscode',
-});
+export enum AUTHENTICATION_TYPE {
+  DEVICE_PASSCODE_OR_BIOMETRICS = 'AuthenticationWithBiometricsDevicePasscode',
+  BIOMETRICS = 'AuthenticationWithBiometrics',
+}
 
-export const AUTHENTICATION_TYPE = Object.freeze({
-  DEVICE_PASSCODE_OR_BIOMETRICS: 'AuthenticationWithBiometricsDevicePasscode',
-  BIOMETRICS: 'AuthenticationWithBiometrics',
-});
+export enum SECURITY_LEVEL {
+  SECURE_SOFTWARE,
+  SECURE_HARDWARE,
+  ANY,
+}
 
-export const BIOMETRY_TYPE = Object.freeze({
-  TOUCH_ID: 'TouchID',
-  FACE_ID: 'FaceID',
-  FINGERPRINT: 'Fingerprint',
-  FACE: 'Face',
-  IRIS: 'Iris',
-});
+export enum BIOMETRY_TYPE {
+  TOUCH_ID = 'TouchID',
+  FACE_ID = 'FaceID',
+  OPTIC_ID = 'OpticID',
+  FINGERPRINT = 'Fingerprint',
+  FACE = 'Face',
+  IRIS = 'Iris',
+}
 
-export const STORAGE_TYPE = Object.freeze({
-  FB: 'FacebookConceal',
-  AES: 'KeystoreAESCBC',
-  RSA: 'KeystoreRSAECB',
-  KC: 'keychain', // <~ iOS only
-});
+export enum STORAGE_TYPE {
+  FB = 'FacebookConceal',
+  AES = 'KeystoreAESCBC',
+  RSA = 'KeystoreRSAECB',
+  KC = 'keychain',
+}
 
-export const SECURITY_RULES = Object.freeze({
-  NONE: 'none',
-  AUTOMATIC_UPGRADE: 'automaticUpgradeToMoreSecuredStorage',
-});
-
-export type SecAccessible = typeof ACCESSIBLE;
-
-export type SecAccessControl = typeof ACCESS_CONTROL;
-
-export type LAPolicy = typeof AUTHENTICATION_TYPE;
-
-export type SecMinimumLevel = typeof SECURITY_LEVEL;
-
-export type SecStorageType = typeof STORAGE_TYPE;
-
-export type SecSecurityRules = typeof SECURITY_RULES;
-
-export type SecBiometryType = typeof BIOMETRY_TYPE;
+export enum SECURITY_RULES {
+  NONE = 'none',
+  AUTOMATIC_UPGRADE = 'automaticUpgradeToMoreSecuredStorage',
+}
 
 export type AuthenticationPrompt = {
   title?: string;
@@ -81,14 +61,14 @@ export type AuthenticationPrompt = {
 };
 
 type BaseOptions = {
-  accessControl?: SecAccessControl;
+  accessControl?: ACCESS_CONTROL;
   accessGroup?: string;
-  accessible?: SecAccessible;
-  authenticationType?: LAPolicy;
+  accessible?: ACCESSIBLE;
+  authenticationType?: AUTHENTICATION_TYPE;
   service?: string;
-  securityLevel?: SecMinimumLevel;
-  storage?: SecStorageType;
-  rules?: SecSecurityRules;
+  securityLevel?: SECURITY_LEVEL;
+  storage?: STORAGE_TYPE;
+  rules?: SECURITY_RULES;
 };
 
 type NormalizedOptions = {
@@ -137,7 +117,7 @@ function normalizeServiceOption(serviceOrOptions?: string | Options): Options {
 function normalizeOptions(
   serviceOrOptions?: string | Options
 ): NormalizedOptions {
-  let options = {
+  const options = {
     ...normalizeServiceOption(serviceOrOptions),
   } as NormalizedOptions;
   const { authenticationPrompt } = options;
@@ -283,7 +263,7 @@ export function resetInternetCredentials(server: string): Promise<void> {
  * @param {object} options An Keychain options object.
  * @return {Promise} Resolves to a `BIOMETRY_TYPE` when supported, otherwise `null`
  */
-export function getSupportedBiometryType(): Promise<null | SecBiometryType> {
+export function getSupportedBiometryType(): Promise<null | BIOMETRY_TYPE> {
   if (!RNKeychainManager.getSupportedBiometryType) {
     return Promise.resolve(null);
   }
@@ -360,7 +340,7 @@ export function canImplyAuthentication(options?: Options): Promise<boolean> {
  */
 export function getSecurityLevel(
   options?: Options
-): Promise<null | SecMinimumLevel> {
+): Promise<null | SECURITY_LEVEL> {
   if (!RNKeychainManager.getSecurityLevel) {
     return Promise.resolve(null);
   }

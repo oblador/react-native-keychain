@@ -1,0 +1,35 @@
+name: Lint and types
+
+on:
+  - push
+  - pull_request
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      - name: Install dependencies
+        run: yarn install --immutable
+      - name: Lint files
+        run: yarn lint
+  typescript:
+    name: Typescript
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      - name: Install dependencies
+        run: yarn install --immutable
+      - name: Check flow types
+        run: yarn types
