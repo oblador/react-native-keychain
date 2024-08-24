@@ -36,4 +36,4 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
       - name: Check flow types
-        run: yarn types
+        run: yarn typecheck

@@ -9,8 +9,6 @@ jobs:
   build-android:
     name: Build Android
     runs-on: ubuntu-latest
-    env:
-      TURBO_CACHE_DIR: .turbo/android
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -22,45 +20,27 @@ jobs:
 
       - name: Enable corepack
         run: corepack enable
+
       - name: Install dependencies
         run: yarn install --immutable
 
-      - name: Cache turborepo for Android
-        uses: actions/cache@v4
-        with:
-          path: ${{ env.TURBO_CACHE_DIR }}
-          key: ${{ runner.os }}-turborepo-android-${{ hashFiles('yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-turborepo-android-
-
-      - name: Check turborepo cache for Android
-        run: |
-          TURBO_CACHE_STATUS=$(node -p "($(yarn turbo run build:android --cache-dir="${{ env.TURBO_CACHE_DIR }}" --dry=json)).tasks.find(t => t.task === 'build:android').cache.status")
-
-          if [[ $TURBO_CACHE_STATUS == "HIT" ]]; then
-            echo "turbo_cache_hit=1" >> $GITHUB_ENV
-          fi
-
       - name: Setup java
-        if: env.turbo_cache_hit != 1
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin' # See 'Supported distributions' for available options
           java-version: '19'
 
       - name: Cache Gradle
-        if: env.turbo_cache_hit != 1
         uses: actions/cache@v4
         with:
           path: |
             ~/.gradle/wrapper
             ~/.gradle/caches
-          key: ${{ runner.os }}-gradle-${{ hashFiles('example/android/gradle/wrapper/gradle-wrapper.properties') }}
+          key: ${{ runner.os }}-gradle-${{ hashFiles('KeychainExample/android/gradle/wrapper/gradle-wrapper.properties') }}
           restore-keys: |
             ${{ runner.os }}-gradle-
 
       - name: Downloading Gradle Dependencies
-        if: env.turbo_cache_hit != 1
         run: |
           cd KeychainExample/android
           chmod +x gradlew
@@ -69,9 +49,10 @@ jobs:
       - name: Build Android Release
         env:
           JAVA_OPTS: '-XX:MaxHeapSize=6g'
+        working-directory: ./KeychainExample
         run: |
-          yarn turbo run build:android --cache-dir="${{ env.TURBO_CACHE_DIR }}"
-          yarn turbo run test:android:build --cache-dir="${{ env.TURBO_CACHE_DIR }}"
+          yarn build:android --cache-dir="${{ env.TURBO_CACHE_DIR }}"
+          yarn test:android:build --cache-dir="${{ env.TURBO_CACHE_DIR }}"
 
       - name: Upload Test APKs
         uses: actions/upload-artifact@v4
@@ -108,6 +89,7 @@ jobs:
 
       - name: Enable corepack
         run: corepack enable
+
       - name: Install dependencies
         run: yarn install --immutable
 
@@ -140,8 +122,6 @@ jobs:
   build-ios:
     name: Build iOS
     runs-on: macos-13
-    env:
-      TURBO_CACHE_DIR: .turbo/ios
 
     steps:
       - name: Checkout
@@ -162,24 +142,7 @@ jobs:
         with:
           podfile-path: KeychainExample/ios/Podfile.lock
 
-      - name: Cache turborepo for iOS
-        uses: actions/cache@v4
-        with:
-          path: ${{ env.TURBO_CACHE_DIR }}
-          key: ${{ runner.os }}-turborepo-ios-${{ hashFiles('yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-turborepo-ios-
-
-      - name: Check turborepo cache for iOS
-        run: |
-          TURBO_CACHE_STATUS=$(node -p "($(yarn turbo run build:ios --cache-dir="${{ env.TURBO_CACHE_DIR }}" --dry=json)).tasks.find(t => t.task === 'build:ios').cache.status")
-
-          if [[ $TURBO_CACHE_STATUS == "HIT" ]]; then
-            echo "turbo_cache_hit=1" >> $GITHUB_ENV
-          fi
-
       - name: Cache cocoapods
-        if: env.turbo_cache_hit != 1
         id: cocoapods-cache
         uses: actions/cache@v4
         with:
@@ -191,7 +154,7 @@ jobs:
             ${{ runner.os }}-cocoapods-
 
       - name: Install Bundle
-        if: env.turbo_cache_hit != 1 && steps.cocoapods-cache.outputs.cache-hit != 'true'
+        if: steps.cocoapods-cache.outputs.cache-hit != 'true'
         run: |
           cd KeychainExample
           bundle install
@@ -210,10 +173,11 @@ jobs:
           xcrun simctl list
 
       - name: Build iOS Release
+        working-directory: ./KeychainExample
         run: |
-          yarn turbo run build:ios --cache-dir="${{ env.TURBO_CACHE_DIR }}"
-          cd KeychainExample/ios && pod install && cd -
-          yarn turbo run test:ios:build --cache-dir="${{ env.TURBO_CACHE_DIR }}"
+          yarn build:ios --cache-dir="${{ env.TURBO_CACHE_DIR }}"
+          cd ios && pod install && cd -
+          yarn test:ios:build --cache-dir="${{ env.TURBO_CACHE_DIR }}"
         env:
           RCT_NEW_ARCH_ENABLED: 0
           USE_HERMES: 1
