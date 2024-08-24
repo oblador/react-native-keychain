@@ -56,7 +56,7 @@ module.exports = {
       type: 'android.emulator',
       headless: Boolean(process.env.CI),
       device: {
-        avdName: 'Pixel_3_XL_API_33',
+        avdName: 'TestingAVD',
       },
     },
   },
