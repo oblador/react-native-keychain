@@ -95,7 +95,7 @@ dependencies {
 if (isNewArchitectureEnabled()) {
   react {
     jsRootDir = file("../src/")
-    libraryName = "Keychain"
+    libraryName = "RNKeychain"
     codegenJavaPackageName = "com.oblador.keychain"
   }
 }

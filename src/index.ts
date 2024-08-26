@@ -27,9 +27,11 @@ export enum AUTHENTICATION_TYPE {
 }
 
 export enum SECURITY_LEVEL {
-  SECURE_SOFTWARE,
-  SECURE_HARDWARE,
-  ANY,
+  SECURE_SOFTWARE = RNKeychainManager &&
+    RNKeychainManager.SECURITY_LEVEL_SECURE_SOFTWARE,
+  SECURE_HARDWARE = RNKeychainManager &&
+    RNKeychainManager.SECURITY_LEVEL_SECURE_HARDWARE,
+  ANY = RNKeychainManager && RNKeychainManager.SECURITY_LEVEL_ANY,
 }
 
 export enum BIOMETRY_TYPE {
@@ -159,7 +161,9 @@ export function setGenericPassword(
   password: string,
   serviceOrOptions?: string | Options
 ): Promise<false | Result> {
+  console.log('setGenericPassword', serviceOrOptions);
   const options = normalizeOptions(serviceOrOptions);
+  console.log('normalized options', options);
   return RNKeychainManager.setGenericPasswordForOptions(
     options,
     username,

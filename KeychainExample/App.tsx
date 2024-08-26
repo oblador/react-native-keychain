@@ -72,13 +72,7 @@ export default class KeychainExample extends Component {
           securityLevel: this.state.securityLevel,
           storage: this.state.storage,
         }
-      )
-        .catch((err) => {
-          console.log(err);
-        })
-        .then((result) => {
-          console.log(result);
-        });
+      );
 
       const end = new Date();
 

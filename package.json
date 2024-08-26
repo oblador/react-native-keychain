@@ -67,6 +67,14 @@
   "engines": {
     "node": ">=18"
   },
+  "codegenConfig": {
+    "name": "RNKeychainSpec",
+    "type": "modules",
+    "jsSrcsDir": "src",
+    "android": {
+      "javaPackageName": "com.oblador.keychain"
+    }
+  },
   "react-native-builder-bob": {
     "source": "src",
     "output": "lib",

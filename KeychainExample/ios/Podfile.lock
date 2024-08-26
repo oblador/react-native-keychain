@@ -1119,7 +1119,7 @@ PODS:
     - React-logger (= 0.74.5)
     - React-perflogger (= 0.74.5)
     - React-utils (= 0.74.5)
-  - ReactNativeHost (0.4.11):
+  - ReactNativeHost (0.4.12):
     - DoubleConversion
     - glog
     - RCT-Folly (= 2024.01.01.00)
@@ -1141,12 +1141,31 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - ReactTestApp-DevSupport (3.9.0):
+  - ReactTestApp-DevSupport (3.9.7):
     - React-Core
     - React-jsi
   - ReactTestApp-Resources (1.0.0-dev)
   - RNKeychain (8.2.0):
+    - DoubleConversion
+    - glog
+    - RCT-Folly (= 2024.01.01.00)
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Codegen
     - React-Core
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-rendererdebug
+    - React-utils
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - Yoga
   - SocketRocket (0.7.0)
   - Yoga (0.0.0)
 
@@ -1380,13 +1399,13 @@ SPEC CHECKSUMS:
   React-runtimescheduler: 057a40b536cab47481d2a2b4f5e93d7eb0b285de
   React-utils: b4b4a8bdd58632a9ec314071fbd4a642d984718e
   ReactCommon: bfd464c8f774a0acb93cf2a45afa80b763431f1b
-  ReactNativeHost: 4983b4bfdef9f1a67f523b633909df57a9c1dae9
-  ReactTestApp-DevSupport: f781365c3ae6377dcfa2affe319ae66e0fb20777
+  ReactNativeHost: 2bc85a4cc8f2e7e7fef5e551d4adb9c90757859f
+  ReactTestApp-DevSupport: 74676edd899013becce4eaecc5eabba1fc51e26e
   ReactTestApp-Resources: 857244f3a23f2b3157b364fa06cf3e8866deff9c
-  RNKeychain: bfef0ca723289eb7693835308b5b93432eb7ea5d
+  RNKeychain: 70a32d9f845cf928ab367ad9c0a9050eb3d5206c
   SocketRocket: abac6f5de4d4d62d24e11868d7a2f427e0ef940d
   Yoga: 950bbfd7e6f04790fdb51149ed51df41f329fcc8
 
 PODFILE CHECKSUM: 8daf094af2120901c020904ed4ae6b82bfbd5642
 
-COCOAPODS: 1.14.3
+COCOAPODS: 1.15.2
