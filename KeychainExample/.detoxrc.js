@@ -60,6 +60,20 @@ module.exports = {
       },
     },
   },
+  artifacts: {
+    plugins: {
+      screenshot: {
+        enabled: true,
+        shouldTakeAutomaticSnapshots: true,
+        keepOnlyFailedTestsArtifacts: true,
+        takeWhen: {
+          testStart: true,
+          testDone: true,
+          appNotReady: true,
+        },
+      },
+    },
+  },
   configurations: {
     'ios.sim.debug': {
       device: 'simulator',

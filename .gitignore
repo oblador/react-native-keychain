@@ -91,6 +91,7 @@ KeychainExample/vendor/
 
 # Tests
 KeychainExample/e2e/output
+KeychainExample/artifacts
 
 # React Native Bob Builder
 lib

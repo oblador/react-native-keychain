@@ -120,9 +120,15 @@ jobs:
             yarn test:android:run
         env:
           API_LEVEL: ${{ matrix.api-level }}
+      - name: Upload test artifacts
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-test-artifacts
+          path: KeychainExample/artifacts
 
   build-ios:
-    name: Build iOS
+    name: Build and Test iOS
     runs-on: macos-13
 
     steps:
@@ -188,3 +194,10 @@ jobs:
         run: |
           cd KeychainExample
           yarn test:ios:run
+
+      - name: Upload test artifacts
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-test-artifacts
+          path: KeychainExample/artifacts
