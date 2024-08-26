@@ -112,6 +112,7 @@ jobs:
         with:
           api-level: ${{ matrix.api-level }}
           arch: x86_64
+          profile: pixel_6
           disable-animations: true
           avd-name: TestingAVD
           script: |
