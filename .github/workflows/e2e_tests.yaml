@@ -68,9 +68,9 @@ jobs:
       fail-fast: false
       matrix:
         api-level:
+          - 31
           - 32
           - 33
-          - 34
 
     steps:
       - name: Enable KVM group perms
