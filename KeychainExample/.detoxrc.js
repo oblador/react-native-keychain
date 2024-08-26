@@ -15,14 +15,14 @@ module.exports = {
       binaryPath:
         'ios/build/Build/Products/Debug-iphonesimulator/ReactTestApp.app',
       build:
-        'xcodebuild -workspace ios/KeychainExample.xcworkspace -scheme KeychainExample -configuration Debug -sdk iphonesimulator -derivedDataPath ios/build',
+        'xcodebuild ONLY_ACTIVE_ARCH=YES -workspace ios/KeychainExample.xcworkspace -UseNewBuildSystem=YES -scheme KeychainExample -configuration Debug -sdk iphonesimulator -derivedDataPath ios/build',
     },
     'ios.release': {
       type: 'ios.app',
       binaryPath:
         'ios/build/Build/Products/Release-iphonesimulator/ReactTestApp.app',
       build:
-        'xcodebuild -workspace ios/KeychainExample.xcworkspace -scheme KeychainExample -configuration Release -sdk iphonesimulator -derivedDataPath ios/build',
+        'xcodebuild ONLY_ACTIVE_ARCH=YES -workspace ios/KeychainExample.xcworkspace -UseNewBuildSystem=YES -scheme KeychainExample -configuration Release -sdk iphonesimulator -derivedDataPath ios/build',
     },
     'android.debug': {
       type: 'android.apk',
