@@ -161,9 +161,7 @@ export function setGenericPassword(
   password: string,
   serviceOrOptions?: string | Options
 ): Promise<false | Result> {
-  console.log('setGenericPassword', serviceOrOptions);
   const options = normalizeOptions(serviceOrOptions);
-  console.log('normalized options', options);
   return RNKeychainManager.setGenericPasswordForOptions(
     options,
     username,
