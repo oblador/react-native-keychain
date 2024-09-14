@@ -56,11 +56,15 @@ export default class KeychainExample extends Component {
     selectedSecurityIndex: 0,
     selectedAccessControlIndex: 0,
     selectedRulesIndex: 0,
+    hasGenericPassword: false,
   };
 
   componentDidMount() {
     Keychain.getSupportedBiometryType().then((biometryType) => {
       this.setState({ biometryType });
+    });
+    Keychain.hasGenericPassword().then((hasGenericPassword) => {
+      this.setState({ hasGenericPassword });
     });
   }
 
@@ -334,6 +338,9 @@ export default class KeychainExample extends Component {
               </TouchableHighlight>
             )}
           </View>
+          <Text style={styles.status}>
+            hasGenericPassword: {String(this.state.hasGenericPassword)}
+          </Text>
         </View>
       </KeyboardAvoidingView>
     );
