@@ -10,14 +10,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
-      - name: Use Node.js
-        uses: actions/setup-node@v2
+      - uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: '14.x'
+          node-version-file: .nvmrc
           registry-url: 'https://registry.npmjs.org'
+      - name: Enable corepack
+        run: corepack enable
       - name: Install dependencies
-        run: yarn --frozen-lockfile --non-interactive --silent
+        run: yarn install --immutable
+      - name: Preapre for release
+        run: yarn prepare
       - name: Publish to NPM
         run: npm publish
         env:

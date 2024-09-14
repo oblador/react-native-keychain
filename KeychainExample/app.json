@@ -1,4 +1,23 @@
 {
   "name": "KeychainExample",
-  "displayName": "KeychainExample"
+  "displayName": "KeychainExample",
+  "components": [
+    {
+      "appKey": "KeychainExample",
+      "displayName": "KeychainExample"
+    }
+  ],
+  "resources": {
+    "android": ["dist/res", "dist/main.android.jsbundle"],
+    "ios": ["dist/assets", "dist/main.ios.jsbundle"],
+    "macos": ["dist/assets", "dist/main.macos.jsbundle"],
+    "visionos": ["dist/assets", "dist/main.visionos.jsbundle"],
+    "windows": ["dist/assets", "dist/main.windows.bundle"]
+  },
+  "android": {
+    "package": "keychain.example"
+  },
+  "ios": {
+    "bundleIdentifier": "keychain.example"
+  }
 }
