@@ -494,7 +494,7 @@ RCT_EXPORT_METHOD(hasGenericPasswordForOptions:(NSDictionary *)options
 
   NSMutableDictionary *queryParts = [[NSMutableDictionary alloc] init];
   queryParts[(__bridge NSString *)kSecClass] = (__bridge id)(kSecClassGenericPassword);
-  queryParts[(__bridge NSString *)kSecAttrServer] = service;
+  queryParts[(__bridge NSString *)kSecAttrService] = service;
   queryParts[(__bridge NSString *)kSecMatchLimit] = (__bridge NSString *)kSecMatchLimitOne;
 
   if (@available(iOS 9, *)) {
@@ -503,7 +503,7 @@ RCT_EXPORT_METHOD(hasGenericPasswordForOptions:(NSDictionary *)options
 
   NSDictionary *query = [queryParts copy];
 
-  // Look up server in the keychain
+  // Look up service in the keychain
   OSStatus osStatus = SecItemCopyMatching((__bridge CFDictionaryRef) query, nil);
 
   switch (osStatus) {
