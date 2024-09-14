@@ -39,6 +39,8 @@ const SECURITY_STORAGE_MAP = [
   Keychain.STORAGE_TYPE.AES,
   Keychain.STORAGE_TYPE.RSA,
 ];
+const SECURITY_RULES_OPTIONS = ['No upgrade', 'Automatic upgrade'];
+const SECURITY_RULES_MAP = [null, Keychain.SECURITY_RULES.AUTOMATIC_UPGRADE];
 
 export default class KeychainExample extends Component {
   state = {
@@ -49,9 +51,11 @@ export default class KeychainExample extends Component {
     accessControl: undefined as undefined | Keychain.ACCESS_CONTROL,
     securityLevel: undefined as undefined | Keychain.SECURITY_LEVEL,
     storage: undefined as undefined | Keychain.STORAGE_TYPE,
+    rules: undefined as undefined | Keychain.SECURITY_RULES,
     selectedStorageIndex: 0,
     selectedSecurityIndex: 0,
     selectedAccessControlIndex: 0,
+    selectedRulesIndex: 0,
   };
 
   componentDidMount() {
@@ -63,7 +67,6 @@ export default class KeychainExample extends Component {
   async save() {
     try {
       const start = new Date();
-      console.log(this.state);
       await Keychain.setGenericPassword(
         this.state.username,
         this.state.password,
@@ -71,6 +74,7 @@ export default class KeychainExample extends Component {
           accessControl: this.state.accessControl,
           securityLevel: this.state.securityLevel,
           storage: this.state.storage,
+          rules: this.state.rules,
         }
       );
 
@@ -98,9 +102,14 @@ export default class KeychainExample extends Component {
           cancel: 'Cancel',
         },
       };
-      const credentials = await Keychain.getGenericPassword(options);
+      const credentials = await Keychain.getGenericPassword({
+        ...options,
+        rules: this.state.rules,
+      });
       if (credentials) {
-        this.setState({ ...credentials, status: 'Credentials loaded!' });
+        this.setState({
+          status: 'Credentials loaded! ' + JSON.stringify(credentials),
+        });
       } else {
         this.setState({ status: 'No credentials stored.' });
       }
@@ -154,14 +163,12 @@ export default class KeychainExample extends Component {
   }
 
   render() {
-    const VALUES =
+    const AC_VALUES =
       Platform.OS === 'ios'
         ? ACCESS_CONTROL_OPTIONS
         : ACCESS_CONTROL_OPTIONS_ANDROID;
     const AC_MAP =
       Platform.OS === 'ios' ? ACCESS_CONTROL_MAP : ACCESS_CONTROL_MAP_ANDROID;
-    const SL_MAP = Platform.OS === 'ios' ? [] : SECURITY_LEVEL_MAP;
-    const ST_MAP = Platform.OS === 'ios' ? [] : SECURITY_STORAGE_MAP;
 
     return (
       <KeyboardAvoidingView
@@ -207,8 +214,8 @@ export default class KeychainExample extends Component {
               selectedIndex={this.state.selectedAccessControlIndex}
               values={
                 this.state.biometryType
-                  ? [...VALUES, this.state.biometryType]
-                  : VALUES
+                  ? [...AC_VALUES, this.state.biometryType]
+                  : AC_VALUES
               }
               onTabPress={(index) =>
                 this.setState({
@@ -228,12 +235,11 @@ export default class KeychainExample extends Component {
                 onTabPress={(index) =>
                   this.setState({
                     ...this.state,
-                    securityLevel: SL_MAP[index],
+                    securityLevel: SECURITY_LEVEL_MAP[index],
                     selectedSecurityIndex: index,
                   })
                 }
               />
-
               <Text style={styles.label}>Storage</Text>
               <SegmentedControlTab
                 selectedIndex={this.state.selectedStorageIndex}
@@ -241,8 +247,20 @@ export default class KeychainExample extends Component {
                 onTabPress={(index) =>
                   this.setState({
                     ...this.state,
-                    storageSelection: ST_MAP[index],
+                    storage: SECURITY_STORAGE_MAP[index],
                     selectedStorageIndex: index,
+                  })
+                }
+              />
+              <Text style={styles.label}>Rules</Text>
+              <SegmentedControlTab
+                selectedIndex={this.state.selectedRulesIndex}
+                values={SECURITY_RULES_OPTIONS}
+                onTabPress={(index) =>
+                  this.setState({
+                    ...this.state,
+                    rules: SECURITY_RULES_MAP[index],
+                    selectedRulesIndex: index,
                   })
                 }
               />

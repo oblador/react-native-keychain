@@ -1,25 +1,7 @@
 import { by, device, element, expect } from 'detox';
-import path from 'path';
+import { enrollBiometric } from '../utils/enrollBiometrics';
+import { matchLoadInfo } from '../utils/matchLoadInfo';
 import cp from 'child_process';
-
-const enrollBiometric = async () => {
-  if (device.getPlatform() === 'android') {
-    const script = path.resolve(
-      __dirname,
-      '../utils/enrollFingerprintAndroid.sh'
-    );
-    const result = cp.spawnSync('sh', [script], {
-      stdio: 'inherit',
-    });
-
-    // Check for errors
-    if (result.error) {
-      console.error('Error executing script:', result.error);
-    }
-  } else {
-    await device.setBiometricEnrollment(true);
-  }
-};
 
 describe('Biometrics Access Control', () => {
   beforeAll(async () => {
@@ -55,9 +37,7 @@ describe('Biometrics Access Control', () => {
       }, 1000);
     }
     await element(by.text('Load')).tap();
-    await expect(element(by.text('Credentials loaded!'))).toBeVisible();
-    await expect(element(by.id('usernameInput'))).toHaveText('testUsername');
-    await expect(element(by.id('passwordInput'))).toHaveText('testPassword');
+    await matchLoadInfo('testUsername', 'testPassword');
   });
 
   it('should retrieve username and password after app launch', async () => {
@@ -70,9 +50,7 @@ describe('Biometrics Access Control', () => {
       }, 1000);
     }
     await element(by.text('Load')).tap();
-    await expect(element(by.text('Credentials loaded!'))).toBeVisible();
-    await expect(element(by.id('usernameInput'))).toHaveText('testUsername');
-    await expect(element(by.id('passwordInput'))).toHaveText('testPassword');
+    await matchLoadInfo('testUsername', 'testPassword');
   });
 
   it(':android:should save and retrieve username and password for hardware security level', async () => {
@@ -93,12 +71,6 @@ describe('Biometrics Access Control', () => {
     }, 1000);
 
     await element(by.text('Load')).tap();
-    await expect(element(by.text('Credentials loaded!'))).toBeVisible();
-    await expect(element(by.id('usernameInput'))).toHaveText(
-      'testUsernameHardware'
-    );
-    await expect(element(by.id('passwordInput'))).toHaveText(
-      'testPasswordHardware'
-    );
+    await matchLoadInfo('testUsernameHardware', 'testPasswordHardware');
   });
 });

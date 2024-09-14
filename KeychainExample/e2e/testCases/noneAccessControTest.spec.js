@@ -1,4 +1,5 @@
 import { by, device, element, expect } from 'detox';
+import { matchLoadInfo } from '../utils/matchLoadInfo';
 
 describe('None Access Control', () => {
   beforeEach(async () => {
@@ -21,17 +22,12 @@ describe('None Access Control', () => {
     await element(by.text('Save')).tap();
     await expect(element(by.text(/^Credentials saved! .*$/))).toBeVisible();
     await element(by.text('Load')).tap();
-    await expect(element(by.text('Credentials loaded!'))).toBeVisible();
-    await expect(element(by.id('usernameInput'))).toHaveText('testUsername');
-    await expect(element(by.id('passwordInput'))).toHaveText('testPassword');
+    await matchLoadInfo('testUsername', 'testPassword');
   });
 
   it('should retrieve username and password after app launch', async () => {
-    await device.launchApp({ newInstance: true });
     await expect(element(by.text('Keychain Example'))).toExist();
     await element(by.text('Load')).tap();
-    await expect(element(by.text('Credentials loaded!'))).toBeVisible();
-    await expect(element(by.id('usernameInput'))).toHaveText('testUsername');
-    await expect(element(by.id('passwordInput'))).toHaveText('testPassword');
+    await matchLoadInfo('testUsername', 'testPassword');
   });
 });
