@@ -3,7 +3,7 @@ import { enrollBiometric } from '../utils/enrollBiometrics';
 import { matchLoadInfo } from '../utils/matchLoadInfo';
 import cp from 'child_process';
 
-describe(':android:None Access Control', () => {
+describe(':android:Storage Types', () => {
   beforeAll(async () => {
     await enrollBiometric();
   });
