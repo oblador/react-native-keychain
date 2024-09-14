@@ -4,30 +4,42 @@
   "private": true,
   "scripts": {
     "android": "react-native run-android",
-    "ios": "react-native run-ios",
-    "macos": "react-native run-macos",
+    "ios": "react-native run-ios --simulator 'iPhone 15 Pro' --mode Release",
+    "build:android": "npm run mkdist && react-native bundle --entry-file index.js --platform android --dev false --bundle-output dist/main.android.jsbundle --assets-dest dist/res",
+    "build:ios": "npm run mkdist && react-native bundle --entry-file index.js --platform ios --dev false --bundle-output dist/main.ios.jsbundle --assets-dest dist/assets",
+    "mkdist": "node -e \"require('node:fs').mkdirSync('dist', { recursive: true, mode: 0o755 })\"",
     "start": "react-native start",
-    "test": "jest",
-    "postinstall": "DESTINATION='node_modules/react-native-keychain' LIB_FILE=`cd .. && echo \\`pwd\\`/\\`npm pack\\`` && (rm -rf $DESTINATION || true) && mkdir $DESTINATION && tar -xvzf $LIB_FILE -C $DESTINATION --strip-components 1 && rm $LIB_FILE"
+    "test:android": "yarn test:android:build && yarn test:android:run",
+    "test:android:build": "detox build --configuration android.emu.release",
+    "test:android:run": "detox test --configuration android.emu.release",
+    "test:ios": "yarn test:ios:build && yarn test:ios:run",
+    "test:ios:build": "detox build --configuration ios.sim.release",
+    "test:ios:run": "detox test --configuration ios.sim.release"
   },
   "dependencies": {
-    "react": "18.0.0",
-    "react-native": "0.69.0",
-    "react-native-keychain": "*",
+    "react": "18.2.0",
+    "react-native": "^0.74.5",
     "react-native-segmented-control-tab": "^4.0.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.12.9",
-    "@babel/runtime": "^7.12.5",
-    "babel-jest": "^26.6.3",
-    "jest": "^26.6.3",
-    "metro-react-native-babel-preset": "^0.70.3",
-    "react-test-renderer": "18.0.0"
+    "@babel/core": "^7.20.0",
+    "@babel/preset-env": "^7.20.0",
+    "@babel/runtime": "^7.20.0",
+    "@react-native/babel-preset": "^0.74.5",
+    "@react-native/metro-config": "^0.74.5",
+    "@react-native/typescript-config": "^0.74.5",
+    "@rnx-kit/polyfills": "^0.1.1",
+    "@types/react": "^18.2.0",
+    "babel-plugin-module-resolver": "^5.0.2",
+    "detox": "^20.25.6",
+    "jest": "^29.7.0",
+    "jest-junit": "^16.0.0",
+    "react-native-test-app": "^3.9.7"
   },
   "jest": {
     "preset": "react-native"
   },
-  "volta": {
-    "node": "16.14.2"
+  "engines": {
+    "node": ">=18"
   }
 }
