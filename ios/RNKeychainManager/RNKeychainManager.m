@@ -486,6 +486,39 @@ RCT_EXPORT_METHOD(hasInternetCredentialsForServer:(NSString *)server
   return rejectWithError(reject, error);
 }
 
+RCT_EXPORT_METHOD(hasGenericPasswordForOptions:(NSDictionary *)options
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+{
+  NSString *service = serviceValue(options);
+
+  NSMutableDictionary *queryParts = [[NSMutableDictionary alloc] init];
+  queryParts[(__bridge NSString *)kSecClass] = (__bridge id)(kSecClassGenericPassword);
+  queryParts[(__bridge NSString *)kSecAttrService] = service;
+  queryParts[(__bridge NSString *)kSecMatchLimit] = (__bridge NSString *)kSecMatchLimitOne;
+
+  if (@available(iOS 9, *)) {
+    queryParts[(__bridge NSString *)kSecUseAuthenticationUI] = (__bridge NSString *)kSecUseAuthenticationUIFail;
+  }
+
+  NSDictionary *query = [queryParts copy];
+
+  // Look up service in the keychain
+  OSStatus osStatus = SecItemCopyMatching((__bridge CFDictionaryRef) query, nil);
+
+  switch (osStatus) {
+    case noErr:
+    case errSecInteractionNotAllowed:
+      return resolve(@(YES));
+
+    case errSecItemNotFound:
+      return resolve(@(NO));
+  }
+
+  NSError *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:osStatus userInfo:nil];
+  return rejectWithError(reject, error);
+}
+
 RCT_EXPORT_METHOD(getInternetCredentialsForServer:(NSString *)server
                   withOptions:(NSDictionary * __nullable)options
                   resolver:(RCTPromiseResolveBlock)resolve
