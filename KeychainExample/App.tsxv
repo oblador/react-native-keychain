@@ -85,7 +85,7 @@ export default class KeychainExample extends Component {
       const end = new Date();
 
       this.setState({
-        username: '',
+         username: '',
         password: '',
         status: `Credentials saved! takes: ${
           end.getTime() - start.getTime()
