@@ -123,6 +123,12 @@ jobs:
             yarn test:android:run
         env:
           API_LEVEL: ${{ matrix.api-level }}
+
+      - name: Test coverage
+        uses: codecov/codecov-action@v4
+        with:
+          verbose: true
+
       - name: Upload test artifacts
         if: ${{ failure() }}
         uses: actions/upload-artifact@v4
