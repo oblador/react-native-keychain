@@ -6,7 +6,7 @@
   />
 </p>
 
-[![Tests](https://github.com/oblador/react-native-keychain/actions/workflows/tests.yaml/badge.svg)](https://github.com/oblador/react-native-keychain/actions/workflows/tests.yaml) [![npm](https://img.shields.io/npm/v/react-native-keychain.svg)](https://npmjs.com/package/react-native-keychain) [![npm](https://img.shields.io/npm/dm/react-native-keychain.svg)](https://npmjs.com/package/react-native-keychain)
+[![Tests](https://github.com/oblador/react-native-keychain/actions/workflows/e2e_tests.yaml/badge.svg)](https://github.com/oblador/react-native-keychain/actions/workflows/e2e_tests.yaml) [![npm](https://img.shields.io/npm/v/react-native-keychain.svg)](https://npmjs.com/package/react-native-keychain) [![npm](https://img.shields.io/npm/dm/react-native-keychain.svg)](https://npmjs.com/package/react-native-keychain)
 
 # Keychain/Keystore Access for React Native
 
@@ -15,7 +15,7 @@
   - [Usage](#usage)
   - [API](#api)
     - [`setGenericPassword(username, password, [{ accessControl, accessible, accessGroup, service, securityLevel }])`](#setgenericpasswordusername-password--accesscontrol-accessible-accessgroup-service-securitylevel-)
-    - [`hasGenericPassword([{ service }])`](#hasgenericpasswordservice)
+    - [`hasGenericPassword([{ service }])`](#hasgenericpassword-service-)
     - [`getGenericPassword([{ authenticationPrompt, service, accessControl }])`](#getgenericpassword-authenticationprompt-service-accesscontrol-)
     - [`resetGenericPassword([{ service }])`](#resetgenericpassword-service-)
     - [`getAllGenericPasswordServices()`](#getallgenericpasswordservices)
