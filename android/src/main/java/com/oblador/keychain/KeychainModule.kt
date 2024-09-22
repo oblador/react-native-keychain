@@ -176,7 +176,7 @@ class KeychainModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
             prefsStorage.storeEncryptedEntry(alias, result)
             val results = Arguments.createMap()
             results.putString(Maps.SERVICE, alias)
-            results.putString(Maps.STORAGE, storage.cipherStorageName)
+            results.putString(Maps.STORAGE, storage.getCipherStorageName())
             promise.resolve(results)
         } catch (e: EmptyParameterException) {
             Log.e(KEYCHAIN_MODULE, e.message, e)
@@ -247,7 +247,7 @@ class KeychainModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
             credentials.putString(Maps.SERVICE, alias)
             credentials.putString(Maps.USERNAME, decryptionResult.username)
             credentials.putString(Maps.PASSWORD, decryptionResult.password)
-            credentials.putString(Maps.STORAGE, cipher.cipherStorageName)
+            credentials.putString(Maps.STORAGE, cipher.getCipherStorageName())
             promise.resolve(credentials)
         } catch (e: KeyStoreAccessException) {
             Log.e(KEYCHAIN_MODULE, e.message!!)
@@ -281,7 +281,7 @@ class KeychainModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
         }
         val result: MutableSet<String> = HashSet()
         for (cipher in ciphers) {
-            val aliases = cipher!!.allKeys
+            val aliases = cipher!!.getAllKeys()
             for (alias in aliases) {
                 if (alias != WARMING_UP_ALIAS) {
                     result.add(alias)
@@ -412,7 +412,7 @@ class KeychainModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
     }
 
     private fun addCipherStorageToMap(cipherStorage: CipherStorage) {
-        cipherStorageMap[cipherStorage.cipherStorageName] = cipherStorage
+        cipherStorageMap[cipherStorage.getCipherStorageName()] = cipherStorage
     }
 
     /**
@@ -428,7 +428,7 @@ class KeychainModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
         val storageName = resultSet.cipherStorageName
 
         // The encrypted data is encrypted using the current CipherStorage, so we just decrypt and return
-        if (storageName == current.cipherStorageName) {
+        if (storageName == current.getCipherStorageName()) {
             return decryptToResult(alias, current, resultSet, promptInfo)
         }
 
@@ -485,7 +485,7 @@ class KeychainModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
         // storage should be as safe as the old one.
         val encryptionResult = newCipherStorage.encrypt(
           service, username, password,
-          decryptionResult.securityLevel)
+          decryptionResult.getSecurityLevel())
 
         // store the encryption result
         prefsStorage.storeEncryptedEntry(service, encryptionResult)
@@ -515,18 +515,18 @@ class KeychainModule(reactContext: ReactApplicationContext) : ReactContextBaseJa
             Log.d(KEYCHAIN_MODULE, "Probe cipher storage: " + variant.javaClass.simpleName)
 
             // Is the cipherStorage supported on the current API level?
-            val minApiLevel = variant.minSupportedApiLevel
-            val capabilityLevel = variant.capabilityLevel
+            val minApiLevel = variant.getMinSupportedApiLevel()
+            val capabilityLevel = variant.getCapabilityLevel()
             val isSupportedApi = minApiLevel <= currentApiLevel
 
             // API not supported
             if (!isSupportedApi) continue
 
             // Is the API level better than the one we previously selected (if any)?
-            if (foundCipher != null && capabilityLevel < foundCipher.capabilityLevel) continue
+            if (foundCipher != null && capabilityLevel < foundCipher.getCapabilityLevel()) continue
 
             // if biometric supported but not configured properly than skip
-            if (variant.isBiometrySupported && !isBiometry) continue
+            if (variant.isBiometrySupported() && !isBiometry) continue
 
             // remember storage with the best capabilities
             foundCipher = variant
