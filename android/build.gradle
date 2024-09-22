@@ -1,4 +1,6 @@
 buildscript {
+  // Buildscript is evaluated before everything else so we can't use safeExtGet
+  def kotlin_version = rootProject.ext.has('kotlinVersion') ? rootProject.ext.get('kotlinVersion') : "1.8.0"
   repositories {
     maven {
       url "https://plugins.gradle.org/m2/"
@@ -7,7 +9,8 @@ buildscript {
     google()
   }
   dependencies {
-    classpath("com.android.tools.build:gradle:8.3.1")
+    classpath "com.android.tools.build:gradle:8.3.1"
+    classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
   }
 }
 
@@ -23,6 +26,7 @@ if (isNewArchitectureEnabled()) {
   apply plugin: "com.facebook.react"
 }
 apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
 
 repositories {
   google()
@@ -34,13 +38,13 @@ android {
   if (project.android.hasProperty("namespace")) {
     namespace = "com.oblador.keychain"
   }
-  compileSdkVersion safeExtGet('compileSdkVersion', 33)
+  compileSdkVersion safeExtGet('compileSdkVersion', 34)
   buildToolsVersion safeExtGet('buildToolsVersion', '33.0.0')
 
   defaultConfig {
     minSdkVersion safeExtGet('minSdkVersion', 23)
-    compileSdkVersion safeExtGet('compileSdkVersion', 33)
-    targetSdkVersion safeExtGet('targetSdkVersion', 33)
+    compileSdkVersion safeExtGet('compileSdkVersion', 34)
+    targetSdkVersion safeExtGet('targetSdkVersion', 34)
     buildConfigField "boolean", "IS_NEW_ARCHITECTURE_ENABLED", isNewArchitectureEnabled().toString()
   }
 
@@ -57,24 +61,20 @@ android {
     disable "GradleCompatible"
     abortOnError false
   }
-
-  testOptions {
-    unitTests {
-      includeAndroidResources = true
-    }
-  }
 }
 
 repositories {
   mavenCentral()
 }
 
+def kotlin_version = safeExtGet('kotlinVersion', '1.8.0')
+
 dependencies {
   //noinspection GradleDynamicVersion
   implementation "com.facebook.react:react-android:+"
-
   implementation 'androidx.appcompat:appcompat:1.6.1'
   implementation 'androidx.legacy:legacy-support-v4:1.0.0'
+  implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 
   // https://mvnrepository.com/artifact/androidx.biometric/biometric
   implementation 'androidx.biometric:biometric:1.1.0@aar'
