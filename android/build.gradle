@@ -1,19 +1,32 @@
 buildscript {
   repositories {
     maven {
-      url 'https://plugins.gradle.org/m2/'
+      url "https://plugins.gradle.org/m2/"
     }
+    mavenCentral()
+    google()
   }
   dependencies {
-    classpath 'com.adarshr:gradle-test-logger-plugin:2.0.0'
+    classpath("com.android.tools.build:gradle:8.3.1")
   }
 }
 
-apply plugin: 'com.android.library'
-apply plugin: "com.adarshr.test-logger"
-
 def safeExtGet(prop, fallback) {
   rootProject.ext.has(prop) ? rootProject.ext.get(prop) : fallback
+}
+
+def isNewArchitectureEnabled() {
+  return project.hasProperty("newArchEnabled") && project.newArchEnabled == "true"
+}
+
+if (isNewArchitectureEnabled()) {
+  apply plugin: "com.facebook.react"
+}
+apply plugin: 'com.android.library'
+
+repositories {
+  google()
+  mavenCentral()
 }
 
 android {
@@ -21,15 +34,14 @@ android {
   if (project.android.hasProperty("namespace")) {
     namespace = "com.oblador.keychain"
   }
-  compileSdkVersion safeExtGet('compileSdkVersion', 31)
-  buildToolsVersion safeExtGet('buildToolsVersion', '31.0.0')
+  compileSdkVersion safeExtGet('compileSdkVersion', 33)
+  buildToolsVersion safeExtGet('buildToolsVersion', '33.0.0')
 
   defaultConfig {
-    minSdkVersion safeExtGet('minSdkVersion', 21)
-    compileSdkVersion safeExtGet('compileSdkVersion', 31)
-    targetSdkVersion safeExtGet('targetSdkVersion', 31)
-    versionCode 1
-    versionName "1.0"
+    minSdkVersion safeExtGet('minSdkVersion', 23)
+    compileSdkVersion safeExtGet('compileSdkVersion', 33)
+    targetSdkVersion safeExtGet('targetSdkVersion', 33)
+    buildConfigField "boolean", "IS_NEW_ARCHITECTURE_ENABLED", isNewArchitectureEnabled().toString()
   }
 
   compileOptions {
@@ -37,8 +49,12 @@ android {
     targetCompatibility JavaVersion.VERSION_1_8
   }
 
+  buildFeatures {
+    buildConfig true
+  }
 
   lintOptions {
+    disable "GradleCompatible"
     abortOnError false
   }
 
@@ -54,9 +70,10 @@ repositories {
 }
 
 dependencies {
-  implementation 'com.facebook.react:react-native:+'
+  //noinspection GradleDynamicVersion
+  implementation "com.facebook.react:react-android:+"
 
-  implementation 'androidx.appcompat:appcompat:1.4.2'
+  implementation 'androidx.appcompat:appcompat:1.6.1'
   implementation 'androidx.legacy:legacy-support-v4:1.0.0'
 
   // https://mvnrepository.com/artifact/androidx.biometric/biometric
@@ -73,27 +90,13 @@ dependencies {
   /* version higher 1.1.3 has problems with included soloader packages,
       https://github.com/facebook/conceal/releases */
   implementation "com.facebook.conceal:conceal:1.1.3@aar"
-
-  /* Unit Testing Frameworks */
-  testImplementation 'junit:junit:4.13.2'
-
-  /* Mockito, https://mvnrepository.com/artifact/org.mockito/mockito-inline */
-  testImplementation 'org.mockito:mockito-inline:4.0.0'
-
-  /* https://mvnrepository.com/artifact/org.hamcrest/hamcrest/2.1 */
-  testImplementation 'org.hamcrest:hamcrest:2.2'
-
-  /* http://robolectric.org/getting-started/ */
-  testImplementation("org.robolectric:robolectric:4.7.3")
-
-  /* https://mvnrepository.com/artifact/androidx.test.ext/junit */
-  testImplementation "androidx.test.ext:junit:1.1.4-alpha05"
-
-  /* https://mvnrepository.com/artifact/androidx.test/core */
-  testImplementation 'androidx.test:core:1.4.1-alpha05'
-  testImplementation "androidx.test:runner:1.5.0-alpha02"
-  testImplementation "androidx.test:monitor:1.6.0-alpha02"
-
-  // Uncomment for including JRE implementation of crypto api (that is used in Robolectric tests)
-  // testImplementation fileTree(dir: "${System.properties.get("java.home")}/lib", include: ["jce.jar"])
 }
+
+if (isNewArchitectureEnabled()) {
+  react {
+    jsRootDir = file("../src/")
+    libraryName = "RNKeychain"
+    codegenJavaPackageName = "com.oblador.keychain"
+  }
+}
+

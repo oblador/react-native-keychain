@@ -6,7 +6,7 @@
   />
 </p>
 
-[![Travis](https://img.shields.io/travis/oblador/react-native-keychain.svg)](https://travis-ci.org/oblador/react-native-keychain) [![npm](https://img.shields.io/npm/v/react-native-keychain.svg)](https://npmjs.com/package/react-native-keychain) [![npm](https://img.shields.io/npm/dm/react-native-keychain.svg)](https://npmjs.com/package/react-native-keychain)
+[![Tests](https://github.com/oblador/react-native-keychain/actions/workflows/tests.yaml/badge.svg)](https://github.com/oblador/react-native-keychain/actions/workflows/tests.yaml) [![npm](https://img.shields.io/npm/v/react-native-keychain.svg)](https://npmjs.com/package/react-native-keychain) [![npm](https://img.shields.io/npm/dm/react-native-keychain.svg)](https://npmjs.com/package/react-native-keychain)
 
 # Keychain/Keystore Access for React Native
 
@@ -15,6 +15,7 @@
   - [Usage](#usage)
   - [API](#api)
     - [`setGenericPassword(username, password, [{ accessControl, accessible, accessGroup, service, securityLevel }])`](#setgenericpasswordusername-password--accesscontrol-accessible-accessgroup-service-securitylevel-)
+    - [`hasGenericPassword([{ service }])`](#hasgenericpasswordservice)
     - [`getGenericPassword([{ authenticationPrompt, service, accessControl }])`](#getgenericpassword-authenticationprompt-service-accesscontrol-)
     - [`resetGenericPassword([{ service }])`](#resetgenericpassword-service-)
     - [`getAllGenericPasswordServices()`](#getallgenericpasswordservices)
@@ -38,7 +39,7 @@
       - [`Keychain.STORAGE_TYPE` enum (Android only)](#keychainstorage_type-enum-android-only)
       - [`Keychain.SECURITY_RULES` enum (Android only)](#keychainsecurity_rules-enum-android-only)
   - [Important Behavior](#important-behavior)
-    - [Rule 1: Automatic Security Level Upgrade](#rule-1-automatic-security-level-upgrade)
+    - [Rule 1: Automatic Security Level](#rule-1-automatic-security-level)
   - [Manual Installation](#manual-installation)
     - [iOS](#ios)
       - [Option: Manually](#option-manually)
@@ -55,6 +56,7 @@
       - [Configuring the Android-specific behavior](#configuring-the-android-specific-behavior)
     - [iOS Notes](#ios-notes)
     - [macOS Catalyst](#macos-catalyst)
+    - [visionOS](#visionos)
     - [Security](#security)
   - [Maintainers](#maintainers)
   - [For Developers / Contributors](#for-developers--contributors)
@@ -108,6 +110,10 @@ Both `setGenericPassword` and `setInternetCredentials` are limited to strings on
 ### `setGenericPassword(username, password, [{ accessControl, accessible, accessGroup, service, securityLevel }])`
 
 Will store the username/password combination in the secure storage. Resolves to `{service, storage}` or rejects in case of an error. `storage` - is a name of used internal cipher for saving secret; `service` - name used for storing secret in internal storage (empty string resolved to valid default name).
+
+### `hasGenericPassword([{ service }])`
+
+Will check if the username/password combination is available for service in the secure storage. Resolves to `true` if an entry exists or `false` if it doesn't.
 
 ### `getGenericPassword([{ authenticationPrompt, service, accessControl }])`
 
