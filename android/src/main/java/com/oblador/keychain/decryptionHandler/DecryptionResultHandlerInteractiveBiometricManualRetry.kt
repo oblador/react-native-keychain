@@ -8,10 +8,12 @@ import com.facebook.react.bridge.ReactApplicationContext
 import com.oblador.keychain.cipherStorage.CipherStorage
 
 class DecryptionResultHandlerInteractiveBiometricManualRetry(
-  @NonNull reactContext: ReactApplicationContext,
-  @NonNull storage: CipherStorage,
-  @NonNull promptInfo: BiometricPrompt.PromptInfo
-) : DecryptionResultHandlerInteractiveBiometric(reactContext, storage, promptInfo), DecryptionResultHandler {
+    @NonNull reactContext: ReactApplicationContext,
+    @NonNull storage: CipherStorage,
+    @NonNull promptInfo: BiometricPrompt.PromptInfo
+) :
+    DecryptionResultHandlerInteractiveBiometric(reactContext, storage, promptInfo),
+    DecryptionResultHandler {
 
   // Explicitly declare visibility and use 'override' to match the interface
   override var result: CipherStorage.DecryptionResult? = null
@@ -48,7 +50,10 @@ class DecryptionResultHandlerInteractiveBiometricManualRetry(
     super.onAuthenticationError(errorCode, errString)
   }
 
-  /** Called when a biometric (e.g. fingerprint, face, etc.) is presented but not recognized as belonging to the user. */
+  /**
+   * Called when a biometric (e.g. fingerprint, face, etc.) is presented but not recognized as
+   * belonging to the user.
+   */
   override fun onAuthenticationFailed() {
     Log.d(LOG_TAG, "Authentication failed: biometric not recognized.")
     if (presentedPrompt != null) {

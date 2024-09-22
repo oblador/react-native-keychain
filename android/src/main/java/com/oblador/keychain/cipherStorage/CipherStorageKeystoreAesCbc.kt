@@ -21,17 +21,18 @@ import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
 import javax.crypto.SecretKeyFactory
-import javax.crypto.spec.IvParameterSpec
 
 /**
- * @see [Secure Data in Android](https://proandroiddev.com/secure-data-in-android-initialization-vector-6ca1c659762c)
- * @see [AES cipher](https://stackoverflow.com/questions/36827352/android-aes-with-keystore-produces-different-cipher-text-with-same-plain-text)
+ * @see
+ *   [Secure Data in Android](https://proandroiddev.com/secure-data-in-android-initialization-vector-6ca1c659762c)
+ * @see
+ *   [AES cipher](https://stackoverflow.com/questions/36827352/android-aes-with-keystore-produces-different-cipher-text-with-same-plain-text)
  */
 @TargetApi(Build.VERSION_CODES.M)
 @Suppress("unused", "MemberVisibilityCanBePrivate")
 class CipherStorageKeystoreAesCbc : CipherStorageBase() {
 
-  //region Constants
+  // region Constants
   /** AES */
   companion object {
     const val ALGORITHM_AES = KeyProperties.KEY_ALGORITHM_AES
@@ -46,9 +47,10 @@ class CipherStorageKeystoreAesCbc : CipherStorageBase() {
 
     const val DEFAULT_SERVICE = "RN_KEYCHAIN_DEFAULT_ALIAS"
   }
-  //endregion
 
-  //region Configuration
+  // endregion
+
+  // region Configuration
   override fun getCipherStorageName(): String = KnownCiphers.AES
 
   /** API23 is a requirement. */
@@ -61,26 +63,24 @@ class CipherStorageKeystoreAesCbc : CipherStorageBase() {
   override fun isBiometrySupported(): Boolean = false
 
   /** AES. */
-  @NonNull
-  override fun getEncryptionAlgorithm(): String = ALGORITHM_AES
+  @NonNull override fun getEncryptionAlgorithm(): String = ALGORITHM_AES
 
   /** AES/CBC/PKCS7Padding */
-  @NonNull
-  override fun getEncryptionTransformation(): String = ENCRYPTION_TRANSFORMATION
+  @NonNull override fun getEncryptionTransformation(): String = ENCRYPTION_TRANSFORMATION
 
   /** Override for saving the compatibility with previous version of lib. */
   override fun getDefaultAliasServiceName(): String = DEFAULT_SERVICE
 
-  //endregion
+  // endregion
 
-  //region Overrides
+  // region Overrides
   @NonNull
   @Throws(CryptoFailedException::class)
   override fun encrypt(
-    @NonNull alias: String,
-    @NonNull username: String,
-    @NonNull password: String,
-    @NonNull level: SecurityLevel
+      @NonNull alias: String,
+      @NonNull username: String,
+      @NonNull password: String,
+      @NonNull level: SecurityLevel
   ): CipherStorage.EncryptionResult {
 
     throwIfInsufficientLevel(level)
@@ -92,10 +92,7 @@ class CipherStorageKeystoreAesCbc : CipherStorageBase() {
       val key = extractGeneratedKey(safeAlias, level, retries)
 
       CipherStorage.EncryptionResult(
-        encryptString(key, username),
-        encryptString(key, password),
-        this
-      )
+          encryptString(key, username), encryptString(key, password), this)
     } catch (e: GeneralSecurityException) {
       throw CryptoFailedException("Could not encrypt data with alias: $alias", e)
     } catch (fail: Throwable) {
@@ -106,10 +103,10 @@ class CipherStorageKeystoreAesCbc : CipherStorageBase() {
   @NonNull
   @Throws(CryptoFailedException::class)
   override fun decrypt(
-    @NonNull alias: String,
-    @NonNull username: ByteArray,
-    @NonNull password: ByteArray,
-    @NonNull level: SecurityLevel
+      @NonNull alias: String,
+      @NonNull username: ByteArray,
+      @NonNull password: ByteArray,
+      @NonNull level: SecurityLevel
   ): CipherStorage.DecryptionResult {
 
     throwIfInsufficientLevel(level)
@@ -121,10 +118,7 @@ class CipherStorageKeystoreAesCbc : CipherStorageBase() {
       val key = extractGeneratedKey(safeAlias, level, retries)
 
       CipherStorage.DecryptionResult(
-        decryptBytes(key, username),
-        decryptBytes(key, password),
-        getSecurityLevel(key)
-      )
+          decryptBytes(key, username), decryptBytes(key, password), getSecurityLevel(key))
     } catch (e: GeneralSecurityException) {
       throw CryptoFailedException("Could not decrypt data with alias: $alias", e)
     } catch (fail: Throwable) {
@@ -135,11 +129,11 @@ class CipherStorageKeystoreAesCbc : CipherStorageBase() {
   /** Redirect call to [decrypt] method. */
   @Throws(CryptoFailedException::class)
   override fun decrypt(
-    @NonNull handler: DecryptionResultHandler,
-    @NonNull alias: String,
-    @NonNull username: ByteArray,
-    @NonNull password: ByteArray,
-    @NonNull level: SecurityLevel
+      @NonNull handler: DecryptionResultHandler,
+      @NonNull alias: String,
+      @NonNull username: ByteArray,
+      @NonNull password: ByteArray,
+      @NonNull level: SecurityLevel
   ) {
     try {
       val results = decrypt(alias, username, password, level)
@@ -148,22 +142,23 @@ class CipherStorageKeystoreAesCbc : CipherStorageBase() {
       handler.onDecrypt(null, fail)
     }
   }
-  //endregion
 
-  //region Implementation
+  // endregion
+
+  // region Implementation
 
   /** Get builder for encryption and decryption operations with required user Authentication. */
   @NonNull
   @Throws(GeneralSecurityException::class)
   override fun getKeyGenSpecBuilder(@NonNull alias: String): KeyGenParameterSpec.Builder =
-    getKeyGenSpecBuilder(alias, false)
+      getKeyGenSpecBuilder(alias, false)
 
   /** Get encryption algorithm specification builder instance. */
   @NonNull
   @Throws(GeneralSecurityException::class)
   override fun getKeyGenSpecBuilder(
-    @NonNull alias: String,
-    isForTesting: Boolean
+      @NonNull alias: String,
+      isForTesting: Boolean
   ): KeyGenParameterSpec.Builder {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
       throw KeyStoreAccessException("Unsupported API${Build.VERSION.SDK_INT} version detected.")
@@ -172,10 +167,10 @@ class CipherStorageKeystoreAesCbc : CipherStorageBase() {
     val purposes = KeyProperties.PURPOSE_DECRYPT or KeyProperties.PURPOSE_ENCRYPT
 
     return KeyGenParameterSpec.Builder(alias, purposes)
-      .setBlockModes(BLOCK_MODE_CBC)
-      .setEncryptionPaddings(PADDING_PKCS7)
-      .setRandomizedEncryptionRequired(true)
-      .setKeySize(ENCRYPTION_KEY_SIZE)
+        .setBlockModes(BLOCK_MODE_CBC)
+        .setEncryptionPaddings(PADDING_PKCS7)
+        .setRandomizedEncryptionRequired(true)
+        .setKeySize(ENCRYPTION_KEY_SIZE)
   }
 
   /** Get information about provided key. */
@@ -212,9 +207,9 @@ class CipherStorageKeystoreAesCbc : CipherStorageBase() {
   @NonNull
   @Throws(GeneralSecurityException::class, IOException::class)
   override fun decryptBytes(
-    @NonNull key: Key,
-    @NonNull bytes: ByteArray,
-    handler: DecryptBytesHandler?
+      @NonNull key: Key,
+      @NonNull bytes: ByteArray,
+      handler: DecryptBytesHandler?
   ): String {
     val cipher = getCachedInstance()
 
@@ -231,17 +226,18 @@ class CipherStorageKeystoreAesCbc : CipherStorageBase() {
       throw fail
     }
   }
-  //endregion
 
-  //region Initialization Vector encrypt/decrypt support
+  // endregion
+
+  // region Initialization Vector encrypt/decrypt support
   @NonNull
   @Throws(GeneralSecurityException::class, IOException::class)
   override fun encryptString(@NonNull key: Key, @NonNull value: String): ByteArray =
-    encryptString(key, value, IV.encrypt)
+      encryptString(key, value, IV.encrypt)
 
   @NonNull
   @Throws(GeneralSecurityException::class, IOException::class)
   override fun decryptBytes(@NonNull key: Key, @NonNull bytes: ByteArray): String =
-    decryptBytes(key, bytes, IV.decrypt)
-  //endregion
+      decryptBytes(key, bytes, IV.decrypt)
+  // endregion
 }

@@ -8,25 +8,24 @@ import androidx.annotation.VisibleForTesting
 import com.oblador.keychain.SecurityLevel
 import com.oblador.keychain.exceptions.CryptoFailedException
 import com.oblador.keychain.exceptions.KeyStoreAccessException
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.Closeable;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
+import java.io.Closeable
+import java.io.IOException
+import java.io.InputStream
+import java.io.OutputStream
 import java.nio.charset.Charset
-import java.security.GeneralSecurityException;
-import java.security.Key;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.ProviderException;
-import java.security.UnrecoverableKeyException;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-
+import java.security.GeneralSecurityException
+import java.security.Key
+import java.security.KeyStore
+import java.security.KeyStoreException
+import java.security.NoSuchAlgorithmException
+import java.security.ProviderException
+import java.security.UnrecoverableKeyException
+import java.util.Collections
+import java.util.HashSet
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
 import javax.crypto.Cipher
 import javax.crypto.CipherInputStream
 import javax.crypto.CipherOutputStream
@@ -35,7 +34,7 @@ import javax.crypto.spec.IvParameterSpec
 
 @Suppress("unused", "MemberVisibilityCanBePrivate", "UnusedReturnValue")
 abstract class CipherStorageBase : CipherStorage {
-  //region Constants
+  // region Constants
   /** Logging tag. */
   protected val LOG_TAG = CipherStorageBase::class.java.simpleName
 
@@ -76,33 +75,31 @@ abstract class CipherStorageBase : CipherStorage {
       }
     }
   }
-  //endregion
 
-  //region Members
+  // endregion
+
+  // region Members
   /** Guard object for [isSupportsSecureHardware] field. */
   protected val _sync = Any()
 
   /** Try to resolve it only once and cache result for all future calls. */
-  @Transient
-  protected var isSupportsSecureHardware: AtomicBoolean? = null
+  @Transient protected var isSupportsSecureHardware: AtomicBoolean? = null
 
   /** Guard for [isStrongboxAvailable] field assignment. */
   protected val _syncStrongbox = Any()
 
   /** Try to resolve support of the strongbox and cache result for future calls. */
-  @Transient
-  protected var isStrongboxAvailable: AtomicBoolean? = null
+  @Transient protected var isStrongboxAvailable: AtomicBoolean? = null
 
   /** Get cached instance of cipher. Get instance operation is slow. */
-  @Transient
-  protected var cachedCipher: Cipher? = null
+  @Transient protected var cachedCipher: Cipher? = null
 
   /** Cached instance of the Keystore. */
-  @Transient
-  protected var cachedKeyStore: KeyStore? = null
-  //endregion
+  @Transient protected var cachedKeyStore: KeyStore? = null
 
-  //region Overrides
+  // endregion
+
+  // region Overrides
 
   /** Hardware supports keystore operations. */
   override fun securityLevel(): SecurityLevel {
@@ -110,8 +107,8 @@ abstract class CipherStorageBase : CipherStorage {
   }
 
   /**
-   * The higher value means better capabilities. Range: [19..1129].
-   * Formula: `1000 * isBiometrySupported() + 100 * isSecureHardware() + minSupportedApiLevel()`
+   * The higher value means better capabilities. Range: [19..1129]. Formula: `1000 *
+   * isBiometrySupported() + 100 * isSecureHardware() + minSupportedApiLevel()`
    */
   override fun getCapabilityLevel(): Int {
     // max: 1000 + 100 + 29 == 1129
@@ -136,8 +133,7 @@ abstract class CipherStorageBase : CipherStorage {
         sdk = SelfDestroyKey(TEST_KEY_ALIAS)
         val newValue = validateKeySecurityLevel(SecurityLevel.SECURE_HARDWARE, sdk.key)
         isSupportsSecureHardware!!.set(newValue)
-      } catch (ignored: Throwable) {
-      } finally {
+      } catch (ignored: Throwable) {} finally {
         sdk?.close()
       }
     }
@@ -173,20 +169,23 @@ abstract class CipherStorageBase : CipherStorage {
       throw KeyStoreAccessException("Error accessing aliases in keystore $ks", e)
     }
   }
-  //endregion
 
-  //region Abstract methods
+  // endregion
+
+  // region Abstract methods
 
   /** Get encryption algorithm specification builder instance. */
   @Throws(GeneralSecurityException::class)
   protected abstract fun getKeyGenSpecBuilder(alias: String): KeyGenParameterSpec.Builder
 
   @Throws(GeneralSecurityException::class)
-  protected abstract fun getKeyGenSpecBuilder(alias: String, isForTesting: Boolean): KeyGenParameterSpec.Builder
+  protected abstract fun getKeyGenSpecBuilder(
+      alias: String,
+      isForTesting: Boolean
+  ): KeyGenParameterSpec.Builder
 
   /** Get information about provided key. */
-  @Throws(GeneralSecurityException::class)
-  protected abstract fun getKeyInfo(key: Key): KeyInfo
+  @Throws(GeneralSecurityException::class) protected abstract fun getKeyInfo(key: Key): KeyInfo
 
   /** Try to generate key from provided specification. */
   @Throws(GeneralSecurityException::class)
@@ -197,9 +196,10 @@ abstract class CipherStorageBase : CipherStorage {
 
   /** Get transformation algorithm for encrypt/decrypt operations. */
   protected abstract fun getEncryptionTransformation(): String
-  //endregion
 
-  //region Implementation
+  // endregion
+
+  // region Implementation
 
   /** Get cipher instance and cache it for any next call. */
   @Throws(NoSuchAlgorithmException::class, NoSuchPaddingException::class)
@@ -218,16 +218,17 @@ abstract class CipherStorageBase : CipherStorage {
   @Throws(CryptoFailedException::class)
   protected fun throwIfInsufficientLevel(level: SecurityLevel) {
     if (!securityLevel().satisfiesSafetyThreshold(level)) {
-      throw CryptoFailedException("Insufficient security level (wants $level; got ${securityLevel()})")
+      throw CryptoFailedException(
+          "Insufficient security level (wants $level; got ${securityLevel()})")
     }
   }
 
   /** Extract existing key or generate a new one. In case of problems raise exception. */
   @Throws(GeneralSecurityException::class)
   protected fun extractGeneratedKey(
-    safeAlias: String,
-    level: SecurityLevel,
-    retries: AtomicInteger
+      safeAlias: String,
+      level: SecurityLevel,
+      retries: AtomicInteger
   ): Key {
     var key: Key?
     do {
@@ -245,13 +246,11 @@ abstract class CipherStorageBase : CipherStorage {
     return key
   }
 
-  /** Try to extract key by alias from keystore, in case of 'known android bug' reduce retry counter. */
+  /**
+   * Try to extract key by alias from keystore, in case of 'known android bug' reduce retry counter.
+   */
   @Throws(GeneralSecurityException::class)
-  protected fun extractKey(
-    keyStore: KeyStore,
-    safeAlias: String,
-    retry: AtomicInteger
-  ): Key? {
+  protected fun extractKey(keyStore: KeyStore, safeAlias: String, retry: AtomicInteger): Key? {
     val key: Key?
 
     try {
@@ -276,8 +275,7 @@ abstract class CipherStorageBase : CipherStorage {
   /** Verify that provided key satisfy minimal needed level. */
   @Throws(GeneralSecurityException::class)
   protected fun validateKeySecurityLevel(level: SecurityLevel, key: Key): Boolean {
-    return getSecurityLevel(key)
-      .satisfiesSafetyThreshold(level)
+    return getSecurityLevel(key).satisfiesSafetyThreshold(level)
   }
 
   /** Get the supported level of security for provided Key instance. */
@@ -331,11 +329,7 @@ abstract class CipherStorageBase : CipherStorage {
 
   /** Encrypt provided string value. */
   @Throws(IOException::class, GeneralSecurityException::class)
-  protected fun encryptString(
-    key: Key,
-    value: String,
-    handler: EncryptStringHandler?
-  ): ByteArray {
+  protected fun encryptString(key: Key, value: String, handler: EncryptStringHandler?): ByteArray {
     val cipher = getCachedInstance()
     try {
       ByteArrayOutputStream().use { output ->
@@ -345,9 +339,7 @@ abstract class CipherStorageBase : CipherStorage {
           output.flush()
         }
 
-        CipherOutputStream(output, cipher).use { encrypt ->
-          encrypt.write(value.toByteArray(UTF8))
-        }
+        CipherOutputStream(output, cipher).use { encrypt -> encrypt.write(value.toByteArray(UTF8)) }
 
         return output.toByteArray()
       }
@@ -360,9 +352,9 @@ abstract class CipherStorageBase : CipherStorage {
   /** Decrypt provided bytes to a string. */
   @Throws(GeneralSecurityException::class, IOException::class)
   protected open fun decryptBytes(
-    key: Key,
-    bytes: ByteArray,
-    handler: DecryptBytesHandler?
+      key: Key,
+      bytes: ByteArray,
+      handler: DecryptBytesHandler?
   ): String {
     val cipher = getCachedInstance()
     try {
@@ -373,9 +365,7 @@ abstract class CipherStorageBase : CipherStorage {
             handler.initialize(cipher, key, input)
           }
 
-          CipherInputStream(input, cipher).use { decrypt ->
-            copy(decrypt, output)
-          }
+          CipherInputStream(input, cipher).use { decrypt -> copy(decrypt, output) }
 
           return String(output.toByteArray(), UTF8)
         }
@@ -435,7 +425,8 @@ abstract class CipherStorageBase : CipherStorage {
   @Throws(GeneralSecurityException::class)
   protected fun tryGenerateRegularSecurityKey(alias: String, isForTesting: Boolean): Key {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-      throw KeyStoreAccessException("Regular security keystore is not supported for old API${Build.VERSION.SDK_INT}.")
+      throw KeyStoreAccessException(
+          "Regular security keystore is not supported for old API${Build.VERSION.SDK_INT}.")
     }
 
     val specification = getKeyGenSpecBuilder(alias, isForTesting).build()
@@ -451,17 +442,17 @@ abstract class CipherStorageBase : CipherStorage {
   @Throws(GeneralSecurityException::class)
   protected fun tryGenerateStrongBoxSecurityKey(alias: String, isForTesting: Boolean): Key {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
-      throw KeyStoreAccessException("Strong box security keystore is not supported for old API${Build.VERSION.SDK_INT}.")
+      throw KeyStoreAccessException(
+          "Strong box security keystore is not supported for old API${Build.VERSION.SDK_INT}.")
     }
 
-    val specification = getKeyGenSpecBuilder(alias, isForTesting)
-      .setIsStrongBoxBacked(true)
-      .build()
+    val specification = getKeyGenSpecBuilder(alias, isForTesting).setIsStrongBoxBacked(true).build()
     return generateKey(specification)
   }
-  //endregion
 
-  //region Testing
+  // endregion
+
+  // region Testing
 
   /** Override internal cipher instance cache. */
   @VisibleForTesting
@@ -476,9 +467,10 @@ abstract class CipherStorageBase : CipherStorage {
     cachedKeyStore = keystore
     return this
   }
-  //endregion
 
-  //region Nested declarations
+  // endregion
+
+  // region Nested declarations
 
   /** Generic cipher initialization. */
   object Defaults {
@@ -514,7 +506,7 @@ abstract class CipherStorageBase : CipherStorage {
       val iv = ByteArray(IV_LENGTH)
 
       if (IV_LENGTH >= bytes.size)
-        throw IOException("Insufficient length of input data for IV extracting.")
+          throw IOException("Insufficient length of input data for IV extracting.")
 
       System.arraycopy(bytes, 0, iv, 0, IV_LENGTH)
 
@@ -527,8 +519,7 @@ abstract class CipherStorageBase : CipherStorage {
       val iv = ByteArray(IV_LENGTH)
       val result = inputStream.read(iv, 0, IV_LENGTH)
 
-      if (result != IV_LENGTH)
-        throw IOException("Input stream has insufficient data.")
+      if (result != IV_LENGTH) throw IOException("Input stream has insufficient data.")
 
       return IvParameterSpec(iv)
     }
@@ -560,5 +551,5 @@ abstract class CipherStorageBase : CipherStorage {
       }
     }
   }
-  //endregion
+  // endregion
 }

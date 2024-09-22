@@ -17,7 +17,10 @@ class DecryptionResultHandlerNonInteractive : DecryptionResultHandler {
     onDecrypt(null, failure)
   }
 
-  override fun onDecrypt(@Nullable decryptionResult: DecryptionResult?, @Nullable error: Throwable?) {
+  override fun onDecrypt(
+      @Nullable decryptionResult: DecryptionResult?,
+      @Nullable error: Throwable?
+  ) {
     this.result = decryptionResult
     this.error = error
   }

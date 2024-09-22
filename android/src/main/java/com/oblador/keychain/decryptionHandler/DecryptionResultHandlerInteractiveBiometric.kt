@@ -10,8 +10,8 @@ import com.facebook.react.bridge.AssertionException
 import com.facebook.react.bridge.ReactApplicationContext
 import com.oblador.keychain.DeviceAvailability
 import com.oblador.keychain.cipherStorage.CipherStorage
-import com.oblador.keychain.cipherStorage.CipherStorage.DecryptionResult
 import com.oblador.keychain.cipherStorage.CipherStorage.DecryptionContext
+import com.oblador.keychain.cipherStorage.CipherStorage.DecryptionResult
 import com.oblador.keychain.cipherStorage.CipherStorageBase
 import com.oblador.keychain.exceptions.CryptoFailedException
 import java.util.concurrent.Executor
@@ -20,9 +20,9 @@ import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
 open class DecryptionResultHandlerInteractiveBiometric(
-  @NonNull protected val reactContext: ReactApplicationContext,
-  @NonNull storage: CipherStorage,
-  @NonNull protected var promptInfo: BiometricPrompt.PromptInfo
+    @NonNull protected val reactContext: ReactApplicationContext,
+    @NonNull storage: CipherStorage,
+    @NonNull protected var promptInfo: BiometricPrompt.PromptInfo
 ) : BiometricPrompt.AuthenticationCallback(), DecryptionResultHandler {
 
   // Explicitly declare the visibility and use 'override' to match the interface
@@ -43,18 +43,23 @@ open class DecryptionResultHandlerInteractiveBiometric(
     this.context = context
 
     if (!DeviceAvailability.isPermissionsGranted(reactContext)) {
-      val failure = CryptoFailedException("Could not start fingerprint Authentication. No permissions granted.")
+      val failure =
+          CryptoFailedException(
+              "Could not start fingerprint Authentication. No permissions granted.")
       onDecrypt(null, failure)
     } else {
       startAuthentication()
     }
   }
 
-  override fun onDecrypt(@Nullable decryptionResult: DecryptionResult?, @Nullable error: Throwable?) {
+  override fun onDecrypt(
+      @Nullable decryptionResult: DecryptionResult?,
+      @Nullable error: Throwable?
+  ) {
     lock.withLock {
       this.result = decryptionResult
       this.error = error
-      condition.signalAll()  // Notify waiting thread
+      condition.signalAll() // Notify waiting thread
     }
   }
 
@@ -69,10 +74,10 @@ open class DecryptionResultHandlerInteractiveBiometric(
     try {
       context ?: throw NullPointerException("Decrypt context is not assigned yet.")
 
-      val decrypted = DecryptionResult(
-        storage.decryptBytes(context!!.key, context!!.username),
-        storage.decryptBytes(context!!.key, context!!.password)
-      )
+      val decrypted =
+          DecryptionResult(
+              storage.decryptBytes(context!!.key, context!!.username),
+              storage.decryptBytes(context!!.key, context!!.password))
 
       onDecrypt(decrypted, null)
     } catch (fail: Throwable) {
@@ -115,7 +120,7 @@ open class DecryptionResultHandlerInteractiveBiometric(
 
     try {
       lock.withLock {
-        condition.await()  // Wait for signal
+        condition.await() // Wait for signal
       }
     } catch (ignored: InterruptedException) {
       // Shutdown sequence

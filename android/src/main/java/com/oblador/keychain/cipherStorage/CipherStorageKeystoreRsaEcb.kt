@@ -48,10 +48,10 @@ class CipherStorageKeystoreRsaEcb : CipherStorageBase() {
 
   @Throws(CryptoFailedException::class)
   override fun encrypt(
-    alias: String,
-    username: String,
-    password: String,
-    level: SecurityLevel
+      alias: String,
+      username: String,
+      password: String,
+      level: SecurityLevel
   ): CipherStorage.EncryptionResult {
     throwIfInsufficientLevel(level)
 
@@ -83,10 +83,10 @@ class CipherStorageKeystoreRsaEcb : CipherStorageBase() {
 
   @Throws(CryptoFailedException::class)
   override fun decrypt(
-    alias: String,
-    username: ByteArray,
-    password: ByteArray,
-    level: SecurityLevel
+      alias: String,
+      username: ByteArray,
+      password: ByteArray,
+      level: SecurityLevel
   ): CipherStorage.DecryptionResult {
     val handler = DecryptionResultHandlerNonInteractive()
     decrypt(handler, alias, username, password, level)
@@ -94,17 +94,18 @@ class CipherStorageKeystoreRsaEcb : CipherStorageBase() {
     CryptoFailedException.reThrowOnError(handler.error)
 
     return handler.result
-      ?: throw CryptoFailedException("No decryption results and no error. Something deeply wrong!")
+        ?: throw CryptoFailedException(
+            "No decryption results and no error. Something deeply wrong!")
   }
 
   @SuppressLint("NewApi")
   @Throws(CryptoFailedException::class)
   override fun decrypt(
-    handler: DecryptionResultHandler,
-    alias: String,
-    username: ByteArray,
-    password: ByteArray,
-    level: SecurityLevel
+      handler: DecryptionResultHandler,
+      alias: String,
+      username: ByteArray,
+      password: ByteArray,
+      level: SecurityLevel
   ) {
     throwIfInsufficientLevel(level)
 
@@ -116,10 +117,8 @@ class CipherStorageKeystoreRsaEcb : CipherStorageBase() {
       // key is always NOT NULL otherwise GeneralSecurityException raised
       key = extractGeneratedKey(safeAlias, level, retries)
 
-      val results = CipherStorage.DecryptionResult(
-        decryptBytes(key, username),
-        decryptBytes(key, password)
-      )
+      val results =
+          CipherStorage.DecryptionResult(decryptBytes(key, username), decryptBytes(key, password))
 
       handler.onDecrypt(results, null)
     } catch (ex: UserNotAuthenticatedException) {
@@ -150,13 +149,16 @@ class CipherStorageKeystoreRsaEcb : CipherStorageBase() {
   /** RSA/ECB/PKCS1Padding */
   override fun getEncryptionTransformation(): String = TRANSFORMATION_RSA_ECB_PKCS1
 
-  /** Clean code without try/catch's that encrypt username and password with a key specified by alias. */
+  /**
+   * Clean code without try/catch's that encrypt username and password with a key specified by
+   * alias.
+   */
   @Throws(GeneralSecurityException::class, IOException::class)
   private fun innerEncryptedCredentials(
-    alias: String,
-    password: String,
-    username: String,
-    level: SecurityLevel
+      alias: String,
+      password: String,
+      username: String,
+      level: SecurityLevel
   ): CipherStorage.EncryptionResult {
     val store = getKeyStoreAndLoad()
 
@@ -172,10 +174,7 @@ class CipherStorageKeystoreRsaEcb : CipherStorageBase() {
     val key = kf.generatePublic(keySpec)
 
     return CipherStorage.EncryptionResult(
-      encryptString(key, username),
-      encryptString(key, password),
-      this
-    )
+        encryptString(key, username), encryptString(key, password), this)
   }
 
   /** Get builder for encryption and decryption operations with required user Authentication. */
@@ -188,7 +187,10 @@ class CipherStorageKeystoreRsaEcb : CipherStorageBase() {
   /** Get builder for encryption and decryption operations with required user Authentication. */
   @SuppressLint("NewApi")
   @Throws(GeneralSecurityException::class)
-  override fun getKeyGenSpecBuilder(alias: String, isForTesting: Boolean): KeyGenParameterSpec.Builder {
+  override fun getKeyGenSpecBuilder(
+      alias: String,
+      isForTesting: Boolean
+  ): KeyGenParameterSpec.Builder {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
       throw KeyStoreAccessException("Unsupported API${Build.VERSION.SDK_INT} version detected.")
     }
@@ -198,18 +200,17 @@ class CipherStorageKeystoreRsaEcb : CipherStorageBase() {
     val keySize = if (isForTesting) ENCRYPTION_KEY_SIZE_WHEN_TESTING else ENCRYPTION_KEY_SIZE
 
     val validityDuration = 5
-    val keyGenParameterSpecBuilder = KeyGenParameterSpec.Builder(alias, purposes)
-      .setBlockModes(BLOCK_MODE_ECB)
-      .setEncryptionPaddings(PADDING_PKCS1)
-      .setRandomizedEncryptionRequired(true)
-      .setUserAuthenticationRequired(true)
-      .setKeySize(keySize)
+    val keyGenParameterSpecBuilder =
+        KeyGenParameterSpec.Builder(alias, purposes)
+            .setBlockModes(BLOCK_MODE_ECB)
+            .setEncryptionPaddings(PADDING_PKCS1)
+            .setRandomizedEncryptionRequired(true)
+            .setUserAuthenticationRequired(true)
+            .setKeySize(keySize)
 
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
       keyGenParameterSpecBuilder.setUserAuthenticationParameters(
-        validityDuration,
-        KeyProperties.AUTH_BIOMETRIC_STRONG
-      )
+          validityDuration, KeyProperties.AUTH_BIOMETRIC_STRONG)
     } else {
       keyGenParameterSpecBuilder.setUserAuthenticationValidityDurationSeconds(validityDuration)
     }
