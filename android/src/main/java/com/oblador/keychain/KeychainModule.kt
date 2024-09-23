@@ -24,7 +24,10 @@ import com.oblador.keychain.decryptionHandler.DecryptionResultHandlerProvider
 import com.oblador.keychain.exceptions.CryptoFailedException
 import com.oblador.keychain.exceptions.EmptyParameterException
 import com.oblador.keychain.exceptions.KeyStoreAccessException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import java.util.concurrent.TimeUnit
+import kotlinx.coroutines.launch
 
 @ReactModule(name = KeychainModule.KEYCHAIN_MODULE)
 @Suppress("unused")
@@ -123,6 +126,9 @@ class KeychainModule(reactContext: ReactApplicationContext) :
   /** Shared preferences storage. */
   private val prefsStorage: PrefsStorage
 
+  /** Launches a coroutine to perform non-blocking UI operations */
+  private val mainCoroutineScope = CoroutineScope(Dispatchers.Default)
+
   // endregion
   // region Initialization
   /** Default constructor. */
@@ -184,26 +190,29 @@ class KeychainModule(reactContext: ReactApplicationContext) :
       options: ReadableMap?,
       promise: Promise
   ) {
-    try {
-      throwIfEmptyLoginPassword(username, password)
-      val level = getSecurityLevelOrDefault(options)
-      val storage = getSelectedStorage(options)
-      throwIfInsufficientLevel(storage, level)
-      val result = storage.encrypt(alias, username, password, level)
-      prefsStorage.storeEncryptedEntry(alias, result)
-      val results = Arguments.createMap()
-      results.putString(Maps.SERVICE, alias)
-      results.putString(Maps.STORAGE, storage.getCipherStorageName())
-      promise.resolve(results)
-    } catch (e: EmptyParameterException) {
-      Log.e(KEYCHAIN_MODULE, e.message, e)
-      promise.reject(Errors.E_EMPTY_PARAMETERS, e)
-    } catch (e: CryptoFailedException) {
-      Log.e(KEYCHAIN_MODULE, e.message, e)
-      promise.reject(Errors.E_CRYPTO_FAILED, e)
-    } catch (fail: Throwable) {
-      Log.e(KEYCHAIN_MODULE, fail.message, fail)
-      promise.reject(Errors.E_UNKNOWN_ERROR, fail)
+    mainCoroutineScope.launch {
+      try {
+        throwIfEmptyLoginPassword(username, password)
+        val level = getSecurityLevelOrDefault(options)
+        val storage = getSelectedStorage(options)
+        throwIfInsufficientLevel(storage, level)
+
+        val result = storage.encrypt(alias, username, password, level)
+        prefsStorage.storeEncryptedEntry(alias, result)
+        val results = Arguments.createMap()
+        results.putString(Maps.SERVICE, alias)
+        results.putString(Maps.STORAGE, storage.getCipherStorageName())
+        promise.resolve(results)
+      } catch (e: EmptyParameterException) {
+        Log.e(KEYCHAIN_MODULE, e.message, e)
+        promise.reject(Errors.E_EMPTY_PARAMETERS, e)
+      } catch (e: CryptoFailedException) {
+        Log.e(KEYCHAIN_MODULE, e.message, e)
+        promise.reject(Errors.E_CRYPTO_FAILED, e)
+      } catch (fail: Throwable) {
+        Log.e(KEYCHAIN_MODULE, fail.message, fail)
+        promise.reject(Errors.E_UNKNOWN_ERROR, fail)
+      }
     }
   }
 
@@ -237,21 +246,22 @@ class KeychainModule(reactContext: ReactApplicationContext) :
   }
 
   private fun getGenericPassword(alias: String, options: ReadableMap?, promise: Promise) {
-    try {
-      val resultSet = prefsStorage.getEncryptedEntry(alias)
-      if (resultSet == null) {
-        Log.e(KEYCHAIN_MODULE, "No entry found for service: $alias")
-        promise.resolve(false)
-        return
-      }
-      val storageName = resultSet.cipherStorageName
-      val rules = getSecurityRulesOrDefault(options)
-      val promptInfo = getPromptInfo(options)
-      var cipher: CipherStorage? = null
+    mainCoroutineScope.launch {
+      try {
+        val resultSet = prefsStorage.getEncryptedEntry(alias)
+        if (resultSet == null) {
+          Log.e(KEYCHAIN_MODULE, "No entry found for service: $alias")
+          promise.resolve(false)
+          return@launch
+        }
+        val storageName = resultSet.cipherStorageName
+        val rules = getSecurityRulesOrDefault(options)
+        val promptInfo = getPromptInfo(options)
+        var cipher: CipherStorage? = null
 
-      // Only check for upgradable ciphers for FacebookConseal as that
-      // is the only cipher that can be upgraded
-      cipher =
+        // Only check for upgradable ciphers for FacebookConseal as that
+        // is the only cipher that can be upgraded
+        cipher =
           if (rules == Rules.AUTOMATIC_UPGRADE && storageName == KnownCiphers.FB) {
             // get the best storage
             val accessControl = getAccessControlOrDefault(options)
@@ -260,22 +270,23 @@ class KeychainModule(reactContext: ReactApplicationContext) :
           } else {
             getCipherStorageByName(storageName)
           }
-      val decryptionResult = decryptCredentials(alias, cipher!!, resultSet, rules, promptInfo)
-      val credentials = Arguments.createMap()
-      credentials.putString(Maps.SERVICE, alias)
-      credentials.putString(Maps.USERNAME, decryptionResult.username)
-      credentials.putString(Maps.PASSWORD, decryptionResult.password)
-      credentials.putString(Maps.STORAGE, cipher.getCipherStorageName())
-      promise.resolve(credentials)
-    } catch (e: KeyStoreAccessException) {
-      Log.e(KEYCHAIN_MODULE, e.message!!)
-      promise.reject(Errors.E_KEYSTORE_ACCESS_ERROR, e)
-    } catch (e: CryptoFailedException) {
-      Log.e(KEYCHAIN_MODULE, e.message!!)
-      promise.reject(Errors.E_CRYPTO_FAILED, e)
-    } catch (fail: Throwable) {
-      Log.e(KEYCHAIN_MODULE, fail.message, fail)
-      promise.reject(Errors.E_UNKNOWN_ERROR, fail)
+        val decryptionResult = decryptCredentials(alias, cipher!!, resultSet, rules, promptInfo)
+        val credentials = Arguments.createMap()
+        credentials.putString(Maps.SERVICE, alias)
+        credentials.putString(Maps.USERNAME, decryptionResult.username)
+        credentials.putString(Maps.PASSWORD, decryptionResult.password)
+        credentials.putString(Maps.STORAGE, cipher.getCipherStorageName())
+        promise.resolve(credentials)
+      } catch (e: KeyStoreAccessException) {
+        Log.e(KEYCHAIN_MODULE, e.message!!)
+        promise.reject(Errors.E_KEYSTORE_ACCESS_ERROR, e)
+      } catch (e: CryptoFailedException) {
+        Log.e(KEYCHAIN_MODULE, e.message!!)
+        promise.reject(Errors.E_CRYPTO_FAILED, e)
+      } catch (fail: Throwable) {
+        Log.e(KEYCHAIN_MODULE, fail.message, fail)
+        promise.reject(Errors.E_UNKNOWN_ERROR, fail)
+      }
     }
   }
 
