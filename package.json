@@ -21,7 +21,8 @@
     "prepare": "bob build"
   },
   "workspaces": [
-    "KeychainExample"
+    "KeychainExample",
+    "website"
   ],
   "keywords": [
     "react-native",
