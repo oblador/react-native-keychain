@@ -192,12 +192,6 @@ const AUTH_PROMPT_DEFAULTS: AuthenticationPrompt = {
   cancel: 'Cancel',
 };
 
-/**
- * Normalizes the service option, handling deprecated string format.
- *
- * @param {string | Options} [serviceOrOptions] - Service name string or options object.
- * @returns {Options} Normalized options object.
- */
 function normalizeServiceOption(serviceOrOptions?: string | Options): Options {
   if (typeof serviceOrOptions === 'string') {
     console.warn(
@@ -212,12 +206,6 @@ function normalizeServiceOption(serviceOrOptions?: string | Options): Options {
   return serviceOrOptions || {};
 }
 
-/**
- * Normalizes options, ensuring proper format and defaults.
- *
- * @param {string | Options} [serviceOrOptions] - Service name string or options object.
- * @returns {NormalizedOptions} Normalized options object with default values.
- */
 function normalizeOptions(
   serviceOrOptions?: string | Options
 ): NormalizedOptions {
@@ -495,7 +483,7 @@ export function requestSharedWebCredentials(): Promise<
 }
 
 /**
- * Sets shared web credentials (iOS and visionOS only).
+ * Sets shared web credentials (iOS only).
  *
  * @param {string} server - The server URL.
  * @param {string} username - The username or e-mail to be saved.
@@ -529,7 +517,7 @@ export function setSharedWebCredentials(
 }
 
 /**
- * Checks if the current device supports the specified authentication policy.
+ * Checks if the current device supports the specified authentication policy (iOS only).
  *
  * @param {Options} [options] - A keychain options object.
  *
