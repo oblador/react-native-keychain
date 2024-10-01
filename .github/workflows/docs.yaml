@@ -28,6 +28,7 @@ jobs:
         working-directory: ./website
         run: yarn build
       - name: Upload Build Artifact
+        if: github.ref_name == 'master'
         uses: actions/upload-pages-artifact@v3
         with:
           path: website/build
@@ -35,16 +36,16 @@ jobs:
   deploy:
     name: Deploy to GitHub Pages
     needs: build
+    runs-on: ubuntu-latest
+    if: github.ref_name == 'master'
 
     permissions:
       pages: write
       id-token: write
-
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
 
-    runs-on: ubuntu-latest
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
