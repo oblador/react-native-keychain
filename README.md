@@ -38,7 +38,7 @@ Check the [GitHub Releases page](https://github.com/oblador/react-native-keychai
     <tr>
       <td align="center">
         <a href="https://github.com/oblador">
-          <img width="150" height="150" src="https://github.com/oblador.png?v=3&s=150">
+          <img width="100" height="100" src="https://github.com/oblador.png?v=3&s=150">
           <br />
           <strong>Joel Arvidsson</strong>
         </a>
@@ -47,7 +47,7 @@ Check the [GitHub Releases page](https://github.com/oblador/react-native-keychai
       </td>
       <td align="center">
         <a href="https://github.com/DorianMazur">
-          <img width="150" height="150" src="https://github.com/DorianMazur.png?v=3&s=150">
+          <img width="100" height="100" src="https://github.com/DorianMazur.png?v=3&s=150">
           <br />
           <strong>Dorian Mazur</strong>
         </a>
@@ -56,7 +56,7 @@ Check the [GitHub Releases page](https://github.com/oblador/react-native-keychai
       </td>
       <td align="center">
         <a href="https://github.com/vonovak">
-          <img width="150" height="150" src="https://github.com/vonovak.png?v=3&s=150">
+          <img width="100" height="100" src="https://github.com/vonovak.png?v=3&s=150">
           <br />
           <strong>Vojtech Novak</strong>
         </a>
@@ -65,7 +65,7 @@ Check the [GitHub Releases page](https://github.com/oblador/react-native-keychai
       </td>
       <td align="center">
         <a href="https://github.com/pcoltau">
-          <img width="150" height="150" src="https://github.com/pcoltau.png?v=3&s=150">
+          <img width="100" height="100" src="https://github.com/pcoltau.png?v=3&s=150">
           <br />
           <strong>Pelle Stenild Coltau</strong>
         </a>
@@ -74,7 +74,7 @@ Check the [GitHub Releases page](https://github.com/oblador/react-native-keychai
       </td>
       <td align="center">
         <a href="https://github.com/OleksandrKucherenko">
-          <img width="150" height="150" src="https://github.com/OleksandrKucherenko.png?v=3&s=150">
+          <img width="100" height="100" src="https://github.com/OleksandrKucherenko.png?v=3&s=150">
           <br />
           <strong>Oleksandr Kucherenko</strong>
         </a>
