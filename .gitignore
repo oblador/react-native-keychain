@@ -95,3 +95,8 @@ KeychainExample/artifacts
 
 # React Native Bob Builder
 lib
+
+# Docosaurus
+/build
+.docusaurus
+.cache-loader
