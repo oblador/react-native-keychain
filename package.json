@@ -12,6 +12,7 @@
     "ios/RNKeychain.xcodeproj",
     "ios/RNKeychainManager",
     "lib",
+    "src",
     "RNKeychain.podspec"
   ],
   "scripts": {
@@ -38,7 +39,11 @@
     "name": "Joel Arvidsson",
     "email": "joel@oblador.se"
   },
-  "homepage": "https://github.com/oblador/react-native-keychain",
+  "contributors": [
+    "Dorian Mazur <mazur.dorian15@gmail.com> (https://github.com/DorianMazur)",
+    "Vojtech Novak <vonovak@gmail.com> (https://github.com/vonovak)"
+  ],
+  "homepage": "https://oblador.github.io/react-native-keychain",
   "bugs": {
     "url": "https://github.com/oblador/react-native-keychain/issues"
   },
