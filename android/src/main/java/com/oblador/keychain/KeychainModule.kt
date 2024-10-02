@@ -26,6 +26,8 @@ import com.oblador.keychain.exceptions.EmptyParameterException
 import com.oblador.keychain.exceptions.KeyStoreAccessException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.isActive
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.launch
 
@@ -127,7 +129,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
   private val prefsStorage: PrefsStorage
 
   /** Launches a coroutine to perform non-blocking UI operations */
-  private val mainCoroutineScope = CoroutineScope(Dispatchers.Default)
+  private val coroutineScope = CoroutineScope(Dispatchers.Default)
 
   // endregion
   // region Initialization
@@ -171,6 +173,13 @@ class KeychainModule(reactContext: ReactApplicationContext) :
   override fun getName(): String {
     return KEYCHAIN_MODULE
   }
+  
+  override fun invalidate() {
+    super.invalidate()
+    if (coroutineScope.isActive) {
+      coroutineScope.cancel("$KEYCHAIN_MODULE has been destroyed.")
+    }
+  }
 
   /** {@inheritDoc} */
   override fun getConstants(): Map<String, Any> {
@@ -190,7 +199,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
       options: ReadableMap?,
       promise: Promise
   ) {
-    mainCoroutineScope.launch {
+    coroutineScope.launch {
       try {
         throwIfEmptyLoginPassword(username, password)
         val level = getSecurityLevelOrDefault(options)
@@ -246,7 +255,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
   }
 
   private fun getGenericPassword(alias: String, options: ReadableMap?, promise: Promise) {
-    mainCoroutineScope.launch {
+    coroutineScope.launch {
       try {
         val resultSet = prefsStorage.getEncryptedEntry(alias)
         if (resultSet == null) {
