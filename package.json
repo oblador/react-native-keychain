@@ -39,6 +39,10 @@
     "name": "Joel Arvidsson",
     "email": "joel@oblador.se"
   },
+  "contributors": [
+    "Dorian Mazur <mazur.dorian15@gmail.com> (https://github.com/DorianMazur)",
+    "Vojtech Novak <vonovak@gmail.com> (https://github.com/vonovak)"
+  ],
   "homepage": "https://oblador.github.io/react-native-keychain",
   "bugs": {
     "url": "https://github.com/oblador/react-native-keychain/issues"
