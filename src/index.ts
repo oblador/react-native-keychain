@@ -126,7 +126,9 @@ export type BaseOptions = {
   accessControl?: ACCESS_CONTROL;
   /** The access group to share keychain items between apps (iOS and visionOS only). */
   accessGroup?: string;
-  /** Specifies when a keychain item is accessible (iOS and visionOS only).*/
+  /** Specifies when a keychain item is accessible (iOS and visionOS only).
+   * @default ACCESSIBLE.FTER_FIRST_UNLOCK
+   */
   accessible?: ACCESSIBLE;
   /** Authentication type for retrieving keychain item (iOS and visionOS only). */
   authenticationType?: AUTHENTICATION_TYPE;
