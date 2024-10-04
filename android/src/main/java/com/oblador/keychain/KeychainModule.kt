@@ -371,10 +371,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
       promise.resolve(false)
       return
     }
-    val results = Arguments.createMap()
-    results.putString(Maps.SERVICE, alias)
-    results.putString(Maps.STORAGE, resultSet.cipherStorageName)
-    promise.resolve(results)
+    promise.resolve(true)
   }
 
   @ReactMethod

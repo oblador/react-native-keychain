@@ -347,7 +347,7 @@ export function getAllGenericPasswordServices(): Promise<string[]> {
  *
  * @param {string} server - The server URL.
  *
- * @returns {Promise<false | Result>} Resolves to an object containing `service` and `storage` when successful, or `false` if not found.
+ * @returns {Promise<false | true>} Resolves to `true` if internet credentials exist, otherwise `false`.
  *
  * @example
  * ```typescript
@@ -355,9 +355,7 @@ export function getAllGenericPasswordServices(): Promise<string[]> {
  * console.log('Internet credentials exist:', hasCredentials);
  * ```
  */
-export function hasInternetCredentials(
-  server: string
-): Promise<false | Result> {
+export function hasInternetCredentials(server: string): Promise<false | true> {
   return RNKeychainManager.hasInternetCredentialsForServer(server);
 }
 
