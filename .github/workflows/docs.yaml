@@ -1,12 +1,8 @@
 name: Docs
 
 on:
-  push:
-    branches:
-      - master
-  pull_request:
-    branches:
-      - master
+  release:
+    types: [created]
 
 jobs:
   build:
@@ -28,7 +24,6 @@ jobs:
         working-directory: ./website
         run: yarn build
       - name: Upload Build Artifact
-        if: github.ref_name == 'master'
         uses: actions/upload-pages-artifact@v3
         with:
           path: website/build
@@ -37,7 +32,6 @@ jobs:
     name: Deploy to GitHub Pages
     needs: build
     runs-on: ubuntu-latest
-    if: github.ref_name == 'master'
 
     permissions:
       pages: write
