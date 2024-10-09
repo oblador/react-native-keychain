@@ -124,7 +124,7 @@ NSString *serverValue(NSDictionary *options)
   if (options && options[@"server"] != nil) {
     return options[@"server"];
   }
-  return "";
+  return @"";
 }
 
 NSString *accessGroupValue(NSDictionary *options)
@@ -481,7 +481,7 @@ RCT_EXPORT_METHOD(setInternetCredentialsForServer:(NSString *)server
   [self insertKeychainEntry:attributes withOptions:options resolver:resolve rejecter:reject];
 }
 
-RCT_EXPORT_METHOD(hasInternetCredentialsForServer:(NSDictionary *)options
+RCT_EXPORT_METHOD(hasInternetCredentialsForOptions:(NSDictionary *)options
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
 {
@@ -595,7 +595,7 @@ RCT_EXPORT_METHOD(getInternetCredentialsForServer:(NSString *)server
 
 }
 
-RCT_EXPORT_METHOD(resetInternetCredentialsForServer:(NSDictionary *)options
+RCT_EXPORT_METHOD(resetInternetCredentialsForOptions:(NSDictionary *)options
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
 {

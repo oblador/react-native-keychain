@@ -364,7 +364,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
   }
 
   @ReactMethod
-  fun hasInternetCredentialsForServer(options: ReadableMap, promise: Promise) {
+  fun hasInternetCredentialsForOptions(options: ReadableMap, promise: Promise) {
     val server = options.getString(Maps.SERVER)
     val alias = getAliasOrDefault(server)
     val resultSet = prefsStorage.getEncryptedEntry(alias)
@@ -405,7 +405,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
   }
 
   @ReactMethod
-  fun resetInternetCredentialsForServer(options: ReadableMap, promise: Promise) {
+  fun resetInternetCredentialsForOptions(options: ReadableMap, promise: Promise) {
     val server = options.getString(Maps.SERVER)
     val alias = getAliasOrDefault(server)
     resetGenericPassword(alias, promise)

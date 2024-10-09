@@ -361,7 +361,7 @@ export function hasInternetCredentials(
   serverOrOptions: string | Options
 ): Promise<boolean> {
   const options = normalizeServerOption(serverOrOptions);
-  return RNKeychainManager.hasInternetCredentialsForServer(options);
+  return RNKeychainManager.hasInternetCredentialsForOptions(options);
 }
 
 /**
@@ -438,7 +438,7 @@ export function resetInternetCredentials(
   serverOrOptions: string | Options
 ): Promise<void> {
   const options = normalizeServerOption(serverOrOptions);
-  return RNKeychainManager.resetInternetCredentialsForServer(options);
+  return RNKeychainManager.resetInternetCredentialsForOptions(options);
 }
 
 /**
