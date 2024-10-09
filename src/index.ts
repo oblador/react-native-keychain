@@ -126,7 +126,9 @@ export type Options = {
   accessControl?: ACCESS_CONTROL;
   /** The access group to share keychain items between apps (iOS and visionOS only). */
   accessGroup?: string;
-  /** Specifies when a keychain item is accessible (iOS and visionOS only).*/
+  /** Specifies when a keychain item is accessible (iOS and visionOS only).
+   * @default ACCESSIBLE.AFTER_FIRST_UNLOCK
+   */
   accessible?: ACCESSIBLE;
   /** Authentication type for retrieving keychain item (iOS and visionOS only). */
   authenticationType?: AUTHENTICATION_TYPE;
@@ -347,7 +349,7 @@ export function getAllGenericPasswordServices(): Promise<string[]> {
  *
  * @param {string} server - The server URL.
  *
- * @returns {Promise<false | Result>} Resolves to an object containing `service` and `storage` when successful, or `false` if not found.
+ * @returns {Promise<boolean>} Resolves to `true` if internet credentials exist, otherwise `false`.
  *
  * @example
  * ```typescript
@@ -357,7 +359,7 @@ export function getAllGenericPasswordServices(): Promise<string[]> {
  */
 export function hasInternetCredentials(
   serverOrOptions: string | Options
-): Promise<false | Result> {
+): Promise<boolean> {
   const options = normalizeServerOption(serverOrOptions);
   return RNKeychainManager.hasInternetCredentialsForServer(options);
 }
