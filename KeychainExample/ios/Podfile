@@ -1,33 +1,9 @@
-require_relative '../node_modules/react-native/scripts/react_native_pods'
-require_relative '../node_modules/@react-native-community/cli-platform-ios/native_modules'
+ws_dir = Pathname.new(__dir__)
+ws_dir = ws_dir.parent until
+  File.exist?("#{ws_dir}/node_modules/react-native-test-app/test_app.rb") ||
+  ws_dir.expand_path.to_s == '/'
+require "#{ws_dir}/node_modules/react-native-test-app/test_app.rb"
 
-platform :ios, '10.0'
+workspace 'KeychainExample.xcworkspace'
 
-target 'KeychainExample' do
-  config = use_native_modules!
-
-  use_react_native!(:path => config["reactNativePath"])
-
-  target 'KeychainExampleTests' do
-    inherit! :complete
-    # Pods for testing
-  end
-
-  # Enables Flipper.
-  #
-  # Note that if you have use_frameworks! enabled, Flipper will not work and
-  # you should disable these next few lines.
-  use_flipper!({ 'Flipper' => '0.74.0' })
-  post_install do |installer|
-    flipper_post_install(installer)
-  end
-end
-
-target 'KeychainExample-tvOS' do
-  # Pods for KeychainExample-tvOS
-
-  target 'KeychainExample-tvOSTests' do
-    inherit! :search_paths
-    # Pods for testing
-  end
-end
+use_test_app!
