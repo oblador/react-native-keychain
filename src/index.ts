@@ -143,7 +143,7 @@ export type Options = {
   /** The security rules to apply when storing the keychain item (Android only). */
   rules?: SECURITY_RULES;
   /** Whether to synchronize the keychain item to iCloud (iOS only). */
-  synchronized?: boolean;
+  cloudSync?: boolean;
   /** Authentication prompt details or a title string. */
   authenticationPrompt?: string | AuthenticationPrompt;
 };
