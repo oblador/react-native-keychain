@@ -347,7 +347,7 @@ export function getAllGenericPasswordServices(): Promise<string[]> {
 /**
  * Checks if internet credentials exist for the given server.
  *
- * @param {string} server - The server URL.
+ * @param {string} serverOrOptions - A keychain options object or a server name string.
  *
  * @returns {Promise<boolean>} Resolves to `true` if internet credentials exist, otherwise `false`.
  *
@@ -424,7 +424,7 @@ export function getInternetCredentials(
 /**
  * Deletes all internet password keychain entries for the given server.
  *
- * @param {string} server - The server URL.
+ * @param {string} serverOrOptions - A keychain options object or a server name string.
  *
  * @returns {Promise<void>} Resolves when the operation is completed.
  *
