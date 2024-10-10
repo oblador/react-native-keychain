@@ -75,6 +75,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
       const val AUTH_PROMPT = "authenticationPrompt"
       const val AUTH_TYPE = "authenticationType"
       const val SERVICE = "service"
+      const val SERVER = "server"
       const val SECURITY_LEVEL = "securityLevel"
       const val RULES = "rules"
       const val USERNAME = "username"
@@ -173,7 +174,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
   override fun getName(): String {
     return KEYCHAIN_MODULE
   }
-  
+
   override fun invalidate() {
     super.invalidate()
     if (coroutineScope.isActive) {
@@ -363,7 +364,8 @@ class KeychainModule(reactContext: ReactApplicationContext) :
   }
 
   @ReactMethod
-  fun hasInternetCredentialsForServer(server: String, promise: Promise) {
+  fun hasInternetCredentialsForOptions(options: ReadableMap, promise: Promise) {
+    val server = options.getString(Maps.SERVER)
     val alias = getAliasOrDefault(server)
     val resultSet = prefsStorage.getEncryptedEntry(alias)
     if (resultSet == null) {
@@ -403,8 +405,10 @@ class KeychainModule(reactContext: ReactApplicationContext) :
   }
 
   @ReactMethod
-  fun resetInternetCredentialsForServer(server: String, promise: Promise) {
-    resetGenericPassword(server, promise)
+  fun resetInternetCredentialsForOptions(options: ReadableMap, promise: Promise) {
+    val server = options.getString(Maps.SERVER)
+    val alias = getAliasOrDefault(server)
+    resetGenericPassword(alias, promise)
   }
 
   @ReactMethod
@@ -791,8 +795,8 @@ class KeychainModule(reactContext: ReactApplicationContext) :
               storage.securityLevel().name))
     }
 
-    private fun getAliasOrDefault(service: String?): String {
-      return service ?: EMPTY_STRING
+    private fun getAliasOrDefault(alias: String?): String {
+      return alias ?: EMPTY_STRING
     } // endregion
   }
 }

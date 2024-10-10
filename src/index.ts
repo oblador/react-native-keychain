@@ -121,7 +121,7 @@ export type AuthenticationPrompt = {
 };
 
 /** Base options for keychain functions. */
-export type BaseOptions = {
+export type Options = {
   /** The access control policy to use for the keychain item. */
   accessControl?: ACCESS_CONTROL;
   /** The access group to share keychain items between apps (iOS and visionOS only). */
@@ -134,31 +134,19 @@ export type BaseOptions = {
   authenticationType?: AUTHENTICATION_TYPE;
   /** The service name to associate with the keychain item. */
   service?: string;
+  /** The server name to associate with the keychain item. */
+  server?: string;
   /** The desired security level of the keychain item. */
   securityLevel?: SECURITY_LEVEL;
   /** The storage type (Android only). */
   storage?: STORAGE_TYPE;
   /** The security rules to apply when storing the keychain item (Android only). */
   rules?: SECURITY_RULES;
+  /** Whether to synchronize the keychain item to iCloud (iOS only). */
+  cloudSync?: boolean;
+  /** Authentication prompt details or a title string. */
+  authenticationPrompt?: string | AuthenticationPrompt;
 };
-
-/**
- * Normalized options including authentication prompt details.
- */
-export type NormalizedOptions = {
-  /** Authentication prompt details. */
-  authenticationPrompt?: AuthenticationPrompt;
-} & BaseOptions;
-
-/**
- * Options for keychain functions.
- */
-export type Options = Partial<
-  {
-    /** Authentication prompt details or a title string. */
-    authenticationPrompt?: string | AuthenticationPrompt;
-  } & BaseOptions
->;
 
 /**
  * Result returned by keychain functions.
@@ -208,12 +196,24 @@ function normalizeServiceOption(serviceOrOptions?: string | Options): Options {
   return serviceOrOptions || {};
 }
 
-function normalizeOptions(
-  serviceOrOptions?: string | Options
-): NormalizedOptions {
+function normalizeServerOption(serverOrOptions?: string | Options): Options {
+  if (typeof serverOrOptions === 'string') {
+    console.warn(
+      `You passed a server string as an argument to one of the react-native-keychain functions.
+          This way of passing service is deprecated and will be removed in a future major.
+          Please update your code to use { service: ${JSON.stringify(
+            serverOrOptions
+          )} }`
+    );
+    return { server: serverOrOptions };
+  }
+  return serverOrOptions || {};
+}
+
+function normalizeOptions(serviceOrOptions?: string | Options): Options {
   const options = {
     ...normalizeServiceOption(serviceOrOptions),
-  } as NormalizedOptions;
+  } as Options;
   const { authenticationPrompt } = options;
 
   if (typeof authenticationPrompt === 'string') {
@@ -347,7 +347,7 @@ export function getAllGenericPasswordServices(): Promise<string[]> {
 /**
  * Checks if internet credentials exist for the given server.
  *
- * @param {string} server - The server URL.
+ * @param {string} serverOrOptions - A keychain options object or a server name string.
  *
  * @returns {Promise<boolean>} Resolves to `true` if internet credentials exist, otherwise `false`.
  *
@@ -357,8 +357,11 @@ export function getAllGenericPasswordServices(): Promise<string[]> {
  * console.log('Internet credentials exist:', hasCredentials);
  * ```
  */
-export function hasInternetCredentials(server: string): Promise<boolean> {
-  return RNKeychainManager.hasInternetCredentialsForServer(server);
+export function hasInternetCredentials(
+  serverOrOptions: string | Options
+): Promise<boolean> {
+  const options = normalizeServerOption(serverOrOptions);
+  return RNKeychainManager.hasInternetCredentialsForOptions(options);
 }
 
 /**
@@ -421,7 +424,7 @@ export function getInternetCredentials(
 /**
  * Deletes all internet password keychain entries for the given server.
  *
- * @param {string} server - The server URL.
+ * @param {string} serverOrOptions - A keychain options object or a server name string.
  *
  * @returns {Promise<void>} Resolves when the operation is completed.
  *
@@ -431,8 +434,11 @@ export function getInternetCredentials(
  * console.log('Credentials reset for server');
  * ```
  */
-export function resetInternetCredentials(server: string): Promise<void> {
-  return RNKeychainManager.resetInternetCredentialsForServer(server);
+export function resetInternetCredentials(
+  serverOrOptions: string | Options
+): Promise<void> {
+  const options = normalizeServerOption(serverOrOptions);
+  return RNKeychainManager.resetInternetCredentialsForOptions(options);
 }
 
 /**
