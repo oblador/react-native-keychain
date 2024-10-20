@@ -16,9 +16,6 @@ This library provides access to the Keychain (iOS) and Keystore (Android) for se
 ## Installation
 
 1. Run `yarn add react-native-keychain`
-
-   1 a. **Only for React Native <= 0.59**: `$ react-native link react-native-keychain` and check `MainApplication.java` to verify the package was added. See manual installation below if you have issues with `react-native link`.
-
 2. Run `pod install` in `ios/` directory to install iOS dependencies.
 3. If you want to support FaceID, add a `NSFaceIDUsageDescription` entry in your `Info.plist`.
 4. Re-build your Android and iOS projects.
