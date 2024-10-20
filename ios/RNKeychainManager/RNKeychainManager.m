@@ -226,12 +226,12 @@ SecAccessControlCreateFlags accessControlValue(NSDictionary *options)
 
   if (accessControl) {
     NSError *aerr = nil;
-#if TARGET_OS_IOS || TARGET_OS_VISION
+    #if TARGET_OS_IOS || TARGET_OS_VISION
     BOOL canAuthenticate = [[LAContext new] canEvaluatePolicy:LAPolicyDeviceOwnerAuthentication error:&aerr];
     if (aerr || !canAuthenticate) {
       return rejectWithError(reject, aerr);
     }
-#endif
+    #endif
 
     CFErrorRef error = NULL;
     SecAccessControlRef sacRef = SecAccessControlCreateWithFlags(kCFAllocatorDefault,
@@ -264,6 +264,49 @@ SecAccessControlCreateFlags accessControlValue(NSDictionary *options)
       @"service": service,
       @"storage": @"keychain"
     });
+  }
+}
+
+- (void)hasCredentialsWithSecClass:(CFTypeRef)secClass
+                           options:(NSDictionary *)options
+                           resolver:(RCTPromiseResolveBlock)resolve
+                           rejecter:(RCTPromiseRejectBlock)reject
+{
+  CFBooleanRef cloudSync = cloudSyncValue(options);
+  NSMutableDictionary *queryParts = [@{
+    (__bridge NSString *)kSecClass: (__bridge id)(secClass),
+    (__bridge NSString *)kSecMatchLimit: (__bridge NSString *)kSecMatchLimitOne,
+    (__bridge NSString *)kSecAttrSynchronizable]: (__bridge id)(cloudSync)
+  } mutableCopy];
+
+  if (secClass == kSecClassInternetPassword) {
+    queryParts[(__bridge NSString *)kSecAttrServer] = serverValue(options);
+  } else {
+    queryParts[(__bridge NSString *)kSecAttrService] = serviceValue(options);
+  }
+
+  if (@available(iOS 9, *)) {
+    queryParts[(__bridge NSString *)kSecUseAuthenticationUI] = (__bridge NSString *)kSecUseAuthenticationUIFail;
+  }
+
+  NSDictionary *query = [queryParts copy];
+
+  // Perform the keychain query
+  OSStatus osStatus = SecItemCopyMatching((__bridge CFDictionaryRef)query, nil);
+
+  switch (osStatus) {
+    case noErr:
+    case errSecInteractionNotAllowed:
+      resolve(@(YES));
+      break;
+    case errSecItemNotFound:
+      resolve(@(NO));
+      break;
+    default: {
+      NSError *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:osStatus userInfo:nil];
+      rejectWithError(reject, error);
+      break;
+    }
   }
 }
 
@@ -485,68 +528,20 @@ RCT_EXPORT_METHOD(hasInternetCredentialsForOptions:(NSDictionary *)options
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
 {
-  CFBooleanRef cloudSync = cloudSyncValue(options);
-  NSString *server = serverValue(options);
-  NSMutableDictionary *queryParts = [[NSMutableDictionary alloc] init];
-
-  queryParts[(__bridge NSString *)kSecClass] = (__bridge id)(kSecClassInternetPassword);
-  queryParts[(__bridge NSString *)kSecAttrServer] = server;
-  queryParts[(__bridge NSString *)kSecMatchLimit] = (__bridge NSString *)kSecMatchLimitOne;
-  queryParts[(__bridge NSString *)kSecAttrSynchronizable] =  (__bridge id)(cloudSync);
-
-  if (@available(iOS 9, *)) {
-    queryParts[(__bridge NSString *)kSecUseAuthenticationUI] = (__bridge NSString *)kSecUseAuthenticationUIFail;
-  }
-
-  NSDictionary *query = [queryParts copy];
-
-  // Look up server in the keychain
-  OSStatus osStatus = SecItemCopyMatching((__bridge CFDictionaryRef) query, nil);
-
-  switch (osStatus) {
-    case noErr:
-    case errSecInteractionNotAllowed:
-      return resolve(@(YES));
-
-    case errSecItemNotFound:
-      return resolve(@(NO));
-  }
-
-  NSError *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:osStatus userInfo:nil];
-  return rejectWithError(reject, error);
+  [self hasCredentialsWithSecClass:kSecClassInternetPassword
+                           options:options
+                           resolver:resolve
+                           rejecter:reject];
 }
 
 RCT_EXPORT_METHOD(hasGenericPasswordForOptions:(NSDictionary *)options
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
 {
-  NSString *service = serviceValue(options);
-
-  NSMutableDictionary *queryParts = [[NSMutableDictionary alloc] init];
-  queryParts[(__bridge NSString *)kSecClass] = (__bridge id)(kSecClassGenericPassword);
-  queryParts[(__bridge NSString *)kSecAttrService] = service;
-  queryParts[(__bridge NSString *)kSecMatchLimit] = (__bridge NSString *)kSecMatchLimitOne;
-
-  if (@available(iOS 9, *)) {
-    queryParts[(__bridge NSString *)kSecUseAuthenticationUI] = (__bridge NSString *)kSecUseAuthenticationUIFail;
-  }
-
-  NSDictionary *query = [queryParts copy];
-
-  // Look up service in the keychain
-  OSStatus osStatus = SecItemCopyMatching((__bridge CFDictionaryRef) query, nil);
-
-  switch (osStatus) {
-    case noErr:
-    case errSecInteractionNotAllowed:
-      return resolve(@(YES));
-
-    case errSecItemNotFound:
-      return resolve(@(NO));
-  }
-
-  NSError *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:osStatus userInfo:nil];
-  return rejectWithError(reject, error);
+  [self hasCredentialsWithSecClass:kSecClassGenericPassword
+                           options:options
+                           resolver:resolve
+                           rejecter:reject];
 }
 
 RCT_EXPORT_METHOD(getInternetCredentialsForServer:(NSString *)server
