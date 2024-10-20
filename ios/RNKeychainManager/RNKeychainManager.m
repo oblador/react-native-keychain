@@ -273,11 +273,10 @@ SecAccessControlCreateFlags accessControlValue(NSDictionary *options)
                            rejecter:(RCTPromiseRejectBlock)reject
 {
   CFBooleanRef cloudSync = cloudSyncValue(options);
-  NSMutableDictionary *queryParts = [@{
-    (__bridge NSString *)kSecClass: (__bridge id)(secClass),
-    (__bridge NSString *)kSecMatchLimit: (__bridge NSString *)kSecMatchLimitOne,
-    (__bridge NSString *)kSecAttrSynchronizable]: (__bridge id)(cloudSync)
-  } mutableCopy];
+  NSMutableDictionary *queryParts = [[NSMutableDictionary alloc] init];
+  queryParts[(__bridge NSString *)kSecClass] = (__bridge id)(secClass),
+  queryParts[(__bridge NSString *)kSecMatchLimit] = (__bridge NSString *)kSecMatchLimitOne;
+  queryParts[(__bridge NSString *)kSecAttrSynchronizable] = (__bridge id)(cloudSync);
 
   if (secClass == kSecClassInternetPassword) {
     queryParts[(__bridge NSString *)kSecAttrServer] = serverValue(options);
@@ -297,17 +296,14 @@ SecAccessControlCreateFlags accessControlValue(NSDictionary *options)
   switch (osStatus) {
     case noErr:
     case errSecInteractionNotAllowed:
-      resolve(@(YES));
-      break;
+      return resolve(@(YES));
+
     case errSecItemNotFound:
-      resolve(@(NO));
-      break;
-    default: {
-      NSError *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:osStatus userInfo:nil];
-      rejectWithError(reject, error);
-      break;
-    }
+      return resolve(@(NO));
   }
+
+  NSError *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:osStatus userInfo:nil];
+  return rejectWithError(reject, error);
 }
 
 - (OSStatus)deletePasswordsForOptions:(NSDictionary *)options
