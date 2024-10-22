@@ -2,11 +2,8 @@ buildscript {
   // Buildscript is evaluated before everything else so we can't use safeExtGet
   def kotlin_version = rootProject.ext.has('kotlinVersion') ? rootProject.ext.get('kotlinVersion') : project.properties['RNKeychain_kotlinVersion']
   repositories {
-    maven {
-      url "https://plugins.gradle.org/m2/"
-    }
-    mavenCentral()
     google()
+    mavenCentral()
   }
   dependencies {
     classpath "com.android.tools.build:gradle:8.3.1"
@@ -15,7 +12,7 @@ buildscript {
 }
 
 def safeExtGet(prop, fallback) {
-  rootProject.ext.has(prop) ? rootProject.ext.get(prop) : fallback
+  return rootProject.ext.has(prop) ? rootProject.ext.get(prop) : fallback
 }
 
 def isNewArchitectureEnabled() {
@@ -30,37 +27,31 @@ if (isNewArchitectureEnabled()) {
   apply plugin: "com.facebook.react"
 }
 
-repositories {
-  google()
-  mavenCentral()
-}
-
 android {
-  // Conditional for compatibility with AGP <4.2.
-  if (project.android.hasProperty("namespace")) {
+  def agpVersion = com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION
+  if (agpVersion.tokenize('.')[0].toInteger() >= 7) {
     namespace = "com.oblador.keychain"
+    buildFeatures {
+      buildConfig true
+    }
   }
-  compileSdkVersion safeExtGet('compileSdkVersion', project.properties['RNKeychain_compileSdkVersion'])
+  compileSdkVersion safeExtGet('compileSdkVersion', project.properties['RNKeychain_compileSdkVersion'].toInteger())
 
   defaultConfig {
-    minSdkVersion safeExtGet('minSdkVersion', project.properties['RNKeychain_minSdkVersion'])
-    compileSdkVersion safeExtGet('compileSdkVersion', project.properties['RNKeychain_compileSdkVersion'])
-    targetSdkVersion safeExtGet('targetSdkVersion', project.properties['RNKeychain_targetSdkVersion'])
+    minSdkVersion safeExtGet('minSdkVersion', project.properties['RNKeychain_minSdkVersion'].toInteger())
+    targetSdkVersion safeExtGet('targetSdkVersion', project.properties['RNKeychain_targetSdkVersion'].toInteger())
     buildConfigField "boolean", "IS_NEW_ARCHITECTURE_ENABLED", isNewArchitectureEnabled().toString()
   }
 
   compileOptions {
-    sourceCompatibility JavaVersion.VERSION_1_8
-    targetCompatibility JavaVersion.VERSION_1_8
-  }
-
-  buildFeatures {
-    buildConfig true
+    sourceCompatibility JavaVersion.VERSION_17
+    targetCompatibility JavaVersion.VERSION_17
   }
 }
 
 repositories {
   mavenCentral()
+  google()
 }
 
 def kotlin_version = safeExtGet('kotlinVersion', project.properties['RNKeychain_kotlinVersion'])

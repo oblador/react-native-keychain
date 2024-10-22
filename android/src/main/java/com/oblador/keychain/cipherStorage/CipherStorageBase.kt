@@ -1,11 +1,15 @@
 package com.oblador.keychain.cipherStorage
 
+import android.content.Context
+import android.content.pm.PackageManager
 import android.os.Build
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyInfo
 import android.util.Log
 import androidx.annotation.VisibleForTesting
 import com.oblador.keychain.SecurityLevel
+import com.oblador.keychain.cipherStorage.CipherStorageBase.DecryptBytesHandler
+import com.oblador.keychain.cipherStorage.CipherStorageBase.EncryptStringHandler
 import com.oblador.keychain.exceptions.CryptoFailedException
 import com.oblador.keychain.exceptions.KeyStoreAccessException
 import java.io.ByteArrayInputStream
@@ -23,7 +27,6 @@ import java.security.NoSuchAlgorithmException
 import java.security.ProviderException
 import java.security.UnrecoverableKeyException
 import java.util.Collections
-import java.util.HashSet
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import javax.crypto.Cipher
@@ -32,8 +35,9 @@ import javax.crypto.CipherOutputStream
 import javax.crypto.NoSuchPaddingException
 import javax.crypto.spec.IvParameterSpec
 
+
 @Suppress("unused", "MemberVisibilityCanBePrivate", "UnusedReturnValue")
-abstract class CipherStorageBase : CipherStorage {
+abstract class CipherStorageBase(protected val applicationContext: Context) : CipherStorage {
   // region Constants
   /** Logging tag. */
   protected val LOG_TAG = CipherStorageBase::class.java.simpleName
@@ -82,22 +86,26 @@ abstract class CipherStorageBase : CipherStorage {
   /** Guard object for [isSupportsSecureHardware] field. */
   protected val _sync = Any()
 
+  /** Try to resolve support of the StrongBox feature. */
+  protected val isStrongboxAvailable: Boolean by lazy {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+      applicationContext.packageManager.hasSystemFeature(PackageManager.FEATURE_STRONGBOX_KEYSTORE)
+    } else {
+      false
+    }
+  }
+
   /** Try to resolve it only once and cache result for all future calls. */
-  @Transient protected var isSupportsSecureHardware: AtomicBoolean? = null
-
-  /** Guard for [isStrongboxAvailable] field assignment. */
-  protected val _syncStrongbox = Any()
-
-  /** Try to resolve support of the strongbox and cache result for future calls. */
-  @Transient protected var isStrongboxAvailable: AtomicBoolean? = null
+  @Transient
+  protected var isSupportsSecureHardware: AtomicBoolean? = null
 
   /** Get cached instance of cipher. Get instance operation is slow. */
-  @Transient protected var cachedCipher: Cipher? = null
+  @Transient
+  protected var cachedCipher: Cipher? = null
 
   /** Cached instance of the Keystore. */
-  @Transient protected var cachedKeyStore: KeyStore? = null
-
-  // endregion
+  @Transient
+  protected var cachedKeyStore: KeyStore? = null
 
   // region Overrides
 
@@ -133,7 +141,8 @@ abstract class CipherStorageBase : CipherStorage {
         sdk = SelfDestroyKey(TEST_KEY_ALIAS)
         val newValue = validateKeySecurityLevel(SecurityLevel.SECURE_HARDWARE, sdk.key)
         isSupportsSecureHardware!!.set(newValue)
-      } catch (ignored: Throwable) {} finally {
+      } catch (ignored: Throwable) {
+      } finally {
         sdk?.close()
       }
     }
@@ -180,12 +189,13 @@ abstract class CipherStorageBase : CipherStorage {
 
   @Throws(GeneralSecurityException::class)
   protected abstract fun getKeyGenSpecBuilder(
-      alias: String,
-      isForTesting: Boolean
+    alias: String,
+    isForTesting: Boolean
   ): KeyGenParameterSpec.Builder
 
   /** Get information about provided key. */
-  @Throws(GeneralSecurityException::class) protected abstract fun getKeyInfo(key: Key): KeyInfo
+  @Throws(GeneralSecurityException::class)
+  protected abstract fun getKeyInfo(key: Key): KeyInfo
 
   /** Try to generate key from provided specification. */
   @Throws(GeneralSecurityException::class)
@@ -219,16 +229,17 @@ abstract class CipherStorageBase : CipherStorage {
   protected fun throwIfInsufficientLevel(level: SecurityLevel) {
     if (!securityLevel().satisfiesSafetyThreshold(level)) {
       throw CryptoFailedException(
-          "Insufficient security level (wants $level; got ${securityLevel()})")
+        "Insufficient security level (wants $level; got ${securityLevel()})"
+      )
     }
   }
 
   /** Extract existing key or generate a new one. In case of problems raise exception. */
   @Throws(GeneralSecurityException::class)
   protected fun extractGeneratedKey(
-      safeAlias: String,
-      level: SecurityLevel,
-      retries: AtomicInteger
+    safeAlias: String,
+    level: SecurityLevel,
+    retries: AtomicInteger
   ): Key {
     var key: Key?
     do {
@@ -352,9 +363,9 @@ abstract class CipherStorageBase : CipherStorage {
   /** Decrypt provided bytes to a string. */
   @Throws(GeneralSecurityException::class, IOException::class)
   protected open fun decryptBytes(
-      key: Key,
-      bytes: ByteArray,
-      handler: DecryptBytesHandler?
+    key: Key,
+    bytes: ByteArray,
+    handler: DecryptBytesHandler?
   ): String {
     val cipher = getCachedInstance()
     try {
@@ -384,25 +395,19 @@ abstract class CipherStorageBase : CipherStorage {
 
     var secretKey: Key? = null
 
-    // multi-threaded usage is possible
-    synchronized(_syncStrongbox) {
-      if (isStrongboxAvailable == null || isStrongboxAvailable!!.get()) {
-        if (isStrongboxAvailable == null) isStrongboxAvailable = AtomicBoolean(false)
-
-        try {
-          secretKey = tryGenerateStrongBoxSecurityKey(alias)
-          isStrongboxAvailable!!.set(true)
-        } catch (ex: GeneralSecurityException) {
-          Log.w(LOG_TAG, "StrongBox security storage is not available.", ex)
-        } catch (ex: ProviderException) {
-          Log.w(LOG_TAG, "StrongBox security storage is not available.", ex)
-        }
+    if (isStrongboxAvailable) {
+      try {
+        secretKey = tryGenerateStrongBoxSecurityKey(alias)
+      } catch (ex: GeneralSecurityException) {
+        Log.w(LOG_TAG, "StrongBox security storage is not available.", ex)
+      } catch (ex: ProviderException) {
+        Log.w(LOG_TAG, "StrongBox security storage is not available.", ex)
       }
     }
 
     // If that is not possible, we generate the key in a regular way
     // (it still might be generated in hardware, but not in StrongBox)
-    if (secretKey == null || !isStrongboxAvailable!!.get()) {
+    if (secretKey == null || !isStrongboxAvailable) {
       try {
         secretKey = tryGenerateRegularSecurityKey(alias)
       } catch (fail: GeneralSecurityException) {
@@ -426,7 +431,8 @@ abstract class CipherStorageBase : CipherStorage {
   protected fun tryGenerateRegularSecurityKey(alias: String, isForTesting: Boolean): Key {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
       throw KeyStoreAccessException(
-          "Regular security keystore is not supported for old API${Build.VERSION.SDK_INT}.")
+        "Regular security keystore is not supported for old API${Build.VERSION.SDK_INT}."
+      )
     }
 
     val specification = getKeyGenSpecBuilder(alias, isForTesting).build()
@@ -443,7 +449,8 @@ abstract class CipherStorageBase : CipherStorage {
   protected fun tryGenerateStrongBoxSecurityKey(alias: String, isForTesting: Boolean): Key {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
       throw KeyStoreAccessException(
-          "Strong box security keystore is not supported for old API${Build.VERSION.SDK_INT}.")
+        "Strong box security keystore is not supported for old API${Build.VERSION.SDK_INT}."
+      )
     }
 
     val specification = getKeyGenSpecBuilder(alias, isForTesting).setIsStrongBoxBacked(true).build()
@@ -506,7 +513,7 @@ abstract class CipherStorageBase : CipherStorage {
       val iv = ByteArray(IV_LENGTH)
 
       if (IV_LENGTH >= bytes.size)
-          throw IOException("Insufficient length of input data for IV extracting.")
+        throw IOException("Insufficient length of input data for IV extracting.")
 
       System.arraycopy(bytes, 0, iv, 0, IV_LENGTH)
 

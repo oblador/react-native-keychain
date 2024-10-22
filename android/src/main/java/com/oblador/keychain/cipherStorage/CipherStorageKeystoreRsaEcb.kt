@@ -7,7 +7,9 @@ import android.security.keystore.KeyInfo
 import android.security.keystore.KeyProperties
 import android.security.keystore.UserNotAuthenticatedException
 import android.util.Log
+import androidx.annotation.NonNull
 import androidx.annotation.RequiresApi
+import com.facebook.react.bridge.ReactApplicationContext
 import com.oblador.keychain.KeychainModule
 import com.oblador.keychain.SecurityLevel
 import com.oblador.keychain.decryptionHandler.DecryptionResultHandler
@@ -30,7 +32,8 @@ import javax.crypto.NoSuchPaddingException
 /** Fingerprint biometry protected storage. */
 @RequiresApi(Build.VERSION_CODES.M)
 @Suppress("unused", "WeakerAccess")
-class CipherStorageKeystoreRsaEcb : CipherStorageBase() {
+class CipherStorageKeystoreRsaEcb(@NonNull reactContext: ReactApplicationContext) :
+    CipherStorageBase(reactContext) {
 
   companion object {
     /** Selected algorithm. */

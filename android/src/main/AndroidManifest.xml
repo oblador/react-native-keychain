@@ -1,8 +1,10 @@
 <manifest
   xmlns:android="http://schemas.android.com/apk/res/android"
   package="com.oblador.keychain"
+  xmlns:tools="http://schemas.android.com/tools"
   >
 
+  <uses-sdk tools:overrideLibrary="com.facebook.react" />
   <uses-permission android:name="android.permission.USE_BIOMETRIC" />
   <uses-permission android:name="android.permission.USE_FINGERPRINT" />
 

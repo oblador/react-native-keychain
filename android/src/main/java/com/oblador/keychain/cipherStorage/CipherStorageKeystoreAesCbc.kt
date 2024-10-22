@@ -7,6 +7,7 @@ import android.security.keystore.KeyInfo
 import android.security.keystore.KeyProperties
 import android.util.Log
 import androidx.annotation.NonNull
+import com.facebook.react.bridge.ReactApplicationContext
 import com.oblador.keychain.KeychainModule.KnownCiphers
 import com.oblador.keychain.SecurityLevel
 import com.oblador.keychain.decryptionHandler.DecryptionResultHandler
@@ -30,7 +31,8 @@ import javax.crypto.SecretKeyFactory
  */
 @TargetApi(Build.VERSION_CODES.M)
 @Suppress("unused", "MemberVisibilityCanBePrivate")
-class CipherStorageKeystoreAesCbc : CipherStorageBase() {
+class CipherStorageKeystoreAesCbc(@NonNull reactContext: ReactApplicationContext) :
+    CipherStorageBase(reactContext) {
 
   // region Constants
   /** AES */

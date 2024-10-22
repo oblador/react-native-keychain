@@ -26,7 +26,7 @@ import java.security.Key
  */
 @Suppress("unused", "MemberVisibilityCanBePrivate")
 class CipherStorageFacebookConceal(@NonNull reactContext: ReactApplicationContext) :
-    CipherStorageBase() {
+    CipherStorageBase(reactContext) {
 
   companion object {
     const val KEYCHAIN_DATA = "RN_KEYCHAIN"
