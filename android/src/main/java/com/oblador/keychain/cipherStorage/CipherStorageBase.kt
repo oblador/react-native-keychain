@@ -6,7 +6,6 @@ import android.os.Build
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyInfo
 import android.util.Log
-import androidx.annotation.RequiresApi
 import androidx.annotation.VisibleForTesting
 import com.oblador.keychain.SecurityLevel
 import com.oblador.keychain.cipherStorage.CipherStorageBase.DecryptBytesHandler
