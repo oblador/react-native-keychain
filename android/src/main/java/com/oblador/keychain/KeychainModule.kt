@@ -138,11 +138,11 @@ class KeychainModule(reactContext: ReactApplicationContext) :
   init {
     prefsStorage = PrefsStorage(reactContext)
     addCipherStorageToMap(CipherStorageFacebookConceal(reactContext))
-    addCipherStorageToMap(CipherStorageKeystoreAesCbc())
+    addCipherStorageToMap(CipherStorageKeystoreAesCbc(reactContext))
 
     // we have a references to newer api that will fail load of app classes in old androids OS
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-      addCipherStorageToMap(CipherStorageKeystoreRsaEcb())
+      addCipherStorageToMap(CipherStorageKeystoreRsaEcb(reactContext))
     }
   }
 
