@@ -134,7 +134,7 @@ jobs:
             adb -e emu finger touch 1
             sleep 2
             adb -e emu finger touch 1
-            sleep2
+            sleep 2
             adb -e emu finger touch 1
             sleep 2
             adb shell input keyevent KEYCODE_HOME
