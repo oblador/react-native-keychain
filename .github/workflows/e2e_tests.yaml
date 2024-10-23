@@ -119,8 +119,9 @@ jobs:
           disable-animations: true
           avd-name: TestingAVD
           script: |
-            cd KeychainExample
-            ./e2e/utils/enrollFingerprintAndroid.sh
+            cd KeychainExample/e2e/utils
+            ./enrollFingerprintAndroid.sh
+            cd ../..
             yarn test:android:run
         env:
           API_LEVEL: ${{ matrix.api-level }}
