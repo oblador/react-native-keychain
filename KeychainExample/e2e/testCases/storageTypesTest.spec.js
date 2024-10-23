@@ -67,6 +67,8 @@ describe(':android:Storage Types', () => {
 
     it(':android:should save with RSA storage - ' + type, async () => {
       await expect(element(by.text('Keychain Example'))).toExist();
+      await element(by.text('Reset')).tap();
+      await expect(element(by.text(/^Credentials Reset!$/))).toBeVisible();
       await element(by.id('usernameInput')).typeText('testUsernameRSA');
       await element(by.id('passwordInput')).typeText('testPasswordRSA');
       // Hide keyboard
