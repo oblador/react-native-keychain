@@ -119,25 +119,24 @@ jobs:
           disable-animations: true
           avd-name: TestingAVD
           script: |
-            DELAY=3
             adb shell locksettings set-pin 1111
             adb shell am start -a android.settings.SECURITY_SETTINGS
-            sleep "${DELAY}"
+            sleep 2
             adb shell input tap 274 1150
-            sleep "${DELAY}"
+            sleep 2
             adb shell input text 1111
             adb shell input keyevent 66
-            sleep "${DELAY}"
+            sleep 2
             adb shell input tap 900 2200
-            sleep "${DELAY}"
+            sleep 2
             adb shell input tap 900 2200
-            sleep "${DELAY}"
+            sleep 2
             adb -e emu finger touch 1
-            sleep "${DELAY}"
+            sleep 2
             adb -e emu finger touch 1
-            sleep "${DELAY}"
+            sleep2
             adb -e emu finger touch 1
-            sleep "${DELAY}"
+            sleep 2
             adb shell input keyevent KEYCODE_HOME
             cd KeychainExample
             yarn test:android:run
