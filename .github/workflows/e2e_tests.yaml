@@ -120,6 +120,7 @@ jobs:
           avd-name: TestingAVD
           script: |
             cd KeychainExample
+            ./e2e/utils/enrollFingerprintAndroid.sh
             yarn test:android:run
         env:
           API_LEVEL: ${{ matrix.api-level }}

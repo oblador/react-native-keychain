@@ -1,70 +1,103 @@
 import { by, device, element, expect } from 'detox';
-import { enrollBiometric } from '../utils/enrollBiometrics';
 import { matchLoadInfo } from '../utils/matchLoadInfo';
 import cp from 'child_process';
 
 describe(':android:Storage Types', () => {
-  beforeAll(async () => {
-    await enrollBiometric();
-  });
-
   beforeEach(async () => {
     await device.launchApp({ newInstance: true });
   });
+  ['genericPassword', 'internetCredentials'].forEach((type) => {
+    it(
+      ':android:should save with FB storage and migrate it to AES - ' + type,
+      async () => {
+        await expect(element(by.text('Keychain Example'))).toExist();
+        await element(by.id('usernameInput')).typeText('testUsernameFB');
+        await element(by.id('passwordInput')).typeText('testPasswordFB');
+        // Hide keyboard
+        await element(by.text('Keychain Example')).tap();
 
-  it(':android:should save with FB storage and migrate it to AES', async () => {
-    await expect(element(by.text('Keychain Example'))).toExist();
-    await element(by.id('usernameInput')).typeText('testUsernameFB');
-    await element(by.id('passwordInput')).typeText('testPasswordFB');
-    // Hide keyboard
-    await element(by.text('Keychain Example')).tap();
-    await element(by.text('None')).tap();
-    await element(by.text('No upgrade')).tap();
-    await element(by.text('FB')).tap();
+        await element(by.text(type)).tap();
+        await element(by.text('None')).tap();
+        await element(by.text('No upgrade')).tap();
+        await element(by.text('FB')).tap();
 
-    await expect(element(by.text('Save'))).toBeVisible();
-    await element(by.text('Save')).tap();
-    await expect(element(by.text(/^Credentials saved! .*$/))).toBeVisible();
-    await element(by.text('Load')).tap();
-    await matchLoadInfo('testUsernameFB', 'testPasswordFB', 'FacebookConceal');
-    await element(by.text('Automatic upgrade')).tap();
-    await element(by.text('Load')).tap();
-    await matchLoadInfo('testUsernameFB', 'testPasswordFB', 'KeystoreAESCBC');
+        await expect(element(by.text('Save'))).toBeVisible();
+        await element(by.text('Save')).tap();
+        await expect(element(by.text(/^Credentials saved! .*$/))).toBeVisible();
+        await element(by.text('Load')).tap();
+        await matchLoadInfo(
+          'testUsernameFB',
+          'testPasswordFB',
+          'FacebookConceal',
+          type === 'internetCredentials' ? 'https://example.com' : undefined
+        );
+        await element(by.text('Automatic upgrade')).tap();
+        await element(by.text('Load')).tap();
+        await matchLoadInfo(
+          'testUsernameFB',
+          'testPasswordFB',
+          'KeystoreAESCBC',
+          type === 'internetCredentials' ? 'https://example.com' : undefined
+        );
+      }
+    );
+
+    it(':android:should save with AES storage - ' + type, async () => {
+      await expect(element(by.text('Keychain Example'))).toExist();
+      await element(by.id('usernameInput')).typeText('testUsernameAES');
+      await element(by.id('passwordInput')).typeText('testPasswordAES');
+      // Hide keyboard
+      await element(by.text('Keychain Example')).tap();
+
+      await element(by.text(type)).tap();
+      await element(by.text('None')).tap();
+      await element(by.text('AES')).tap();
+
+      await expect(element(by.text('Save'))).toBeVisible();
+      await element(by.text('Save')).tap();
+      await expect(element(by.text(/^Credentials saved! .*$/))).toBeVisible();
+      await element(by.text('Load')).tap();
+      await matchLoadInfo(
+        'testUsernameAES',
+        'testPasswordAES',
+        'KeystoreAESCBC',
+        type === 'internetCredentials' ? 'https://example.com' : undefined
+      );
+    });
+
+    it(':android:should save with RSA storage - ' + type, async () => {
+      await expect(element(by.text('Keychain Example'))).toExist();
+      await element(by.id('usernameInput')).typeText('testUsernameRSA');
+      await element(by.id('passwordInput')).typeText('testPasswordRSA');
+      // Hide keyboard
+      await element(by.text('Keychain Example')).tap();
+
+      await element(by.text(type)).tap();
+      await element(by.text('None')).tap();
+      await element(by.text('RSA')).tap();
+
+      await expect(element(by.text('Save'))).toBeVisible();
+      await element(by.text('Save')).tap();
+      await expect(element(by.text(/^Credentials saved! .*$/))).toBeVisible();
+      setTimeout(() => {
+        cp.spawnSync('adb', ['-e', 'emu', 'finger', 'touch', '1']);
+      }, 1000);
+      await element(by.text('Load')).tap();
+      await expect(element(by.text(/^Credentials loaded! .*$/))).toBeVisible();
+      await matchLoadInfo(
+        'testUsernameRSA',
+        'testPasswordRSA',
+        'KeystoreRSAECB',
+        type === 'internetCredentials' ? 'https://example.com' : undefined
+      );
+    });
   });
 
-  it(':android:should save with AES storage', async () => {
+  it(':android:should reset all credentials', async () => {
     await expect(element(by.text('Keychain Example'))).toExist();
-    await element(by.id('usernameInput')).typeText('testUsernameAES');
-    await element(by.id('passwordInput')).typeText('testPasswordAES');
     // Hide keyboard
-    await element(by.text('Keychain Example')).tap();
-    await element(by.text('None')).tap();
-    await element(by.text('AES')).tap();
 
-    await expect(element(by.text('Save'))).toBeVisible();
-    await element(by.text('Save')).tap();
-    await expect(element(by.text(/^Credentials saved! .*$/))).toBeVisible();
-    await element(by.text('Load')).tap();
-    await matchLoadInfo('testUsernameAES', 'testPasswordAES', 'KeystoreAESCBC');
-  });
-
-  it(':android:should save with RSA storage', async () => {
-    await expect(element(by.text('Keychain Example'))).toExist();
-    await element(by.id('usernameInput')).typeText('testUsernameRSA');
-    await element(by.id('passwordInput')).typeText('testPasswordRSA');
-    // Hide keyboard
-    await element(by.text('Keychain Example')).tap();
-    await element(by.text('None')).tap();
-    await element(by.text('RSA')).tap();
-
-    await expect(element(by.text('Save'))).toBeVisible();
-    await element(by.text('Save')).tap();
-    await expect(element(by.text(/^Credentials saved! .*$/))).toBeVisible();
-    setTimeout(() => {
-      cp.spawnSync('adb', ['-e', 'emu', 'finger', 'touch', '1']);
-    }, 1000);
-    await element(by.text('Load')).tap();
-    await expect(element(by.text(/^Credentials loaded! .*$/))).toBeVisible();
-    await matchLoadInfo('testUsernameRSA', 'testPasswordRSA', 'KeystoreRSAECB');
+    await element(by.text('Reset')).tap();
+    await expect(element(by.text(/^Credentials Reset!$/))).toBeVisible();
   });
 });
