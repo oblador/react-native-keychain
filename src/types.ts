@@ -51,7 +51,9 @@ export type Options = {
   service?: string;
   /** The server name to associate with the keychain item. */
   server?: string;
-  /** The desired security level of the keychain item. */
+  /** The desired security level of the keychain item.
+   * @platform Android
+   */
   securityLevel?: SECURITY_LEVEL;
   /** The storage type.
    * @platform Android

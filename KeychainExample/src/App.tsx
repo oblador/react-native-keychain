@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Alert,
   Keyboard,
   KeyboardAvoidingView,
   Platform,
@@ -42,10 +41,13 @@ const SECURITY_STORAGE_MAP = [
 const SECURITY_RULES_OPTIONS = ['No upgrade', 'Automatic upgrade'];
 const SECURITY_RULES_MAP = [null, Keychain.SECURITY_RULES.AUTOMATIC_UPGRADE];
 
+const TYPE_OPTIONS = ['genericPassword', 'internetCredentials'];
+
 export default function App() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [status, setStatus] = useState('');
+  const [type, setType] = useState(TYPE_OPTIONS[0]);
   const [biometryType, setBiometryType] =
     useState<Keychain.BIOMETRY_TYPE | null>(null);
   const [accessControl, setAccessControl] = useState<
@@ -66,6 +68,7 @@ export default function App() {
     useState(0);
   const [selectedRulesIndex, setSelectedRulesIndex] = useState(0);
   const [hasGenericPassword, setHasGenericPassword] = useState(false);
+  const [hasInternetCredentials, setHasInternetCredentials] = useState(false);
 
   useEffect(() => {
     Keychain.getSupportedBiometryType().then((result) => {
@@ -74,17 +77,36 @@ export default function App() {
     Keychain.hasGenericPassword().then((result) => {
       setHasGenericPassword(result);
     });
+    Keychain.hasInternetCredentials({ server: 'https://example.com' }).then(
+      (result) => {
+        setHasInternetCredentials(result);
+      }
+    );
   }, []);
 
   const save = async () => {
     try {
       const start = new Date();
-      await Keychain.setGenericPassword(username, password, {
-        accessControl,
-        securityLevel,
-        storage,
-        rules,
-      });
+      if (type === 'internetCredentials') {
+        await Keychain.setInternetCredentials(
+          'https://example.com',
+          username,
+          password,
+          {
+            accessControl,
+            securityLevel,
+            storage,
+            rules,
+          }
+        );
+      } else {
+        await Keychain.setGenericPassword(username, password, {
+          accessControl,
+          securityLevel,
+          storage,
+          rules,
+        });
+      }
 
       const end = new Date();
       setUsername('');
@@ -107,10 +129,21 @@ export default function App() {
           cancel: 'Cancel',
         },
       };
-      const credentials = await Keychain.getGenericPassword({
-        ...options,
-        rules: rules,
-      });
+      let credentials;
+      if (type === 'internetCredentials') {
+        credentials = await Keychain.getInternetCredentials(
+          'https://example.com',
+          {
+            ...options,
+            rules: rules,
+          }
+        );
+      } else {
+        credentials = await Keychain.getGenericPassword({
+          ...options,
+          rules: rules,
+        });
+      }
       if (credentials) {
         setStatus('Credentials loaded! ' + JSON.stringify(credentials));
       } else {
@@ -124,20 +157,12 @@ export default function App() {
   const reset = async () => {
     try {
       await Keychain.resetGenericPassword();
+      await Keychain.resetInternetCredentials('https://example.com');
       setStatus('Credentials Reset!');
       setUsername('');
       setPassword('');
     } catch (err) {
       setStatus('Could not reset credentials, ' + err);
-    }
-  };
-
-  const getAll = async () => {
-    try {
-      const result = await Keychain.getAllGenericPasswordServices();
-      setStatus(`All keys successfully fetched! Found: ${result.length} keys.`);
-    } catch (err) {
-      setStatus('Could not get all keys. ' + err);
     }
   };
 
@@ -180,6 +205,16 @@ export default function App() {
             value={password}
             onChange={(event) => setPassword(event.nativeEvent.text)}
             underlineColorAndroid="transparent"
+          />
+        </View>
+        <View style={styles.field}>
+          <Text style={styles.label}>Type</Text>
+          <SegmentedControlTab
+            selectedIndex={TYPE_OPTIONS.indexOf(type)}
+            values={TYPE_OPTIONS}
+            onTabPress={(index) => {
+              setType(TYPE_OPTIONS[index]);
+            }}
           />
         </View>
         <View style={styles.field}>
@@ -246,30 +281,11 @@ export default function App() {
           </TouchableHighlight>
         </View>
 
-        <View style={styles.buttons}>
-          <TouchableHighlight onPress={getAll} style={styles.button}>
-            <View style={styles.load}>
-              <Text style={styles.buttonText}>Get Used Keys</Text>
-            </View>
-          </TouchableHighlight>
-          {Platform.OS === 'android' && (
-            <TouchableHighlight
-              onPress={async () => {
-                const level = await Keychain.getSecurityLevel();
-                if (level !== null) {
-                  Alert.alert('Security Level', JSON.stringify(level));
-                }
-              }}
-              style={styles.button}
-            >
-              <View style={styles.load}>
-                <Text style={styles.buttonText}>Get security level</Text>
-              </View>
-            </TouchableHighlight>
-          )}
-        </View>
         <Text style={styles.status}>
           hasGenericPassword: {String(hasGenericPassword)}
+        </Text>
+        <Text style={styles.status}>
+          hasInternetCredentials: {String(hasInternetCredentials)}
         </Text>
       </View>
     </KeyboardAvoidingView>
