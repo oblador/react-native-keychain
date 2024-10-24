@@ -22,15 +22,6 @@ const sidebars: SidebarsConfig = {
       id: 'faq',
       label: 'Frequently Asked Questions',
     },
-    /*{
-      type: 'category',
-      label: 'Guides',
-      link: {
-        type: 'generated-index',
-        title: 'react-native-keychain guides',
-      },
-      items: ['guides/gettingStarted'],
-    },*/
   ],
   api: ['api/index', require('./docs/api/typedoc-sidebar.cjs')],
 };

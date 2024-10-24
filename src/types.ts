@@ -27,10 +27,21 @@ export type AuthenticationPrompt = {
   cancel?: string;
 };
 
+export type BaseOptions = {
+  /** The service name to associate with the keychain item.
+   * @default 'App bundle ID'
+   */
+  service?: string;
+  /** The server name to associate with the keychain item. */
+  server?: string;
+  /** Whether to synchronize the keychain item to iCloud.
+   * @platform iOS
+   */
+  cloudSync?: boolean;
+};
+
 /** Base options for keychain functions. */
-export type Options = {
-  /** The access control policy to use for the keychain item. */
-  accessControl?: ACCESS_CONTROL;
+export type SetOptions = {
   /** The access group to share keychain items between apps.
    * @platform iOS, visionOS
    */
@@ -40,17 +51,6 @@ export type Options = {
    * @default ACCESSIBLE.AFTER_FIRST_UNLOCK
    */
   accessible?: ACCESSIBLE;
-  /** Authentication type for retrieving keychain item.
-   * @platform iOS, visionOS
-   * @default AUTHENTICATION_TYPE.DEVICE_PASSCODE_OR_BIOMETRICS
-   */
-  authenticationType?: AUTHENTICATION_TYPE;
-  /** The service name to associate with the keychain item.
-   * @default 'App bundle ID'
-   */
-  service?: string;
-  /** The server name to associate with the keychain item. */
-  server?: string;
   /** The desired security level of the keychain item.
    * @platform Android
    */
@@ -60,15 +60,18 @@ export type Options = {
    * @default 'Best available storage'
    */
   storage?: STORAGE_TYPE;
+} & BaseOptions &
+  AccessControlOption;
+
+/** Base options for keychain functions. */
+export type GetOptions = {
+  /** The access control policy to use for the keychain item. */
+  accessControl?: ACCESS_CONTROL;
   /** The security rules to apply when storing the keychain item.
    * @platform Android
    * @default SECURITY_RULES.AUTOMATIC_UPGRADE
    */
   rules?: SECURITY_RULES;
-  /** Whether to synchronize the keychain item to iCloud.
-   * @platform iOS
-   */
-  cloudSync?: boolean;
   /** Authentication prompt details or a title string.
    * @default
    * ```json
@@ -80,6 +83,20 @@ export type Options = {
    *
    */
   authenticationPrompt?: string | AuthenticationPrompt;
+} & BaseOptions &
+  AccessControlOption;
+
+export type AccessControlOption = {
+  /** The access control policy to use for the keychain item. */
+  accessControl?: ACCESS_CONTROL;
+};
+
+export type AuthenticationTypeOption = {
+  /** Authentication type for retrieving keychain item.
+   * @platform iOS, visionOS
+   * @default AUTHENTICATION_TYPE.DEVICE_PASSCODE_OR_BIOMETRICS
+   */
+  authenticationType?: AUTHENTICATION_TYPE;
 };
 
 /**

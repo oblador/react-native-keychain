@@ -9,12 +9,20 @@ import {
   BIOMETRY_TYPE,
 } from './enums';
 import type {
-  Options,
   Result,
   UserCredentials,
   SharedWebCredentials,
+  GetOptions,
+  BaseOptions,
+  SetOptions,
+  AuthenticationTypeOption,
+  AccessControlOption,
 } from './types';
-import { normalizeOptions, normalizeServerOption } from './normalizeOptions';
+import {
+  normalizeOptions,
+  normalizeServerOption,
+  normalizeServiceOption,
+} from './normalizeOptions';
 
 const { RNKeychainManager } = NativeModules;
 
@@ -23,7 +31,7 @@ const { RNKeychainManager } = NativeModules;
  *
  * @param {string} username - The username or e-mail to be saved.
  * @param {string} password - The password to be saved.
- * @param {Options | string} [serviceOrOptions] - A keychain options object or a service name string. Passing a service name as a string is deprecated.
+ * @param {SetOptions | string} [serviceOrOptions] - A keychain options object or a service name string. Passing a service name as a string is deprecated.
  *
  * @returns {Promise<false | Result>} Resolves to an object containing `service` and `storage` when successful, or `false` on failure.
  *
@@ -35,9 +43,9 @@ const { RNKeychainManager } = NativeModules;
 export function setGenericPassword(
   username: string,
   password: string,
-  serviceOrOptions?: string | Options
+  serviceOrOptions?: string | SetOptions
 ): Promise<false | Result> {
-  const options = normalizeOptions(serviceOrOptions);
+  const options = normalizeServiceOption(serviceOrOptions);
   return RNKeychainManager.setGenericPasswordForOptions(
     options,
     username,
@@ -48,7 +56,7 @@ export function setGenericPassword(
 /**
  * Fetches the `username` and `password` combination for the given service.
  *
- * @param {Options | string} [serviceOrOptions] - A keychain options object or a service name string.
+ * @param {GetOptions | string} [serviceOrOptions] - A keychain options object or a service name string.
  *
  * @returns {Promise<false | UserCredentials>} Resolves to an object containing `service`, `username`, `password`, and `storage` when successful, or `false` on failure.
  *
@@ -63,7 +71,7 @@ export function setGenericPassword(
  * ```
  */
 export function getGenericPassword(
-  serviceOrOptions?: string | Options
+  serviceOrOptions?: string | GetOptions
 ): Promise<false | UserCredentials> {
   const options = normalizeOptions(serviceOrOptions);
   return RNKeychainManager.getGenericPasswordForOptions(options);
@@ -72,7 +80,7 @@ export function getGenericPassword(
 /**
  * Checks if generic password exists for the given service.
  *
- * @param {Options | string} [serviceOrOptions] - A keychain options object or a service name string.
+ * @param {BaseOptions | string} [serviceOrOptions] - A keychain options object or a service name string.
  *
  * @returns {Promise<boolean>} Resolves to `true` if a password exists, otherwise `false`.
  *
@@ -83,16 +91,16 @@ export function getGenericPassword(
  * ```
  */
 export function hasGenericPassword(
-  serviceOrOptions?: string | Options
+  serviceOrOptions?: string | BaseOptions
 ): Promise<boolean> {
-  const options = normalizeOptions(serviceOrOptions);
+  const options = normalizeServiceOption(serviceOrOptions);
   return RNKeychainManager.hasGenericPasswordForOptions(options);
 }
 
 /**
  * Deletes all generic password keychain entries for the given service.
  *
- * @param {Options | string} [serviceOrOptions] - A keychain options object or a service name string.
+ * @param {BaseOptions | string} [serviceOrOptions] - A keychain options object or a service name string.
  *
  * @returns {Promise<boolean>} Resolves to `true` when successful, otherwise `false`.
  *
@@ -103,9 +111,9 @@ export function hasGenericPassword(
  * ```
  */
 export function resetGenericPassword(
-  serviceOrOptions?: string | Options
+  serviceOrOptions?: string | BaseOptions
 ): Promise<boolean> {
-  const options = normalizeOptions(serviceOrOptions);
+  const options = normalizeServiceOption(serviceOrOptions);
   return RNKeychainManager.resetGenericPasswordForOptions(options);
 }
 
@@ -138,7 +146,7 @@ export function getAllGenericPasswordServices(): Promise<string[]> {
  * ```
  */
 export function hasInternetCredentials(
-  serverOrOptions: string | Options
+  serverOrOptions: string | BaseOptions
 ): Promise<boolean> {
   const options = normalizeServerOption(serverOrOptions);
   return RNKeychainManager.hasInternetCredentialsForOptions(options);
@@ -150,7 +158,7 @@ export function hasInternetCredentials(
  * @param {string} server - The server URL.
  * @param {string} username - The username or e-mail to be saved.
  * @param {string} password - The password to be saved.
- * @param {Options} [options] - A keychain options object.
+ * @param {SetOptions} [options] - A keychain options object.
  *
  * @returns {Promise<false | Result>} Resolves to an object containing `service` and `storage` when successful, or `false` on failure.
  *
@@ -163,7 +171,7 @@ export function setInternetCredentials(
   server: string,
   username: string,
   password: string,
-  options?: Options
+  options?: SetOptions
 ): Promise<false | Result> {
   return RNKeychainManager.setInternetCredentialsForServer(
     server,
@@ -177,7 +185,7 @@ export function setInternetCredentials(
  * Fetches the internet credentials for the given server.
  *
  * @param {string} server - The server URL.
- * @param {Options} [options] - A keychain options object.
+ * @param {GetOptions} [options] - A keychain options object.
  *
  * @returns {Promise<false | UserCredentials>} Resolves to an object containing `server`, `username`, `password`, and `storage` when successful, or `false` on failure.
  *
@@ -193,7 +201,7 @@ export function setInternetCredentials(
  */
 export function getInternetCredentials(
   server: string,
-  options?: Options
+  options?: GetOptions
 ): Promise<false | UserCredentials> {
   return RNKeychainManager.getInternetCredentialsForServer(
     server,
@@ -204,7 +212,7 @@ export function getInternetCredentials(
 /**
  * Deletes all internet password keychain entries for the given server.
  *
- * @param {string} serverOrOptions - A keychain options object or a server name string.
+ * @param {BaseOptions | string} [serviceOrOptions] - A keychain options object or a service name string.
  *
  * @returns {Promise<void>} Resolves when the operation is completed.
  *
@@ -215,7 +223,7 @@ export function getInternetCredentials(
  * ```
  */
 export function resetInternetCredentials(
-  serverOrOptions: string | Options
+  serverOrOptions: string | BaseOptions
 ): Promise<void> {
   const options = normalizeServerOption(serverOrOptions);
   return RNKeychainManager.resetInternetCredentialsForOptions(options);
@@ -311,7 +319,7 @@ export function setSharedWebCredentials(
  *
  * @platform iOS
  *
- * @param {Options} [options] - A keychain options object.
+ * @param {AuthenticationTypeOption} [options] - A keychain options object.
  *
  * @returns {Promise<boolean>} Resolves to `true` when supported, otherwise `false`.
  *
@@ -321,7 +329,9 @@ export function setSharedWebCredentials(
  * console.log('Can imply authentication:', canAuthenticate);
  * ```
  */
-export function canImplyAuthentication(options?: Options): Promise<boolean> {
+export function canImplyAuthentication(
+  options?: AuthenticationTypeOption
+): Promise<boolean> {
   if (!RNKeychainManager.canCheckAuthentication) {
     return Promise.resolve(false);
   }
@@ -333,7 +343,7 @@ export function canImplyAuthentication(options?: Options): Promise<boolean> {
  *
  * @platform Android
  *
- * @param {Options} [options] - A keychain options object.
+ * @param {AccessControlOption} [options] - A keychain options object.
  *
  * @returns {Promise<null | SECURITY_LEVEL>} Resolves to a `SECURITY_LEVEL` when supported, otherwise `null`.
  *
@@ -344,7 +354,7 @@ export function canImplyAuthentication(options?: Options): Promise<boolean> {
  * ```
  */
 export function getSecurityLevel(
-  options?: Options
+  options?: AccessControlOption
 ): Promise<null | SECURITY_LEVEL> {
   if (!RNKeychainManager.getSecurityLevel) {
     return Promise.resolve(null);

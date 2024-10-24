@@ -40,7 +40,8 @@ const config: Config = {
       {
         docs: {
           path: './docs/',
-          sidebarPath: './sidebars.ts',
+          sidebarPath: require.resolve('./sidebars.ts'),
+          sidebarCollapsible: false,
           editUrl: `${REPO_URL}/edit/master/website/docs/`,
           lastVersion: 'current',
           versions: {
@@ -70,8 +71,6 @@ const config: Config = {
           type: 'docsVersionDropdown',
           position: 'left',
           dropdownActiveClassDisabled: true,
-          dropdownItemsBefore: [],
-          dropdownItemsAfter: [],
         },
         {
           type: 'doc',
