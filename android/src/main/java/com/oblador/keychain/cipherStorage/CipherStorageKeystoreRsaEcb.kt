@@ -22,6 +22,7 @@ import java.security.InvalidKeyException
 import java.security.Key
 import java.security.KeyFactory
 import java.security.KeyPairGenerator
+import java.security.KeyStore
 import java.security.KeyStoreException
 import java.security.NoSuchAlgorithmException
 import java.security.spec.InvalidKeySpecException
@@ -59,9 +60,10 @@ class CipherStorageKeystoreRsaEcb(@NonNull reactContext: ReactApplicationContext
     throwIfInsufficientLevel(level)
 
     val safeAlias = getDefaultAliasIfEmpty(alias, getDefaultAliasServiceName())
-
+    val retries = AtomicInteger(1)
     try {
-      return innerEncryptedCredentials(safeAlias, password, username, level)
+      extractGeneratedKey(safeAlias, level, retries)
+      return innerEncryptedCredentials(safeAlias, password, username)
     } catch (e: Exception) {
       when (e) {
         is NoSuchAlgorithmException,
@@ -161,23 +163,21 @@ class CipherStorageKeystoreRsaEcb(@NonNull reactContext: ReactApplicationContext
       alias: String,
       password: String,
       username: String,
-      level: SecurityLevel
   ): CipherStorage.EncryptionResult {
-    val store = getKeyStoreAndLoad()
+    val keyStore = getKeyStoreAndLoad()
 
-    // on first access create a key for storage
-    if (!store.containsAlias(alias)) {
-      generateKeyAndStoreUnderAlias(alias, level)
-    }
+    // Retrieve the certificate after ensuring the key is compatible
+    val certificate = keyStore.getCertificate(alias)
+      ?: throw GeneralSecurityException("Certificate is null for alias $alias")
 
-    val kf = KeyFactory.getInstance(ALGORITHM_RSA)
-    val certificate = store.getCertificate(alias)
     val publicKey = certificate.publicKey
+    val kf = KeyFactory.getInstance(ALGORITHM_RSA)
     val keySpec = X509EncodedKeySpec(publicKey.encoded)
     val key = kf.generatePublic(keySpec)
 
     return CipherStorage.EncryptionResult(
-        encryptString(key, username), encryptString(key, password), this)
+      encryptString(key, username), encryptString(key, password), this
+    )
   }
 
   /** Get builder for encryption and decryption operations with required user Authentication. */
