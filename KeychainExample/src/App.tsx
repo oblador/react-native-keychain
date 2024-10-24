@@ -96,7 +96,6 @@ export default function App() {
             accessControl,
             securityLevel,
             storage,
-            rules,
           }
         );
       } else {
@@ -104,7 +103,6 @@ export default function App() {
           accessControl,
           securityLevel,
           storage,
-          rules,
         });
       }
 

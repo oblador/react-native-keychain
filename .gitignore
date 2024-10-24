@@ -98,5 +98,6 @@ lib
 
 # Docosaurus
 /build
+website/docs/api
 .docusaurus
 .cache-loader

@@ -1,4 +1,4 @@
-import type { AuthenticationPrompt, Options } from './types';
+import type { AuthenticationPrompt, BaseOptions, SetOptions } from './types';
 
 // Default authentication prompt options
 export const AUTH_PROMPT_DEFAULTS: AuthenticationPrompt = {
@@ -7,8 +7,8 @@ export const AUTH_PROMPT_DEFAULTS: AuthenticationPrompt = {
 };
 
 export function normalizeServiceOption(
-  serviceOrOptions?: string | Options
-): Options {
+  serviceOrOptions?: string | BaseOptions
+): BaseOptions {
   if (typeof serviceOrOptions === 'string') {
     console.warn(
       `You passed a service string as an argument to one of the react-native-keychain functions.
@@ -23,8 +23,8 @@ export function normalizeServiceOption(
 }
 
 export function normalizeServerOption(
-  serverOrOptions?: string | Options
-): Options {
+  serverOrOptions?: string | BaseOptions
+): BaseOptions {
   if (typeof serverOrOptions === 'string') {
     console.warn(
       `You passed a server string as an argument to one of the react-native-keychain functions.
@@ -38,10 +38,13 @@ export function normalizeServerOption(
   return serverOrOptions || {};
 }
 
-export function normalizeOptions(serviceOrOptions?: string | Options): Options {
+export function normalizeOptions(
+  serviceOrOptions?: string | SetOptions
+): SetOptions {
   const options = {
+    authenticationPrompt: AUTH_PROMPT_DEFAULTS,
     ...normalizeServiceOption(serviceOrOptions),
-  } as Options;
+  };
   const { authenticationPrompt } = options;
 
   if (typeof authenticationPrompt === 'string') {
