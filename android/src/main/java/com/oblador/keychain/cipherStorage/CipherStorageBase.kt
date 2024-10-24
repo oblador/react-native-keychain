@@ -244,13 +244,29 @@ abstract class CipherStorageBase(protected val applicationContext: Context) : Ci
     var key: Key?
     do {
       val keyStore = getKeyStoreAndLoad()
-
-      // if key is not available yet, try to generate the strongest possible
+      // Check if the key exists
       if (!keyStore.containsAlias(safeAlias)) {
+        // Key does not exist, generate a new one
         generateKeyAndStoreUnderAlias(safeAlias, level)
+      } else {
+        // Key exists, check if it's compatible
+        key = keyStore.getKey(safeAlias, null)
+        if (key != null && !isKeyAlgorithmSupported(key, getEncryptionAlgorithm())) {
+          Log.w(
+            LOG_TAG,
+            "Incompatible key found for alias: $safeAlias. Expected: ${getEncryptionAlgorithm()}, Found: ${key.algorithm}." +
+              "This can happen if you try to overwrite credentials that were previously saved with a different encryption algorithm."
+          )
+          // Key is not compatible, delete it
+          keyStore.deleteEntry(safeAlias)
+          // Generate a new compatible key
+          generateKeyAndStoreUnderAlias(safeAlias, level)
+          key = null // Set key to null to retry the loop
+          continue
+        }
       }
 
-      // throw exception if cannot extract key in several retries
+      // Attempt to retrieve the key
       key = extractKey(keyStore, safeAlias, retries)
     } while (key == null)
 
@@ -419,6 +435,11 @@ abstract class CipherStorageBase(protected val applicationContext: Context) : Ci
     if (!validateKeySecurityLevel(requiredLevel, secretKey!!)) {
       throw CryptoFailedException("Cannot generate keys with required security guarantees")
     }
+  }
+
+  @Throws(GeneralSecurityException::class)
+  protected fun isKeyAlgorithmSupported(key: Key, expectedAlgorithm: String): Boolean {
+    return key.algorithm.equals(expectedAlgorithm, ignoreCase = true)
   }
 
   /** Try to get secured keystore instance. */

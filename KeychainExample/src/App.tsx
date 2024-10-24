@@ -157,7 +157,9 @@ export default function App() {
   const reset = async () => {
     try {
       await Keychain.resetGenericPassword();
-      await Keychain.resetInternetCredentials('https://example.com');
+      await Keychain.resetInternetCredentials({
+        server: 'https://example.com',
+      });
       setStatus('Credentials Reset!');
       setUsername('');
       setPassword('');
