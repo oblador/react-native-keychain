@@ -11,6 +11,7 @@ This library provides access to the Keychain (iOS) and Keystore (Android) for se
 - [Documentation](#documentation)
 - [Changelog](#changelog)
 - [Maintainers](#maintainers)
+- [Used By](#used-by)
 - [License](#license)
 
 ## Installation
@@ -81,6 +82,14 @@ Check the [GitHub Releases page](https://github.com/oblador/react-native-keychai
     </tr>
   <tbody>
 </table>
+
+## Used By
+
+This library is used by several projects, including:
+
+- [Rainbow Wallet](https://github.com/rainbow-me/rainbow)
+- [MetaMask Mobile](https://github.com/MetaMask/metamask-mobile)
+- [BlueWallet](https://github.com/bluewallet/bluewallet)
 
 ## License
 
