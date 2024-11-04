@@ -5,16 +5,16 @@ import android.content.SharedPreferences
 import android.util.Base64
 import com.facebook.react.bridge.ReactApplicationContext
 import com.oblador.keychain.KeychainModule.KnownCiphers
-import com.oblador.keychain.cipherStorage.CipherStorage.CipherResult
+import com.oblador.keychain.PrefsStorageBase.Companion.KEYCHAIN_DATA
+import com.oblador.keychain.PrefsStorageBase.Companion.getKeyForCipherStorage
+import com.oblador.keychain.PrefsStorageBase.Companion.getKeyForPassword
+import com.oblador.keychain.PrefsStorageBase.Companion.getKeyForUsername
+import com.oblador.keychain.PrefsStorageBase.Companion.isKeyForCipherStorage
+import com.oblador.keychain.PrefsStorageBase.ResultSet
 import com.oblador.keychain.cipherStorage.CipherStorage.EncryptionResult
 
 @Suppress("unused")
-class PrefsStorage(reactContext: ReactApplicationContext) {
-  class ResultSet(
-      @JvmField @field:KnownCiphers @param:KnownCiphers val cipherStorageName: String,
-      usernameBytes: ByteArray?,
-      passwordBytes: ByteArray?
-  ) : CipherResult<ByteArray?>(usernameBytes, passwordBytes)
+open class PrefsStorage(reactContext: ReactApplicationContext) : PrefsStorageBase {
 
   private val prefs: SharedPreferences
 
@@ -22,7 +22,7 @@ class PrefsStorage(reactContext: ReactApplicationContext) {
     prefs = reactContext.getSharedPreferences(KEYCHAIN_DATA, Context.MODE_PRIVATE)
   }
 
-  fun getEncryptedEntry(service: String): ResultSet? {
+  override fun getEncryptedEntry(service: String): ResultSet? {
     val bytesForUsername = getBytesForUsername(service)
     val bytesForPassword = getBytesForPassword(service)
     var cipherStorageName = getCipherStorageName(service)
@@ -40,14 +40,14 @@ class PrefsStorage(reactContext: ReactApplicationContext) {
     return ResultSet(cipherStorageName, bytesForUsername, bytesForPassword)
   }
 
-  fun removeEntry(service: String) {
+  override fun removeEntry(service: String) {
     val keyForUsername = getKeyForUsername(service)
     val keyForPassword = getKeyForPassword(service)
     val keyForCipherStorage = getKeyForCipherStorage(service)
     prefs.edit().remove(keyForUsername).remove(keyForPassword).remove(keyForCipherStorage).apply()
   }
 
-  fun storeEncryptedEntry(service: String, encryptionResult: EncryptionResult) {
+  override fun storeEncryptedEntry(service: String, encryptionResult: EncryptionResult) {
     val keyForUsername = getKeyForUsername(service)
     val keyForPassword = getKeyForPassword(service)
     val keyForCipherStorage = getKeyForCipherStorage(service)
@@ -59,16 +59,7 @@ class PrefsStorage(reactContext: ReactApplicationContext) {
         .apply()
   }
 
-  val usedCipherNames: Set<String?>
-    /**
-     * List all types of cipher which are involved in en/decryption of the data stored herein.
-     *
-     * A cipher type is stored together with the datum upon encryption so the datum can later be
-     * decrypted using correct cipher. This way, a [PrefsStorage] can involve different ciphers for
-     * different data. This method returns all ciphers involved with this storage.
-     *
-     * @return set of cipher names
-     */
+  override val usedCipherNames: Set<String?>
     get() {
       val result: MutableSet<String?> = HashSet()
       val keys: Set<String> = prefs.all.keys
@@ -101,25 +92,5 @@ class PrefsStorage(reactContext: ReactApplicationContext) {
     return if (value != null) {
       Base64.decode(value, Base64.DEFAULT)
     } else null
-  }
-
-  companion object {
-    const val KEYCHAIN_DATA = "RN_KEYCHAIN"
-
-    fun getKeyForUsername(service: String): String {
-      return "$service:u"
-    }
-
-    fun getKeyForPassword(service: String): String {
-      return "$service:p"
-    }
-
-    fun getKeyForCipherStorage(service: String): String {
-      return "$service:c"
-    }
-
-    fun isKeyForCipherStorage(key: String): Boolean {
-      return key.endsWith(":c")
-    }
   }
 }

@@ -127,7 +127,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
   private val cipherStorageMap: MutableMap<String, CipherStorage> = HashMap()
 
   /** Shared preferences storage. */
-  private val prefsStorage: PrefsStorage
+  private val prefsStorage: PrefsStorageBase
 
   /** Launches a coroutine to perform non-blocking UI operations */
   private val coroutineScope = CoroutineScope(Dispatchers.Default)
@@ -136,7 +136,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
   // region Initialization
   /** Default constructor. */
   init {
-    prefsStorage = PrefsStorage(reactContext)
+    prefsStorage = DataStorePrefsStorage(reactContext)
     addCipherStorageToMap(CipherStorageFacebookConceal(reactContext))
     addCipherStorageToMap(CipherStorageKeystoreAesCbc(reactContext))
 
@@ -457,7 +457,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
   private fun decryptCredentials(
       alias: String,
       current: CipherStorage,
-      resultSet: PrefsStorage.ResultSet,
+      resultSet: PrefsStorageBase.ResultSet,
       @Rules rules: String,
       promptInfo: PromptInfo
   ): DecryptionResult {
@@ -496,7 +496,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
   private fun decryptToResult(
       alias: String,
       storage: CipherStorage,
-      resultSet: PrefsStorage.ResultSet,
+      resultSet: PrefsStorageBase.ResultSet,
       promptInfo: PromptInfo
   ): DecryptionResult {
     val handler = getInteractiveHandler(storage, promptInfo)
