@@ -11,22 +11,27 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.facebook.react.bridge.ReactApplicationContext
 import com.oblador.keychain.KeychainModule.KnownCiphers
-import com.oblador.keychain.PrefsStorageBase.KEYCHAIN_DATA
+import com.oblador.keychain.PrefsStorageBase.Companion.KEYCHAIN_DATA
+import com.oblador.keychain.PrefsStorageBase.Companion.getKeyForCipherStorage
+import com.oblador.keychain.PrefsStorageBase.Companion.getKeyForPassword
+import com.oblador.keychain.PrefsStorageBase.Companion.getKeyForUsername
+import com.oblador.keychain.PrefsStorageBase.Companion.isKeyForCipherStorage
 import com.oblador.keychain.PrefsStorageBase.ResultSet
-import com.oblador.keychain.PrefsStorageBase.getKeyForCipherStorage
-import com.oblador.keychain.PrefsStorageBase.getKeyForPassword
-import com.oblador.keychain.PrefsStorageBase.getKeyForUsername
-import com.oblador.keychain.PrefsStorageBase.isKeyForCipherStorage
 import com.oblador.keychain.cipherStorage.CipherStorage
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 
 @Suppress("unused")
-class DataStorePrefsStorage(reactContext: ReactApplicationContext) : PrefsStorageBase {
+class DataStorePrefsStorage(
+  reactContext: ReactApplicationContext,
+  private val coroutineScope: CoroutineScope,
+) : PrefsStorageBase {
 
   private val Context.prefs: DataStore<Preferences> by preferencesDataStore(
     name = KEYCHAIN_DATA,
-    produceMigrations = ::sharedPreferencesMigration
+    produceMigrations = ::sharedPreferencesMigration,
+    scope = coroutineScope,
   )
   private val prefs: DataStore<Preferences> = reactContext.prefs
   private val prefsData: Preferences get() = callSuspendable { prefs.data.first() }
@@ -43,8 +48,8 @@ class DataStorePrefsStorage(reactContext: ReactApplicationContext) : PrefsStorag
     // in case of wrong password or username
     if (bytesForUsername == null || bytesForPassword == null) return null
     if (cipherStorageName == null) {
-      // If the CipherStorage name is not found, we assume it is because the entry was written by an older
-      // version of this library. The older version used Facebook Conceal, so we default to that.
+      // If the CipherStorage name is not found, we assume it is because the entry was written by an
+      // older version of this library which used Facebook Conceal, so we default to that.
       cipherStorageName = KnownCiphers.FB
     }
     return ResultSet(cipherStorageName, bytesForUsername, bytesForPassword)
@@ -79,20 +84,21 @@ class DataStorePrefsStorage(reactContext: ReactApplicationContext) : PrefsStorag
     }
   }
 
-  override fun getUsedCipherNames(): Set<String?> {
-    val result: MutableSet<String?> = HashSet()
-    val keys = prefsData.asMap().keys.map { it.name }
-    for (key in keys) {
-      if (isKeyForCipherStorage(key)) {
-        val cipher = prefsData[stringPreferencesKey(key)]
-        result.add(cipher)
+  override val usedCipherNames: Set<String?>
+    get() {
+      val result: MutableSet<String?> = HashSet()
+      val keys = prefsData.asMap().keys.map { it.name }
+      for (key in keys) {
+        if (isKeyForCipherStorage(key)) {
+          val cipher = prefsData[stringPreferencesKey(key)]
+          result.add(cipher)
+        }
       }
+      return result
     }
-    return result
-  }
 
   private fun <T> callSuspendable(block: suspend () -> T): T {
-    return runBlocking {
+    return runBlocking(coroutineScope.coroutineContext) {
       block()
     }
   }
