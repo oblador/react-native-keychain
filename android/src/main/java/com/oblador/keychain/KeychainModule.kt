@@ -190,8 +190,8 @@ class KeychainModule(reactContext: ReactApplicationContext) :
     constants[SecurityLevel.SECURE_HARDWARE.jsName()] = SecurityLevel.SECURE_HARDWARE.name
     return constants
   }
-
   // endregion
+
   // region React Methods
   private fun setGenericPassword(
       alias: String,
@@ -637,6 +637,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
       SecurityLevel.ANY
     }
   }
+  // endregion
 
   companion object {
     // region Constants
