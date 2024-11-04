@@ -45,7 +45,7 @@ allprojects {
         }
         // END:detox
     }
-
+    
     // START:detox
     afterEvaluate { project ->
         def androidExtension = project.extensions.findByName('android')

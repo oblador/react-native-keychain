@@ -14,7 +14,7 @@ import com.oblador.keychain.PrefsStorageBase.ResultSet
 import com.oblador.keychain.cipherStorage.CipherStorage.EncryptionResult
 
 @Suppress("unused")
-open class PrefsStorage(reactContext: ReactApplicationContext) : PrefsStorageBase {
+class PrefsStorage(reactContext: ReactApplicationContext) : PrefsStorageBase {
 
   private val prefs: SharedPreferences
 
