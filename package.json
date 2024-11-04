@@ -1,22 +1,30 @@
 {
   "name": "react-native-keychain",
-  "version": "8.2.0",
+  "version": "9.1.0",
   "description": "Keychain Access for React Native",
-  "main": "index.js",
+  "main": "./lib/commonjs/index.js",
+  "module": "./lib/module/index",
+  "types": "./lib/typescript/index.d.ts",
+  "react-native": "./src/index",
+  "source": "./src/index",
   "files": [
     "android",
-    "!android/src/test",
-    "RNKeychain.xcodeproj",
-    "RNKeychainManager",
-    "typings",
+    "ios/RNKeychain.xcodeproj",
+    "ios/RNKeychainManager",
+    "lib",
+    "src",
     "RNKeychain.podspec"
   ],
   "scripts": {
     "format": "prettier '{,typings/,KeychainExample/}*.{md,js,json,ts,tsx}' --write",
-    "lint": "eslint .",
-    "flow": "flow",
-    "test": "./gradlew test"
+    "lint": "eslint \"**/*.{js,ts,tsx}\"",
+    "typecheck": "tsc -p tsconfig.json",
+    "prepare": "bob build"
   },
+  "workspaces": [
+    "KeychainExample",
+    "website"
+  ],
   "keywords": [
     "react-native",
     "react-component",
@@ -31,28 +39,70 @@
     "name": "Joel Arvidsson",
     "email": "joel@oblador.se"
   },
-  "homepage": "https://github.com/oblador/react-native-keychain",
+  "contributors": [
+    "Dorian Mazur <mazur.dorian15@gmail.com> (https://github.com/DorianMazur)",
+    "Vojtech Novak <vonovak@gmail.com> (https://github.com/vonovak)"
+  ],
+  "homepage": "https://oblador.github.io/react-native-keychain",
   "bugs": {
     "url": "https://github.com/oblador/react-native-keychain/issues"
   },
   "typescript": {
     "definition": "typings/react-native-keychain.d.ts"
   },
-  "types": "typings/react-native-keychain.d.ts",
+  "packageManager": "yarn@3.6.1",
   "repository": {
     "type": "git",
     "url": "git://github.com/oblador/react-native-keychain.git"
   },
   "license": "MIT",
   "devDependencies": {
-    "@react-native-community/eslint-config": "^3.0.1",
-    "eslint": "^7.2.0",
-    "flow-bin": "^0.176.3",
-    "prettier": "^2.2.1",
-    "react-native": "^0.69.0",
-    "typescript": "^4.2.2"
+    "@react-native/eslint-config": "^0.74.84",
+    "@react-native/typescript-config": "^0.74.84",
+    "eslint": "^8.46.0",
+    "eslint-plugin-prettier": "^5.1.3",
+    "prettier": "^3.0.3",
+    "react": "18.2.0",
+    "react-native": "0.74.5",
+    "react-native-builder-bob": "^0.30.0",
+    "typescript": "^5.2.2"
   },
   "volta": {
     "node": "16.14.2"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "codegenConfig": {
+    "name": "RNKeychainSpec",
+    "type": "modules",
+    "jsSrcsDir": "src",
+    "android": {
+      "javaPackageName": "com.oblador.keychain"
+    }
+  },
+  "react-native-builder-bob": {
+    "source": "src",
+    "output": "lib",
+    "targets": [
+      [
+        "commonjs",
+        {
+          "esm": true
+        }
+      ],
+      [
+        "module",
+        {
+          "esm": true
+        }
+      ],
+      [
+        "typescript",
+        {
+          "project": "tsconfig.build.json"
+        }
+      ]
+    ]
   }
 }
