@@ -31,11 +31,12 @@ const SECURITY_LEVEL_MAP = [
   Keychain.SECURITY_LEVEL.SECURE_HARDWARE,
 ];
 
-const SECURITY_STORAGE_OPTIONS = ['Best', 'FB', 'AES', 'RSA'];
+const SECURITY_STORAGE_OPTIONS = ['Best', 'FB', 'AES_CBC', 'AES_GCM', 'RSA'];
 const SECURITY_STORAGE_MAP = [
   null,
   Keychain.STORAGE_TYPE.FB,
-  Keychain.STORAGE_TYPE.AES,
+  Keychain.STORAGE_TYPE.AES_CBC,
+  Keychain.STORAGE_TYPE.AES_GCM,
   Keychain.STORAGE_TYPE.RSA,
 ];
 const SECURITY_RULES_OPTIONS = ['No upgrade', 'Automatic upgrade'];

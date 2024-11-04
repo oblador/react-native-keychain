@@ -18,6 +18,7 @@ import com.oblador.keychain.cipherStorage.CipherStorage.DecryptionResult
 import com.oblador.keychain.cipherStorage.CipherStorageBase
 import com.oblador.keychain.cipherStorage.CipherStorageFacebookConceal
 import com.oblador.keychain.cipherStorage.CipherStorageKeystoreAesCbc
+import com.oblador.keychain.cipherStorage.CipherStorageKeystoreAesGcm
 import com.oblador.keychain.cipherStorage.CipherStorageKeystoreRsaEcb
 import com.oblador.keychain.decryptionHandler.DecryptionResultHandler
 import com.oblador.keychain.decryptionHandler.DecryptionResultHandlerProvider
@@ -98,14 +99,17 @@ class KeychainModule(reactContext: ReactApplicationContext) :
   }
 
   /** Supported ciphers. */
-  @StringDef(KnownCiphers.FB, KnownCiphers.AES, KnownCiphers.RSA)
+  @StringDef(KnownCiphers.FB, KnownCiphers.AES_CBC, KnownCiphers.AES_GCM, KnownCiphers.RSA)
   annotation class KnownCiphers {
     companion object {
       /** Facebook conceal compatibility lib in use. */
       const val FB = "FacebookConceal"
 
-      /** AES encryption. */
-      const val AES = "KeystoreAESCBC"
+      /** AES CBC encryption. */
+      const val AES_CBC = "KeystoreAESCBC"
+
+      /** AES GCM encryption. */
+      const val AES_GCM = "KeystoreAESGCM"
 
       /** Biometric + RSA. */
       const val RSA = "KeystoreRSAECB"
@@ -139,6 +143,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
     prefsStorage = PrefsStorage(reactContext)
     addCipherStorageToMap(CipherStorageFacebookConceal(reactContext))
     addCipherStorageToMap(CipherStorageKeystoreAesCbc(reactContext))
+    addCipherStorageToMap(CipherStorageKeystoreAesGcm(reactContext))
 
     // we have a references to newer api that will fail load of app classes in old androids OS
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {

@@ -42,10 +42,10 @@ describe(':android:Storage Types', () => {
       }
     );
 
-    it(':android:should save with AES storage - ' + type, async () => {
+    it(':android:should save with AES_CBC storage - ' + type, async () => {
       await expect(element(by.text('Keychain Example'))).toExist();
-      await element(by.id('usernameInput')).typeText('testUsernameAES');
-      await element(by.id('passwordInput')).typeText('testPasswordAES');
+      await element(by.id('usernameInput')).typeText('testUsernameAESCBC');
+      await element(by.id('passwordInput')).typeText('testPasswordAESCBC');
       // Hide keyboard
       await element(by.text('Keychain Example')).tap();
 
@@ -58,8 +58,31 @@ describe(':android:Storage Types', () => {
       await expect(element(by.text(/^Credentials saved! .*$/))).toBeVisible();
       await element(by.text('Load')).tap();
       await matchLoadInfo(
-        'testUsernameAES',
-        'testPasswordAES',
+        'testUsernameAESCBC',
+        'testPasswordAESCBC',
+        'KeystoreAESCBC',
+        type === 'internetCredentials' ? 'https://example.com' : undefined
+      );
+    });
+
+    it(':android:should save with AES_GCM storage - ' + type, async () => {
+      await expect(element(by.text('Keychain Example'))).toExist();
+      await element(by.id('usernameInput')).typeText('testUsernameAESGCM');
+      await element(by.id('passwordInput')).typeText('testPasswordAESGCM');
+      // Hide keyboard
+      await element(by.text('Keychain Example')).tap();
+
+      await element(by.text(type)).tap();
+      await element(by.text('None')).tap();
+      await element(by.text('AES')).tap();
+
+      await expect(element(by.text('Save'))).toBeVisible();
+      await element(by.text('Save')).tap();
+      await expect(element(by.text(/^Credentials saved! .*$/))).toBeVisible();
+      await element(by.text('Load')).tap();
+      await matchLoadInfo(
+        'testUsernameAESGCM',
+        'testPasswordAESGCM',
         'KeystoreAESCBC',
         type === 'internetCredentials' ? 'https://example.com' : undefined
       );

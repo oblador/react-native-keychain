@@ -106,8 +106,14 @@ export enum STORAGE_TYPE {
    * @deprecated Facebook Conceal was deprecated and archived in Mar 3, 2020. https://github.com/facebookarchive/conceal
    */
   FB = 'FacebookConceal',
+  /** Encryptions without human interaction.
+   * @deprecated Use AES_CBC or AES_GCM instead.
+   */
+  AES = 'KeystoreAES',
   /** Encryptions without human interaction. */
-  AES = 'KeystoreAESCBC',
+  AES_CBC = 'KeystoreAESCBC',
+  /** Encryptions without human interaction. */
+  AES_GCM = 'KeystoreAESGCM',
   /** Encryption with biometrics. */
   RSA = 'KeystoreRSAECB',
 }
