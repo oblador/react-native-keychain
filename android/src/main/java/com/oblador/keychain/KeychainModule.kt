@@ -136,7 +136,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
   // region Initialization
   /** Default constructor. */
   init {
-    prefsStorage = DataStorePrefsStorage(reactContext)
+     prefsStorage = DataStorePrefsStorage(reactContext, coroutineScope)
     addCipherStorageToMap(CipherStorageFacebookConceal(reactContext))
     addCipherStorageToMap(CipherStorageKeystoreAesCbc(reactContext))
 

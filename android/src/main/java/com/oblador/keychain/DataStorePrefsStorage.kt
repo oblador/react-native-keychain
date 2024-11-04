@@ -18,17 +18,20 @@ import com.oblador.keychain.PrefsStorageBase.Companion.getKeyForUsername
 import com.oblador.keychain.PrefsStorageBase.Companion.isKeyForCipherStorage
 import com.oblador.keychain.PrefsStorageBase.ResultSet
 import com.oblador.keychain.cipherStorage.CipherStorage
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 
 @Suppress("unused")
 class DataStorePrefsStorage(
   reactContext: ReactApplicationContext,
+  private val coroutineScope: CoroutineScope,
 ) : PrefsStorageBase {
 
   private val Context.prefs: DataStore<Preferences> by preferencesDataStore(
     name = KEYCHAIN_DATA,
-    produceMigrations = ::sharedPreferencesMigration
+    produceMigrations = ::sharedPreferencesMigration,
+    scope = coroutineScope,
   )
   private val prefs: DataStore<Preferences> = reactContext.prefs
   private val prefsData: Preferences get() = callSuspendable { prefs.data.first() }
@@ -95,7 +98,7 @@ class DataStorePrefsStorage(
     }
 
   private fun <T> callSuspendable(block: suspend () -> T): T {
-    return runBlocking {
+    return runBlocking(coroutineScope.coroutineContext) {
       block()
     }
   }
