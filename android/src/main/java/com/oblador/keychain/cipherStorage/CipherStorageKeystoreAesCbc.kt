@@ -27,18 +27,22 @@ import javax.crypto.spec.IvParameterSpec
 
 @TargetApi(Build.VERSION_CODES.M)
 class CipherStorageKeystoreAesCbc(@NonNull reactContext: ReactApplicationContext) :
-    CipherStorageBase(reactContext) {
+  CipherStorageBase(reactContext) {
 
   // region Constants
   /** AES */
   companion object {
     const val ALGORITHM_AES = KeyProperties.KEY_ALGORITHM_AES
+
     /** CBC */
     const val BLOCK_MODE_CBC = KeyProperties.BLOCK_MODE_CBC
+
     /** PKCS7 */
     const val PADDING_PKCS7 = KeyProperties.ENCRYPTION_PADDING_PKCS7
+
     /** Transformation path. */
     const val ENCRYPTION_TRANSFORMATION = "$ALGORITHM_AES/$BLOCK_MODE_CBC/$PADDING_PKCS7"
+
     /** Key size. */
     const val ENCRYPTION_KEY_SIZE = 256
 
@@ -60,10 +64,12 @@ class CipherStorageKeystoreAesCbc(@NonNull reactContext: ReactApplicationContext
   override fun isBiometrySupported(): Boolean = false
 
   /** AES. */
-  @NonNull override fun getEncryptionAlgorithm(): String = ALGORITHM_AES
+  @NonNull
+  override fun getEncryptionAlgorithm(): String = ALGORITHM_AES
 
   /** AES/CBC/PKCS7Padding */
-  @NonNull override fun getEncryptionTransformation(): String = ENCRYPTION_TRANSFORMATION
+  @NonNull
+  override fun getEncryptionTransformation(): String = ENCRYPTION_TRANSFORMATION
 
   /** Override for saving the compatibility with previous version of lib. */
   override fun getDefaultAliasServiceName(): String = DEFAULT_SERVICE
@@ -74,10 +80,10 @@ class CipherStorageKeystoreAesCbc(@NonNull reactContext: ReactApplicationContext
   @NonNull
   @Throws(CryptoFailedException::class)
   override fun encrypt(
-      @NonNull alias: String,
-      @NonNull username: String,
-      @NonNull password: String,
-      @NonNull level: SecurityLevel
+    @NonNull alias: String,
+    @NonNull username: String,
+    @NonNull password: String,
+    @NonNull level: SecurityLevel
   ): CipherStorage.EncryptionResult {
 
     throwIfInsufficientLevel(level)
@@ -89,7 +95,8 @@ class CipherStorageKeystoreAesCbc(@NonNull reactContext: ReactApplicationContext
       val key = extractGeneratedKey(safeAlias, level, retries)
 
       CipherStorage.EncryptionResult(
-          encryptString(key, username), encryptString(key, password), this)
+        encryptString(key, username), encryptString(key, password), this
+      )
     } catch (e: GeneralSecurityException) {
       throw CryptoFailedException("Could not encrypt data with alias: $alias", e)
     } catch (fail: Throwable) {
@@ -100,10 +107,10 @@ class CipherStorageKeystoreAesCbc(@NonNull reactContext: ReactApplicationContext
   @NonNull
   @Throws(CryptoFailedException::class)
   override fun decrypt(
-      @NonNull alias: String,
-      @NonNull username: ByteArray,
-      @NonNull password: ByteArray,
-      @NonNull level: SecurityLevel
+    @NonNull alias: String,
+    @NonNull username: ByteArray,
+    @NonNull password: ByteArray,
+    @NonNull level: SecurityLevel
   ): CipherStorage.DecryptionResult {
 
     throwIfInsufficientLevel(level)
@@ -115,7 +122,8 @@ class CipherStorageKeystoreAesCbc(@NonNull reactContext: ReactApplicationContext
       val key = extractGeneratedKey(safeAlias, level, retries)
 
       CipherStorage.DecryptionResult(
-          decryptBytes(key, username), decryptBytes(key, password), getSecurityLevel(key))
+        decryptBytes(key, username), decryptBytes(key, password), getSecurityLevel(key)
+      )
     } catch (e: GeneralSecurityException) {
       throw CryptoFailedException("Could not decrypt data with alias: $alias", e)
     } catch (fail: Throwable) {
@@ -126,11 +134,11 @@ class CipherStorageKeystoreAesCbc(@NonNull reactContext: ReactApplicationContext
   /** Redirect call to [decrypt] method. */
   @Throws(CryptoFailedException::class)
   override fun decrypt(
-      @NonNull handler: DecryptionResultHandler,
-      @NonNull alias: String,
-      @NonNull username: ByteArray,
-      @NonNull password: ByteArray,
-      @NonNull level: SecurityLevel
+    @NonNull handler: DecryptionResultHandler,
+    @NonNull alias: String,
+    @NonNull username: ByteArray,
+    @NonNull password: ByteArray,
+    @NonNull level: SecurityLevel
   ) {
     try {
       val results = decrypt(alias, username, password, level)
@@ -148,14 +156,14 @@ class CipherStorageKeystoreAesCbc(@NonNull reactContext: ReactApplicationContext
   @NonNull
   @Throws(GeneralSecurityException::class)
   override fun getKeyGenSpecBuilder(@NonNull alias: String): KeyGenParameterSpec.Builder =
-      getKeyGenSpecBuilder(alias, false)
+    getKeyGenSpecBuilder(alias, false)
 
   /** Get encryption algorithm specification builder instance. */
   @NonNull
   @Throws(GeneralSecurityException::class)
   override fun getKeyGenSpecBuilder(
-      @NonNull alias: String,
-      isForTesting: Boolean
+    @NonNull alias: String,
+    isForTesting: Boolean
   ): KeyGenParameterSpec.Builder {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
       throw KeyStoreAccessException("Unsupported API${Build.VERSION.SDK_INT} version detected.")
@@ -164,10 +172,10 @@ class CipherStorageKeystoreAesCbc(@NonNull reactContext: ReactApplicationContext
     val purposes = KeyProperties.PURPOSE_DECRYPT or KeyProperties.PURPOSE_ENCRYPT
 
     return KeyGenParameterSpec.Builder(alias, purposes)
-        .setBlockModes(BLOCK_MODE_CBC)
-        .setEncryptionPaddings(PADDING_PKCS7)
-        .setRandomizedEncryptionRequired(true)
-        .setKeySize(ENCRYPTION_KEY_SIZE)
+      .setBlockModes(BLOCK_MODE_CBC)
+      .setEncryptionPaddings(PADDING_PKCS7)
+      .setRandomizedEncryptionRequired(true)
+      .setKeySize(ENCRYPTION_KEY_SIZE)
   }
 
   /** Get information about provided key. */
@@ -204,9 +212,9 @@ class CipherStorageKeystoreAesCbc(@NonNull reactContext: ReactApplicationContext
   @NonNull
   @Throws(GeneralSecurityException::class, IOException::class)
   override fun decryptBytes(
-      @NonNull key: Key,
-      @NonNull bytes: ByteArray,
-      handler: DecryptBytesHandler?
+    @NonNull key: Key,
+    @NonNull bytes: ByteArray,
+    handler: DecryptBytesHandler?
   ): String {
     val cipher = getCachedInstance()
 
@@ -274,12 +282,12 @@ class CipherStorageKeystoreAesCbc(@NonNull reactContext: ReactApplicationContext
   @NonNull
   @Throws(GeneralSecurityException::class, IOException::class)
   override fun encryptString(@NonNull key: Key, @NonNull value: String): ByteArray =
-      encryptString(key, value, IV.encrypt)
+    encryptString(key, value, IV.encrypt)
 
   @NonNull
   @Throws(GeneralSecurityException::class, IOException::class)
   override fun decryptBytes(@NonNull key: Key, @NonNull bytes: ByteArray): String =
-      decryptBytes(key, bytes, IV.decrypt)
+    decryptBytes(key, bytes, IV.decrypt)
 
   // endregion
 }
