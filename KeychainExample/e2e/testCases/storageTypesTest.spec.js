@@ -51,7 +51,7 @@ describe(':android:Storage Types', () => {
 
       await element(by.text(type)).tap();
       await element(by.text('None')).tap();
-      await element(by.text('AES')).tap();
+      await element(by.text('AES_CBC')).tap();
 
       await expect(element(by.text('Save'))).toBeVisible();
       await element(by.text('Save')).tap();
@@ -74,7 +74,7 @@ describe(':android:Storage Types', () => {
 
       await element(by.text(type)).tap();
       await element(by.text('None')).tap();
-      await element(by.text('AES')).tap();
+      await element(by.text('AES_GCM')).tap();
 
       await expect(element(by.text('Save'))).toBeVisible();
       await element(by.text('Save')).tap();
