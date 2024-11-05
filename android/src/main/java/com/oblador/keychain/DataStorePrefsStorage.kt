@@ -22,7 +22,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 
-@Suppress("unused")
 class DataStorePrefsStorage(
   reactContext: ReactApplicationContext,
   private val coroutineScope: CoroutineScope,
