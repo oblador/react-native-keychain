@@ -8,7 +8,8 @@ describe(':android:Storage Types', () => {
   });
   ['genericPassword', 'internetCredentials'].forEach((type) => {
     it(
-      ':android:should save with FB storage and migrate it to AES - ' + type,
+      ':android:should save with FB storage and migrate it to AES_GCM - ' +
+        type,
       async () => {
         await expect(element(by.text('Keychain Example'))).toExist();
         await element(by.id('usernameInput')).typeText('testUsernameFB');
@@ -36,7 +37,7 @@ describe(':android:Storage Types', () => {
         await matchLoadInfo(
           'testUsernameFB',
           'testPasswordFB',
-          'KeystoreAESCBC',
+          'KeystoreAESGCM',
           type === 'internetCredentials' ? 'https://example.com' : undefined
         );
       }
@@ -83,7 +84,7 @@ describe(':android:Storage Types', () => {
       await matchLoadInfo(
         'testUsernameAESGCM',
         'testPasswordAESGCM',
-        'KeystoreAESCBC',
+        'KeystoreAESGCM',
         type === 'internetCredentials' ? 'https://example.com' : undefined
       );
     });

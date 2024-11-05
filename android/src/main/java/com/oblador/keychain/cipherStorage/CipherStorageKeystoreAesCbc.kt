@@ -14,6 +14,7 @@ import com.oblador.keychain.decryptionHandler.DecryptionResultHandler
 import com.oblador.keychain.exceptions.CryptoFailedException
 import com.oblador.keychain.exceptions.KeyStoreAccessException
 import java.io.IOException
+import java.io.InputStream
 import java.security.GeneralSecurityException
 import java.security.Key
 import java.security.spec.KeySpec
@@ -22,6 +23,7 @@ import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
 import javax.crypto.SecretKeyFactory
+import javax.crypto.spec.IvParameterSpec
 
 @TargetApi(Build.VERSION_CODES.M)
 class CipherStorageKeystoreAesCbc(@NonNull reactContext: ReactApplicationContext) :
@@ -225,6 +227,50 @@ class CipherStorageKeystoreAesCbc(@NonNull reactContext: ReactApplicationContext
   // endregion
 
   // region Initialization Vector encrypt/decrypt support
+
+  /** Initialization vector support. */
+  object IV {
+    /** Encryption/Decryption initialization vector length. */
+    const val IV_LENGTH = 16
+
+    /** Save Initialization vector to output stream. */
+    val encrypt = EncryptStringHandler { cipher, key, output ->
+      cipher.init(Cipher.ENCRYPT_MODE, key)
+      val iv = cipher.iv
+      output.write(iv, 0, iv.size)
+    }
+
+    /** Read initialization vector from input stream and configure cipher by it. */
+    val decrypt = DecryptBytesHandler { cipher, key, input ->
+      val iv = readIv(input)
+      cipher.init(Cipher.DECRYPT_MODE, key, iv)
+    }
+
+    /** Extract initialization vector from provided bytes array. */
+    @Throws(IOException::class)
+    fun readIv(bytes: ByteArray): IvParameterSpec {
+      val iv = ByteArray(IV_LENGTH)
+
+      if (IV_LENGTH >= bytes.size)
+        throw IOException("Insufficient length of input data for IV extracting.")
+
+      System.arraycopy(bytes, 0, iv, 0, IV_LENGTH)
+
+      return IvParameterSpec(iv)
+    }
+
+    /** Extract initialization vector from provided input stream. */
+    @Throws(IOException::class)
+    fun readIv(inputStream: InputStream): IvParameterSpec {
+      val iv = ByteArray(IV_LENGTH)
+      val result = inputStream.read(iv, 0, IV_LENGTH)
+
+      if (result != IV_LENGTH) throw IOException("Input stream has insufficient data.")
+
+      return IvParameterSpec(iv)
+    }
+  }
+
   @NonNull
   @Throws(GeneralSecurityException::class, IOException::class)
   override fun encryptString(@NonNull key: Key, @NonNull value: String): ByteArray =
@@ -234,5 +280,6 @@ class CipherStorageKeystoreAesCbc(@NonNull reactContext: ReactApplicationContext
   @Throws(GeneralSecurityException::class, IOException::class)
   override fun decryptBytes(@NonNull key: Key, @NonNull bytes: ByteArray): String =
       decryptBytes(key, bytes, IV.decrypt)
+
   // endregion
 }

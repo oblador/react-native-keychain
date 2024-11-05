@@ -510,49 +510,6 @@ abstract class CipherStorageBase(protected val applicationContext: Context) : Ci
     }
   }
 
-  /** Initialization vector support. */
-  object IV {
-    /** Encryption/Decryption initialization vector length. */
-    const val IV_LENGTH = 16
-
-    /** Save Initialization vector to output stream. */
-    val encrypt = EncryptStringHandler { cipher, key, output ->
-      cipher.init(Cipher.ENCRYPT_MODE, key)
-      val iv = cipher.iv
-      output.write(iv, 0, iv.size)
-    }
-
-    /** Read initialization vector from input stream and configure cipher by it. */
-    val decrypt = DecryptBytesHandler { cipher, key, input ->
-      val iv = readIv(input)
-      cipher.init(Cipher.DECRYPT_MODE, key, iv)
-    }
-
-    /** Extract initialization vector from provided bytes array. */
-    @Throws(IOException::class)
-    fun readIv(bytes: ByteArray): IvParameterSpec {
-      val iv = ByteArray(IV_LENGTH)
-
-      if (IV_LENGTH >= bytes.size)
-        throw IOException("Insufficient length of input data for IV extracting.")
-
-      System.arraycopy(bytes, 0, iv, 0, IV_LENGTH)
-
-      return IvParameterSpec(iv)
-    }
-
-    /** Extract initialization vector from provided input stream. */
-    @Throws(IOException::class)
-    fun readIv(inputStream: InputStream): IvParameterSpec {
-      val iv = ByteArray(IV_LENGTH)
-      val result = inputStream.read(iv, 0, IV_LENGTH)
-
-      if (result != IV_LENGTH) throw IOException("Input stream has insufficient data.")
-
-      return IvParameterSpec(iv)
-    }
-  }
-
   /** Handler for storing cipher configuration in output stream. */
   fun interface EncryptStringHandler {
     @Throws(GeneralSecurityException::class, IOException::class)
