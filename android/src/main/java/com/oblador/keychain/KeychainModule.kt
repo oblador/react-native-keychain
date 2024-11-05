@@ -30,6 +30,8 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.isActive
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 @ReactModule(name = KeychainModule.KEYCHAIN_MODULE)
 @Suppress("unused")
@@ -132,6 +134,9 @@ class KeychainModule(reactContext: ReactApplicationContext) :
   /** Launches a coroutine to perform non-blocking UI operations */
   private val coroutineScope = CoroutineScope(Dispatchers.Default)
 
+  /** Mutex to prevent concurrent calls to Cipher, which doesn't support multi-threading */
+  private val mutex = Mutex()
+
   // endregion
   // region Initialization
   /** Default constructor. */
@@ -207,7 +212,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
         val storage = getSelectedStorage(options)
         throwIfInsufficientLevel(storage, level)
 
-        val result = storage.encrypt(alias, username, password, level)
+        val result = mutex.withLock { storage.encrypt(alias, username, password, level) }
         prefsStorage.storeEncryptedEntry(alias, result)
         val results = Arguments.createMap()
         results.putString(Maps.SERVICE, alias)
