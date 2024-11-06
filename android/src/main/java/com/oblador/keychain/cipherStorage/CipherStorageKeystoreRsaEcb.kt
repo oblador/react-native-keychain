@@ -10,7 +10,7 @@ import android.util.Log
 import androidx.annotation.NonNull
 import androidx.annotation.RequiresApi
 import com.facebook.react.bridge.ReactApplicationContext
-import com.oblador.keychain.KeychainModule
+import com.oblador.keychain.KeychainModule.KnownCiphers
 import com.oblador.keychain.SecurityLevel
 import com.oblador.keychain.decryptionHandler.DecryptionResultHandler
 import com.oblador.keychain.decryptionHandler.DecryptionResultHandlerNonInteractive
@@ -22,7 +22,6 @@ import java.security.InvalidKeyException
 import java.security.Key
 import java.security.KeyFactory
 import java.security.KeyPairGenerator
-import java.security.KeyStore
 import java.security.KeyStoreException
 import java.security.NoSuchAlgorithmException
 import java.security.spec.InvalidKeySpecException
@@ -140,7 +139,7 @@ class CipherStorageKeystoreRsaEcb(@NonNull reactContext: ReactApplicationContext
   }
 
   /** RSAECB. */
-  override fun getCipherStorageName(): String = KeychainModule.KnownCiphers.RSA
+  override fun getCipherStorageName(): String = KnownCiphers.RSA
 
   /** API23 is a requirement. */
   override fun getMinSupportedApiLevel(): Int = Build.VERSION_CODES.M
