@@ -250,10 +250,14 @@ abstract class CipherStorageBase(protected val applicationContext: Context) : Ci
       } else {
         // Key exists, check if it's compatible
         key = keyStore.getKey(safeAlias, null)
-        if (key != null && !isKeyAlgorithmSupported(key, getEncryptionAlgorithm())) {
+        if (key != null && !isKeyAlgorithmSupported(
+            key,
+            getEncryptionAlgorithm()
+          )
+        ) {
           Log.w(
             LOG_TAG,
-            "Incompatible key found for alias: $safeAlias. Expected: ${getEncryptionAlgorithm()}, Found: ${key.algorithm}." +
+            "Incompatible key found for alias: $safeAlias. Expected cipher: ${getEncryptionTransformation()}. " +
               "This can happen if you try to overwrite credentials that were previously saved with a different encryption algorithm."
           )
           // Key is not compatible, delete it
@@ -433,8 +437,30 @@ abstract class CipherStorageBase(protected val applicationContext: Context) : Ci
   }
 
   @Throws(GeneralSecurityException::class)
-  protected fun isKeyAlgorithmSupported(key: Key, expectedAlgorithm: String): Boolean {
-    return key.algorithm.equals(expectedAlgorithm, ignoreCase = true)
+  protected fun isKeyAlgorithmSupported(
+    key: Key,
+    expectedAlgorithm: String
+  ): Boolean {
+    if (!key.algorithm.equals(expectedAlgorithm, ignoreCase = true)) {
+      return false
+    }
+
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+      return false
+    }
+
+    try {
+      val keyInfo = getKeyInfo(key)
+      val blockModes = keyInfo.blockModes
+      val expectedBlockMode = getEncryptionTransformation()
+        .split("/")[1] // Split "AES/GCM/NoPadding" and get "GCM"
+      return blockModes.any { mode ->
+        mode.equals(expectedBlockMode, ignoreCase = true)
+      }
+    } catch (e: GeneralSecurityException) {
+      Log.w(LOG_TAG, "Failed to check cipher configuration: ${e.message}")
+      return false
+    }
   }
 
   /** Try to get secured keystore instance. */
