@@ -44,8 +44,6 @@ class CipherStorageKeystoreAesGcm(@NonNull reactContext: ReactApplicationContext
     const val ENCRYPTION_TRANSFORMATION = "$ALGORITHM_AES/$BLOCK_MODE_GCM/$PADDING_NONE"
     /** Key size. */
     const val ENCRYPTION_KEY_SIZE = 256
-
-    const val DEFAULT_SERVICE = "RN_KEYCHAIN_DEFAULT_ALIAS"
   }
 
   // endregion
@@ -67,9 +65,6 @@ class CipherStorageKeystoreAesGcm(@NonNull reactContext: ReactApplicationContext
 
   /** AES/CBC/PKCS7Padding */
   @NonNull override fun getEncryptionTransformation(): String = ENCRYPTION_TRANSFORMATION
-
-  /** Override for saving the compatibility with previous version of lib. */
-  override fun getDefaultAliasServiceName(): String = DEFAULT_SERVICE
 
   // endregion
 
@@ -239,12 +234,8 @@ class CipherStorageKeystoreAesGcm(@NonNull reactContext: ReactApplicationContext
 
     /** Save Initialization vector to output stream. */
     val encrypt = EncryptStringHandler { cipher, key, output ->
-      val iv = ByteArray(IV_LENGTH)
-
-      SecureRandom().nextBytes(iv)
-      val gcmParamSpec = GCMParameterSpec(TAG_LENGTH, iv)
-
-      cipher.init(Cipher.ENCRYPT_MODE, key, gcmParamSpec)
+      cipher.init(Cipher.ENCRYPT_MODE, key)
+      val iv = cipher.iv
       output.write(iv, 0, iv.size)
     }
 

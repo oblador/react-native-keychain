@@ -359,7 +359,6 @@ abstract class CipherStorageBase(protected val applicationContext: Context) : Ci
     val cipher = getCachedInstance()
     try {
       ByteArrayOutputStream().use { output ->
-        // write initialization vector to the beginning of the stream
         if (handler != null) {
           handler.initialize(cipher, key, output)
           output.flush()
@@ -386,10 +385,7 @@ abstract class CipherStorageBase(protected val applicationContext: Context) : Ci
     try {
       ByteArrayInputStream(bytes).use { input ->
         ByteArrayOutputStream().use { output ->
-          // read the initialization vector from the beginning of the stream
-          if (handler != null) {
-            handler.initialize(cipher, key, input)
-          }
+          handler?.initialize(cipher, key, input)
 
           CipherInputStream(input, cipher).use { decrypt -> copy(decrypt, output) }
 
