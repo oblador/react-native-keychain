@@ -107,14 +107,29 @@ export enum STORAGE_TYPE {
    */
   FB = 'FacebookConceal',
   /** Encryptions without human interaction.
-   * @deprecated Use AES_CBC or AES_GCM instead.
+   * @deprecated Use AES_GCM_NO_AUTH instead.
    */
   AES = 'KeystoreAES',
-  /** Encryptions without human interaction. */
+  /**
+   * AES encryption in CBC (Cipher Block Chaining) mode.
+   * Provides data confidentiality without authentication.
+   * @deprecated Use AES_GCM_NO_AUTH instead.
+   */
   AES_CBC = 'KeystoreAESCBC',
-  /** Encryptions without human interaction. */
+  /**
+   * AES encryption in GCM (Galois/Counter Mode).
+   * Provides both data confidentiality and authentication.
+   */
+  AES_GCM_NO_AUTH = 'KeystoreAESGCM_NoAuth',
+  /**
+   * AES-GCM encryption with biometric authentication.
+   * Requires user authentication for both encryption and decryption operations.
+   */
   AES_GCM = 'KeystoreAESGCM',
-  /** Encryption with biometrics. */
+  /**
+   * RSA encryption with biometric authentication.
+   * Uses asymmetric encryption and requires biometric authentication.
+   */
   RSA = 'KeystoreRSAECB',
 }
 

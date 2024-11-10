@@ -8,7 +8,7 @@ describe(':android:Storage Types', () => {
   });
   ['genericPassword', 'internetCredentials'].forEach((type) => {
     it(
-      ':android:should save with FB storage and migrate it to AES_GCM - ' +
+      ':android:should save with FB storage and migrate it to AES_GCM_NO_AUTH - ' +
         type,
       async () => {
         await expect(element(by.text('Keychain Example'))).toExist();
@@ -37,7 +37,7 @@ describe(':android:Storage Types', () => {
         await matchLoadInfo(
           'testUsernameFB',
           'testPasswordFB',
-          'KeystoreAESGCM',
+          'KeystoreAES_GCM_NoAuth',
           type === 'internetCredentials' ? 'https://example.com' : undefined
         );
       }
@@ -80,6 +80,9 @@ describe(':android:Storage Types', () => {
       await expect(element(by.text('Save'))).toBeVisible();
       await element(by.text('Save')).tap();
       await expect(element(by.text(/^Credentials saved! .*$/))).toBeVisible();
+      setTimeout(() => {
+        cp.spawnSync('adb', ['-e', 'emu', 'finger', 'touch', '1']);
+      }, 1000);
       await element(by.text('Load')).tap();
       await matchLoadInfo(
         'testUsernameAESGCM',
@@ -88,6 +91,36 @@ describe(':android:Storage Types', () => {
         type === 'internetCredentials' ? 'https://example.com' : undefined
       );
     });
+
+    it(
+      ':android:should save with AES_GCM_NO_AUTH storage - ' + type,
+      async () => {
+        await expect(element(by.text('Keychain Example'))).toExist();
+        await element(by.id('usernameInput')).typeText(
+          'testUsernameAESGCMNoAuth'
+        );
+        await element(by.id('passwordInput')).typeText(
+          'testPasswordAESGCMNoAuth'
+        );
+        // Hide keyboard
+        await element(by.text('Keychain Example')).tap();
+
+        await element(by.text(type)).tap();
+        await element(by.text('None')).tap();
+        await element(by.text('AES_GCM')).tap();
+
+        await expect(element(by.text('Save'))).toBeVisible();
+        await element(by.text('Save')).tap();
+        await expect(element(by.text(/^Credentials saved! .*$/))).toBeVisible();
+        await element(by.text('Load')).tap();
+        await matchLoadInfo(
+          'testUsernameAESGCMNoAuth',
+          'testPasswordAESGCMNoAuth',
+          'KeystoreAES_GCM_NoAuth',
+          type === 'internetCredentials' ? 'https://example.com' : undefined
+        );
+      }
+    );
 
     it(':android:should save with RSA storage - ' + type, async () => {
       await expect(element(by.text('Keychain Example'))).toExist();

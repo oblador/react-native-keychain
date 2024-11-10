@@ -31,12 +31,20 @@ const SECURITY_LEVEL_MAP = [
   Keychain.SECURITY_LEVEL.SECURE_HARDWARE,
 ];
 
-const SECURITY_STORAGE_OPTIONS = ['Best', 'FB', 'AES_CBC', 'AES_GCM', 'RSA'];
+const SECURITY_STORAGE_OPTIONS = [
+  'Best',
+  'FB',
+  'AES_CBC',
+  'AES_GCM',
+  'AES_GCM_NO_AUTH',
+  'RSA',
+];
 const SECURITY_STORAGE_MAP = [
   null,
   Keychain.STORAGE_TYPE.FB,
   Keychain.STORAGE_TYPE.AES_CBC,
   Keychain.STORAGE_TYPE.AES_GCM,
+  Keychain.STORAGE_TYPE.AES_GCM_NO_AUTH,
   Keychain.STORAGE_TYPE.RSA,
 ];
 const SECURITY_RULES_OPTIONS = ['No upgrade', 'Automatic upgrade'];
@@ -87,6 +95,14 @@ export default function App() {
 
   const save = async () => {
     try {
+      const options = {
+        authenticationPrompt: {
+          title: 'Authentication needed',
+          subtitle: 'Subtitle',
+          description: 'Some descriptive text',
+          cancel: 'Cancel',
+        },
+      };
       const start = new Date();
       if (type === 'internetCredentials') {
         await Keychain.setInternetCredentials(
@@ -101,6 +117,7 @@ export default function App() {
         );
       } else {
         await Keychain.setGenericPassword(username, password, {
+          ...options,
           accessControl,
           securityLevel,
           storage,
@@ -242,6 +259,8 @@ export default function App() {
             />
             <Text style={styles.label}>Storage</Text>
             <SegmentedControlTab
+              tabTextStyle={{ fontSize: 12 }}
+              tabStyle={{ padding: 5, flex: 0 }}
               selectedIndex={selectedStorageIndex}
               values={SECURITY_STORAGE_OPTIONS}
               onTabPress={(index) => {

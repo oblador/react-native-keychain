@@ -56,7 +56,7 @@ module.exports = {
       type: 'android.emulator',
       headless: Boolean(process.env.CI),
       device: {
-        avdName: 'TestingAVD',
+        avdName: 'Pixel_XL_API_Tiramisu',
       },
     },
   },
