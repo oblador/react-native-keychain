@@ -29,6 +29,11 @@ describe('Access Control', () => {
         }
 
         await expect(element(by.text('Save'))).toBeVisible();
+        if (device.getPlatform() === 'android') {
+          setTimeout(() => {
+            cp.spawnSync('adb', ['-e', 'emu', 'finger', 'touch', '1']);
+          }, 1000);
+        }
         await element(by.text('Save')).tap();
         await expect(element(by.text(/^Credentials saved! .*$/))).toBeVisible();
         // Biometric prompt is not available in the IOS simulator
@@ -39,7 +44,11 @@ describe('Access Control', () => {
           }, 1000);
         }
         await element(by.text('Load')).tap();
-        await matchLoadInfo('testUsernameBiometrics', 'testPasswordBiometrics');
+        await matchLoadInfo(
+          'testUsernameBiometrics',
+          'testPasswordBiometrics',
+          'KeystoreAESGCM'
+        );
       }
     );
 
@@ -59,7 +68,11 @@ describe('Access Control', () => {
           }, 1000);
         }
         await element(by.text('Load')).tap();
-        await matchLoadInfo('testUsernameBiometrics', 'testPasswordBiometrics');
+        await matchLoadInfo(
+          'testUsernameBiometrics',
+          'testPasswordBiometrics',
+          'KeystoreAESGCM'
+        );
       }
     );
 
@@ -76,6 +89,10 @@ describe('Access Control', () => {
         await element(by.text('Hardware')).tap();
 
         await expect(element(by.text('Save'))).toBeVisible();
+        setTimeout(() => {
+          cp.spawnSync('adb', ['-e', 'emu', 'finger', 'touch', '1']);
+        }, 1000);
+
         await element(by.text('Save')).tap();
         await expect(element(by.text(/^Credentials saved! .*$/))).toBeVisible();
 
@@ -84,7 +101,11 @@ describe('Access Control', () => {
         }, 1000);
 
         await element(by.text('Load')).tap();
-        await matchLoadInfo('testUsernameHardware', 'testPasswordHardware');
+        await matchLoadInfo(
+          'testUsernameHardware',
+          'testPasswordHardware',
+          'KeystoreAESGCM'
+        );
       }
     );
 
@@ -101,6 +122,9 @@ describe('Access Control', () => {
         await element(by.text('Software')).tap();
 
         await expect(element(by.text('Save'))).toBeVisible();
+        setTimeout(() => {
+          cp.spawnSync('adb', ['-e', 'emu', 'finger', 'touch', '1']);
+        }, 1000);
         await element(by.text('Save')).tap();
         await expect(element(by.text(/^Credentials saved! .*$/))).toBeVisible();
 
@@ -109,7 +133,11 @@ describe('Access Control', () => {
         }, 1000);
 
         await element(by.text('Load')).tap();
-        await matchLoadInfo('testUsernameSoftware', 'testPasswordSoftware');
+        await matchLoadInfo(
+          'testUsernameSoftware',
+          'testPasswordSoftware',
+          'KeystoreAESGCM'
+        );
       }
     );
 
@@ -132,7 +160,11 @@ describe('Access Control', () => {
         await element(by.text('Save')).tap();
         await expect(element(by.text(/^Credentials saved! .*$/))).toBeVisible();
         await element(by.text('Load')).tap();
-        await matchLoadInfo('testUsernameAny', 'testPasswordAny');
+        await matchLoadInfo(
+          'testUsernameAny',
+          'testPasswordAny',
+          'KeystoreAESGCM_NoAuth'
+        );
       }
     );
 
@@ -145,7 +177,11 @@ describe('Access Control', () => {
           element(by.text('hasGenericPassword: true'))
         ).toBeVisible();
         await element(by.text('Load')).tap();
-        await matchLoadInfo('testUsernameAny', 'testPasswordAny');
+        await matchLoadInfo(
+          'testUsernameAny',
+          'testPasswordAny',
+          'KeystoreAESGCM_NoAuth'
+        );
       }
     );
   });
