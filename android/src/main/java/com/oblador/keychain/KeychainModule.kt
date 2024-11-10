@@ -18,9 +18,10 @@ import com.oblador.keychain.cipherStorage.CipherStorage.DecryptionResult
 import com.oblador.keychain.cipherStorage.CipherStorageBase
 import com.oblador.keychain.cipherStorage.CipherStorageFacebookConceal
 import com.oblador.keychain.cipherStorage.CipherStorageKeystoreAesCbc
+import com.oblador.keychain.cipherStorage.CipherStorageKeystoreAesGcm
 import com.oblador.keychain.cipherStorage.CipherStorageKeystoreRsaEcb
-import com.oblador.keychain.decryptionHandler.DecryptionResultHandler
-import com.oblador.keychain.decryptionHandler.DecryptionResultHandlerProvider
+import com.oblador.keychain.resultHandler.ResultHandler
+import com.oblador.keychain.resultHandler.ResultHandlerProvider
 import com.oblador.keychain.exceptions.CryptoFailedException
 import com.oblador.keychain.exceptions.EmptyParameterException
 import com.oblador.keychain.exceptions.KeyStoreAccessException
@@ -98,16 +99,22 @@ class KeychainModule(reactContext: ReactApplicationContext) :
   }
 
   /** Supported ciphers. */
-  @StringDef(KnownCiphers.FB, KnownCiphers.AES, KnownCiphers.RSA)
+  @StringDef(KnownCiphers.FB, KnownCiphers.AES_CBC, KnownCiphers.AES_GCM, KnownCiphers.RSA)
   annotation class KnownCiphers {
     companion object {
       /** Facebook conceal compatibility lib in use. */
       const val FB = "FacebookConceal"
 
-      /** AES encryption. */
-      const val AES = "KeystoreAESCBC"
+      /** AES CBC encryption. */
+      const val AES_CBC = "KeystoreAESCBC"
 
-      /** Biometric + RSA. */
+      /** Biometric Auth + AES GCM encryption. */
+      const val AES_GCM = "KeystoreAESGCM"
+
+      /** AES GCM encryption. */
+      const val AES_GCM_NO_AUTH = "KeystoreAESGCM_NoAuth"
+
+      /** Biometric Auth + RSA ECB encryption */
       const val RSA = "KeystoreRSAECB"
     }
   }
@@ -139,6 +146,8 @@ class KeychainModule(reactContext: ReactApplicationContext) :
     prefsStorage = PrefsStorage(reactContext)
     addCipherStorageToMap(CipherStorageFacebookConceal(reactContext))
     addCipherStorageToMap(CipherStorageKeystoreAesCbc(reactContext))
+    addCipherStorageToMap(CipherStorageKeystoreAesGcm(reactContext, false))
+    addCipherStorageToMap(CipherStorageKeystoreAesGcm(reactContext, true))
 
     // we have a references to newer api that will fail load of app classes in old androids OS
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -206,8 +215,8 @@ class KeychainModule(reactContext: ReactApplicationContext) :
         val level = getSecurityLevelOrDefault(options)
         val storage = getSelectedStorage(options)
         throwIfInsufficientLevel(storage, level)
-
-        val result = storage.encrypt(alias, username, password, level)
+        val promptInfo = getPromptInfo(options)
+        val result = encryptToResult(alias, storage, username, password, level, promptInfo)
         prefsStorage.storeEncryptedEntry(alias, result)
         val results = Arguments.createMap()
         results.putString(Maps.SERVICE, alias)
@@ -438,8 +447,6 @@ class KeychainModule(reactContext: ReactApplicationContext) :
 
   @ReactMethod
   fun getSecurityLevel(options: ReadableMap?, promise: Promise) {
-    // DONE (olku): if forced biometry than we should return security level = HARDWARE if it
-    // supported
     val accessControl = getAccessControlOrDefault(options)
     val useBiometry = getUseBiometry(accessControl)
     promise.resolve(getSecurityLevel(useBiometry).name)
@@ -482,7 +489,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
     if (Rules.AUTOMATIC_UPGRADE == rules) {
       try {
         // encrypt using the current cipher storage
-        migrateCipherStorage(alias, current, oldStorage, decryptionResult)
+        migrateCipherStorage(alias, current, oldStorage, decryptionResult, promptInfo)
       } catch (e: CryptoFailedException) {
         Log.w(
             KEYCHAIN_MODULE, "Migrating to a less safe storage is not allowed. Keeping the old one")
@@ -494,27 +501,46 @@ class KeychainModule(reactContext: ReactApplicationContext) :
   /** Try to decrypt with provided storage. */
   @Throws(CryptoFailedException::class)
   private fun decryptToResult(
-      alias: String,
-      storage: CipherStorage,
-      resultSet: PrefsStorage.ResultSet,
-      promptInfo: PromptInfo
+    alias: String,
+    storage: CipherStorage,
+    resultSet: PrefsStorage.ResultSet,
+    promptInfo: PromptInfo
   ): DecryptionResult {
     val handler = getInteractiveHandler(storage, promptInfo)
     storage.decrypt(handler, alias, resultSet.username!!, resultSet.password!!, SecurityLevel.ANY)
     CryptoFailedException.reThrowOnError(handler.error)
-    if (null == handler.result) {
+    if (null == handler.decryptionResult) {
       throw CryptoFailedException("No decryption results and no error. Something deeply wrong!")
     }
-    return handler.result!!
+    return handler.decryptionResult!!
+  }
+
+  /** Try to encrypt with provided storage. */
+  @Throws(CryptoFailedException::class)
+  private fun encryptToResult(
+    alias: String,
+    storage: CipherStorage,
+    username: String,
+    password: String,
+    securityLevel: SecurityLevel,
+    promptInfo: PromptInfo
+  ): CipherStorage.EncryptionResult {
+    val handler = getInteractiveHandler(storage, promptInfo)
+    storage.encrypt(handler, alias, username, password, securityLevel)
+    CryptoFailedException.reThrowOnError(handler.error)
+    if (null == handler.encryptionResult) {
+      throw CryptoFailedException("No decryption results and no error. Something deeply wrong!")
+    }
+    return handler.encryptionResult!!
   }
 
   /** Get instance of handler that resolves access to the keystore on system request. */
   private fun getInteractiveHandler(
       current: CipherStorage,
       promptInfo: PromptInfo
-  ): DecryptionResultHandler {
+  ): ResultHandler {
     val reactContext = reactApplicationContext
-    return DecryptionResultHandlerProvider.getHandler(reactContext, current, promptInfo)
+    return ResultHandlerProvider.getHandler(reactContext, current, promptInfo)
   }
 
   /** Remove key from old storage and add it to the new storage. */
@@ -525,18 +551,17 @@ class KeychainModule(reactContext: ReactApplicationContext) :
       service: String,
       newCipherStorage: CipherStorage,
       oldCipherStorage: CipherStorage,
-      decryptionResult: DecryptionResult
+      decryptionResult: DecryptionResult,
+      promptInfo: PromptInfo
   ) {
 
     val username =
         decryptionResult.username ?: throw IllegalArgumentException("Username cannot be null")
     val password =
         decryptionResult.password ?: throw IllegalArgumentException("Password cannot be null")
-
     // don't allow to degrade security level when transferring, the new
     // storage should be as safe as the old one.
-    val encryptionResult =
-        newCipherStorage.encrypt(service, username, password, decryptionResult.getSecurityLevel())
+    val encryptionResult = encryptToResult(service, newCipherStorage, username, password, decryptionResult.getSecurityLevel(), promptInfo)
 
     // store the encryption result
     prefsStorage.storeEncryptedEntry(service, encryptionResult)

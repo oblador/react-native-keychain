@@ -5,11 +5,13 @@ import android.os.Build
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyInfo
 import android.security.keystore.KeyProperties
+import android.security.keystore.UserNotAuthenticatedException
 import android.util.Log
 import com.facebook.react.bridge.ReactApplicationContext
 import com.oblador.keychain.KeychainModule.KnownCiphers
 import com.oblador.keychain.SecurityLevel
-import com.oblador.keychain.cipherStorage.CipherStorageKeystoreAesCbc.IV.IV_LENGTH
+import com.oblador.keychain.resultHandler.CryptoContext
+import com.oblador.keychain.resultHandler.CryptoOperation
 import com.oblador.keychain.resultHandler.ResultHandler
 import com.oblador.keychain.exceptions.CryptoFailedException
 import com.oblador.keychain.exceptions.KeyStoreAccessException
@@ -22,10 +24,10 @@ import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
 import javax.crypto.SecretKeyFactory
-import javax.crypto.spec.IvParameterSpec
+import javax.crypto.spec.GCMParameterSpec
 
 @TargetApi(Build.VERSION_CODES.M)
-class CipherStorageKeystoreAesCbc(reactContext: ReactApplicationContext) :
+class CipherStorageKeystoreAesGcm(reactContext: ReactApplicationContext, val requiresBiometricAuth: Boolean) :
     CipherStorageBase(reactContext) {
 
     // region Constants
@@ -33,25 +35,26 @@ class CipherStorageKeystoreAesCbc(reactContext: ReactApplicationContext) :
     companion object {
         const val ALGORITHM_AES = KeyProperties.KEY_ALGORITHM_AES
 
-        /** CBC */
-        const val BLOCK_MODE_CBC = KeyProperties.BLOCK_MODE_CBC
+        /** GCM */
+        const val BLOCK_MODE_GCM = KeyProperties.BLOCK_MODE_GCM
 
         /** PKCS7 */
-        const val PADDING_PKCS7 = KeyProperties.ENCRYPTION_PADDING_PKCS7
+        const val PADDING_NONE = KeyProperties.ENCRYPTION_PADDING_NONE
 
         /** Transformation path. */
-        const val ENCRYPTION_TRANSFORMATION = "$ALGORITHM_AES/$BLOCK_MODE_CBC/$PADDING_PKCS7"
+        const val ENCRYPTION_TRANSFORMATION = "$ALGORITHM_AES/$BLOCK_MODE_GCM/$PADDING_NONE"
 
         /** Key size. */
         const val ENCRYPTION_KEY_SIZE = 256
-
-        const val DEFAULT_SERVICE = "RN_KEYCHAIN_DEFAULT_ALIAS"
     }
 
     // endregion
 
     // region Configuration
-    override fun getCipherStorageName(): String = KnownCiphers.AES_CBC
+    override fun getCipherStorageName(): String = when (requiresBiometricAuth) {
+        true -> KnownCiphers.AES_GCM
+        false -> KnownCiphers.AES_GCM_NO_AUTH
+    }
 
     /** API23 is a requirement. */
     override fun getMinSupportedApiLevel(): Int = Build.VERSION_CODES.M
@@ -60,18 +63,13 @@ class CipherStorageKeystoreAesCbc(reactContext: ReactApplicationContext) :
     override fun securityLevel(): SecurityLevel = SecurityLevel.SECURE_HARDWARE
 
     /** Biometry is Not Supported. */
-    override fun isBiometrySupported(): Boolean = false
+    override fun isBiometrySupported(): Boolean = requiresBiometricAuth
 
     /** AES. */
-
     override fun getEncryptionAlgorithm(): String = ALGORITHM_AES
 
     /** AES/CBC/PKCS7Padding */
-
     override fun getEncryptionTransformation(): String = ENCRYPTION_TRANSFORMATION
-
-    /** Override for saving the compatibility with previous version of lib. */
-    override fun getDefaultAliasServiceName(): String = DEFAULT_SERVICE
 
     // endregion
 
@@ -90,24 +88,30 @@ class CipherStorageKeystoreAesCbc(reactContext: ReactApplicationContext) :
 
         val safeAlias = getDefaultAliasIfEmpty(alias, getDefaultAliasServiceName())
         val retries = AtomicInteger(1)
+        var key: Key? = null
 
         try {
-            val key = extractGeneratedKey(safeAlias, level, retries)
+            key = extractGeneratedKey(safeAlias, level, retries)
 
             val result = CipherStorage.EncryptionResult(
                 encryptString(key, username), encryptString(key, password), this
             )
             handler.onEncrypt(result, null)
-        } catch (e: GeneralSecurityException) {
-            throw CryptoFailedException("Could not encrypt data with alias: $alias", e)
-        } catch (fail: Throwable) {
-            throw CryptoFailedException(
-                "Unknown error with alias: $alias, error: ${fail.message}",
-                fail
+        } catch (ex: UserNotAuthenticatedException) {
+            Log.d(LOG_TAG, "Unlock of keystore is needed. Error: ${ex.message}", ex)
+            val context = CryptoContext(
+                safeAlias,
+                key!!,
+                password.toByteArray(),
+                username.toByteArray(),
+                CryptoOperation.ENCRYPT
             )
+
+            handler.askAccessPermissions(context)
+        } catch (fail: Throwable) {
+            handler.onEncrypt(null, fail)
         }
     }
-
 
     /** Redirect call to [decrypt] method. */
     @Throws(CryptoFailedException::class)
@@ -118,22 +122,30 @@ class CipherStorageKeystoreAesCbc(reactContext: ReactApplicationContext) :
         password: ByteArray,
         level: SecurityLevel
     ) {
-
         throwIfInsufficientLevel(level)
 
         val safeAlias = getDefaultAliasIfEmpty(alias, getDefaultAliasServiceName())
         val retries = AtomicInteger(1)
+        var key: Key? = null
 
         try {
-            val key = extractGeneratedKey(safeAlias, level, retries)
+            key = extractGeneratedKey(safeAlias, level, retries)
+            val results =
+                CipherStorage.DecryptionResult(
+                    decryptBytes(key, username),
+                    decryptBytes(key, password)
+                )
 
-            val results = CipherStorage.DecryptionResult(
-                decryptBytes(key, username), decryptBytes(key, password), getSecurityLevel(key)
-            )
             handler.onDecrypt(results, null)
-        } catch (e: GeneralSecurityException) {
-            throw CryptoFailedException("Could not decrypt data with alias: $alias", e)
+        } catch (ex: UserNotAuthenticatedException) {
+            Log.d(LOG_TAG, "Unlock of keystore is needed. Error: ${ex.message}", ex)
+            // expected that KEY instance is extracted and we caught exception on decryptBytes operation
+            val context =
+                CryptoContext(safeAlias, key!!, password, username, CryptoOperation.DECRYPT)
+
+            handler.askAccessPermissions(context)
         } catch (fail: Throwable) {
+            // any other exception treated as a failure
             handler.onDecrypt(null, fail)
         }
     }
@@ -161,11 +173,28 @@ class CipherStorageKeystoreAesCbc(reactContext: ReactApplicationContext) :
 
         val purposes = KeyProperties.PURPOSE_DECRYPT or KeyProperties.PURPOSE_ENCRYPT
 
-        return KeyGenParameterSpec.Builder(alias, purposes)
-            .setBlockModes(BLOCK_MODE_CBC)
-            .setEncryptionPaddings(PADDING_PKCS7)
-            .setRandomizedEncryptionRequired(true)
-            .setKeySize(ENCRYPTION_KEY_SIZE)
+        val validityDuration = 5
+        val keyGenParameterSpecBuilder =
+            KeyGenParameterSpec.Builder(alias, purposes)
+                .setBlockModes(BLOCK_MODE_GCM)
+                .setEncryptionPaddings(PADDING_NONE)
+                .setRandomizedEncryptionRequired(true)
+                .setKeySize(ENCRYPTION_KEY_SIZE)
+
+        if(requiresBiometricAuth) {
+            keyGenParameterSpecBuilder.setUserAuthenticationRequired(true)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                keyGenParameterSpecBuilder.setUserAuthenticationParameters(
+                    validityDuration, KeyProperties.AUTH_BIOMETRIC_STRONG
+                )
+            } else {
+                keyGenParameterSpecBuilder.setUserAuthenticationValidityDurationSeconds(
+                    validityDuration
+                )
+            }
+        }
+
+        return keyGenParameterSpecBuilder
     }
 
     /** Get information about provided key. */
@@ -209,20 +238,18 @@ class CipherStorageKeystoreAesCbc(reactContext: ReactApplicationContext) :
         val cipher = getCachedInstance()
 
         return try {
-            // read the initialization vector from bytes array
-            val iv = ByteArray(IV_LENGTH)
-
-            if (IV_LENGTH >= bytes.size)
+            if (IV.IV_LENGTH >= bytes.size)
                 throw IOException("Insufficient length of input data for IV extracting.")
-
-            System.arraycopy(bytes, 0, iv, 0, IV_LENGTH)
-
-            val spec = IvParameterSpec(iv)
+            val iv = ByteArray(IV.IV_LENGTH)
+            System.arraycopy(bytes, 0, iv, 0, IV.IV_LENGTH)
+            val spec = GCMParameterSpec(IV.TAG_LENGTH, iv)
             cipher.init(Cipher.DECRYPT_MODE, key, spec)
 
             // Decrypt the bytes using cipher.doFinal()
             val decryptedBytes = cipher.doFinal(bytes, IV.IV_LENGTH, bytes.size - IV.IV_LENGTH)
             String(decryptedBytes, UTF8)
+        } catch (ex: UserNotAuthenticatedException){
+            throw ex
         } catch (fail: Throwable) {
             Log.w(LOG_TAG, fail.message, fail)
             throw fail
@@ -236,7 +263,8 @@ class CipherStorageKeystoreAesCbc(reactContext: ReactApplicationContext) :
     /** Initialization vector support. */
     object IV {
         /** Encryption/Decryption initialization vector length. */
-        const val IV_LENGTH = 16
+        const val IV_LENGTH = 12
+        const val TAG_LENGTH = 128
 
         /** Save Initialization vector to output stream. */
         val encrypt = EncryptStringHandler { cipher, key, output ->
@@ -249,14 +277,10 @@ class CipherStorageKeystoreAesCbc(reactContext: ReactApplicationContext) :
         val decrypt = DecryptBytesHandler { cipher, key, input ->
             val iv = ByteArray(IV_LENGTH)
             val result = input.read(iv, 0, IV_LENGTH)
-
             if (result != IV_LENGTH) throw IOException("Input stream has insufficient data.")
-
-            val spec = IvParameterSpec(iv)
-
+            val spec = GCMParameterSpec(TAG_LENGTH, iv)
             cipher.init(Cipher.DECRYPT_MODE, key, spec)
         }
-
     }
 
 

@@ -7,13 +7,13 @@ import android.security.keystore.KeyInfo
 import android.security.keystore.KeyProperties
 import android.security.keystore.UserNotAuthenticatedException
 import android.util.Log
-import androidx.annotation.NonNull
 import androidx.annotation.RequiresApi
 import com.facebook.react.bridge.ReactApplicationContext
-import com.oblador.keychain.KeychainModule
+import com.oblador.keychain.KeychainModule.KnownCiphers
 import com.oblador.keychain.SecurityLevel
-import com.oblador.keychain.decryptionHandler.DecryptionResultHandler
-import com.oblador.keychain.decryptionHandler.DecryptionResultHandlerNonInteractive
+import com.oblador.keychain.resultHandler.CryptoContext
+import com.oblador.keychain.resultHandler.CryptoOperation
+import com.oblador.keychain.resultHandler.ResultHandler
 import com.oblador.keychain.exceptions.CryptoFailedException
 import com.oblador.keychain.exceptions.KeyStoreAccessException
 import java.io.IOException
@@ -22,7 +22,6 @@ import java.security.InvalidKeyException
 import java.security.Key
 import java.security.KeyFactory
 import java.security.KeyPairGenerator
-import java.security.KeyStore
 import java.security.KeyStoreException
 import java.security.NoSuchAlgorithmException
 import java.security.spec.InvalidKeySpecException
@@ -33,18 +32,22 @@ import javax.crypto.NoSuchPaddingException
 /** Fingerprint biometry protected storage. */
 @RequiresApi(Build.VERSION_CODES.M)
 @Suppress("unused", "WeakerAccess")
-class CipherStorageKeystoreRsaEcb(@NonNull reactContext: ReactApplicationContext) :
-    CipherStorageBase(reactContext) {
+class CipherStorageKeystoreRsaEcb(reactContext: ReactApplicationContext) :
+  CipherStorageBase(reactContext) {
 
   companion object {
     /** Selected algorithm. */
     const val ALGORITHM_RSA: String = KeyProperties.KEY_ALGORITHM_RSA
+
     /** Selected block mode. */
     const val BLOCK_MODE_ECB: String = KeyProperties.BLOCK_MODE_ECB
+
     /** Selected padding transformation. */
     const val PADDING_PKCS1: String = KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1
+
     /** Composed transformation algorithms. */
     val TRANSFORMATION_RSA_ECB_PKCS1: String = "$ALGORITHM_RSA/$BLOCK_MODE_ECB/$PADDING_PKCS1"
+
     /** Selected encryption key size. */
     const val ENCRYPTION_KEY_SIZE = 2048
     const val ENCRYPTION_KEY_SIZE_WHEN_TESTING = 512
@@ -52,18 +55,20 @@ class CipherStorageKeystoreRsaEcb(@NonNull reactContext: ReactApplicationContext
 
   @Throws(CryptoFailedException::class)
   override fun encrypt(
-      alias: String,
-      username: String,
-      password: String,
-      level: SecurityLevel
-  ): CipherStorage.EncryptionResult {
+    handler: ResultHandler,
+    alias: String,
+    username: String,
+    password: String,
+    level: SecurityLevel
+  ) {
     throwIfInsufficientLevel(level)
 
     val safeAlias = getDefaultAliasIfEmpty(alias, getDefaultAliasServiceName())
     val retries = AtomicInteger(1)
     try {
       extractGeneratedKey(safeAlias, level, retries)
-      return innerEncryptedCredentials(safeAlias, password, username)
+      val result = innerEncryptedCredentials(safeAlias, password, username)
+      handler.onEncrypt(result, null)
     } catch (e: Exception) {
       when (e) {
         is NoSuchAlgorithmException,
@@ -72,13 +77,16 @@ class CipherStorageKeystoreRsaEcb(@NonNull reactContext: ReactApplicationContext
         is InvalidKeyException -> {
           throw CryptoFailedException("Could not encrypt data for service $alias", e)
         }
+
         is KeyStoreException,
         is KeyStoreAccessException -> {
           throw CryptoFailedException("Could not access Keystore for service $alias", e)
         }
+
         is IOException -> {
           throw CryptoFailedException("I/O error: ${e.message}", e)
         }
+
         else -> {
           throw CryptoFailedException("Unknown error: ${e.message}", e)
         }
@@ -86,31 +94,15 @@ class CipherStorageKeystoreRsaEcb(@NonNull reactContext: ReactApplicationContext
     }
   }
 
-  @Throws(CryptoFailedException::class)
-  override fun decrypt(
-      alias: String,
-      username: ByteArray,
-      password: ByteArray,
-      level: SecurityLevel
-  ): CipherStorage.DecryptionResult {
-    val handler = DecryptionResultHandlerNonInteractive()
-    decrypt(handler, alias, username, password, level)
-
-    CryptoFailedException.reThrowOnError(handler.error)
-
-    return handler.result
-        ?: throw CryptoFailedException(
-            "No decryption results and no error. Something deeply wrong!")
-  }
 
   @SuppressLint("NewApi")
   @Throws(CryptoFailedException::class)
   override fun decrypt(
-      handler: DecryptionResultHandler,
-      alias: String,
-      username: ByteArray,
-      password: ByteArray,
-      level: SecurityLevel
+    handler: ResultHandler,
+    alias: String,
+    username: ByteArray,
+    password: ByteArray,
+    level: SecurityLevel
   ) {
     throwIfInsufficientLevel(level)
 
@@ -123,14 +115,14 @@ class CipherStorageKeystoreRsaEcb(@NonNull reactContext: ReactApplicationContext
       key = extractGeneratedKey(safeAlias, level, retries)
 
       val results =
-          CipherStorage.DecryptionResult(decryptBytes(key, username), decryptBytes(key, password))
+        CipherStorage.DecryptionResult(decryptBytes(key, username), decryptBytes(key, password))
 
       handler.onDecrypt(results, null)
     } catch (ex: UserNotAuthenticatedException) {
       Log.d(LOG_TAG, "Unlock of keystore is needed. Error: ${ex.message}", ex)
 
       // expected that KEY instance is extracted and we caught exception on decryptBytes operation
-      val context = CipherStorage.DecryptionContext(safeAlias, key!!, password, username)
+      val context = CryptoContext(safeAlias, key!!, password, username, CryptoOperation.DECRYPT)
 
       handler.askAccessPermissions(context)
     } catch (fail: Throwable) {
@@ -140,7 +132,7 @@ class CipherStorageKeystoreRsaEcb(@NonNull reactContext: ReactApplicationContext
   }
 
   /** RSAECB. */
-  override fun getCipherStorageName(): String = KeychainModule.KnownCiphers.RSA
+  override fun getCipherStorageName(): String = KnownCiphers.RSA
 
   /** API23 is a requirement. */
   override fun getMinSupportedApiLevel(): Int = Build.VERSION_CODES.M
@@ -160,9 +152,9 @@ class CipherStorageKeystoreRsaEcb(@NonNull reactContext: ReactApplicationContext
    */
   @Throws(GeneralSecurityException::class, IOException::class)
   private fun innerEncryptedCredentials(
-      alias: String,
-      password: String,
-      username: String,
+    alias: String,
+    password: String,
+    username: String,
   ): CipherStorage.EncryptionResult {
     val keyStore = getKeyStoreAndLoad()
 
@@ -191,8 +183,8 @@ class CipherStorageKeystoreRsaEcb(@NonNull reactContext: ReactApplicationContext
   @SuppressLint("NewApi")
   @Throws(GeneralSecurityException::class)
   override fun getKeyGenSpecBuilder(
-      alias: String,
-      isForTesting: Boolean
+    alias: String,
+    isForTesting: Boolean
   ): KeyGenParameterSpec.Builder {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
       throw KeyStoreAccessException("Unsupported API${Build.VERSION.SDK_INT} version detected.")
@@ -204,16 +196,17 @@ class CipherStorageKeystoreRsaEcb(@NonNull reactContext: ReactApplicationContext
 
     val validityDuration = 5
     val keyGenParameterSpecBuilder =
-        KeyGenParameterSpec.Builder(alias, purposes)
-            .setBlockModes(BLOCK_MODE_ECB)
-            .setEncryptionPaddings(PADDING_PKCS1)
-            .setRandomizedEncryptionRequired(true)
-            .setUserAuthenticationRequired(true)
-            .setKeySize(keySize)
+      KeyGenParameterSpec.Builder(alias, purposes)
+        .setBlockModes(BLOCK_MODE_ECB)
+        .setEncryptionPaddings(PADDING_PKCS1)
+        .setRandomizedEncryptionRequired(true)
+        .setUserAuthenticationRequired(true)
+        .setKeySize(keySize)
 
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
       keyGenParameterSpecBuilder.setUserAuthenticationParameters(
-          validityDuration, KeyProperties.AUTH_BIOMETRIC_STRONG)
+        validityDuration, KeyProperties.AUTH_BIOMETRIC_STRONG
+      )
     } else {
       keyGenParameterSpecBuilder.setUserAuthenticationValidityDurationSeconds(validityDuration)
     }

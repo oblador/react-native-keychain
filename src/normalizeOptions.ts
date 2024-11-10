@@ -1,3 +1,4 @@
+import { STORAGE_TYPE } from './enums';
 import type { AuthenticationPrompt, BaseOptions, SetOptions } from './types';
 
 // Default authentication prompt options
@@ -5,6 +6,17 @@ export const AUTH_PROMPT_DEFAULTS: AuthenticationPrompt = {
   title: 'Authenticate to retrieve secret',
   cancel: 'Cancel',
 };
+
+export function normalizeStorageOptions(options: SetOptions): SetOptions {
+  if (options.storage && options.storage === STORAGE_TYPE.AES) {
+    console.warn(
+      `You passed 'AES' as a storage option to one of the react-native-keychain functions.
+            This way of passing storage is deprecated and will be removed in a future major.`
+    );
+    return { ...options, storage: STORAGE_TYPE.AES_CBC };
+  }
+  return options;
+}
 
 export function normalizeServiceOption(
   serviceOrOptions?: string | BaseOptions
