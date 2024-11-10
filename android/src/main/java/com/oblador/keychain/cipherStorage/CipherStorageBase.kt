@@ -1,5 +1,6 @@
 package com.oblador.keychain.cipherStorage
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
@@ -373,7 +374,7 @@ abstract class CipherStorageBase(protected val applicationContext: Context) : Ci
 
         return output.toByteArray()
       }
-    } catch (ex: UserNotAuthenticatedException){
+    } catch (@SuppressLint("NewApi") ex: UserNotAuthenticatedException){
       throw ex
     } catch (fail: Throwable) {
       Log.e(LOG_TAG, fail.message, fail)
