@@ -1,12 +1,10 @@
 package com.oblador.keychain.cipherStorage
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyInfo
-import android.security.keystore.UserNotAuthenticatedException
 import android.util.Log
 import androidx.annotation.VisibleForTesting
 import com.oblador.keychain.SecurityLevel
@@ -374,8 +372,6 @@ abstract class CipherStorageBase(protected val applicationContext: Context) : Ci
 
         return output.toByteArray()
       }
-    } catch (@SuppressLint("NewApi") ex: UserNotAuthenticatedException){
-      throw ex
     } catch (fail: Throwable) {
       Log.e(LOG_TAG, fail.message, fail)
       throw fail
@@ -456,6 +452,9 @@ abstract class CipherStorageBase(protected val applicationContext: Context) : Ci
     try {
       val keyInfo = getKeyInfo(key)
       val blockModes = keyInfo.blockModes
+      if(keyInfo.isUserAuthenticationRequired != isBiometrySupported()){
+        return false
+      }
       val expectedBlockMode = getEncryptionTransformation()
         .split("/")[1] // Split "AES/GCM/NoPadding" and get "GCM"
       return blockModes.any { mode ->
