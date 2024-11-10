@@ -110,6 +110,7 @@ export default function App() {
           username,
           password,
           {
+            ...options,
             accessControl,
             securityLevel,
             storage,

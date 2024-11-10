@@ -37,7 +37,7 @@ describe(':android:Storage Types', () => {
         await matchLoadInfo(
           'testUsernameFB',
           'testPasswordFB',
-          'KeystoreAES_GCM_NoAuth',
+          'KeystoreAESGCM_NoAuth',
           type === 'internetCredentials' ? 'https://example.com' : undefined
         );
       }
@@ -119,7 +119,7 @@ describe(':android:Storage Types', () => {
         await matchLoadInfo(
           'testUsernameAESGCMNoAuth',
           'testPasswordAESGCMNoAuth',
-          'KeystoreAES_GCM_NoAuth',
+          'KeystoreAESGCM_NoAuth',
           type === 'internetCredentials' ? 'https://example.com' : undefined
         );
       }
