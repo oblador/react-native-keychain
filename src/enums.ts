@@ -98,7 +98,21 @@ export enum BIOMETRY_TYPE {
 }
 
 /**
- * Enum representing storage types.
+ * Enum representing cryptographic storage types for sensitive data.
+ *
+ * Security Level Categories:
+ *
+ * 1. High Security (Biometric Authentication Required):
+ * - AES_GCM: For sensitive local data (passwords, personal info)
+ * - RSA: For asymmetric operations (signatures, key exchange)
+ *
+ * 2. Medium Security (No Authentication):
+ * - AES_GCM_NO_AUTH: For app-level secrets and cached data
+ *
+ * 3. Legacy/Deprecated:
+ * - AES_CBC: Outdated, use AES_GCM_NO_AUTH instead
+ * - FB: Archived Facebook Conceal implementation
+ *
  * @platform Android
  */
 export enum STORAGE_TYPE {

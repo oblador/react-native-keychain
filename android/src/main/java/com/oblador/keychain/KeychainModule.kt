@@ -108,13 +108,13 @@ class KeychainModule(reactContext: ReactApplicationContext) :
       /** AES CBC encryption. */
       const val AES_CBC = "KeystoreAESCBC"
 
-      /** Biometric + AES GCM encryption. */
+      /** Biometric Auth + AES GCM encryption. */
       const val AES_GCM = "KeystoreAESGCM"
 
       /** AES GCM encryption. */
       const val AES_GCM_NO_AUTH = "KeystoreAESGCM_NoAuth"
 
-      /** Biometric + RSA ECB encryption */
+      /** Biometric Auth + RSA ECB encryption */
       const val RSA = "KeystoreRSAECB"
     }
   }

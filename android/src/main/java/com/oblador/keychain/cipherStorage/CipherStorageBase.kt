@@ -5,6 +5,7 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyInfo
+import android.security.keystore.UserNotAuthenticatedException
 import android.util.Log
 import androidx.annotation.VisibleForTesting
 import com.oblador.keychain.SecurityLevel
@@ -372,6 +373,8 @@ abstract class CipherStorageBase(protected val applicationContext: Context) : Ci
 
         return output.toByteArray()
       }
+    } catch (ex: UserNotAuthenticatedException){
+      throw ex
     } catch (fail: Throwable) {
       Log.e(LOG_TAG, fail.message, fail)
       throw fail
