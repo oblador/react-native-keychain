@@ -14,6 +14,11 @@ const sidebars: SidebarsConfig = {
     },
     {
       type: 'doc',
+      id: 'choosing-storage-type',
+      label: '[Android] Choosing Storage Type',
+    },
+    {
+      type: 'doc',
       id: 'jest',
       label: 'Unit Testing with Jest',
     },

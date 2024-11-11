@@ -1,6 +1,6 @@
 {
   "name": "react-native-keychain",
-  "version": "9.1.0",
+  "version": "9.2.0",
   "description": "Keychain Access for React Native",
   "main": "./lib/commonjs/index.js",
   "module": "./lib/module/index",
