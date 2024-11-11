@@ -1,22 +1,24 @@
-package com.oblador.keychain.decryptionHandler
+package com.oblador.keychain.resultHandler
 
 import android.os.Looper
 import android.util.Log
-import androidx.annotation.NonNull
 import androidx.biometric.BiometricPrompt
 import com.facebook.react.bridge.ReactApplicationContext
 import com.oblador.keychain.cipherStorage.CipherStorage
+import com.oblador.keychain.cipherStorage.CipherStorage.DecryptionResult
+import com.oblador.keychain.cipherStorage.CipherStorage.EncryptionResult
 
-class DecryptionResultHandlerInteractiveBiometricManualRetry(
-    @NonNull reactContext: ReactApplicationContext,
-    @NonNull storage: CipherStorage,
-    @NonNull promptInfo: BiometricPrompt.PromptInfo
+class ResultHandlerInteractiveBiometricManualRetry(
+  reactContext: ReactApplicationContext,
+  storage: CipherStorage,
+  promptInfo: BiometricPrompt.PromptInfo
 ) :
-    DecryptionResultHandlerInteractiveBiometric(reactContext, storage, promptInfo),
-    DecryptionResultHandler {
+  ResultHandlerInteractiveBiometric(reactContext, storage, promptInfo),
+  ResultHandler {
 
   // Explicitly declare visibility and use 'override' to match the interface
-  override var result: CipherStorage.DecryptionResult? = null
+  override var decryptionResult: DecryptionResult? = null
+  override var encryptionResult: EncryptionResult? = null
   override var error: Throwable? = null
 
   private var presentedPrompt: BiometricPrompt? = null
@@ -39,7 +41,7 @@ class DecryptionResultHandlerInteractiveBiometricManualRetry(
   }
 
   /** Called when an unrecoverable error has been encountered and the operation is complete. */
-  override fun onAuthenticationError(errorCode: Int, @NonNull errString: CharSequence) {
+  override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
     if (didFailBiometric) {
       this.presentedPrompt = null
       this.didFailBiometric = false
@@ -63,7 +65,7 @@ class DecryptionResultHandlerInteractiveBiometricManualRetry(
   }
 
   /** Called when a biometric is recognized. */
-  override fun onAuthenticationSucceeded(@NonNull result: BiometricPrompt.AuthenticationResult) {
+  override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
     this.presentedPrompt = null
     this.didFailBiometric = false
     super.onAuthenticationSucceeded(result)

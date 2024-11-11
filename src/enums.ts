@@ -98,7 +98,21 @@ export enum BIOMETRY_TYPE {
 }
 
 /**
- * Enum representing storage types.
+ * Enum representing cryptographic storage types for sensitive data.
+ *
+ * Security Level Categories:
+ *
+ * 1. High Security (Biometric Authentication Required):
+ * - AES_GCM: For sensitive local data (passwords, personal info)
+ * - RSA: For asymmetric operations (signatures, key exchange)
+ *
+ * 2. Medium Security (No Authentication):
+ * - AES_GCM_NO_AUTH: For app-level secrets and cached data
+ *
+ * 3. Legacy/Deprecated:
+ * - AES_CBC: Outdated, use AES_GCM_NO_AUTH instead
+ * - FB: Archived Facebook Conceal implementation
+ *
  * @platform Android
  */
 export enum STORAGE_TYPE {
@@ -106,9 +120,30 @@ export enum STORAGE_TYPE {
    * @deprecated Facebook Conceal was deprecated and archived in Mar 3, 2020. https://github.com/facebookarchive/conceal
    */
   FB = 'FacebookConceal',
-  /** Encryptions without human interaction. */
-  AES = 'KeystoreAESCBC',
-  /** Encryption with biometrics. */
+  /** Encryptions without human interaction.
+   * @deprecated Use AES_GCM_NO_AUTH instead.
+   */
+  AES = 'KeystoreAES',
+  /**
+   * AES encryption in CBC (Cipher Block Chaining) mode.
+   * Provides data confidentiality without authentication.
+   * @deprecated Use AES_GCM_NO_AUTH instead.
+   */
+  AES_CBC = 'KeystoreAESCBC',
+  /**
+   * AES encryption in GCM (Galois/Counter Mode).
+   * Provides both data confidentiality and authentication.
+   */
+  AES_GCM_NO_AUTH = 'KeystoreAESGCM_NoAuth',
+  /**
+   * AES-GCM encryption with biometric authentication.
+   * Requires user authentication for both encryption and decryption operations.
+   */
+  AES_GCM = 'KeystoreAESGCM',
+  /**
+   * RSA encryption with biometric authentication.
+   * Uses asymmetric encryption and requires biometric authentication.
+   */
   RSA = 'KeystoreRSAECB',
 }
 

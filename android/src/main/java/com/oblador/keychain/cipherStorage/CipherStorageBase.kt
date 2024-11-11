@@ -33,7 +33,6 @@ import javax.crypto.Cipher
 import javax.crypto.CipherInputStream
 import javax.crypto.CipherOutputStream
 import javax.crypto.NoSuchPaddingException
-import javax.crypto.spec.IvParameterSpec
 
 
 @Suppress("unused", "MemberVisibilityCanBePrivate", "UnusedReturnValue")
@@ -251,10 +250,14 @@ abstract class CipherStorageBase(protected val applicationContext: Context) : Ci
       } else {
         // Key exists, check if it's compatible
         key = keyStore.getKey(safeAlias, null)
-        if (key != null && !isKeyAlgorithmSupported(key, getEncryptionAlgorithm())) {
+        if (key != null && !isKeyAlgorithmSupported(
+            key,
+            getEncryptionAlgorithm()
+          )
+        ) {
           Log.w(
             LOG_TAG,
-            "Incompatible key found for alias: $safeAlias. Expected: ${getEncryptionAlgorithm()}, Found: ${key.algorithm}." +
+            "Incompatible key found for alias: $safeAlias. Expected cipher: ${getEncryptionTransformation()}. " +
               "This can happen if you try to overwrite credentials that were previously saved with a different encryption algorithm."
           )
           // Key is not compatible, delete it
@@ -360,7 +363,6 @@ abstract class CipherStorageBase(protected val applicationContext: Context) : Ci
     val cipher = getCachedInstance()
     try {
       ByteArrayOutputStream().use { output ->
-        // write initialization vector to the beginning of the stream
         if (handler != null) {
           handler.initialize(cipher, key, output)
           output.flush()
@@ -387,10 +389,7 @@ abstract class CipherStorageBase(protected val applicationContext: Context) : Ci
     try {
       ByteArrayInputStream(bytes).use { input ->
         ByteArrayOutputStream().use { output ->
-          // read the initialization vector from the beginning of the stream
-          if (handler != null) {
-            handler.initialize(cipher, key, input)
-          }
+          handler?.initialize(cipher, key, input)
 
           CipherInputStream(input, cipher).use { decrypt -> copy(decrypt, output) }
 
@@ -438,8 +437,33 @@ abstract class CipherStorageBase(protected val applicationContext: Context) : Ci
   }
 
   @Throws(GeneralSecurityException::class)
-  protected fun isKeyAlgorithmSupported(key: Key, expectedAlgorithm: String): Boolean {
-    return key.algorithm.equals(expectedAlgorithm, ignoreCase = true)
+  protected fun isKeyAlgorithmSupported(
+    key: Key,
+    expectedAlgorithm: String
+  ): Boolean {
+    if (!key.algorithm.equals(expectedAlgorithm, ignoreCase = true)) {
+      return false
+    }
+
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+      return false
+    }
+
+    try {
+      val keyInfo = getKeyInfo(key)
+      val blockModes = keyInfo.blockModes
+      if(keyInfo.isUserAuthenticationRequired != isBiometrySupported()){
+        return false
+      }
+      val expectedBlockMode = getEncryptionTransformation()
+        .split("/")[1] // Split "AES/GCM/NoPadding" and get "GCM"
+      return blockModes.any { mode ->
+        mode.equals(expectedBlockMode, ignoreCase = true)
+      }
+    } catch (e: GeneralSecurityException) {
+      Log.w(LOG_TAG, "Failed to check cipher configuration: ${e.message}")
+      return false
+    }
   }
 
   /** Try to get secured keystore instance. */
@@ -507,49 +531,6 @@ abstract class CipherStorageBase(protected val applicationContext: Context) : Ci
     }
     val decrypt = DecryptBytesHandler { cipher, key, input ->
       cipher.init(Cipher.DECRYPT_MODE, key)
-    }
-  }
-
-  /** Initialization vector support. */
-  object IV {
-    /** Encryption/Decryption initialization vector length. */
-    const val IV_LENGTH = 16
-
-    /** Save Initialization vector to output stream. */
-    val encrypt = EncryptStringHandler { cipher, key, output ->
-      cipher.init(Cipher.ENCRYPT_MODE, key)
-      val iv = cipher.iv
-      output.write(iv, 0, iv.size)
-    }
-
-    /** Read initialization vector from input stream and configure cipher by it. */
-    val decrypt = DecryptBytesHandler { cipher, key, input ->
-      val iv = readIv(input)
-      cipher.init(Cipher.DECRYPT_MODE, key, iv)
-    }
-
-    /** Extract initialization vector from provided bytes array. */
-    @Throws(IOException::class)
-    fun readIv(bytes: ByteArray): IvParameterSpec {
-      val iv = ByteArray(IV_LENGTH)
-
-      if (IV_LENGTH >= bytes.size)
-        throw IOException("Insufficient length of input data for IV extracting.")
-
-      System.arraycopy(bytes, 0, iv, 0, IV_LENGTH)
-
-      return IvParameterSpec(iv)
-    }
-
-    /** Extract initialization vector from provided input stream. */
-    @Throws(IOException::class)
-    fun readIv(inputStream: InputStream): IvParameterSpec {
-      val iv = ByteArray(IV_LENGTH)
-      val result = inputStream.read(iv, 0, IV_LENGTH)
-
-      if (result != IV_LENGTH) throw IOException("Input stream has insufficient data.")
-
-      return IvParameterSpec(iv)
     }
   }
 

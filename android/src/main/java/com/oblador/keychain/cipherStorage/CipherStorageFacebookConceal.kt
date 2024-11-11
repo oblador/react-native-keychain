@@ -4,7 +4,6 @@ import android.os.Build
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyInfo
 import android.util.Log
-import androidx.annotation.NonNull
 import com.facebook.android.crypto.keychain.AndroidConceal
 import com.facebook.android.crypto.keychain.SharedPrefsBackedKeyChain
 import com.facebook.crypto.Crypto
@@ -14,7 +13,7 @@ import com.facebook.react.bridge.AssertionException
 import com.facebook.react.bridge.ReactApplicationContext
 import com.oblador.keychain.KeychainModule.KnownCiphers
 import com.oblador.keychain.SecurityLevel
-import com.oblador.keychain.decryptionHandler.DecryptionResultHandler
+import com.oblador.keychain.resultHandler.ResultHandler
 import com.oblador.keychain.exceptions.CryptoFailedException
 import java.security.GeneralSecurityException
 import java.security.Key
@@ -25,8 +24,8 @@ import java.security.Key
  *   [Fast Cryptographics](https://medium.com/@ssaurel/make-fast-cryptographic-operations-on-android-with-conceal-77a751e89b8e)
  */
 @Suppress("unused", "MemberVisibilityCanBePrivate")
-class CipherStorageFacebookConceal(@NonNull reactContext: ReactApplicationContext) :
-    CipherStorageBase(reactContext) {
+class CipherStorageFacebookConceal(reactContext: ReactApplicationContext) :
+  CipherStorageBase(reactContext) {
 
   companion object {
     const val KEYCHAIN_DATA = "RN_KEYCHAIN"
@@ -53,14 +52,15 @@ class CipherStorageFacebookConceal(@NonNull reactContext: ReactApplicationContex
   // endregion
 
   // region Overrides
-  @NonNull
+
   @Throws(CryptoFailedException::class)
   override fun encrypt(
-      @NonNull alias: String,
-      @NonNull username: String,
-      @NonNull password: String,
-      @NonNull level: SecurityLevel
-  ): CipherStorage.EncryptionResult {
+    handler: ResultHandler,
+    alias: String,
+    username: String,
+    password: String,
+    level: SecurityLevel
+  ) {
 
     throwIfInsufficientLevel(level)
     throwIfNoCryptoAvailable()
@@ -68,97 +68,83 @@ class CipherStorageFacebookConceal(@NonNull reactContext: ReactApplicationContex
     val usernameEntity = createUsernameEntity(alias)
     val passwordEntity = createPasswordEntity(alias)
 
-    return try {
+    try {
       val encryptedUsername = crypto.encrypt(username.toByteArray(UTF8), usernameEntity)
       val encryptedPassword = crypto.encrypt(password.toByteArray(UTF8), passwordEntity)
 
-      CipherStorage.EncryptionResult(encryptedUsername, encryptedPassword, this)
+      val result = CipherStorage.EncryptionResult(encryptedUsername, encryptedPassword, this)
+      handler.onEncrypt(result, null)
     } catch (fail: Throwable) {
       throw CryptoFailedException("Encryption failed for alias: $alias", fail)
     }
   }
 
-  @NonNull
-  @Throws(CryptoFailedException::class)
+  /** Redirect call to default [decrypt] method. */
   override fun decrypt(
-      @NonNull alias: String,
-      @NonNull username: ByteArray,
-      @NonNull password: ByteArray,
-      @NonNull level: SecurityLevel
-  ): CipherStorage.DecryptionResult {
-
+    handler: ResultHandler,
+    alias: String,
+    username: ByteArray,
+    password: ByteArray,
+    level: SecurityLevel
+  ) {
     throwIfInsufficientLevel(level)
     throwIfNoCryptoAvailable()
 
     val usernameEntity = createUsernameEntity(alias)
     val passwordEntity = createPasswordEntity(alias)
 
-    return try {
+    try {
       val decryptedUsername = crypto.decrypt(username, usernameEntity)
       val decryptedPassword = crypto.decrypt(password, passwordEntity)
 
-      CipherStorage.DecryptionResult(
-          String(decryptedUsername, UTF8), String(decryptedPassword, UTF8), SecurityLevel.ANY)
-    } catch (fail: Throwable) {
-      throw CryptoFailedException("Decryption failed for alias: $alias", fail)
-    }
-  }
-
-  /** Redirect call to default [decrypt] method. */
-  override fun decrypt(
-      @NonNull handler: DecryptionResultHandler,
-      @NonNull service: String,
-      @NonNull username: ByteArray,
-      @NonNull password: ByteArray,
-      @NonNull level: SecurityLevel
-  ) {
-    try {
-      val results = decrypt(service, username, password, level)
+      val results = CipherStorage.DecryptionResult(
+        String(decryptedUsername, UTF8), String(decryptedPassword, UTF8), SecurityLevel.ANY
+      )
       handler.onDecrypt(results, null)
     } catch (fail: Throwable) {
       handler.onDecrypt(null, fail)
     }
   }
 
-  override fun removeKey(@NonNull alias: String) {
+  override fun removeKey(alias: String) {
     // Facebook Conceal stores only one key across all services, so we cannot
     // delete the key (otherwise decryption will fail for encrypted data of other services).
     Log.w(LOG_TAG, "CipherStorageFacebookConceal removeKey called. alias: $alias")
   }
 
-  @NonNull
+
   @Throws(GeneralSecurityException::class)
-  override fun getKeyGenSpecBuilder(@NonNull alias: String): KeyGenParameterSpec.Builder {
+  override fun getKeyGenSpecBuilder(alias: String): KeyGenParameterSpec.Builder {
     throw CryptoFailedException("Not designed for a call")
   }
 
-  @NonNull
+
   @Throws(GeneralSecurityException::class)
   override fun getKeyGenSpecBuilder(
-      @NonNull alias: String,
-      isForTesting: Boolean
+    alias: String,
+    isForTesting: Boolean
   ): KeyGenParameterSpec.Builder {
     throw CryptoFailedException("Not designed for a call")
   }
 
-  @NonNull
+
   @Throws(GeneralSecurityException::class)
-  override fun getKeyInfo(@NonNull key: Key): KeyInfo {
+  override fun getKeyInfo(key: Key): KeyInfo {
     throw CryptoFailedException("Not designed for a call")
   }
 
-  @NonNull
+
   @Throws(GeneralSecurityException::class)
-  override fun generateKey(@NonNull spec: KeyGenParameterSpec): Key {
+  override fun generateKey(spec: KeyGenParameterSpec): Key {
     throw CryptoFailedException("Not designed for a call")
   }
 
-  @NonNull
+
   override fun getEncryptionAlgorithm(): String {
     throw AssertionException("Not designed for a call")
   }
 
-  @NonNull
+
   override fun getEncryptionTransformation(): String {
     throw AssertionException("Not designed for a call")
   }
@@ -174,18 +160,19 @@ class CipherStorageFacebookConceal(@NonNull reactContext: ReactApplicationContex
   // endregion
 
   // region Helper methods
-  @NonNull
-  private fun createUsernameEntity(@NonNull alias: String): Entity {
+
+  private fun createUsernameEntity(alias: String): Entity {
     val prefix = getEntityPrefix(alias)
     return Entity.create("$prefix user")
   }
 
-  @NonNull
-  private fun createPasswordEntity(@NonNull alias: String): Entity {
+
+  private fun createPasswordEntity(alias: String): Entity {
     val prefix = getEntityPrefix(alias)
     return Entity.create("$prefix pass")
   }
 
-  @NonNull private fun getEntityPrefix(@NonNull alias: String): String = "$KEYCHAIN_DATA:$alias"
+
+  private fun getEntityPrefix(alias: String): String = "$KEYCHAIN_DATA:$alias"
   // endregion
 }

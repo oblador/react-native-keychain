@@ -1,17 +1,15 @@
-package com.oblador.keychain.decryptionHandler
+package com.oblador.keychain.resultHandler
 
 import android.os.Looper
 import android.util.Log
-import androidx.annotation.NonNull
-import androidx.annotation.Nullable
 import androidx.biometric.BiometricPrompt
 import androidx.fragment.app.FragmentActivity
 import com.facebook.react.bridge.AssertionException
 import com.facebook.react.bridge.ReactApplicationContext
 import com.oblador.keychain.DeviceAvailability
 import com.oblador.keychain.cipherStorage.CipherStorage
-import com.oblador.keychain.cipherStorage.CipherStorage.DecryptionContext
 import com.oblador.keychain.cipherStorage.CipherStorage.DecryptionResult
+import com.oblador.keychain.cipherStorage.CipherStorage.EncryptionResult
 import com.oblador.keychain.cipherStorage.CipherStorageBase
 import com.oblador.keychain.exceptions.CryptoFailedException
 import java.util.concurrent.Executor
@@ -19,71 +17,106 @@ import java.util.concurrent.Executors
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
-open class DecryptionResultHandlerInteractiveBiometric(
-    @NonNull protected val reactContext: ReactApplicationContext,
-    @NonNull storage: CipherStorage,
-    @NonNull protected var promptInfo: BiometricPrompt.PromptInfo
-) : BiometricPrompt.AuthenticationCallback(), DecryptionResultHandler {
+open class ResultHandlerInteractiveBiometric(
+  protected val reactContext: ReactApplicationContext,
+  storage: CipherStorage,
+  protected var promptInfo: BiometricPrompt.PromptInfo
+) : BiometricPrompt.AuthenticationCallback(), ResultHandler {
 
   // Explicitly declare the visibility and use 'override' to match the interface
-  override var result: DecryptionResult? = null
+  override var decryptionResult: DecryptionResult? = null
+  override var encryptionResult: EncryptionResult? = null
   override var error: Throwable? = null
   protected val storage: CipherStorageBase = storage as CipherStorageBase
   protected val executor: Executor = Executors.newSingleThreadExecutor()
-  protected var context: DecryptionContext? = null
+  protected var context: CryptoContext? = null
 
   // Synchronization primitives
   private val lock = ReentrantLock()
   private val condition = lock.newCondition()
 
   /** Logging tag. */
-  protected val LOG_TAG = DecryptionResultHandlerInteractiveBiometric::class.java.simpleName
+  protected val LOG_TAG = ResultHandlerInteractiveBiometric::class.java.simpleName
 
-  override fun askAccessPermissions(@NonNull context: DecryptionContext) {
+  override fun askAccessPermissions(context: CryptoContext) {
     this.context = context
 
     if (!DeviceAvailability.isPermissionsGranted(reactContext)) {
-      val failure =
-          CryptoFailedException(
-              "Could not start fingerprint Authentication. No permissions granted.")
-      onDecrypt(null, failure)
+      val failure = CryptoFailedException(
+        "Could not start biometric Authentication. No permissions granted."
+      )
+      when (context.operation) {
+        CryptoOperation.ENCRYPT -> onEncrypt(null, failure)
+        CryptoOperation.DECRYPT -> onDecrypt(null, failure)
+      }
     } else {
       startAuthentication()
     }
   }
 
+  override fun onEncrypt(encryptionResult: EncryptionResult?, error: Throwable?) {
+    lock.withLock {
+      this.encryptionResult = encryptionResult
+      this.error = error
+      condition.signalAll() // Notify waiting thread
+    }
+  }
+
   override fun onDecrypt(
-      @Nullable decryptionResult: DecryptionResult?,
-      @Nullable error: Throwable?
+    decryptionResult: DecryptionResult?, error: Throwable?
   ) {
     lock.withLock {
-      this.result = decryptionResult
+      this.decryptionResult = decryptionResult
       this.error = error
       condition.signalAll() // Notify waiting thread
     }
   }
 
   /** Called when an unrecoverable error has been encountered and the operation is complete. */
-  override fun onAuthenticationError(errorCode: Int, @NonNull errString: CharSequence) {
+  override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
     val error = CryptoFailedException("code: $errorCode, msg: $errString")
-    onDecrypt(null, error)
-  }
-
-  /** Called when a biometric is recognized. */
-  override fun onAuthenticationSucceeded(@NonNull result: BiometricPrompt.AuthenticationResult) {
-    try {
-      context ?: throw NullPointerException("Decrypt context is not assigned yet.")
-
-      val decrypted =
-          DecryptionResult(
-              storage.decryptBytes(context!!.key, context!!.username),
-              storage.decryptBytes(context!!.key, context!!.password))
-
-      onDecrypt(decrypted, null)
-    } catch (fail: Throwable) {
-      onDecrypt(null, fail)
+    when (context?.operation) {
+      CryptoOperation.ENCRYPT -> onEncrypt(null, error)
+      CryptoOperation.DECRYPT -> onDecrypt(null, error)
+      null -> Log.e(LOG_TAG, "No operation context available")
     }
   }
+
+
+  /** Called when a biometric is recognized. */
+  override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
+    try {
+      context ?: throw NullPointerException("Crypto context is not assigned yet.")
+
+      when (context?.operation) {
+        CryptoOperation.ENCRYPT -> {
+          val encrypted = EncryptionResult(
+            storage.encryptString(context!!.key, String(context!!.username)),
+            storage.encryptString(context!!.key, String(context!!.password)),
+            storage
+          )
+          onEncrypt(encrypted, null)
+        }
+
+        CryptoOperation.DECRYPT -> {
+          val decrypted = DecryptionResult(
+            storage.decryptBytes(context!!.key, context!!.username),
+            storage.decryptBytes(context!!.key, context!!.password)
+          )
+          onDecrypt(decrypted, null)
+        }
+
+        null -> Log.e(LOG_TAG, "No operation context available")
+      }
+    } catch (fail: Throwable) {
+      when (context?.operation) {
+        CryptoOperation.ENCRYPT -> onEncrypt(null, fail)
+        CryptoOperation.DECRYPT -> onDecrypt(null, fail)
+        null -> Log.e(LOG_TAG, "No operation context available")
+      }
+    }
+  }
+
 
   /** Trigger interactive authentication. */
   open fun startAuthentication() {
@@ -104,7 +137,7 @@ open class DecryptionResultHandlerInteractiveBiometric(
     return activity ?: throw NullPointerException("Not assigned current activity")
   }
 
-  protected fun authenticateWithPrompt(@NonNull activity: FragmentActivity): BiometricPrompt {
+  protected fun authenticateWithPrompt(activity: FragmentActivity): BiometricPrompt {
     val prompt = BiometricPrompt(activity, executor, this)
     prompt.authenticate(this.promptInfo)
     return prompt
