@@ -1,6 +1,6 @@
 ---
 id: choosing-storage-type
-title: '[Android] Choosing Storage Type'
+title: Choosing Storage Type
 ---
 
 On Android, securing sensitive data requires careful consideration of different storage types. This guide helps you choose the right storage type.

@@ -15,7 +15,7 @@ const sidebars: SidebarsConfig = {
     {
       type: 'doc',
       id: 'choosing-storage-type',
-      label: '[Android] Choosing Storage Type',
+      label: 'Choosing Storage Type',
     },
     {
       type: 'doc',
