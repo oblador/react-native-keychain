@@ -40,7 +40,7 @@ Ensure the `rules` property is set to the string value `AUTOMATIC_UPGRADE`.
 **A:** To force a specific encryption level, call:
 
 ```tsx
-setGenericPassword({ ...otherProps, storage: "AES_GCM_NO_AUTH" });
+setGenericPassword({ ...otherProps, storage: "AES" });
 ```
 
 > **Note:** If you attempt to force `RSA` storage when biometrics are not available, the call will be rejected with an error related to the device's biometric configuration.

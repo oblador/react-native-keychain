@@ -49,7 +49,7 @@ The module automatically selects the appropriate `CipherStorage` implementation 
 - **API levels 16-22**: Uses Facebook Conceal for encryption/decryption.
 - **API level 23+**: Uses Android Keystore for encryption/decryption.
 
-Encrypted data is stored in `Jetpack DataStore`.
+Encrypted data is stored in `SharedPreferences`.
 
 #### Multiple Credentials
 
