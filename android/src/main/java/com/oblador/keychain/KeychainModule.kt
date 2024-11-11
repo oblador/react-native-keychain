@@ -221,7 +221,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
         val storage = getSelectedStorage(options)
         throwIfInsufficientLevel(storage, level)
         val promptInfo = getPromptInfo(options)
-        val result = encryptToResult(alias, storage, username, password, level, promptInfo)
+        val result = mutex.withLock { encryptToResult(alias, storage, username, password, level, promptInfo) }
         prefsStorage.storeEncryptedEntry(alias, result)
         val results = Arguments.createMap()
         results.putString(Maps.SERVICE, alias)
@@ -294,12 +294,12 @@ class KeychainModule(reactContext: ReactApplicationContext) :
           } else {
             getCipherStorageByName(storageName)
           }
-        val decryptionResult = decryptCredentials(alias, cipher!!, resultSet, rules, promptInfo)
+        val decryptionResult = mutex.withLock { decryptCredentials(alias, cipher!!, resultSet, rules, promptInfo) }
         val credentials = Arguments.createMap()
         credentials.putString(Maps.SERVICE, alias)
         credentials.putString(Maps.USERNAME, decryptionResult.username)
         credentials.putString(Maps.PASSWORD, decryptionResult.password)
-        credentials.putString(Maps.STORAGE, cipher.getCipherStorageName())
+        credentials.putString(Maps.STORAGE, cipher?.getCipherStorageName())
         promise.resolve(credentials)
       } catch (e: KeyStoreAccessException) {
         Log.e(KEYCHAIN_MODULE, e.message!!)
@@ -512,7 +512,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
     promptInfo: PromptInfo
   ): DecryptionResult {
     val handler = getInteractiveHandler(storage, promptInfo)
-    mutex.withLock { storage.decrypt(handler, alias, resultSet.username!!, resultSet.password!!, SecurityLevel.ANY) }
+    storage.decrypt(handler, alias, resultSet.username!!, resultSet.password!!, SecurityLevel.ANY)
     CryptoFailedException.reThrowOnError(handler.error)
     if (null == handler.decryptionResult) {
       throw CryptoFailedException("No decryption results and no error. Something deeply wrong!")
@@ -531,7 +531,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
     promptInfo: PromptInfo
   ): CipherStorage.EncryptionResult {
     val handler = getInteractiveHandler(storage, promptInfo)
-    mutex.withLock { storage.encrypt(handler, alias, username, password, securityLevel) }
+    storage.encrypt(handler, alias, username, password, securityLevel)
     CryptoFailedException.reThrowOnError(handler.error)
     if (null == handler.encryptionResult) {
       throw CryptoFailedException("No decryption results and no error. Something deeply wrong!")
