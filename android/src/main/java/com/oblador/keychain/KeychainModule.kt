@@ -31,6 +31,8 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.isActive
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 @ReactModule(name = KeychainModule.KEYCHAIN_MODULE)
 @Suppress("unused")
@@ -134,16 +136,19 @@ class KeychainModule(reactContext: ReactApplicationContext) :
   private val cipherStorageMap: MutableMap<String, CipherStorage> = HashMap()
 
   /** Shared preferences storage. */
-  private val prefsStorage: PrefsStorage
+  private val prefsStorage: PrefsStorageBase
 
   /** Launches a coroutine to perform non-blocking UI operations */
   private val coroutineScope = CoroutineScope(Dispatchers.Default)
+
+  /** Mutex to prevent concurrent calls to Cipher, which doesn't support multi-threading */
+  private val mutex = Mutex()
 
   // endregion
   // region Initialization
   /** Default constructor. */
   init {
-    prefsStorage = PrefsStorage(reactContext)
+    prefsStorage = DataStorePrefsStorage(reactContext, coroutineScope)
     addCipherStorageToMap(CipherStorageFacebookConceal(reactContext))
     addCipherStorageToMap(CipherStorageKeystoreAesCbc(reactContext))
     addCipherStorageToMap(CipherStorageKeystoreAesGcm(reactContext, false))
@@ -199,8 +204,8 @@ class KeychainModule(reactContext: ReactApplicationContext) :
     constants[SecurityLevel.SECURE_HARDWARE.jsName()] = SecurityLevel.SECURE_HARDWARE.name
     return constants
   }
-
   // endregion
+
   // region React Methods
   private fun setGenericPassword(
       alias: String,
@@ -216,7 +221,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
         val storage = getSelectedStorage(options)
         throwIfInsufficientLevel(storage, level)
         val promptInfo = getPromptInfo(options)
-        val result = encryptToResult(alias, storage, username, password, level, promptInfo)
+        val result = mutex.withLock { encryptToResult(alias, storage, username, password, level, promptInfo) }
         prefsStorage.storeEncryptedEntry(alias, result)
         val results = Arguments.createMap()
         results.putString(Maps.SERVICE, alias)
@@ -289,12 +294,12 @@ class KeychainModule(reactContext: ReactApplicationContext) :
           } else {
             getCipherStorageByName(storageName)
           }
-        val decryptionResult = decryptCredentials(alias, cipher!!, resultSet, rules, promptInfo)
+        val decryptionResult = mutex.withLock { decryptCredentials(alias, cipher!!, resultSet, rules, promptInfo) }
         val credentials = Arguments.createMap()
         credentials.putString(Maps.SERVICE, alias)
         credentials.putString(Maps.USERNAME, decryptionResult.username)
         credentials.putString(Maps.PASSWORD, decryptionResult.password)
-        credentials.putString(Maps.STORAGE, cipher.getCipherStorageName())
+        credentials.putString(Maps.STORAGE, cipher?.getCipherStorageName())
         promise.resolve(credentials)
       } catch (e: KeyStoreAccessException) {
         Log.e(KEYCHAIN_MODULE, e.message!!)
@@ -464,7 +469,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
   private fun decryptCredentials(
       alias: String,
       current: CipherStorage,
-      resultSet: PrefsStorage.ResultSet,
+      resultSet: PrefsStorageBase.ResultSet,
       @Rules rules: String,
       promptInfo: PromptInfo
   ): DecryptionResult {
@@ -503,7 +508,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
   private fun decryptToResult(
     alias: String,
     storage: CipherStorage,
-    resultSet: PrefsStorage.ResultSet,
+    resultSet: PrefsStorageBase.ResultSet,
     promptInfo: PromptInfo
   ): DecryptionResult {
     val handler = getInteractiveHandler(storage, promptInfo)
@@ -662,6 +667,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
       SecurityLevel.ANY
     }
   }
+  // endregion
 
   companion object {
     // region Constants
