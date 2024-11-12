@@ -46,9 +46,7 @@ export function setGenericPassword(
   password: string,
   serviceOrOptions?: string | SetOptions
 ): Promise<false | Result> {
-  const options = normalizeStorageOptions(
-    normalizeServiceOption(serviceOrOptions)
-  );
+  const options = normalizeStorageOptions(normalizeOptions(serviceOrOptions));
   return RNKeychainManager.setGenericPasswordForOptions(
     options,
     username,
@@ -180,7 +178,7 @@ export function setInternetCredentials(
     server,
     username,
     password,
-    options ? normalizeStorageOptions(options) : {}
+    normalizeStorageOptions(normalizeOptions(options))
   );
 }
 
