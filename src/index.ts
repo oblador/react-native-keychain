@@ -177,7 +177,7 @@ export function setInternetCredentials(
     server,
     username,
     password,
-    options ? normalizeOptions(options) : {}
+    normalizeOptions(options)
   );
 }
 
