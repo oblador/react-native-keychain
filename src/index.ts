@@ -22,7 +22,6 @@ import {
   normalizeOptions,
   normalizeServerOption,
   normalizeServiceOption,
-  normalizeStorageOptions,
 } from './normalizeOptions';
 
 const { RNKeychainManager } = NativeModules;
@@ -46,9 +45,7 @@ export function setGenericPassword(
   password: string,
   serviceOrOptions?: string | SetOptions
 ): Promise<false | Result> {
-  const options = normalizeStorageOptions(
-    normalizeServiceOption(serviceOrOptions)
-  );
+  const options = normalizeOptions(serviceOrOptions);
   return RNKeychainManager.setGenericPasswordForOptions(
     options,
     username,
@@ -180,7 +177,7 @@ export function setInternetCredentials(
     server,
     username,
     password,
-    options ? normalizeStorageOptions(options) : {}
+    options ? normalizeOptions(options) : {}
   );
 }
 
