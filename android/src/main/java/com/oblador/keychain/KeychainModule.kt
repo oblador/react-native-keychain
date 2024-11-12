@@ -594,7 +594,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
         useBiometry && (isFingerprintAuthAvailable || isFaceAuthAvailable || isIrisAuthAvailable)
     var foundCipher: CipherStorage? = null
     for (variant in cipherStorageMap.values) {
-      Log.d(KEYCHAIN_MODULE, "Probe cipher storage: " + variant.javaClass.simpleName)
+      Log.d(KEYCHAIN_MODULE, "Probe cipher storage: " + variant.getCipherStorageName())
 
       // Is the cipherStorage supported on the current API level?
       val minApiLevel = variant.getMinSupportedApiLevel()
@@ -616,7 +616,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
     if (foundCipher == null) {
       throw CryptoFailedException("Unsupported Android SDK " + Build.VERSION.SDK_INT)
     }
-    Log.d(KEYCHAIN_MODULE, "Selected storage: " + foundCipher.javaClass.simpleName)
+    Log.d(KEYCHAIN_MODULE, "Selected storage: " + foundCipher.getCipherStorageName())
     return foundCipher
   }
 

@@ -60,6 +60,17 @@ export type SetOptions = {
    * @default 'Best available storage'
    */
   storage?: STORAGE_TYPE;
+  /** Authentication prompt details or a title string.
+   * @default
+   * ```json
+   * {
+   *   "title": "Authenticate to retrieve secret",
+   *   "cancel": "Cancel"
+   * }
+   * ```
+   *
+   */
+  authenticationPrompt?: string | AuthenticationPrompt;
 } & BaseOptions &
   AccessControlOption;
 

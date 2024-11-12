@@ -27,7 +27,7 @@ import javax.crypto.SecretKeyFactory
 import javax.crypto.spec.GCMParameterSpec
 
 @TargetApi(Build.VERSION_CODES.M)
-class CipherStorageKeystoreAesGcm(reactContext: ReactApplicationContext, val requiresBiometricAuth: Boolean) :
+class CipherStorageKeystoreAesGcm(reactContext: ReactApplicationContext, private val requiresBiometricAuth: Boolean) :
     CipherStorageBase(reactContext) {
 
     // region Constants
