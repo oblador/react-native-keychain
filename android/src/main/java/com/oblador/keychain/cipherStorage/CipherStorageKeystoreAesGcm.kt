@@ -229,33 +229,6 @@ class CipherStorageKeystoreAesGcm(reactContext: ReactApplicationContext, private
 
     /** Decrypt provided bytes to a string. */
 
-    @Throws(GeneralSecurityException::class, IOException::class)
-    override fun decryptBytes(
-        key: Key,
-        bytes: ByteArray,
-        handler: DecryptBytesHandler?
-    ): String {
-        val cipher = getCachedInstance()
-
-        return try {
-            if (IV.IV_LENGTH >= bytes.size)
-                throw IOException("Insufficient length of input data for IV extracting.")
-            val iv = ByteArray(IV.IV_LENGTH)
-            System.arraycopy(bytes, 0, iv, 0, IV.IV_LENGTH)
-            val spec = GCMParameterSpec(IV.TAG_LENGTH, iv)
-            cipher.init(Cipher.DECRYPT_MODE, key, spec)
-
-            // Decrypt the bytes using cipher.doFinal()
-            val decryptedBytes = cipher.doFinal(bytes, IV.IV_LENGTH, bytes.size - IV.IV_LENGTH)
-            String(decryptedBytes, UTF8)
-        } catch (ex: UserNotAuthenticatedException){
-            throw ex
-        } catch (fail: Throwable) {
-            Log.w(LOG_TAG, fail.message, fail)
-            throw fail
-        }
-    }
-
     // endregion
 
     // region Initialization Vector encrypt/decrypt support
