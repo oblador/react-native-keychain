@@ -1,10 +1,12 @@
 package com.oblador.keychain.cipherStorage
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyInfo
+import android.security.keystore.UserNotAuthenticatedException
 import android.util.Log
 import androidx.annotation.VisibleForTesting
 import com.oblador.keychain.SecurityLevel
@@ -379,6 +381,7 @@ abstract class CipherStorageBase(protected val applicationContext: Context) : Ci
   }
 
   /** Decrypt provided bytes to a string. */
+  @SuppressLint("NewApi")
   @Throws(GeneralSecurityException::class, IOException::class)
   protected open fun decryptBytes(
     key: Key,
@@ -391,7 +394,19 @@ abstract class CipherStorageBase(protected val applicationContext: Context) : Ci
         ByteArrayOutputStream().use { output ->
           handler?.initialize(cipher, key, input)
 
-          CipherInputStream(input, cipher).use { decrypt -> copy(decrypt, output) }
+          try {
+            val decrypted = cipher.doFinal(input.readBytes())
+            output.write(decrypted)
+          } catch (e: Exception) {
+            when {
+              e is UserNotAuthenticatedException -> throw e
+              e.cause is android.security.KeyStoreException &&
+                e.cause?.message?.contains("Key user not authenticated") == true -> {
+                throw UserNotAuthenticatedException()
+              }
+              else -> throw e
+            }
+          }
 
           return String(output.toByteArray(), UTF8)
         }
