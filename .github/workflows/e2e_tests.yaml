@@ -131,19 +131,10 @@ jobs:
             adb shell "screenrecord --bugreport /data/local/tmp/screenrecord.mp4 & echo \$! > /data/local/tmp/screenrecord_pid.txt" &
             adb shell settings put system pointer_location 1
             adb shell locksettings set-pin 1111
-            adb shell am start -a android.settings.SECURITY_SETTINGS
-            sleep 3
-            if [ ${{ matrix.api-level }} -le 33 ]; then adb shell input tap 274 1150; fi
-            if [ ${{ matrix.api-level }} -gt 33 ]; then adb shell input tap 274 1800; fi
-            if [ ${{ matrix.api-level }} -gt 33 ]; then adb shell input tap 274 1770; fi
-            sleep 3
+            adb shell am start -a android.settings.BIOMETRIC_ENROLL
             adb shell input text 1111
             adb shell input keyevent 66
             sleep 3
-            adb shell input tap 274 1300
-            sleep 3
-            if [ ${{ matrix.api-level }} -gt 33 ]; then adb shell input tap 274 1300; fi
-            if [ ${{ matrix.api-level }} -gt 33 ]; then sleep 3; fi
             adb shell input tap 900 2200
             sleep 3
             adb shell input tap 900 2200
@@ -160,8 +151,6 @@ jobs:
             adb pull /data/local/tmp/screenrecord.mp4 .
             cd KeychainExample
             yarn test:android:run
-        env:
-          API_LEVEL: ${{ matrix.api-level }}
       - name: Upload test artifacts
         if: ${{ failure() }}
         uses: actions/upload-artifact@v4
