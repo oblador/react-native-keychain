@@ -166,7 +166,7 @@ jobs:
         if: ${{ failure() }}
         uses: actions/upload-artifact@v4
         with:
-          name: android-test-artifacts
+          name: android-test-artifacts-${{ matrix.api-level }}
           path: |
             KeychainExample/artifacts
             screenrecord.mp4
