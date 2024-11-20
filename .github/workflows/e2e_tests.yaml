@@ -130,29 +130,20 @@ jobs:
             adb shell locksettings set-pin 1111
             adb shell am start -a android.settings.SECURITY_SETTINGS
             sleep 3
-            if [ ${{ matrix.api-level }} -le 33 ]; then
-              adb shell input tap 274 1150
-            else
-              adb shell input tap 274 1800
-              adb shell input tap 274 1770
-            fi
+            if [ ${{ matrix.api-level }} -le 33 ]; then adb shell input tap 274 1150; fi
+            if [ ${{ matrix.api-level }} -gt 33 ]; then adb shell input tap 274 1800; fi
+            if [ ${{ matrix.api-level }} -gt 33 ]; then adb shell input tap 274 1770; fi
             sleep 3
             adb shell input text 1111
             adb shell input keyevent 66
             sleep 3
             adb shell input tap 274 1300
             sleep 3
-            if [ ${{ matrix.api-level }} -le 33 ]; then
-              adb shell input tap 900 2200
-              sleep 3
-              adb shell input tap 900 2200
-            else
-              adb shell input tap 274 1300
-              sleep 3
-              adb shell input tap 900 2200
-              sleep 3
-              adb shell input tap 900 2200
-            fi
+            if [ ${{ matrix.api-level }} -gt 33 ]; then adb shell input tap 274 1300; fi
+            if [ ${{ matrix.api-level }} -gt 33 ]; then sleep 3; fi
+            adb shell input tap 900 2200
+            sleep 3
+            adb shell input tap 900 2200
             sleep 3
             adb -e emu finger touch 1
             sleep 3
