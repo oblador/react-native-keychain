@@ -130,7 +130,7 @@ jobs:
             adb shell locksettings set-pin 1111
             adb shell am start -a android.settings.SECURITY_SETTINGS
             sleep 3
-            if [[ ${{ matrix.api-level }} -le 33 ]]; then
+            if [ ${{ matrix.api-level }} -le 33 ]; then
               adb shell input tap 274 1150
             else
               adb shell input tap 274 1800
@@ -142,7 +142,7 @@ jobs:
             sleep 3
             adb shell input tap 274 1300
             sleep 3
-            if [[ ${{ matrix.api-level }} -le 33 ]]; then
+            if [ ${{ matrix.api-level }} -le 33 ]; then
               adb shell input tap 900 2200
               sleep 3
               adb shell input tap 900 2200
