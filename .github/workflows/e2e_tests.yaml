@@ -162,7 +162,7 @@ jobs:
 
   build-ios:
     name: Build and Test iOS
-    runs-on: macos-13
+    runs-on: macos-latest
 
     steps:
       - name: Checkout
