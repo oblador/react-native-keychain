@@ -1,4 +1,4 @@
-import { by, element, expect } from 'detox';
+import { by, element, waitFor } from 'detox';
 
 export const matchLoadInfo = async (
   username: string,
@@ -20,5 +20,7 @@ export const matchLoadInfo = async (
 
   regexPattern += '.*$';
   const regex = new RegExp(regexPattern);
-  await expect(element(by.text(regex))).toBeVisible();
+  await waitFor(element(by.text(regex)))
+    .toBeVisible()
+    .withTimeout(3000);
 };

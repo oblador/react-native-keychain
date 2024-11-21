@@ -27,26 +27,27 @@ import com.oblador.keychain.exceptions.EmptyParameterException
 import com.oblador.keychain.exceptions.KeyStoreAccessException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.isActive
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 
 @ReactModule(name = KeychainModule.KEYCHAIN_MODULE)
 @Suppress("unused")
 class KeychainModule(reactContext: ReactApplicationContext) :
-    ReactContextBaseJavaModule(reactContext) {
+  ReactContextBaseJavaModule(reactContext) {
   @StringDef(
-      AccessControl.NONE,
-      AccessControl.USER_PRESENCE,
-      AccessControl.BIOMETRY_ANY,
-      AccessControl.BIOMETRY_CURRENT_SET,
-      AccessControl.DEVICE_PASSCODE,
-      AccessControl.APPLICATION_PASSWORD,
-      AccessControl.BIOMETRY_ANY_OR_DEVICE_PASSCODE,
-      AccessControl.BIOMETRY_CURRENT_SET_OR_DEVICE_PASSCODE)
+    AccessControl.NONE,
+    AccessControl.USER_PRESENCE,
+    AccessControl.BIOMETRY_ANY,
+    AccessControl.BIOMETRY_CURRENT_SET,
+    AccessControl.DEVICE_PASSCODE,
+    AccessControl.APPLICATION_PASSWORD,
+    AccessControl.BIOMETRY_ANY_OR_DEVICE_PASSCODE,
+    AccessControl.BIOMETRY_CURRENT_SET_OR_DEVICE_PASSCODE
+  )
   internal annotation class AccessControl {
     companion object {
       const val NONE = "None"
@@ -139,10 +140,11 @@ class KeychainModule(reactContext: ReactApplicationContext) :
   private val prefsStorage: PrefsStorageBase
 
   /** Launches a coroutine to perform non-blocking UI operations */
-  private val coroutineScope = CoroutineScope(Dispatchers.Default)
+  private val coroutineScope = CoroutineScope(Dispatchers.Default + SupervisorJob())
 
-  /** Mutex to prevent concurrent calls to Cipher, which doesn't support multi-threading */
-  private val mutex = Mutex()
+  /** Limit parallelism for coroutineScope */
+  @OptIn(ExperimentalCoroutinesApi::class)
+  private val serialDispatcher = Dispatchers.Default.limitedParallelism(1)
 
   // endregion
   // region Initialization
@@ -169,14 +171,15 @@ class KeychainModule(reactContext: ReactApplicationContext) :
       val instance = best.getCachedInstance()
       val isSecure = best.supportsSecureHardware()
       val requiredLevel =
-          if (isSecure) SecurityLevel.SECURE_HARDWARE else SecurityLevel.SECURE_SOFTWARE
+        if (isSecure) SecurityLevel.SECURE_HARDWARE else SecurityLevel.SECURE_SOFTWARE
       best.generateKeyAndStoreUnderAlias(WARMING_UP_ALIAS, requiredLevel)
       best.getKeyStoreAndLoad()
       Log.v(
-          KEYCHAIN_MODULE,
-          "warming up takes: " +
-              TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startTime) +
-              " ms")
+        KEYCHAIN_MODULE,
+        "warming up takes: " +
+          TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startTime) +
+          " ms"
+      )
     } catch (ex: Throwable) {
       Log.e(KEYCHAIN_MODULE, "warming up failed!", ex)
     }
@@ -208,20 +211,20 @@ class KeychainModule(reactContext: ReactApplicationContext) :
 
   // region React Methods
   private fun setGenericPassword(
-      alias: String,
-      username: String,
-      password: String,
-      options: ReadableMap?,
-      promise: Promise
+    alias: String,
+    username: String,
+    password: String,
+    options: ReadableMap?,
+    promise: Promise
   ) {
-    coroutineScope.launch {
+    coroutineScope.launch(serialDispatcher) {
       try {
         throwIfEmptyLoginPassword(username, password)
         val level = getSecurityLevelOrDefault(options)
         val storage = getSelectedStorage(options)
         throwIfInsufficientLevel(storage, level)
         val promptInfo = getPromptInfo(options)
-        val result = mutex.withLock { encryptToResult(alias, storage, username, password, level, promptInfo) }
+        val result = encryptToResult(alias, storage, username, password, level, promptInfo)
         prefsStorage.storeEncryptedEntry(alias, result)
         val results = Arguments.createMap()
         results.putString(Maps.SERVICE, alias)
@@ -242,10 +245,10 @@ class KeychainModule(reactContext: ReactApplicationContext) :
 
   @ReactMethod
   fun setGenericPasswordForOptions(
-      options: ReadableMap?,
-      username: String,
-      password: String,
-      promise: Promise
+    options: ReadableMap?,
+    username: String,
+    password: String,
+    promise: Promise
   ) {
     val service = getServiceOrDefault(options)
     setGenericPassword(service, username, password, options, promise)
@@ -270,7 +273,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
   }
 
   private fun getGenericPassword(alias: String, options: ReadableMap?, promise: Promise) {
-    coroutineScope.launch {
+    coroutineScope.launch(serialDispatcher) {
       try {
         val resultSet = prefsStorage.getEncryptedEntry(alias)
         if (resultSet == null) {
@@ -294,7 +297,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
           } else {
             getCipherStorageByName(storageName)
           }
-        val decryptionResult = mutex.withLock { decryptCredentials(alias, cipher!!, resultSet, rules, promptInfo) }
+        val decryptionResult = decryptCredentials(alias, cipher!!, resultSet, rules, promptInfo)
         val credentials = Arguments.createMap()
         credentials.putString(Maps.SERVICE, alias)
         credentials.putString(Maps.USERNAME, decryptionResult.username)
@@ -404,11 +407,11 @@ class KeychainModule(reactContext: ReactApplicationContext) :
 
   @ReactMethod
   fun setInternetCredentialsForServer(
-      server: String,
-      username: String,
-      password: String,
-      options: ReadableMap?,
-      promise: Promise
+    server: String,
+    username: String,
+    password: String,
+    options: ReadableMap?,
+    promise: Promise
   ) {
     setGenericPassword(server, username, password, options, promise)
   }
@@ -467,11 +470,11 @@ class KeychainModule(reactContext: ReactApplicationContext) :
    */
   @Throws(CryptoFailedException::class, KeyStoreAccessException::class)
   private fun decryptCredentials(
-      alias: String,
-      current: CipherStorage,
-      resultSet: PrefsStorageBase.ResultSet,
-      @Rules rules: String,
-      promptInfo: PromptInfo
+    alias: String,
+    current: CipherStorage,
+    resultSet: PrefsStorageBase.ResultSet,
+    @Rules rules: String,
+    promptInfo: PromptInfo
   ): DecryptionResult {
     val storageName = resultSet.cipherStorageName
 
@@ -485,9 +488,10 @@ class KeychainModule(reactContext: ReactApplicationContext) :
     // first,
     // then encrypt it using the current CipherStorage, then store it again and return
     val oldStorage =
-        getCipherStorageByName(storageName)
-            ?: throw KeyStoreAccessException(
-                "Wrong cipher storage name '$storageName' or cipher not available")
+      getCipherStorageByName(storageName)
+        ?: throw KeyStoreAccessException(
+          "Wrong cipher storage name '$storageName' or cipher not available"
+        )
 
     // decrypt using the older cipher storage
     val decryptionResult = decryptToResult(alias, oldStorage, resultSet, promptInfo)
@@ -497,7 +501,8 @@ class KeychainModule(reactContext: ReactApplicationContext) :
         migrateCipherStorage(alias, current, oldStorage, decryptionResult, promptInfo)
       } catch (e: CryptoFailedException) {
         Log.w(
-            KEYCHAIN_MODULE, "Migrating to a less safe storage is not allowed. Keeping the old one")
+          KEYCHAIN_MODULE, "Migrating to a less safe storage is not allowed. Keeping the old one"
+        )
       }
     }
     return decryptionResult
@@ -541,8 +546,8 @@ class KeychainModule(reactContext: ReactApplicationContext) :
 
   /** Get instance of handler that resolves access to the keystore on system request. */
   private fun getInteractiveHandler(
-      current: CipherStorage,
-      promptInfo: PromptInfo
+    current: CipherStorage,
+    promptInfo: PromptInfo
   ): ResultHandler {
     val reactContext = reactApplicationContext
     return ResultHandlerProvider.getHandler(reactContext, current, promptInfo)
@@ -551,22 +556,30 @@ class KeychainModule(reactContext: ReactApplicationContext) :
   /** Remove key from old storage and add it to the new storage. */
   /* package */
   @Throws(
-      KeyStoreAccessException::class, CryptoFailedException::class, IllegalArgumentException::class)
+    KeyStoreAccessException::class, CryptoFailedException::class, IllegalArgumentException::class
+  )
   fun migrateCipherStorage(
-      service: String,
-      newCipherStorage: CipherStorage,
-      oldCipherStorage: CipherStorage,
-      decryptionResult: DecryptionResult,
-      promptInfo: PromptInfo
+    service: String,
+    newCipherStorage: CipherStorage,
+    oldCipherStorage: CipherStorage,
+    decryptionResult: DecryptionResult,
+    promptInfo: PromptInfo
   ) {
 
     val username =
-        decryptionResult.username ?: throw IllegalArgumentException("Username cannot be null")
+      decryptionResult.username ?: throw IllegalArgumentException("Username cannot be null")
     val password =
-        decryptionResult.password ?: throw IllegalArgumentException("Password cannot be null")
+      decryptionResult.password ?: throw IllegalArgumentException("Password cannot be null")
     // don't allow to degrade security level when transferring, the new
     // storage should be as safe as the old one.
-    val encryptionResult = encryptToResult(service, newCipherStorage, username, password, decryptionResult.getSecurityLevel(), promptInfo)
+    val encryptionResult = encryptToResult(
+      service,
+      newCipherStorage,
+      username,
+      password,
+      decryptionResult.getSecurityLevel(),
+      promptInfo
+    )
 
     // store the encryption result
     prefsStorage.storeEncryptedEntry(service, encryptionResult)
@@ -591,7 +604,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
   fun /* package */ getCipherStorageForCurrentAPILevel(useBiometry: Boolean): CipherStorage {
     val currentApiLevel = Build.VERSION.SDK_INT
     val isBiometry =
-        useBiometry && (isFingerprintAuthAvailable || isFaceAuthAvailable || isIrisAuthAvailable)
+      useBiometry && (isFingerprintAuthAvailable || isFaceAuthAvailable || isIrisAuthAvailable)
     var foundCipher: CipherStorage? = null
     for (variant in cipherStorageMap.values) {
       Log.d(KEYCHAIN_MODULE, "Probe cipher storage: " + variant.getCipherStorageName())
@@ -628,29 +641,29 @@ class KeychainModule(reactContext: ReactApplicationContext) :
   val isFingerprintAuthAvailable: Boolean
     /** True - if fingerprint hardware available and configured, otherwise false. */
     get() =
-        DeviceAvailability.isStrongBiometricAuthAvailable(reactApplicationContext) &&
-            DeviceAvailability.isFingerprintAuthAvailable(reactApplicationContext)
+      DeviceAvailability.isStrongBiometricAuthAvailable(reactApplicationContext) &&
+        DeviceAvailability.isFingerprintAuthAvailable(reactApplicationContext)
 
   val isFaceAuthAvailable: Boolean
     /** True - if face recognition hardware available and configured, otherwise false. */
     get() =
-        DeviceAvailability.isStrongBiometricAuthAvailable(reactApplicationContext) &&
-            DeviceAvailability.isFaceAuthAvailable(reactApplicationContext)
+      DeviceAvailability.isStrongBiometricAuthAvailable(reactApplicationContext) &&
+        DeviceAvailability.isFaceAuthAvailable(reactApplicationContext)
 
   val isIrisAuthAvailable: Boolean
     /** True - if iris recognition hardware available and configured, otherwise false. */
     get() =
-        DeviceAvailability.isStrongBiometricAuthAvailable(reactApplicationContext) &&
-            DeviceAvailability.isIrisAuthAvailable(reactApplicationContext)
+      DeviceAvailability.isStrongBiometricAuthAvailable(reactApplicationContext) &&
+        DeviceAvailability.isIrisAuthAvailable(reactApplicationContext)
 
   val isSecureHardwareAvailable: Boolean
     /** Is secured hardware a part of current storage or not. */
     get() =
-        try {
-          cipherStorageForCurrentAPILevel.supportsSecureHardware()
-        } catch (e: CryptoFailedException) {
-          false
-        }
+      try {
+        cipherStorageForCurrentAPILevel.supportsSecureHardware()
+      } catch (e: CryptoFailedException) {
+        false
+      }
 
   /** Resolve storage to security level it provides. */
   private fun getSecurityLevel(useBiometry: Boolean): SecurityLevel {
@@ -736,8 +749,8 @@ class KeychainModule(reactContext: ReactApplicationContext) :
     /** Get access control value from options or fallback to default. */
     @AccessControl
     private fun getAccessControlOrDefault(
-        options: ReadableMap?,
-        @AccessControl fallback: String
+      options: ReadableMap?,
+      @AccessControl fallback: String
     ): String {
       var accessControl: String? = null
       if (null != options && options.hasKey(Maps.ACCESS_CONTROL)) {
@@ -766,16 +779,16 @@ class KeychainModule(reactContext: ReactApplicationContext) :
     /** Is provided access control string matching biometry use request? */
     fun getUseBiometry(@AccessControl accessControl: String?): Boolean {
       return AccessControl.BIOMETRY_ANY == accessControl ||
-          AccessControl.BIOMETRY_CURRENT_SET == accessControl ||
-          AccessControl.BIOMETRY_ANY_OR_DEVICE_PASSCODE == accessControl ||
-          AccessControl.BIOMETRY_CURRENT_SET_OR_DEVICE_PASSCODE == accessControl
+        AccessControl.BIOMETRY_CURRENT_SET == accessControl ||
+        AccessControl.BIOMETRY_ANY_OR_DEVICE_PASSCODE == accessControl ||
+        AccessControl.BIOMETRY_CURRENT_SET_OR_DEVICE_PASSCODE == accessControl
     }
 
     /** Extract user specified prompt info from options. */
     private fun getPromptInfo(options: ReadableMap?): PromptInfo {
       val promptInfoOptionsMap =
-          if (options != null && options.hasKey(Maps.AUTH_PROMPT)) options.getMap(Maps.AUTH_PROMPT)
-          else null
+        if (options != null && options.hasKey(Maps.AUTH_PROMPT)) options.getMap(Maps.AUTH_PROMPT)
+        else null
       val promptInfoBuilder = PromptInfo.Builder()
       if (null != promptInfoOptionsMap && promptInfoOptionsMap.hasKey(AuthPromptOptions.TITLE)) {
         val promptInfoTitle = promptInfoOptionsMap.getString(AuthPromptOptions.TITLE)
@@ -786,7 +799,8 @@ class KeychainModule(reactContext: ReactApplicationContext) :
         promptInfoBuilder.setSubtitle(promptInfoSubtitle)
       }
       if (null != promptInfoOptionsMap &&
-          promptInfoOptionsMap.hasKey(AuthPromptOptions.DESCRIPTION)) {
+        promptInfoOptionsMap.hasKey(AuthPromptOptions.DESCRIPTION)
+      ) {
         val promptInfoDescription = promptInfoOptionsMap.getString(AuthPromptOptions.DESCRIPTION)
         promptInfoBuilder.setDescription(promptInfoDescription)
       }
@@ -796,10 +810,10 @@ class KeychainModule(reactContext: ReactApplicationContext) :
       }
 
       /* PromptInfo is only used in Biometric-enabled RSA storage and can only be unlocked by a strong biometric */ promptInfoBuilder
-          .setAllowedAuthenticators(BiometricManager.Authenticators.BIOMETRIC_STRONG)
+        .setAllowedAuthenticators(BiometricManager.Authenticators.BIOMETRIC_STRONG)
 
       /* Bypass confirmation to avoid KeyStore unlock timeout being exceeded when using passive biometrics */ promptInfoBuilder
-          .setConfirmationRequired(false)
+        .setConfirmationRequired(false)
       return promptInfoBuilder.build()
     }
 
@@ -820,10 +834,12 @@ class KeychainModule(reactContext: ReactApplicationContext) :
         return
       }
       throw CryptoFailedException(
-          String.format(
-              "Cipher Storage is too weak. Required security level is: %s, but only %s is provided",
-              level.name,
-              storage.securityLevel().name))
+        String.format(
+          "Cipher Storage is too weak. Required security level is: %s, but only %s is provided",
+          level.name,
+          storage.securityLevel().name
+        )
+      )
     }
 
     private fun getAliasOrDefault(alias: String?): String {
