@@ -128,10 +128,13 @@ jobs:
           avd-name: TestingAVD
           script: |
             echo "Starting the screen recording..."
+            sleep 3
             adb shell "screenrecord --bugreport /data/local/tmp/screenrecord.mp4 & echo \$! > /data/local/tmp/screenrecord_pid.txt" &
             adb shell settings put system pointer_location 1
             adb shell locksettings set-pin 1111
+            sleep 3
             adb shell am start -a android.settings.BIOMETRIC_ENROLL
+            sleep 3
             adb shell input text 1111
             adb shell input keyevent 66
             sleep 3
