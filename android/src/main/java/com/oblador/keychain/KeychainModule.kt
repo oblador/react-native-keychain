@@ -27,12 +27,12 @@ import com.oblador.keychain.exceptions.EmptyParameterException
 import com.oblador.keychain.exceptions.KeyStoreAccessException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.isActive
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 @ReactModule(name = KeychainModule.KEYCHAIN_MODULE)
 @Suppress("unused")
@@ -140,11 +140,10 @@ class KeychainModule(reactContext: ReactApplicationContext) :
   private val prefsStorage: PrefsStorageBase
 
   /** Launches a coroutine to perform non-blocking UI operations */
-  private val coroutineScope = CoroutineScope(Dispatchers.Default + SupervisorJob())
+  private val coroutineScope = CoroutineScope(Dispatchers.Default)
 
-  /** Limit parallelism for coroutineScope */
-  @OptIn(ExperimentalCoroutinesApi::class)
-  private val serialDispatcher = Dispatchers.Default.limitedParallelism(1)
+  /** Mutex to prevent concurrent calls to Cipher, which doesn't support multi-threading */
+  private val mutex = Mutex()
 
   // endregion
   // region Initialization
@@ -217,28 +216,30 @@ class KeychainModule(reactContext: ReactApplicationContext) :
     options: ReadableMap?,
     promise: Promise
   ) {
-    coroutineScope.launch(serialDispatcher) {
-      try {
-        throwIfEmptyLoginPassword(username, password)
-        val level = getSecurityLevelOrDefault(options)
-        val storage = getSelectedStorage(options)
-        throwIfInsufficientLevel(storage, level)
-        val promptInfo = getPromptInfo(options)
-        val result = encryptToResult(alias, storage, username, password, level, promptInfo)
-        prefsStorage.storeEncryptedEntry(alias, result)
-        val results = Arguments.createMap()
-        results.putString(Maps.SERVICE, alias)
-        results.putString(Maps.STORAGE, storage.getCipherStorageName())
-        promise.resolve(results)
-      } catch (e: EmptyParameterException) {
-        Log.e(KEYCHAIN_MODULE, e.message, e)
-        promise.reject(Errors.E_EMPTY_PARAMETERS, e)
-      } catch (e: CryptoFailedException) {
-        Log.e(KEYCHAIN_MODULE, e.message, e)
-        promise.reject(Errors.E_CRYPTO_FAILED, e)
-      } catch (fail: Throwable) {
-        Log.e(KEYCHAIN_MODULE, fail.message, fail)
-        promise.reject(Errors.E_UNKNOWN_ERROR, fail)
+    coroutineScope.launch {
+      mutex.withLock {
+        try {
+          throwIfEmptyLoginPassword(username, password)
+          val level = getSecurityLevelOrDefault(options)
+          val storage = getSelectedStorage(options)
+          throwIfInsufficientLevel(storage, level)
+          val promptInfo = getPromptInfo(options)
+          val result = encryptToResult(alias, storage, username, password, level, promptInfo)
+          prefsStorage.storeEncryptedEntry(alias, result)
+          val results = Arguments.createMap()
+          results.putString(Maps.SERVICE, alias)
+          results.putString(Maps.STORAGE, storage.getCipherStorageName())
+          promise.resolve(results)
+        } catch (e: EmptyParameterException) {
+          Log.e(KEYCHAIN_MODULE, e.message, e)
+          promise.reject(Errors.E_EMPTY_PARAMETERS, e)
+        } catch (e: CryptoFailedException) {
+          Log.e(KEYCHAIN_MODULE, e.message, e)
+          promise.reject(Errors.E_CRYPTO_FAILED, e)
+        } catch (fail: Throwable) {
+          Log.e(KEYCHAIN_MODULE, fail.message, fail)
+          promise.reject(Errors.E_UNKNOWN_ERROR, fail)
+        }
       }
     }
   }
@@ -273,46 +274,48 @@ class KeychainModule(reactContext: ReactApplicationContext) :
   }
 
   private fun getGenericPassword(alias: String, options: ReadableMap?, promise: Promise) {
-    coroutineScope.launch(serialDispatcher) {
-      try {
-        val resultSet = prefsStorage.getEncryptedEntry(alias)
-        if (resultSet == null) {
-          Log.e(KEYCHAIN_MODULE, "No entry found for service: $alias")
-          promise.resolve(false)
-          return@launch
-        }
-        val storageName = resultSet.cipherStorageName
-        val rules = getSecurityRulesOrDefault(options)
-        val promptInfo = getPromptInfo(options)
-        var cipher: CipherStorage? = null
-
-        // Only check for upgradable ciphers for FacebookConseal as that
-        // is the only cipher that can be upgraded
-        cipher =
-          if (rules == Rules.AUTOMATIC_UPGRADE && storageName == KnownCiphers.FB) {
-            // get the best storage
-            val accessControl = getAccessControlOrDefault(options)
-            val useBiometry = getUseBiometry(accessControl)
-            getCipherStorageForCurrentAPILevel(useBiometry)
-          } else {
-            getCipherStorageByName(storageName)
+    coroutineScope.launch {
+      mutex.withLock {
+        try {
+          val resultSet = prefsStorage.getEncryptedEntry(alias)
+          if (resultSet == null) {
+            Log.e(KEYCHAIN_MODULE, "No entry found for service: $alias")
+            promise.resolve(false)
+            return@launch
           }
-        val decryptionResult = decryptCredentials(alias, cipher!!, resultSet, rules, promptInfo)
-        val credentials = Arguments.createMap()
-        credentials.putString(Maps.SERVICE, alias)
-        credentials.putString(Maps.USERNAME, decryptionResult.username)
-        credentials.putString(Maps.PASSWORD, decryptionResult.password)
-        credentials.putString(Maps.STORAGE, cipher?.getCipherStorageName())
-        promise.resolve(credentials)
-      } catch (e: KeyStoreAccessException) {
-        Log.e(KEYCHAIN_MODULE, e.message!!)
-        promise.reject(Errors.E_KEYSTORE_ACCESS_ERROR, e)
-      } catch (e: CryptoFailedException) {
-        Log.e(KEYCHAIN_MODULE, e.message!!)
-        promise.reject(Errors.E_CRYPTO_FAILED, e)
-      } catch (fail: Throwable) {
-        Log.e(KEYCHAIN_MODULE, fail.message, fail)
-        promise.reject(Errors.E_UNKNOWN_ERROR, fail)
+          val storageName = resultSet.cipherStorageName
+          val rules = getSecurityRulesOrDefault(options)
+          val promptInfo = getPromptInfo(options)
+          var cipher: CipherStorage? = null
+
+          // Only check for upgradable ciphers for FacebookConseal as that
+          // is the only cipher that can be upgraded
+          cipher =
+            if (rules == Rules.AUTOMATIC_UPGRADE && storageName == KnownCiphers.FB) {
+              // get the best storage
+              val accessControl = getAccessControlOrDefault(options)
+              val useBiometry = getUseBiometry(accessControl)
+              getCipherStorageForCurrentAPILevel(useBiometry)
+            } else {
+              getCipherStorageByName(storageName)
+            }
+          val decryptionResult = decryptCredentials(alias, cipher!!, resultSet, rules, promptInfo)
+          val credentials = Arguments.createMap()
+          credentials.putString(Maps.SERVICE, alias)
+          credentials.putString(Maps.USERNAME, decryptionResult.username)
+          credentials.putString(Maps.PASSWORD, decryptionResult.password)
+          credentials.putString(Maps.STORAGE, cipher?.getCipherStorageName())
+          promise.resolve(credentials)
+        } catch (e: KeyStoreAccessException) {
+          Log.e(KEYCHAIN_MODULE, e.message!!)
+          promise.reject(Errors.E_KEYSTORE_ACCESS_ERROR, e)
+        } catch (e: CryptoFailedException) {
+          Log.e(KEYCHAIN_MODULE, e.message!!)
+          promise.reject(Errors.E_CRYPTO_FAILED, e)
+        } catch (fail: Throwable) {
+          Log.e(KEYCHAIN_MODULE, fail.message, fail)
+          promise.reject(Errors.E_UNKNOWN_ERROR, fail)
+        }
       }
     }
   }
@@ -469,7 +472,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
    * set then executed migration.
    */
   @Throws(CryptoFailedException::class, KeyStoreAccessException::class)
-  private fun decryptCredentials(
+  private suspend fun decryptCredentials(
     alias: String,
     current: CipherStorage,
     resultSet: PrefsStorageBase.ResultSet,
@@ -510,7 +513,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
 
   /** Try to decrypt with provided storage. */
   @Throws(CryptoFailedException::class)
-  private fun decryptToResult(
+  private suspend fun decryptToResult(
     alias: String,
     storage: CipherStorage,
     resultSet: PrefsStorageBase.ResultSet,
@@ -527,7 +530,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
 
   /** Try to encrypt with provided storage. */
   @Throws(CryptoFailedException::class)
-  private fun encryptToResult(
+  private suspend fun encryptToResult(
     alias: String,
     storage: CipherStorage,
     username: String,
@@ -558,7 +561,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
   @Throws(
     KeyStoreAccessException::class, CryptoFailedException::class, IllegalArgumentException::class
   )
-  fun migrateCipherStorage(
+  private suspend fun migrateCipherStorage(
     service: String,
     newCipherStorage: CipherStorage,
     oldCipherStorage: CipherStorage,
