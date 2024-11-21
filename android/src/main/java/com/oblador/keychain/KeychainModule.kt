@@ -27,6 +27,7 @@ import com.oblador.keychain.exceptions.EmptyParameterException
 import com.oblador.keychain.exceptions.KeyStoreAccessException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.isActive
 import java.util.concurrent.TimeUnit
@@ -140,7 +141,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
   private val prefsStorage: PrefsStorageBase
 
   /** Launches a coroutine to perform non-blocking UI operations */
-  private val coroutineScope = CoroutineScope(Dispatchers.Default)
+  private val coroutineScope = CoroutineScope(Dispatchers.Default + SupervisorJob())
 
   /** Mutex to prevent concurrent calls to Cipher, which doesn't support multi-threading */
   private val mutex = Mutex()
