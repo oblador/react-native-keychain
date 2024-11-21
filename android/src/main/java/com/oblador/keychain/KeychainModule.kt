@@ -46,7 +46,8 @@ class KeychainModule(reactContext: ReactApplicationContext) :
     AccessControl.DEVICE_PASSCODE,
     AccessControl.APPLICATION_PASSWORD,
     AccessControl.BIOMETRY_ANY_OR_DEVICE_PASSCODE,
-    AccessControl.BIOMETRY_CURRENT_SET_OR_DEVICE_PASSCODE)
+    AccessControl.BIOMETRY_CURRENT_SET_OR_DEVICE_PASSCODE
+  )
   internal annotation class AccessControl {
     companion object {
       const val NONE = "None"
@@ -177,7 +178,8 @@ class KeychainModule(reactContext: ReactApplicationContext) :
         KEYCHAIN_MODULE,
         "warming up takes: " +
           TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startTime) +
-          " ms")
+          " ms"
+      )
     } catch (ex: Throwable) {
       Log.e(KEYCHAIN_MODULE, "warming up failed!", ex)
     }
@@ -488,7 +490,8 @@ class KeychainModule(reactContext: ReactApplicationContext) :
     val oldStorage =
       getCipherStorageByName(storageName)
         ?: throw KeyStoreAccessException(
-          "Wrong cipher storage name '$storageName' or cipher not available")
+          "Wrong cipher storage name '$storageName' or cipher not available"
+        )
 
     // decrypt using the older cipher storage
     val decryptionResult = decryptToResult(alias, oldStorage, resultSet, promptInfo)
@@ -498,7 +501,8 @@ class KeychainModule(reactContext: ReactApplicationContext) :
         migrateCipherStorage(alias, current, oldStorage, decryptionResult, promptInfo)
       } catch (e: CryptoFailedException) {
         Log.w(
-          KEYCHAIN_MODULE, "Migrating to a less safe storage is not allowed. Keeping the old one")
+          KEYCHAIN_MODULE, "Migrating to a less safe storage is not allowed. Keeping the old one"
+        )
       }
     }
     return decryptionResult
@@ -552,7 +556,8 @@ class KeychainModule(reactContext: ReactApplicationContext) :
   /** Remove key from old storage and add it to the new storage. */
   /* package */
   @Throws(
-    KeyStoreAccessException::class, CryptoFailedException::class, IllegalArgumentException::class)
+    KeyStoreAccessException::class, CryptoFailedException::class, IllegalArgumentException::class
+  )
   fun migrateCipherStorage(
     service: String,
     newCipherStorage: CipherStorage,
@@ -567,7 +572,14 @@ class KeychainModule(reactContext: ReactApplicationContext) :
       decryptionResult.password ?: throw IllegalArgumentException("Password cannot be null")
     // don't allow to degrade security level when transferring, the new
     // storage should be as safe as the old one.
-    val encryptionResult = encryptToResult(service, newCipherStorage, username, password, decryptionResult.getSecurityLevel(), promptInfo)
+    val encryptionResult = encryptToResult(
+      service,
+      newCipherStorage,
+      username,
+      password,
+      decryptionResult.getSecurityLevel(),
+      promptInfo
+    )
 
     // store the encryption result
     prefsStorage.storeEncryptedEntry(service, encryptionResult)
@@ -787,7 +799,8 @@ class KeychainModule(reactContext: ReactApplicationContext) :
         promptInfoBuilder.setSubtitle(promptInfoSubtitle)
       }
       if (null != promptInfoOptionsMap &&
-        promptInfoOptionsMap.hasKey(AuthPromptOptions.DESCRIPTION)) {
+        promptInfoOptionsMap.hasKey(AuthPromptOptions.DESCRIPTION)
+      ) {
         val promptInfoDescription = promptInfoOptionsMap.getString(AuthPromptOptions.DESCRIPTION)
         promptInfoBuilder.setDescription(promptInfoDescription)
       }
@@ -824,7 +837,9 @@ class KeychainModule(reactContext: ReactApplicationContext) :
         String.format(
           "Cipher Storage is too weak. Required security level is: %s, but only %s is provided",
           level.name,
-          storage.securityLevel().name))
+          storage.securityLevel().name
+        )
+      )
     }
 
     private fun getAliasOrDefault(alias: String?): String {
