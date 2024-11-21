@@ -80,6 +80,8 @@ jobs:
           - 31
           - 32
           - 33
+          - 34
+          - 35
 
     steps:
       - name: Enable KVM group perms
@@ -125,10 +127,13 @@ jobs:
           disable-animations: true
           avd-name: TestingAVD
           script: |
-            adb shell locksettings set-pin 1111
-            adb shell am start -a android.settings.SECURITY_SETTINGS
+            echo "Starting the screen recording..."
             sleep 3
-            adb shell input tap 274 1150
+            adb shell "screenrecord --bugreport /data/local/tmp/screenrecord.mp4 & echo \$! > /data/local/tmp/screenrecord_pid.txt" &
+            adb shell settings put system pointer_location 1
+            adb shell locksettings set-pin 1111
+            sleep 3
+            adb shell am start -a android.settings.BIOMETRIC_ENROLL
             sleep 3
             adb shell input text 1111
             adb shell input keyevent 66
@@ -144,20 +149,23 @@ jobs:
             adb -e emu finger touch 1
             sleep 3
             adb shell input keyevent KEYCODE_HOME
+            adb shell "kill -2 \$(cat /data/local/tmp/screenrecord_pid.txt)"
+            sleep 1
+            adb pull /data/local/tmp/screenrecord.mp4 .
             cd KeychainExample
             yarn test:android:run
-        env:
-          API_LEVEL: ${{ matrix.api-level }}
       - name: Upload test artifacts
         if: ${{ failure() }}
         uses: actions/upload-artifact@v4
         with:
-          name: android-test-artifacts
-          path: KeychainExample/artifacts
+          name: android-test-artifacts-${{ matrix.api-level }}
+          path: |
+            KeychainExample/artifacts
+            screenrecord.mp4
 
   build-ios:
     name: Build and Test iOS
-    runs-on: macos-13
+    runs-on: macos-latest
 
     steps:
       - name: Checkout
