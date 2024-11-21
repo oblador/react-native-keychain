@@ -14,11 +14,6 @@ const sidebars: SidebarsConfig = {
     },
     {
       type: 'doc',
-      id: 'choosing-storage-type',
-      label: 'Choosing Storage Type',
-    },
-    {
-      type: 'doc',
       id: 'jest',
       label: 'Unit Testing with Jest',
     },
@@ -26,6 +21,22 @@ const sidebars: SidebarsConfig = {
       type: 'doc',
       id: 'faq',
       label: 'Frequently Asked Questions',
+    },
+    {
+      type: 'category',
+      label: 'Android',
+      items: [
+        {
+          type: 'doc',
+          id: 'choosing-storage-type',
+          label: 'Choosing Storage Type',
+        },
+        {
+          type: 'doc',
+          id: 'secure-hardware-vs-software',
+          label: 'Secure Hardware vs Software',
+        },
+      ],
     },
   ],
   api: ['api/index', require('./docs/api/typedoc-sidebar.cjs')],
