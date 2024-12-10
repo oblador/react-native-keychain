@@ -71,7 +71,7 @@
     "node": "16.14.2"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=16"
   },
   "codegenConfig": {
     "name": "RNKeychainSpec",
