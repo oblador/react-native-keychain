@@ -16734,9 +16734,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-keychain@workspace:.":
+"@dt/react-native-keychain@workspace:.":
   version: 0.0.0-use.local
-  resolution: "react-native-keychain@workspace:."
+  resolution: "@dt/react-native-keychain@workspace:."
   dependencies:
     "@react-native/eslint-config": ^0.74.84
     "@react-native/typescript-config": ^0.74.84
