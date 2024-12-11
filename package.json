@@ -1,5 +1,5 @@
 {
-  "name": "react-native-keychain",
+  "name": "@dt/react-native-keychain",
   "version": "9.2.2",
   "description": "Keychain Access for React Native",
   "main": "./lib/commonjs/index.js",
