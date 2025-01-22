@@ -163,13 +163,13 @@ class CipherStorageFacebookConceal(reactContext: ReactApplicationContext) :
 
   private fun createUsernameEntity(alias: String): Entity {
     val prefix = getEntityPrefix(alias)
-    return Entity.create("$prefix user")
+    return Entity.create(prefix + "user")
   }
 
 
   private fun createPasswordEntity(alias: String): Entity {
     val prefix = getEntityPrefix(alias)
-    return Entity.create("$prefix pass")
+    return Entity.create(prefix + "pass")
   }
 
 
