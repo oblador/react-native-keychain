@@ -322,7 +322,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
   }
 
   @ReactMethod
-  fun getAllGenericPasswordServices(promise: Promise) {
+  fun getAllGenericPasswordServices(options: ReadableMap?, promise: Promise) {
     try {
       val services = doGetAllGenericPasswordServices()
       promise.resolve(Arguments.makeNativeArray<Any>(services.toTypedArray()))
