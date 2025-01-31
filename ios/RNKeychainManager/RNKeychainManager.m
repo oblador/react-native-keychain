@@ -335,12 +335,15 @@ SecAccessControlCreateFlags accessControlValue(NSDictionary *options)
   return SecItemDelete((__bridge CFDictionaryRef) query);
 }
 
--(NSArray<NSString*>*)getAllServicesForSecurityClasses:(NSArray *)secItemClasses
+-(NSArray<NSString*>*)getAllServicesForSecurityClasses:(NSArray *)secItemClasses withOptions:(NSDictionary * __nullable)options
 {
   NSMutableDictionary *query = [NSMutableDictionary dictionaryWithObjectsAndKeys:
                                 (__bridge id)kCFBooleanTrue, (__bridge id)kSecReturnAttributes,
                                 (__bridge id)kSecMatchLimitAll, (__bridge id)kSecMatchLimit,
                                 nil];
+  if ([options[@"skipUIAuth"] boolValue]) {
+    [query setObject:(__bridge id)kSecUseAuthenticationUISkip forKey:(__bridge id)kSecUseAuthenticationUI];
+  }
   NSMutableArray<NSString*> *services = [NSMutableArray<NSString*> new];
   for (id secItemClass in secItemClasses) {
     [query setObject:secItemClass forKey:(__bridge id)kSecClass];
@@ -650,13 +653,15 @@ RCT_EXPORT_METHOD(setSharedWebCredentialsForServer:(NSString *)server
 }
 #endif
 
-RCT_EXPORT_METHOD(getAllGenericPasswordServices:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
+RCT_EXPORT_METHOD(getAllGenericPasswordServices:(NSDictionary * __nullable)options
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
 {
   @try {
     NSArray *secItemClasses = [NSArray arrayWithObjects:
                               (__bridge id)kSecClassGenericPassword,
                               nil];
-    NSArray *services = [self getAllServicesForSecurityClasses:secItemClasses];
+    NSArray *services = [self getAllServicesForSecurityClasses:secItemClasses withOptions:options];
     return resolve(services);
   } @catch (NSError *nsError) {
     return rejectWithError(reject, nsError);

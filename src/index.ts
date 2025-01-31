@@ -13,6 +13,7 @@ import type {
   UserCredentials,
   SharedWebCredentials,
   GetOptions,
+  GetAllOptions,
   BaseOptions,
   SetOptions,
   AuthenticationTypeOption,
@@ -128,8 +129,10 @@ export function resetGenericPassword(
  * console.log('Services:', services);
  * ```
  */
-export function getAllGenericPasswordServices(): Promise<string[]> {
-  return RNKeychainManager.getAllGenericPasswordServices();
+export function getAllGenericPasswordServices(
+  options?: GetAllOptions
+): Promise<string[]> {
+  return RNKeychainManager.getAllGenericPasswordServices(options);
 }
 
 /**
