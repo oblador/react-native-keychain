@@ -9,7 +9,6 @@
   "source": "./src/index",
   "files": [
     "android",
-    "ios/RNKeychain.xcodeproj",
     "ios/RNKeychainManager",
     "lib",
     "src",
