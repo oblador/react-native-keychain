@@ -97,6 +97,13 @@ export type GetOptions = {
 } & BaseOptions &
   AccessControlOption;
 
+export type GetAllOptions = {
+  /** Whether items requiring user authentication should be skipped
+   * @platform iOS
+   */
+  skipUIAuth?: boolean;
+};
+
 export type AccessControlOption = {
   /** The access control policy to use for the keychain item. */
   accessControl?: ACCESS_CONTROL;
