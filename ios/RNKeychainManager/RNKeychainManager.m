@@ -341,7 +341,7 @@ SecAccessControlCreateFlags accessControlValue(NSDictionary *options)
                                 (__bridge id)kCFBooleanTrue, (__bridge id)kSecReturnAttributes,
                                 (__bridge id)kSecMatchLimitAll, (__bridge id)kSecMatchLimit,
                                 nil];
-  if ([options[@"skipUIAuth"] boolValue]) {
+  if (options && [options[@"skipUIAuth"] boolValue]) {
     [query setObject:(__bridge id)kSecUseAuthenticationUISkip forKey:(__bridge id)kSecUseAuthenticationUI];
   }
   NSMutableArray<NSString*> *services = [NSMutableArray<NSString*> new];
