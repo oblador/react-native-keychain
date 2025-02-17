@@ -19,6 +19,12 @@ object DeviceAvailability {
       BiometricManager.BIOMETRIC_SUCCESS
   }
 
+  fun isDeviceCredentialAvailable(context: Context): Boolean {
+    return BiometricManager.from(context)
+      .canAuthenticate(BiometricManager.Authenticators.DEVICE_CREDENTIAL) ==
+      BiometricManager.BIOMETRIC_SUCCESS
+  }
+
   fun isFingerprintAuthAvailable(context: Context): Boolean {
     return context.packageManager.hasSystemFeature(PackageManager.FEATURE_FINGERPRINT)
   }

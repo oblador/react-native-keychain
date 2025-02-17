@@ -193,7 +193,8 @@ class CipherStorageKeystoreRsaEcb(reactContext: ReactApplicationContext) :
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             keyGenParameterSpecBuilder.setUserAuthenticationParameters(
-                validityDuration, KeyProperties.AUTH_BIOMETRIC_STRONG
+                validityDuration,
+                KeyProperties.AUTH_BIOMETRIC_STRONG or KeyProperties.AUTH_DEVICE_CREDENTIAL
             )
         } else {
             keyGenParameterSpecBuilder.setUserAuthenticationValidityDurationSeconds(validityDuration)

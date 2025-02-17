@@ -108,7 +108,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
             /** AES CBC encryption. */
             const val AES_CBC = "KeystoreAESCBC"
 
-            /** Biometric Auth + AES GCM encryption. */
+            /** Auth + AES GCM encryption. */
             const val AES_GCM = "KeystoreAESGCM"
 
             /** AES GCM encryption. */
@@ -702,46 +702,71 @@ class KeychainModule(reactContext: ReactApplicationContext) :
 
         // endregion
         // region Implementation
+
         /** Is provided access control string matching biometry use request? */
         fun getUseBiometry(@AccessControl accessControl: String?): Boolean {
-            return AccessControl.BIOMETRY_ANY == accessControl ||
-                    AccessControl.BIOMETRY_CURRENT_SET == accessControl ||
-                    AccessControl.BIOMETRY_ANY_OR_DEVICE_PASSCODE == accessControl ||
-                    AccessControl.BIOMETRY_CURRENT_SET_OR_DEVICE_PASSCODE == accessControl
+            return accessControl in setOf(
+                AccessControl.BIOMETRY_ANY,
+                AccessControl.BIOMETRY_CURRENT_SET,
+                AccessControl.BIOMETRY_ANY_OR_DEVICE_PASSCODE,
+                AccessControl.BIOMETRY_CURRENT_SET_OR_DEVICE_PASSCODE
+            )
+        }
+
+        /** Is provided access control string matching passcode use request? */
+        fun getUsePasscode(@AccessControl accessControl: String?): Boolean {
+            return accessControl in setOf(
+                AccessControl.DEVICE_PASSCODE,
+                AccessControl.BIOMETRY_ANY_OR_DEVICE_PASSCODE,
+                AccessControl.BIOMETRY_CURRENT_SET_OR_DEVICE_PASSCODE
+            )
         }
 
         /** Extract user specified prompt info from options. */
         private fun getPromptInfo(options: ReadableMap?): PromptInfo {
+            val accessControl = getAccessControlOrDefault(options)
+            val usePasscode = getUsePasscode(accessControl)
+            val useBiometry = getUseBiometry(accessControl)
             val promptInfoOptionsMap =
                 if (options != null && options.hasKey(Maps.AUTH_PROMPT)) options.getMap(Maps.AUTH_PROMPT)
                 else null
+
             val promptInfoBuilder = PromptInfo.Builder()
-            if (null != promptInfoOptionsMap && promptInfoOptionsMap.hasKey(AuthPromptOptions.TITLE)) {
-                val promptInfoTitle = promptInfoOptionsMap.getString(AuthPromptOptions.TITLE)
-                promptInfoBuilder.setTitle(promptInfoTitle!!)
+            promptInfoOptionsMap?.getString(AuthPromptOptions.TITLE)?.let {
+                promptInfoBuilder.setTitle(it)
             }
-            if (null != promptInfoOptionsMap && promptInfoOptionsMap.hasKey(AuthPromptOptions.SUBTITLE)) {
-                val promptInfoSubtitle = promptInfoOptionsMap.getString(AuthPromptOptions.SUBTITLE)
-                promptInfoBuilder.setSubtitle(promptInfoSubtitle)
+            promptInfoOptionsMap?.getString(AuthPromptOptions.SUBTITLE)?.let {
+                promptInfoBuilder.setSubtitle(it)
             }
-            if (null != promptInfoOptionsMap &&
-                promptInfoOptionsMap.hasKey(AuthPromptOptions.DESCRIPTION)
-            ) {
-                val promptInfoDescription =
-                    promptInfoOptionsMap.getString(AuthPromptOptions.DESCRIPTION)
-                promptInfoBuilder.setDescription(promptInfoDescription)
-            }
-            if (null != promptInfoOptionsMap && promptInfoOptionsMap.hasKey(AuthPromptOptions.CANCEL)) {
-                val promptInfoNegativeButton =
-                    promptInfoOptionsMap.getString(AuthPromptOptions.CANCEL)
-                promptInfoBuilder.setNegativeButtonText(promptInfoNegativeButton!!)
+            promptInfoOptionsMap?.getString(AuthPromptOptions.DESCRIPTION)?.let {
+                promptInfoBuilder.setDescription(it)
             }
 
-            /* PromptInfo is only used in Biometric-enabled RSA storage and can only be unlocked by a strong biometric */ promptInfoBuilder
-                .setAllowedAuthenticators(BiometricManager.Authenticators.BIOMETRIC_STRONG)
+            val allowedAuthenticators = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                when {
+                    usePasscode && useBiometry ->
+                        BiometricManager.Authenticators.BIOMETRIC_STRONG or BiometricManager.Authenticators.DEVICE_CREDENTIAL
 
-            /* Bypass confirmation to avoid KeyStore unlock timeout being exceeded when using passive biometrics */ promptInfoBuilder
-                .setConfirmationRequired(false)
+                    usePasscode ->
+                        BiometricManager.Authenticators.DEVICE_CREDENTIAL
+
+                    else ->
+                        BiometricManager.Authenticators.BIOMETRIC_STRONG
+                }
+            } else {
+                BiometricManager.Authenticators.BIOMETRIC_STRONG
+            }
+
+            promptInfoBuilder.setAllowedAuthenticators(allowedAuthenticators)
+
+            if (!usePasscode) {
+                promptInfoOptionsMap?.getString(AuthPromptOptions.CANCEL)?.let {
+                    promptInfoBuilder.setNegativeButtonText(it)
+                }
+            }
+
+            /* Bypass confirmation to avoid KeyStore unlock timeout being exceeded when using passive biometrics */
+            promptInfoBuilder.setConfirmationRequired(false)
             return promptInfoBuilder.build()
         }
 

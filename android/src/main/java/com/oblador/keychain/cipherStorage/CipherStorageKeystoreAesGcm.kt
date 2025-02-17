@@ -25,7 +25,7 @@ import javax.crypto.SecretKeyFactory
 import javax.crypto.spec.GCMParameterSpec
 
 class CipherStorageKeystoreAesGcm(
-    reactContext: ReactApplicationContext, private val requiresBiometricAuth: Boolean
+    reactContext: ReactApplicationContext, private val requiresAuth: Boolean
 ) : CipherStorageBase(reactContext) {
 
     // region Constants
@@ -49,7 +49,7 @@ class CipherStorageKeystoreAesGcm(
     // endregion
 
     // region Configuration
-    override fun getCipherStorageName(): String = when (requiresBiometricAuth) {
+    override fun getCipherStorageName(): String = when (requiresAuth) {
         true -> KnownCiphers.AES_GCM
         false -> KnownCiphers.AES_GCM_NO_AUTH
     }
@@ -60,8 +60,8 @@ class CipherStorageKeystoreAesGcm(
     /** It can guarantee security levels up to SECURE_HARDWARE/SE/StrongBox */
     override fun securityLevel(): SecurityLevel = SecurityLevel.SECURE_HARDWARE
 
-    /** Biometry is Not Supported. */
-    override fun isBiometrySupported(): Boolean = requiresBiometricAuth
+    /** Is Biometry supported based on requiresAuth flag. */
+    override fun isBiometrySupported(): Boolean = requiresAuth
 
     /** AES. */
     override fun getEncryptionAlgorithm(): String = ALGORITHM_AES
@@ -164,11 +164,12 @@ class CipherStorageKeystoreAesGcm(
                 .setEncryptionPaddings(PADDING_NONE).setRandomizedEncryptionRequired(true)
                 .setKeySize(ENCRYPTION_KEY_SIZE)
 
-        if (requiresBiometricAuth) {
+        if (requiresAuth) {
             keyGenParameterSpecBuilder.setUserAuthenticationRequired(true)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                 keyGenParameterSpecBuilder.setUserAuthenticationParameters(
-                    validityDuration, KeyProperties.AUTH_BIOMETRIC_STRONG
+                    validityDuration,
+                    KeyProperties.AUTH_BIOMETRIC_STRONG or KeyProperties.AUTH_DEVICE_CREDENTIAL
                 )
             } else {
                 keyGenParameterSpecBuilder.setUserAuthenticationValidityDurationSeconds(
