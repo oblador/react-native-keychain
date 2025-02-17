@@ -3,7 +3,6 @@ import type {
   ACCESSIBLE,
   AUTHENTICATION_TYPE,
   SECURITY_LEVEL,
-  SECURITY_RULES,
   STORAGE_TYPE,
 } from './enums';
 
@@ -78,11 +77,6 @@ export type SetOptions = {
 export type GetOptions = {
   /** The access control policy to use for the keychain item. */
   accessControl?: ACCESS_CONTROL;
-  /** The security rules to apply when storing the keychain item.
-   * @platform Android
-   * @default SECURITY_RULES.AUTOMATIC_UPGRADE
-   */
-  rules?: SECURITY_RULES;
   /** Authentication prompt details or a title string.
    * @default
    * ```json

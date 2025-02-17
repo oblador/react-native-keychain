@@ -4,7 +4,6 @@ import {
   ACCESS_CONTROL,
   AUTHENTICATION_TYPE,
   SECURITY_LEVEL,
-  SECURITY_RULES,
   STORAGE_TYPE,
   BIOMETRY_TYPE,
 } from './enums';
@@ -375,7 +374,6 @@ export default {
   AUTHENTICATION_TYPE,
   BIOMETRY_TYPE,
   STORAGE_TYPE,
-  SECURITY_RULES,
   getSecurityLevel,
   canImplyAuthentication,
   getSupportedBiometryType,
