@@ -47,8 +47,8 @@ export function normalizeServerOption(
   if (typeof serverOrOptions === 'string') {
     console.warn(
       `You passed a server string as an argument to one of the react-native-keychain functions.
-            This way of passing service is deprecated and will be removed in a future major.
-            Please update your code to use { service: ${JSON.stringify(
+            This way of passing server is deprecated and will be removed in a future major.
+            Please update your code to use { server: ${JSON.stringify(
               serverOrOptions
             )} }`
     );
