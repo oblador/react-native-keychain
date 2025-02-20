@@ -273,10 +273,15 @@ SecAccessControlCreateFlags accessControlValue(NSDictionary *options)
                            rejecter:(RCTPromiseRejectBlock)reject
 {
   CFBooleanRef cloudSync = cloudSyncValue(options);
+  NSString *accessGroup = accessGroupValue(options);
   NSMutableDictionary *queryParts = [[NSMutableDictionary alloc] init];
   queryParts[(__bridge NSString *)kSecClass] = (__bridge id)(secClass),
   queryParts[(__bridge NSString *)kSecMatchLimit] = (__bridge NSString *)kSecMatchLimitOne;
   queryParts[(__bridge NSString *)kSecAttrSynchronizable] = (__bridge id)(cloudSync);
+
+  if (accessGroup != nil) {
+    queryParts[(__bridge NSString *)kSecAttrAccessGroup] = accessGroup;
+  }
 
   if (secClass == kSecClassInternetPassword) {
     queryParts[(__bridge NSString *)kSecAttrServer] = serverValue(options);
@@ -310,13 +315,19 @@ SecAccessControlCreateFlags accessControlValue(NSDictionary *options)
 {
   NSString *service = serviceValue(options);
   CFBooleanRef cloudSync = cloudSyncValue(options);
-  NSDictionary *query = @{
+  NSString *accessGroup = accessGroupValue(options);
+
+  NSMutableDictionary *query = [@{
     (__bridge NSString *)kSecClass: (__bridge id)(kSecClassGenericPassword),
     (__bridge NSString *)kSecAttrService: service,
     (__bridge NSString *)kSecAttrSynchronizable: (__bridge id)cloudSync,
     (__bridge NSString *)kSecReturnAttributes: (__bridge id)kCFBooleanTrue,
     (__bridge NSString *)kSecReturnData: (__bridge id)kCFBooleanFalse
-  };
+  } mutableCopy];
+
+  if (accessGroup != nil) {
+    query[(__bridge NSString *)kSecAttrAccessGroup] = accessGroup;
+  }
 
   return SecItemDelete((__bridge CFDictionaryRef) query);
 }
@@ -443,8 +454,9 @@ RCT_EXPORT_METHOD(getGenericPasswordForOptions:(NSDictionary * __nullable)option
   NSString *service = serviceValue(options);
   NSString *authenticationPrompt = authenticationPromptValue(options);
   CFBooleanRef cloudSync = cloudSyncValue(options);
+  NSString *accessGroup = accessGroupValue(options);
 
-  NSDictionary *query = @{
+  NSMutableDictionary *query = [@{
     (__bridge NSString *)kSecClass: (__bridge id)(kSecClassGenericPassword),
     (__bridge NSString *)kSecAttrService: service,
     (__bridge NSString *)kSecAttrSynchronizable: (__bridge id)(cloudSync),
@@ -452,7 +464,11 @@ RCT_EXPORT_METHOD(getGenericPasswordForOptions:(NSDictionary * __nullable)option
     (__bridge NSString *)kSecReturnData: (__bridge id)kCFBooleanTrue,
     (__bridge NSString *)kSecMatchLimit: (__bridge NSString *)kSecMatchLimitOne,
     (__bridge NSString *)kSecUseOperationPrompt: authenticationPrompt
-  };
+  } mutableCopy];
+
+  if (accessGroup != nil) {
+    query[(__bridge NSString *)kSecAttrAccessGroup] = accessGroup;
+  }
 
   // Look up service in the keychain
   NSDictionary *found = nil;
@@ -550,7 +566,9 @@ RCT_EXPORT_METHOD(getInternetCredentialsForServer:(NSString *)server
 {
   CFBooleanRef cloudSync = cloudSyncValue(options);
   NSString *authenticationPrompt = authenticationPromptValue(options);
-  NSDictionary *query = @{
+  NSString *accessGroup = accessGroupValue(options);
+  
+  NSMutableDictionary *query = [@{
     (__bridge NSString *)kSecClass: (__bridge id)(kSecClassInternetPassword),
     (__bridge NSString *)kSecAttrServer: server,
     (__bridge NSString *)kSecReturnAttributes: (__bridge id)kCFBooleanTrue,
@@ -558,7 +576,11 @@ RCT_EXPORT_METHOD(getInternetCredentialsForServer:(NSString *)server
     (__bridge NSString *)kSecReturnData: (__bridge id)kCFBooleanTrue,
     (__bridge NSString *)kSecMatchLimit: (__bridge NSString *)kSecMatchLimitOne,
     (__bridge NSString *)kSecUseOperationPrompt: authenticationPrompt
-  };
+  } mutableCopy];
+
+  if (accessGroup != nil) {
+    query[(__bridge NSString *)kSecAttrAccessGroup] = accessGroup;
+  }
 
   // Look up server in the keychain
   NSDictionary *found = nil;
