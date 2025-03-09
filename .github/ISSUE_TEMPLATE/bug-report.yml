@@ -51,7 +51,7 @@ body:
       required: true
 
   - type: input
-    id: react-native-keychain version
+    id: react-native-keychain-version
     attributes:
       label: React Native Keychain version
       description: What version of react-native-keychain are you using?
