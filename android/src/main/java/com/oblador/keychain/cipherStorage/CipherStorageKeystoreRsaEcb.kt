@@ -137,7 +137,7 @@ class CipherStorageKeystoreRsaEcb(reactContext: ReactApplicationContext) :
     override fun getMinSupportedApiLevel(): Int = Build.VERSION_CODES.M
 
     /** Biometry is supported. */
-    override fun isBiometrySupported(): Boolean = true
+    override fun isAuthSupported(): Boolean = true
 
     /** RSA. */
     override fun getEncryptionAlgorithm(): String = ALGORITHM_RSA
@@ -193,7 +193,8 @@ class CipherStorageKeystoreRsaEcb(reactContext: ReactApplicationContext) :
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             keyGenParameterSpecBuilder.setUserAuthenticationParameters(
-                validityDuration, KeyProperties.AUTH_BIOMETRIC_STRONG
+                validityDuration,
+                KeyProperties.AUTH_BIOMETRIC_STRONG or KeyProperties.AUTH_DEVICE_CREDENTIAL
             )
         } else {
             keyGenParameterSpecBuilder.setUserAuthenticationValidityDurationSeconds(validityDuration)
