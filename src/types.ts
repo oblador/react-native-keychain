@@ -39,7 +39,6 @@ export type BaseOptions = {
   cloudSync?: boolean;
 };
 
-/** Base options for keychain functions. */
 export type SetOptions = {
   /** The access group to share keychain items between apps.
    * @platform iOS, visionOS
@@ -73,7 +72,6 @@ export type SetOptions = {
 } & BaseOptions &
   AccessControlOption;
 
-/** Base options for keychain functions. */
 export type GetOptions = {
   /** The access control policy to use for the keychain item. */
   accessControl?: ACCESS_CONTROL;
