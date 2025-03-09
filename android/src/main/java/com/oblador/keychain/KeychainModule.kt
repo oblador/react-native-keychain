@@ -607,12 +607,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
 
     val isSecureHardwareAvailable: Boolean
         /** Is secured hardware a part of current storage or not. */
-        get() =
-            try {
-                cipherStorageForCurrentAPILevel.supportsSecureHardware()
-            } catch (e: CryptoFailedException) {
-                false
-            }
+        get() = DeviceAvailability.isStrongboxAvailable(reactApplicationContext)
 
     /** Resolve storage to security level it provides. */
     private fun getSecurityLevel(useBiometry: Boolean): SecurityLevel {
@@ -621,7 +616,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
             if (!storage.securityLevel().satisfiesSafetyThreshold(SecurityLevel.SECURE_SOFTWARE)) {
                 return SecurityLevel.ANY
             }
-            if (storage.supportsSecureHardware()) {
+            if (isSecureHardwareAvailable) {
                 SecurityLevel.SECURE_HARDWARE
             } else SecurityLevel.SECURE_SOFTWARE
         } catch (e: CryptoFailedException) {
