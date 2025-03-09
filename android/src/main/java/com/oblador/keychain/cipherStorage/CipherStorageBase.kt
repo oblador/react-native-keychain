@@ -2,7 +2,6 @@ package com.oblador.keychain.cipherStorage
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.content.pm.PackageManager
 import android.os.Build
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyInfo
@@ -17,7 +16,6 @@ import com.oblador.keychain.exceptions.CryptoFailedException
 import com.oblador.keychain.exceptions.KeyStoreAccessException
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
-import java.io.Closeable
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
@@ -30,10 +28,8 @@ import java.security.NoSuchAlgorithmException
 import java.security.ProviderException
 import java.security.UnrecoverableKeyException
 import java.util.Collections
-import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import javax.crypto.Cipher
-import javax.crypto.CipherInputStream
 import javax.crypto.CipherOutputStream
 import javax.crypto.NoSuchPaddingException
 
@@ -386,7 +382,7 @@ abstract class CipherStorageBase(protected val applicationContext: Context) : Ci
     // see https://developer.android.com/training/articles/keystore#HardwareSecurityModule
 
     var secretKey: Key? = null
-    val supportsSecureHardware = DeviceAvailability.isStrongBiometricAuthAvailable(applicationContext)
+    val supportsSecureHardware = DeviceAvailability.isStrongboxAvailable(applicationContext)
 
     if (supportsSecureHardware) {
       try {

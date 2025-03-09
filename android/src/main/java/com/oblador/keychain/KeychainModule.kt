@@ -607,7 +607,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
 
     val isSecureHardwareAvailable: Boolean
         /** Is secured hardware a part of current storage or not. */
-        get() = DeviceAvailability.isStrongBiometricAuthAvailable(reactApplicationContext)
+        get() = DeviceAvailability.isStrongboxAvailable(reactApplicationContext)
 
     /** Resolve storage to security level it provides. */
     private fun getSecurityLevel(useBiometry: Boolean): SecurityLevel {
