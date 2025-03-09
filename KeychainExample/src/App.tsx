@@ -33,7 +33,6 @@ const SECURITY_LEVEL_MAP = [
 
 const SECURITY_STORAGE_OPTIONS = [
   'Best',
-  'FB',
   'AES_CBC',
   'AES_GCM',
   'AES_GCM_NO_AUTH',
