@@ -69,7 +69,7 @@ export type SetOptions = {
    * ```
    *
    */
-  authenticationPrompt?: string | AuthenticationPrompt;
+  authenticationPrompt?: AuthenticationPrompt;
 } & BaseOptions &
   AccessControlOption;
 
@@ -87,7 +87,7 @@ export type GetOptions = {
    * ```
    *
    */
-  authenticationPrompt?: string | AuthenticationPrompt;
+  authenticationPrompt?: AuthenticationPrompt;
 } & BaseOptions &
   AccessControlOption;
 

@@ -111,15 +111,10 @@ export enum BIOMETRY_TYPE {
  *
  * 3. Legacy/Deprecated:
  * - AES_CBC: Outdated, use AES_GCM_NO_AUTH instead
- * - FB: Archived Facebook Conceal implementation
  *
  * @platform Android
  */
 export enum STORAGE_TYPE {
-  /** Encryptions without human interaction.
-   * @deprecated Use AES_GCM_NO_AUTH instead.
-   */
-  AES = 'KeystoreAES',
   /**
    * AES encryption in CBC (Cipher Block Chaining) mode.
    * Provides data confidentiality without authentication.

@@ -13,6 +13,15 @@ import androidx.biometric.BiometricManager
  */
 @Suppress("deprecation")
 object DeviceAvailability {
+
+  fun isStrongboxAvailable(context: Context): Boolean {
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+      context.packageManager.hasSystemFeature(PackageManager.FEATURE_STRONGBOX_KEYSTORE)
+    } else {
+      false
+    }
+  }
+
   fun isStrongBiometricAuthAvailable(context: Context): Boolean {
     return BiometricManager.from(context)
       .canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_STRONG) ==
