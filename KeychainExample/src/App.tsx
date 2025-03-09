@@ -13,7 +13,7 @@ import SegmentedControlTab from 'react-native-segmented-control-tab';
 import * as Keychain from 'react-native-keychain';
 
 const ACCESS_CONTROL_OPTIONS = ['None', 'Passcode', 'Password'];
-const ACCESS_CONTROL_OPTIONS_ANDROID = ['None'];
+const ACCESS_CONTROL_OPTIONS_ANDROID = ['None', 'Passcode'];
 const ACCESS_CONTROL_MAP = [
   null,
   Keychain.ACCESS_CONTROL.DEVICE_PASSCODE,
@@ -22,6 +22,7 @@ const ACCESS_CONTROL_MAP = [
 ];
 const ACCESS_CONTROL_MAP_ANDROID = [
   null,
+  Keychain.ACCESS_CONTROL.DEVICE_PASSCODE,
   Keychain.ACCESS_CONTROL.BIOMETRY_CURRENT_SET,
 ];
 const SECURITY_LEVEL_OPTIONS = ['Any', 'Software', 'Hardware'];
@@ -144,11 +145,13 @@ export default function App() {
           'https://example.com',
           {
             ...options,
+            accessControl,
           }
         );
       } else {
         credentials = await Keychain.getGenericPassword({
           ...options,
+          accessControl,
         });
       }
       if (credentials) {
