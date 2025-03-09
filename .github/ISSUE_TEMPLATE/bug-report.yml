@@ -1,0 +1,102 @@
+name: Bug report
+description: Report an issue with react-native-keychain here.
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report!
+
+        Before you proceed:
+
+        - Make sure to check whether there are similar issues in the repository
+        - Make sure to clean cache in your project. Depending on your setup this could be done by:
+          - `yarn start --reset-cache` or
+          - `npm start -- --reset-cache` or
+          - `expo start --clear`
+
+  - type: markdown
+    attributes:
+      value: |
+        ## Required information
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Please provide a clear, concise and descriptive explanation of what the bug is. Include screenshots or a video if needed.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps-to-reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Provide a detailed list of steps that reproduce the issue.
+      placeholder: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+
+  - type: input
+    id: repro
+    attributes:
+      label: Snack or a link to a repository
+      description: |
+        Please provide a Snack (https://snack.expo.io/) or a link to a repository on GitHub under your username that reproduces the issue.
+        Here are some tips for providing a minimal example: https://stackoverflow.com/help/mcve.
+        Issues without a reproduction are likely to stale and get closed.
+      placeholder: Link to a Snack or a GitHub repository
+    validations:
+      required: true
+
+  - type: input
+    id: react-native-keychain version
+    attributes:
+      label: React Native Keychain version
+      description: What version of react-native-keychain are you using?
+      placeholder: 9.0.0
+    validations:
+      required: true
+
+  - type: input
+    id: react-native-version
+    attributes:
+      label: React Native version
+      description: What version of react-native are you using?
+      placeholder: 0.73.0
+    validations:
+      required: true
+
+  - type: dropdown
+    id: platforms
+    attributes:
+      label: Platforms
+      description: On what platform your application is running on?
+      multiple: true
+      options:
+        - Android
+        - iOS
+        - Web
+        - MacOS
+    validations:
+      required: true
+
+  - type: dropdown
+    id: workflow
+    attributes:
+      label: Workflow
+      description: How your application is managed? Not sure? Read [this part](https://docs.expo.dev/introduction/managed-vs-bare/) of Expo documentation
+      options:
+        - React Native (without Expo)
+        - Expo bare workflow
+        - Expo managed workflow
+
+  - type: dropdown
+    id: architecture
+    attributes:
+      label: Architecture
+      description: What React Native architecture your application is running on? Currently, the default architecture on React Native is Paper so if you haven't changed it in your application select this option.
+      options:
+        - Paper (Old Architecture)
+        - Fabric (New Architecture)
