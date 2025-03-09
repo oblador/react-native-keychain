@@ -7,42 +7,6 @@ describe(':android:Storage Types', () => {
     await device.launchApp({ newInstance: true });
   });
   ['genericPassword', 'internetCredentials'].forEach((type) => {
-    it(
-      ':android:should save with FB storage and migrate it to AES_GCM_NO_AUTH - ' +
-        type,
-      async () => {
-        await expect(element(by.text('Keychain Example'))).toExist();
-        await element(by.id('usernameInput')).typeText('testUsernameFB');
-        await element(by.id('passwordInput')).typeText('testPasswordFB');
-        // Hide keyboard
-        await element(by.text('Keychain Example')).tap();
-
-        await element(by.text(type)).tap();
-        await element(by.text('None')).tap();
-        await element(by.text('No upgrade')).tap();
-        await element(by.text('FB')).tap();
-
-        await expect(element(by.text('Save'))).toBeVisible();
-        await element(by.text('Save')).tap();
-        await expect(element(by.text(/^Credentials saved! .*$/))).toBeVisible();
-        await element(by.text('Load')).tap();
-        await matchLoadInfo(
-          'testUsernameFB',
-          'testPasswordFB',
-          'FacebookConceal',
-          type === 'internetCredentials' ? 'https://example.com' : undefined
-        );
-        await element(by.text('Automatic upgrade')).tap();
-        await element(by.text('Load')).tap();
-        await matchLoadInfo(
-          'testUsernameFB',
-          'testPasswordFB',
-          'KeystoreAESGCM_NoAuth',
-          type === 'internetCredentials' ? 'https://example.com' : undefined
-        );
-      }
-    );
-
     it(':android:should save with AES_CBC storage - ' + type, async () => {
       await expect(element(by.text('Keychain Example'))).toExist();
       await element(by.id('usernameInput')).typeText('testUsernameAESCBC');

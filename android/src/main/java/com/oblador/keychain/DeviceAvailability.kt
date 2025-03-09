@@ -13,10 +13,19 @@ import androidx.biometric.BiometricManager
  */
 @Suppress("deprecation")
 object DeviceAvailability {
+
+  fun isStrongboxAvailable(context: Context): Boolean {
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+      context.packageManager.hasSystemFeature(PackageManager.FEATURE_STRONGBOX_KEYSTORE)
+    } else {
+      false
+    }
+  }
+
   fun isStrongBiometricAuthAvailable(context: Context): Boolean {
     return BiometricManager.from(context)
-        .canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_STRONG) ==
-        BiometricManager.BIOMETRIC_SUCCESS
+      .canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_STRONG) ==
+      BiometricManager.BIOMETRIC_SUCCESS
   }
 
   fun isFingerprintAuthAvailable(context: Context): Boolean {
@@ -34,20 +43,16 @@ object DeviceAvailability {
   /** Check is permissions granted for biometric things. */
   @JvmStatic
   fun isPermissionsGranted(context: Context): Boolean {
-    // before api23 no permissions for biometric, no hardware == no permissions
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-      return false
-    }
     val km = context.getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
     if (!km.isKeyguardSecure) return false
 
     // api28+
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
       context.checkSelfPermission(Manifest.permission.USE_BIOMETRIC) ==
-          PackageManager.PERMISSION_GRANTED
+        PackageManager.PERMISSION_GRANTED
     } else
-        context.checkSelfPermission(Manifest.permission.USE_FINGERPRINT) ==
-            PackageManager.PERMISSION_GRANTED
+      context.checkSelfPermission(Manifest.permission.USE_FINGERPRINT) ==
+        PackageManager.PERMISSION_GRANTED
 
     // before api28
   }

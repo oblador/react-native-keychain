@@ -96,9 +96,6 @@ interface CipherStorage {
   /** Provided security level. */
   fun securityLevel(): SecurityLevel
 
-  /** True if based on secured hardware capabilities, otherwise False. */
-  fun supportsSecureHardware(): Boolean
-
   /** True if based on biometric capabilities, otherwise False. */
   fun isBiometrySupported(): Boolean
 
