@@ -99,9 +99,6 @@ interface CipherStorage {
   /** True if based on biometric capabilities, otherwise False. */
   fun isBiometrySupported(): Boolean
 
-  /** True if based on biometric capabilities, otherwise False. */
-  fun isPasscodeSupported(): Boolean
-
   /**
    * The higher value means better capabilities. Formula: = 1000 * isBiometrySupported() + 100 *
    * supportsSecureHardware() + minSupportedApiLevel
