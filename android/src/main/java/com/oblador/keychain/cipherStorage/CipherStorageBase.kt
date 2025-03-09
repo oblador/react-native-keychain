@@ -102,7 +102,7 @@ abstract class CipherStorageBase(protected val applicationContext: Context) : Ci
     // max: 1000 + 100 + 29 == 1129
     // min: 0000 + 000 + 19 == 0019
 
-    return (1000 * if (isBiometrySupported()) 1 else 0) + (getMinSupportedApiLevel())
+    return (1000 * if (isAuthSupported()) 1 else 0) + (getMinSupportedApiLevel())
   }
 
   /** {@inheritDoc} */
@@ -422,7 +422,7 @@ abstract class CipherStorageBase(protected val applicationContext: Context) : Ci
     try {
       val keyInfo = getKeyInfo(key)
       val blockModes = keyInfo.blockModes
-      if (keyInfo.isUserAuthenticationRequired != isBiometrySupported()) {
+      if (keyInfo.isUserAuthenticationRequired != isAuthSupported()) {
         return false
       }
       val expectedBlockMode = getEncryptionTransformation()

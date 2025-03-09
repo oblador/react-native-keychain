@@ -57,7 +57,7 @@ class CipherStorageKeystoreAesCbc(reactContext: ReactApplicationContext) :
     override fun securityLevel(): SecurityLevel = SecurityLevel.SECURE_HARDWARE
 
     /** Biometry is Not Supported. */
-    override fun isBiometrySupported(): Boolean = false
+    override fun isAuthSupported(): Boolean = false
 
     /** AES. */
 

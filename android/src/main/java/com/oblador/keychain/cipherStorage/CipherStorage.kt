@@ -97,7 +97,7 @@ interface CipherStorage {
   fun securityLevel(): SecurityLevel
 
   /** True if based on biometric capabilities, otherwise False. */
-  fun isBiometrySupported(): Boolean
+  fun isAuthSupported(): Boolean
 
   /**
    * The higher value means better capabilities. Formula: = 1000 * isBiometrySupported() + 100 *

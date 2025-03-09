@@ -61,7 +61,7 @@ class CipherStorageKeystoreAesGcm(
     override fun securityLevel(): SecurityLevel = SecurityLevel.SECURE_HARDWARE
 
     /** Is Biometry supported based on requiresAuth flag. */
-    override fun isBiometrySupported(): Boolean = requiresAuth
+    override fun isAuthSupported(): Boolean = requiresAuth
 
     /** AES. */
     override fun getEncryptionAlgorithm(): String = ALGORITHM_AES

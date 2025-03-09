@@ -137,7 +137,7 @@ class CipherStorageKeystoreRsaEcb(reactContext: ReactApplicationContext) :
     override fun getMinSupportedApiLevel(): Int = Build.VERSION_CODES.M
 
     /** Biometry is supported. */
-    override fun isBiometrySupported(): Boolean = true
+    override fun isAuthSupported(): Boolean = true
 
     /** RSA. */
     override fun getEncryptionAlgorithm(): String = ALGORITHM_RSA
