@@ -175,7 +175,7 @@ class CipherStorageKeystoreAesGcm(reactContext: ReactApplicationContext, private
 
         val validityDuration = 5
         val keyGenParameterSpecBuilder =
-            KeyGenParameterSpec.Builder(alias, purposes)
+            KeyGenParameterSpec.Builder(getPrefixedAlias(alias), purposes)
                 .setBlockModes(BLOCK_MODE_GCM)
                 .setEncryptionPaddings(PADDING_NONE)
                 .setRandomizedEncryptionRequired(true)
@@ -267,4 +267,14 @@ class CipherStorageKeystoreAesGcm(reactContext: ReactApplicationContext, private
         decryptBytes(key, bytes, IV.decrypt)
 
     // endregion
+
+    // region Alias Helpers
+    
+    private fun getPrefixedAlias(alias: String): String {
+        val prefix = if (requiresBiometricAuth) "bio_" else "std_"
+        return prefix + alias
+    }
+
+    // endregion
+
 }
