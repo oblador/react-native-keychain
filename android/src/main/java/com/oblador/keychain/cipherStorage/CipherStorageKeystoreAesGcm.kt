@@ -1,6 +1,5 @@
 package com.oblador.keychain.cipherStorage
 
-import android.annotation.TargetApi
 import android.os.Build
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyInfo
@@ -14,7 +13,6 @@ import com.oblador.keychain.resultHandler.CryptoContext
 import com.oblador.keychain.resultHandler.CryptoOperation
 import com.oblador.keychain.resultHandler.ResultHandler
 import com.oblador.keychain.exceptions.CryptoFailedException
-import com.oblador.keychain.exceptions.KeyStoreAccessException
 import java.io.IOException
 import java.security.GeneralSecurityException
 import java.security.Key
@@ -26,9 +24,9 @@ import javax.crypto.SecretKey
 import javax.crypto.SecretKeyFactory
 import javax.crypto.spec.GCMParameterSpec
 
-@TargetApi(Build.VERSION_CODES.M)
-class CipherStorageKeystoreAesGcm(reactContext: ReactApplicationContext, private val requiresBiometricAuth: Boolean) :
-    CipherStorageBase(reactContext) {
+class CipherStorageKeystoreAesGcm(
+    reactContext: ReactApplicationContext, private val requiresAuth: Boolean
+) : CipherStorageBase(reactContext) {
 
     // region Constants
     /** AES */
@@ -51,7 +49,7 @@ class CipherStorageKeystoreAesGcm(reactContext: ReactApplicationContext, private
     // endregion
 
     // region Configuration
-    override fun getCipherStorageName(): String = when (requiresBiometricAuth) {
+    override fun getCipherStorageName(): String = when (requiresAuth) {
         true -> KnownCiphers.AES_GCM
         false -> KnownCiphers.AES_GCM_NO_AUTH
     }
@@ -62,8 +60,8 @@ class CipherStorageKeystoreAesGcm(reactContext: ReactApplicationContext, private
     /** It can guarantee security levels up to SECURE_HARDWARE/SE/StrongBox */
     override fun securityLevel(): SecurityLevel = SecurityLevel.SECURE_HARDWARE
 
-    /** Biometry is Not Supported. */
-    override fun isBiometrySupported(): Boolean = requiresBiometricAuth
+    /** Is Biometry supported based on requiresAuth flag. */
+    override fun isAuthSupported(): Boolean = requiresAuth
 
     /** AES. */
     override fun getEncryptionAlgorithm(): String = ALGORITHM_AES
@@ -130,11 +128,9 @@ class CipherStorageKeystoreAesGcm(reactContext: ReactApplicationContext, private
 
         try {
             key = extractGeneratedKey(safeAlias, level, retries)
-            val results =
-                CipherStorage.DecryptionResult(
-                    decryptBytes(key, username),
-                    decryptBytes(key, password)
-                )
+            val results = CipherStorage.DecryptionResult(
+                decryptBytes(key, username), decryptBytes(key, password)
+            )
 
             handler.onDecrypt(results, null)
         } catch (ex: UserNotAuthenticatedException) {
@@ -154,38 +150,26 @@ class CipherStorageKeystoreAesGcm(reactContext: ReactApplicationContext, private
 
     // region Implementation
 
-    /** Get builder for encryption and decryption operations with required user Authentication. */
-
-    @Throws(GeneralSecurityException::class)
-    override fun getKeyGenSpecBuilder(alias: String): KeyGenParameterSpec.Builder =
-        getKeyGenSpecBuilder(alias, false)
 
     /** Get encryption algorithm specification builder instance. */
-
     @Throws(GeneralSecurityException::class)
     override fun getKeyGenSpecBuilder(
         alias: String,
-        isForTesting: Boolean
     ): KeyGenParameterSpec.Builder {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-            throw KeyStoreAccessException("Unsupported API${Build.VERSION.SDK_INT} version detected.")
-        }
-
         val purposes = KeyProperties.PURPOSE_DECRYPT or KeyProperties.PURPOSE_ENCRYPT
 
         val validityDuration = 5
         val keyGenParameterSpecBuilder =
-            KeyGenParameterSpec.Builder(getPrefixedAlias(alias), purposes)
-                .setBlockModes(BLOCK_MODE_GCM)
-                .setEncryptionPaddings(PADDING_NONE)
-                .setRandomizedEncryptionRequired(true)
+            KeyGenParameterSpec.Builder(getPrefixedAlias(alias), purposes).setBlockModes(BLOCK_MODE_GCM)
+                .setEncryptionPaddings(PADDING_NONE).setRandomizedEncryptionRequired(true)
                 .setKeySize(ENCRYPTION_KEY_SIZE)
 
-        if(requiresBiometricAuth) {
+        if (requiresAuth) {
             keyGenParameterSpecBuilder.setUserAuthenticationRequired(true)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                 keyGenParameterSpecBuilder.setUserAuthenticationParameters(
-                    validityDuration, KeyProperties.AUTH_BIOMETRIC_STRONG
+                    validityDuration,
+                    KeyProperties.AUTH_BIOMETRIC_STRONG or KeyProperties.AUTH_DEVICE_CREDENTIAL
                 )
             } else {
                 keyGenParameterSpecBuilder.setUserAuthenticationValidityDurationSeconds(
@@ -201,10 +185,6 @@ class CipherStorageKeystoreAesGcm(reactContext: ReactApplicationContext, private
 
     @Throws(GeneralSecurityException::class)
     override fun getKeyInfo(key: Key): KeyInfo {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-            throw KeyStoreAccessException("Unsupported API${Build.VERSION.SDK_INT} version detected.")
-        }
-
         val factory = SecretKeyFactory.getInstance(key.algorithm, KEYSTORE_TYPE)
         val keySpec: KeySpec = factory.getKeySpec(key as SecretKey, KeyInfo::class.java)
 
@@ -215,10 +195,6 @@ class CipherStorageKeystoreAesGcm(reactContext: ReactApplicationContext, private
 
     @Throws(GeneralSecurityException::class)
     override fun generateKey(spec: KeyGenParameterSpec): Key {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-            throw KeyStoreAccessException("Unsupported API${Build.VERSION.SDK_INT} version detected.")
-        }
-
         val generator = KeyGenerator.getInstance(getEncryptionAlgorithm(), KEYSTORE_TYPE)
 
         // initialize key generator

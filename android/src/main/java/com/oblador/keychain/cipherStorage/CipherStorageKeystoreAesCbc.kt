@@ -1,6 +1,5 @@
 package com.oblador.keychain.cipherStorage
 
-import android.annotation.TargetApi
 import android.os.Build
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyInfo
@@ -12,7 +11,6 @@ import com.oblador.keychain.SecurityLevel
 import com.oblador.keychain.cipherStorage.CipherStorageKeystoreAesCbc.IV.IV_LENGTH
 import com.oblador.keychain.resultHandler.ResultHandler
 import com.oblador.keychain.exceptions.CryptoFailedException
-import com.oblador.keychain.exceptions.KeyStoreAccessException
 import java.io.IOException
 import java.security.GeneralSecurityException
 import java.security.Key
@@ -24,7 +22,6 @@ import javax.crypto.SecretKey
 import javax.crypto.SecretKeyFactory
 import javax.crypto.spec.IvParameterSpec
 
-@TargetApi(Build.VERSION_CODES.M)
 class CipherStorageKeystoreAesCbc(reactContext: ReactApplicationContext) :
     CipherStorageBase(reactContext) {
 
@@ -60,7 +57,7 @@ class CipherStorageKeystoreAesCbc(reactContext: ReactApplicationContext) :
     override fun securityLevel(): SecurityLevel = SecurityLevel.SECURE_HARDWARE
 
     /** Biometry is Not Supported. */
-    override fun isBiometrySupported(): Boolean = false
+    override fun isAuthSupported(): Boolean = false
 
     /** AES. */
 
@@ -142,23 +139,12 @@ class CipherStorageKeystoreAesCbc(reactContext: ReactApplicationContext) :
 
     // region Implementation
 
-    /** Get builder for encryption and decryption operations with required user Authentication. */
-
-    @Throws(GeneralSecurityException::class)
-    override fun getKeyGenSpecBuilder(alias: String): KeyGenParameterSpec.Builder =
-        getKeyGenSpecBuilder(alias, false)
-
     /** Get encryption algorithm specification builder instance. */
 
     @Throws(GeneralSecurityException::class)
     override fun getKeyGenSpecBuilder(
-        alias: String,
-        isForTesting: Boolean
+        alias: String
     ): KeyGenParameterSpec.Builder {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-            throw KeyStoreAccessException("Unsupported API${Build.VERSION.SDK_INT} version detected.")
-        }
-
         val purposes = KeyProperties.PURPOSE_DECRYPT or KeyProperties.PURPOSE_ENCRYPT
 
         return KeyGenParameterSpec.Builder(alias, purposes)
@@ -172,10 +158,6 @@ class CipherStorageKeystoreAesCbc(reactContext: ReactApplicationContext) :
 
     @Throws(GeneralSecurityException::class)
     override fun getKeyInfo(key: Key): KeyInfo {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-            throw KeyStoreAccessException("Unsupported API${Build.VERSION.SDK_INT} version detected.")
-        }
-
         val factory = SecretKeyFactory.getInstance(key.algorithm, KEYSTORE_TYPE)
         val keySpec: KeySpec = factory.getKeySpec(key as SecretKey, KeyInfo::class.java)
 
@@ -186,10 +168,6 @@ class CipherStorageKeystoreAesCbc(reactContext: ReactApplicationContext) :
 
     @Throws(GeneralSecurityException::class)
     override fun generateKey(spec: KeyGenParameterSpec): Key {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-            throw KeyStoreAccessException("Unsupported API${Build.VERSION.SDK_INT} version detected.")
-        }
-
         val generator = KeyGenerator.getInstance(getEncryptionAlgorithm(), KEYSTORE_TYPE)
 
         // initialize key generator

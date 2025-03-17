@@ -13,7 +13,7 @@ import SegmentedControlTab from 'react-native-segmented-control-tab';
 import * as Keychain from 'react-native-keychain';
 
 const ACCESS_CONTROL_OPTIONS = ['None', 'Passcode', 'Password'];
-const ACCESS_CONTROL_OPTIONS_ANDROID = ['None'];
+const ACCESS_CONTROL_OPTIONS_ANDROID = ['None', 'Passcode'];
 const ACCESS_CONTROL_MAP = [
   null,
   Keychain.ACCESS_CONTROL.DEVICE_PASSCODE,
@@ -22,6 +22,7 @@ const ACCESS_CONTROL_MAP = [
 ];
 const ACCESS_CONTROL_MAP_ANDROID = [
   null,
+  Keychain.ACCESS_CONTROL.DEVICE_PASSCODE,
   Keychain.ACCESS_CONTROL.BIOMETRY_CURRENT_SET,
 ];
 const SECURITY_LEVEL_OPTIONS = ['Any', 'Software', 'Hardware'];
@@ -33,7 +34,6 @@ const SECURITY_LEVEL_MAP = [
 
 const SECURITY_STORAGE_OPTIONS = [
   'Best',
-  'FB',
   'AES_CBC',
   'AES_GCM',
   'AES_GCM_NO_AUTH',
@@ -41,14 +41,11 @@ const SECURITY_STORAGE_OPTIONS = [
 ];
 const SECURITY_STORAGE_MAP = [
   null,
-  Keychain.STORAGE_TYPE.FB,
   Keychain.STORAGE_TYPE.AES_CBC,
   Keychain.STORAGE_TYPE.AES_GCM,
   Keychain.STORAGE_TYPE.AES_GCM_NO_AUTH,
   Keychain.STORAGE_TYPE.RSA,
 ];
-const SECURITY_RULES_OPTIONS = ['No upgrade', 'Automatic upgrade'];
-const SECURITY_RULES_MAP = [null, Keychain.SECURITY_RULES.AUTOMATIC_UPGRADE];
 
 const TYPE_OPTIONS = ['genericPassword', 'internetCredentials'];
 
@@ -68,14 +65,10 @@ export default function App() {
   const [storage, setStorage] = useState<Keychain.STORAGE_TYPE | undefined>(
     undefined
   );
-  const [rules, setRules] = useState<Keychain.SECURITY_RULES | undefined>(
-    undefined
-  );
   const [selectedStorageIndex, setSelectedStorageIndex] = useState(0);
   const [selectedSecurityIndex, setSelectedSecurityIndex] = useState(0);
   const [selectedAccessControlIndex, setSelectedAccessControlIndex] =
     useState(0);
-  const [selectedRulesIndex, setSelectedRulesIndex] = useState(0);
   const [hasGenericPassword, setHasGenericPassword] = useState(false);
   const [hasInternetCredentials, setHasInternetCredentials] = useState(false);
 
@@ -152,13 +145,13 @@ export default function App() {
           'https://example.com',
           {
             ...options,
-            rules: rules,
+            accessControl,
           }
         );
       } else {
         credentials = await Keychain.getGenericPassword({
           ...options,
-          rules: rules,
+          accessControl,
         });
       }
       if (credentials) {
@@ -267,15 +260,6 @@ export default function App() {
               onTabPress={(index) => {
                 setStorage(SECURITY_STORAGE_MAP[index] || undefined);
                 setSelectedStorageIndex(index);
-              }}
-            />
-            <Text style={styles.label}>Rules</Text>
-            <SegmentedControlTab
-              selectedIndex={selectedRulesIndex}
-              values={SECURITY_RULES_OPTIONS}
-              onTabPress={(index) => {
-                setRules(SECURITY_RULES_MAP[index] || undefined);
-                setSelectedRulesIndex(index);
               }}
             />
           </View>

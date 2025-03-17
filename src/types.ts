@@ -3,7 +3,6 @@ import type {
   ACCESSIBLE,
   AUTHENTICATION_TYPE,
   SECURITY_LEVEL,
-  SECURITY_RULES,
   STORAGE_TYPE,
 } from './enums';
 
@@ -40,7 +39,6 @@ export type BaseOptions = {
   cloudSync?: boolean;
 };
 
-/** Base options for keychain functions. */
 export type SetOptions = {
   /** The access group to share keychain items between apps.
    * @platform iOS, visionOS
@@ -70,19 +68,13 @@ export type SetOptions = {
    * ```
    *
    */
-  authenticationPrompt?: string | AuthenticationPrompt;
+  authenticationPrompt?: AuthenticationPrompt;
 } & BaseOptions &
   AccessControlOption;
 
-/** Base options for keychain functions. */
 export type GetOptions = {
   /** The access control policy to use for the keychain item. */
   accessControl?: ACCESS_CONTROL;
-  /** The security rules to apply when storing the keychain item.
-   * @platform Android
-   * @default SECURITY_RULES.AUTOMATIC_UPGRADE
-   */
-  rules?: SECURITY_RULES;
   /** Authentication prompt details or a title string.
    * @default
    * ```json
@@ -93,9 +85,16 @@ export type GetOptions = {
    * ```
    *
    */
-  authenticationPrompt?: string | AuthenticationPrompt;
+  authenticationPrompt?: AuthenticationPrompt;
 } & BaseOptions &
   AccessControlOption;
+
+export type GetAllOptions = {
+  /** Whether items requiring user authentication should be skipped
+   * @platform iOS
+   */
+  skipUIAuth?: boolean;
+};
 
 export type AccessControlOption = {
   /** The access control policy to use for the keychain item. */
