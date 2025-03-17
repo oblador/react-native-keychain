@@ -84,7 +84,7 @@ class CipherStorageKeystoreAesGcm(
 
         throwIfInsufficientLevel(level)
 
-        val safeAlias = getDefaultAliasIfEmpty(alias, getDefaultAliasServiceName())
+        val safeAlias = getPrefixedAlias(getDefaultAliasIfEmpty(alias, getDefaultAliasServiceName()))
         val retries = AtomicInteger(1)
         var key: Key? = null
 
@@ -122,7 +122,7 @@ class CipherStorageKeystoreAesGcm(
     ) {
         throwIfInsufficientLevel(level)
 
-        val safeAlias = getDefaultAliasIfEmpty(alias, getDefaultAliasServiceName())
+        val safeAlias = getPrefixedAlias(getDefaultAliasIfEmpty(alias, getDefaultAliasServiceName()))
         val retries = AtomicInteger(1)
         var key: Key? = null
 
