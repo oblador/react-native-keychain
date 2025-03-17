@@ -44,6 +44,9 @@ class CipherStorageKeystoreAesGcm(
 
         /** Key size. */
         const val ENCRYPTION_KEY_SIZE = 256
+
+        private const val PREFIX_AUTH = "AES_GCM_"
+        private const val PREFIX_STD = "AES_GCM_NO_AUTH_"
     }
 
     // endregion
@@ -122,27 +125,57 @@ class CipherStorageKeystoreAesGcm(
     ) {
         throwIfInsufficientLevel(level)
 
-        val safeAlias = getPrefixedAlias(getDefaultAliasIfEmpty(alias, getDefaultAliasServiceName()))
+        val defaultAlias = getDefaultAliasIfEmpty(alias, getDefaultAliasServiceName())
+        val safeAlias = getPrefixedAlias(defaultAlias)
         val retries = AtomicInteger(1)
         var key: Key? = null
+        var lastException: Throwable? = null
 
         try {
             key = extractGeneratedKey(safeAlias, level, retries)
             val results = CipherStorage.DecryptionResult(
                 decryptBytes(key, username), decryptBytes(key, password)
             )
-
             handler.onDecrypt(results, null)
-        } catch (ex: UserNotAuthenticatedException) {
-            Log.d(LOG_TAG, "Unlock of keystore is needed. Error: ${ex.message}", ex)
-            // expected that KEY instance is extracted and we caught exception on decryptBytes operation
-            val context =
-                CryptoContext(safeAlias, key!!, password, username, CryptoOperation.DECRYPT)
+            return
+        } catch (ex: Throwable) {
+            lastException = ex
+            if (ex is UserNotAuthenticatedException) {
+                Log.d(LOG_TAG, "Unlock of keystore is needed. Error: ${ex.message}", ex)
+                val context = CryptoContext(safeAlias, key!!, password, username, CryptoOperation.DECRYPT)
+                handler.askAccessPermissions(context)
+                return
+            }
+        }
 
-            handler.askAccessPermissions(context)
-        } catch (fail: Throwable) {
-            // any other exception treated as a failure
-            handler.onDecrypt(null, fail)
+        // retry with deprecated alias format
+        try {
+            key = extractGeneratedKey(defaultAlias, level, retries)
+            val results = CipherStorage.DecryptionResult(
+                decryptBytes(key, username), decryptBytes(key, password)
+            )
+            
+            handler.onDecrypt(results, null)
+            
+            // attempt migration to new prefixed alias format
+            try {
+                Log.d(LOG_TAG, "Attempting migration from legacy alias to prefixed format")
+                encrypt(handler, alias, results.username, results.password, level)
+                
+                extractGeneratedKey(safeAlias, level, retries).let { verificationKey ->
+                    try {
+                        decryptBytes(verificationKey, encryptString(verificationKey, results.username))
+                        removeKey(defaultAlias)
+                        Log.d(LOG_TAG, "Successfully migrated to new prefixed alias format")
+                    } catch (ex: Exception) {
+                        throw Exception("Verification of new key failed", ex)
+                    }
+                }
+            } catch (migrationEx: Exception) {
+                Log.w(LOG_TAG, "Failed to migrate to new alias format: ${migrationEx.message}", migrationEx)
+            }
+        } catch (ex: Throwable) {
+            handler.onDecrypt(null, lastException ?: ex)
         }
     }
 
@@ -247,8 +280,12 @@ class CipherStorageKeystoreAesGcm(
     // region Alias Helpers
     
     private fun getPrefixedAlias(alias: String): String {
-        val prefix = if (requiresAuth) "auth_" else "std_"
-        return prefix + alias
+        val prefix = if (requiresAuth) PREFIX_AUTH else PREFIX_STD
+        return if (alias.startsWith(PREFIX_AUTH) || alias.startsWith(PREFIX_STD)) {
+            alias
+        } else {
+            prefix + alias
+        }
     }
 
     // endregion
