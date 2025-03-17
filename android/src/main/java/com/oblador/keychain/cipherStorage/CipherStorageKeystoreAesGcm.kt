@@ -247,7 +247,7 @@ class CipherStorageKeystoreAesGcm(
     // region Alias Helpers
     
     private fun getPrefixedAlias(alias: String): String {
-        val prefix = if (requiresBiometricAuth) "bio_" else "std_"
+        val prefix = if (requiresAuth) "bio_" else "std_"
         return prefix + alias
     }
 
