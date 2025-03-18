@@ -645,7 +645,8 @@ class KeychainModule(reactContext: ReactApplicationContext) :
     const val EMPTY_STRING = ""
     const val WARMING_UP_ALIAS = "warmingUp"
     private val LOG_TAG = KeychainModule::class.java.simpleName
-
+    private const val DEFAULT_TITLE = "Authentication Required"
+    private const val DEFAULT_CANCEL = "Cancel"
 
     // endregion
     // region Helpers
@@ -739,7 +740,8 @@ class KeychainModule(reactContext: ReactApplicationContext) :
       val promptInfoBuilder = PromptInfo.Builder()
       promptInfoOptionsMap?.getString(AuthPromptOptions.TITLE)?.let {
         promptInfoBuilder.setTitle(it)
-      }
+      } ?: promptInfoBuilder.setTitle(DEFAULT_TITLE);
+      
       promptInfoOptionsMap?.getString(AuthPromptOptions.SUBTITLE)?.let {
         promptInfoBuilder.setSubtitle(it)
       }
@@ -750,11 +752,9 @@ class KeychainModule(reactContext: ReactApplicationContext) :
       val allowedAuthenticators = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
         when {
           usePasscode && useBiometry ->
-            BiometricManager.Authenticators.BIOMETRIC_STRONG or BiometricManager.Authenticators.DEVICE_CREDENTIAL
-
+            BiometricManager.Authenticators.DEVICE_CREDENTIAL or BiometricManager.Authenticators.BIOMETRIC_STRONG
           usePasscode ->
             BiometricManager.Authenticators.DEVICE_CREDENTIAL
-
           else ->
             BiometricManager.Authenticators.BIOMETRIC_STRONG
         }
@@ -767,7 +767,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
       if (!usePasscode) {
         promptInfoOptionsMap?.getString(AuthPromptOptions.CANCEL)?.let {
           promptInfoBuilder.setNegativeButtonText(it)
-        }
+        } ?: promptInfoBuilder.setNegativeButtonText(DEFAULT_CANCEL)
       }
 
       /* Bypass confirmation to avoid KeyStore unlock timeout being exceeded when using passive biometrics */
