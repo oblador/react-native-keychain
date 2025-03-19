@@ -14,6 +14,7 @@ import com.oblador.keychain.cipherStorage.CipherStorageBase.DecryptBytesHandler
 import com.oblador.keychain.cipherStorage.CipherStorageBase.EncryptStringHandler
 import com.oblador.keychain.exceptions.CryptoFailedException
 import com.oblador.keychain.exceptions.KeyStoreAccessException
+import com.oblador.keychain.resultHandler.ResultHandler
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.IOException
@@ -38,11 +39,21 @@ import javax.crypto.NoSuchPaddingException
 abstract class CipherStorageBase(protected val applicationContext: Context) : CipherStorage {
   // region Constants
   /** Logging tag. */
-  protected val LOG_TAG = CipherStorageBase::class.java.simpleName
+  protected val LOG_TAG get() = Companion.LOG_TAG
 
   /** Default key storage type/name. */
   companion object {
     const val KEYSTORE_TYPE = "AndroidKeyStore"
+    const val PREFIX_DELIMITER = "_"
+    
+    /** Logging tag. */
+    private val LOG_TAG = CipherStorageBase::class.java.simpleName
+        
+    // Prefix constants
+    const val PREFIX_RSA = "RSA"
+    const val PREFIX_AES_GCM = "AES_GCM"
+    const val PREFIX_AES_GCM_NO_AUTH = "AES_GCM_NA"
+    const val PREFIX_AES_CBC = "AES_CBC"
 
     /** Size of hash calculation buffer. Default: 4Kb. */
     private const val BUFFER_SIZE = 4 * 1024
@@ -72,6 +83,44 @@ abstract class CipherStorageBase(protected val applicationContext: Context) : Ci
       while (input.read(buf).also { len = it } > 0) {
         output.write(buf, 0, len)
       }
+    }
+
+      fun getPrefixedAlias(alias: String, prefix: String): String {
+      return if (alias.startsWith("$prefix$PREFIX_DELIMITER")) {
+        alias
+      } else {
+        "$prefix$PREFIX_DELIMITER$alias"
+      }
+    }
+
+
+    fun migrateLegacyKey(
+        legacyAlias: String,
+        newAlias: String,
+        keyStore: KeyStore,
+        handler: ResultHandler,
+        level: SecurityLevel
+    ) {
+        try {
+            val legacyKey = keyStore.getKey(legacyAlias, null) ?: return
+            
+            // Save the key under new alias
+            keyStore.setKeyEntry(
+                newAlias,
+                legacyKey,
+                null,
+                keyStore.getCertificateChain(legacyAlias)
+            )
+
+            // Verify the new key works
+            if (keyStore.getKey(newAlias, null) != null) {
+                // If successful, delete the old key
+                keyStore.deleteEntry(legacyAlias)
+                Log.d(LOG_TAG, "Successfully migrated key from $legacyAlias to $newAlias")
+            }
+        } catch (e: Exception) {
+            Log.w(LOG_TAG, "Failed to migrate legacy key $legacyAlias: ${e.message}")
+        }
     }
   }
 
@@ -112,12 +161,20 @@ abstract class CipherStorageBase(protected val applicationContext: Context) : Ci
 
   /** Remove key with provided name from security storage. */
   override fun removeKey(alias: String) {
-    val safeAlias = getDefaultAliasIfEmpty(alias, getDefaultAliasServiceName())
+    val defaultAlias = getDefaultAliasIfEmpty(alias, getDefaultAliasServiceName())
+    // Try removing both prefixed and unprefixed versions for migration support
     val ks = getKeyStoreAndLoad()
 
     try {
-      if (ks.containsAlias(safeAlias)) {
-        ks.deleteEntry(safeAlias)
+      if (ks.containsAlias(defaultAlias)) {
+        ks.deleteEntry(defaultAlias)
+      }
+      // Try each possible prefix
+      listOf(PREFIX_RSA, PREFIX_AES_GCM, PREFIX_AES_GCM_NO_AUTH, PREFIX_AES_CBC).forEach { prefix ->
+        val prefixedAlias = getPrefixedAlias(defaultAlias, prefix)
+        if (ks.containsAlias(prefixedAlias)) {
+          ks.deleteEntry(prefixedAlias)
+        }
       }
     } catch (ignored: GeneralSecurityException) {
       /* only one exception can be raised by code: 'KeyStore is not loaded' */
@@ -128,7 +185,15 @@ abstract class CipherStorageBase(protected val applicationContext: Context) : Ci
     val ks = getKeyStoreAndLoad()
     try {
       val aliases = ks.aliases()
-      return HashSet(Collections.list(aliases))
+      // Strip prefixes when returning keys
+      return HashSet(Collections.list(aliases).map { alias ->
+        listOf(PREFIX_RSA, PREFIX_AES_GCM, PREFIX_AES_GCM_NO_AUTH, PREFIX_AES_CBC).forEach { prefix ->
+          if (alias.startsWith("$prefix$PREFIX_DELIMITER")) {
+            return@map alias.substring(prefix.length + PREFIX_DELIMITER.length)
+          }
+        }
+        alias
+      })
     } catch (e: KeyStoreException) {
       throw KeyStoreAccessException("Error accessing aliases in keystore $ks", e)
     }
@@ -251,6 +316,42 @@ abstract class CipherStorageBase(protected val applicationContext: Context) : Ci
     }
 
     return key
+  }
+
+  /**
+   * Try to extract key, first with prefix then fallback to legacy format
+   */
+  @Throws(GeneralSecurityException::class) 
+  protected fun extractKeyWithMigration(
+      alias: String,
+      prefix: String,
+      handler: ResultHandler,
+      level: SecurityLevel,
+      retries: AtomicInteger
+  ): Key {
+      val prefixedAlias = getPrefixedAlias(alias, prefix)
+      val keyStore = getKeyStoreAndLoad()
+
+      // First try prefixed alias
+      if (keyStore.containsAlias(prefixedAlias)) {
+          return extractKey(keyStore, prefixedAlias, retries) ?: 
+              throw KeyStoreAccessException("Failed to extract key for $prefixedAlias")
+      }
+
+      // Try legacy alias
+      if (keyStore.containsAlias(alias)) {
+          val key = extractKey(keyStore, alias, retries)
+          if (key != null) {
+              // Migrate to new format
+              migrateLegacyKey(alias, prefixedAlias, keyStore, handler, level)
+              return key
+          }
+      }
+
+      // No existing key found, create new one with prefix
+      generateKeyAndStoreUnderAlias(prefixedAlias, level)
+      return extractKey(keyStore, prefixedAlias, retries) ?:
+          throw KeyStoreAccessException("Failed to generate key for $prefixedAlias")
   }
 
   /** Verify that provided key satisfy minimal needed level. */

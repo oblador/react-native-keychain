@@ -59,7 +59,8 @@ class CipherStorageKeystoreRsaEcb(reactContext: ReactApplicationContext) :
     ) {
         throwIfInsufficientLevel(level)
 
-        val safeAlias = getDefaultAliasIfEmpty(alias, getDefaultAliasServiceName())
+        val defaultAlias = getDefaultAliasIfEmpty(alias, getDefaultAliasServiceName())
+        val safeAlias = getPrefixedAlias(defaultAlias, PREFIX_RSA)
         val retries = AtomicInteger(1)
         try {
             extractGeneratedKey(safeAlias, level, retries)
@@ -106,23 +107,18 @@ class CipherStorageKeystoreRsaEcb(reactContext: ReactApplicationContext) :
         var key: Key? = null
 
         try {
-            // key is always NOT NULL otherwise GeneralSecurityException raised
-            key = extractGeneratedKey(safeAlias, level, retries)
-
-            val results =
-                CipherStorage.DecryptionResult(
-                    decryptBytes(key, username),
-                    decryptBytes(key, password)
-                )
-
+            // key is always NOT NULL otherwise GeneralSecurityException is thrown
+            key = extractKeyWithMigration(safeAlias, PREFIX_RSA, handler, level, retries)
+            val results = CipherStorage.DecryptionResult(
+                decryptBytes(key, username),
+                decryptBytes(key, password)
+            )
             handler.onDecrypt(results, null)
         } catch (ex: UserNotAuthenticatedException) {
             Log.d(LOG_TAG, "Unlock of keystore is needed. Error: ${ex.message}", ex)
-
-            // expected that KEY instance is extracted and we caught exception on decryptBytes operation
-            val context =
-                CryptoContext(safeAlias, key!!, password, username, CryptoOperation.DECRYPT)
-
+            // expected that KEY instance is extracted and we caught expection on decrtptBytes operation
+            val context = CryptoContext(getPrefixedAlias(safeAlias, PREFIX_RSA), 
+                key!!, password, username, CryptoOperation.DECRYPT)
             handler.askAccessPermissions(context)
         } catch (fail: Throwable) {
             // any other exception treated as a failure
@@ -157,9 +153,10 @@ class CipherStorageKeystoreRsaEcb(reactContext: ReactApplicationContext) :
     ): CipherStorage.EncryptionResult {
         val keyStore = getKeyStoreAndLoad()
 
-        // Retrieve the certificate after ensuring the key is compatible
-        val certificate = keyStore.getCertificate(alias)
-            ?: throw GeneralSecurityException("Certificate is null for alias $alias")
+                // Retrieve the certificate after ensuring the key is compatible
+        val prefixedAlias = getPrefixedAlias(alias, PREFIX_RSA)
+        val certificate = keyStore.getCertificate(prefixedAlias)
+            ?: throw GeneralSecurityException("Certificate is null for alias $prefixedAlias")
 
         val publicKey = certificate.publicKey
         val kf = KeyFactory.getInstance(ALGORITHM_RSA)
@@ -177,6 +174,7 @@ class CipherStorageKeystoreRsaEcb(reactContext: ReactApplicationContext) :
     override fun getKeyGenSpecBuilder(
         alias: String,
     ): KeyGenParameterSpec.Builder {
+        val safeAlias = getPrefixedAlias(alias, PREFIX_RSA)
 
         val purposes = KeyProperties.PURPOSE_DECRYPT or KeyProperties.PURPOSE_ENCRYPT
 
@@ -184,7 +182,7 @@ class CipherStorageKeystoreRsaEcb(reactContext: ReactApplicationContext) :
 
         val validityDuration = 5
         val keyGenParameterSpecBuilder =
-            KeyGenParameterSpec.Builder(alias, purposes)
+            KeyGenParameterSpec.Builder(safeAlias, purposes)
                 .setBlockModes(BLOCK_MODE_ECB)
                 .setEncryptionPaddings(PADDING_PKCS1)
                 .setRandomizedEncryptionRequired(true)
@@ -215,10 +213,8 @@ class CipherStorageKeystoreRsaEcb(reactContext: ReactApplicationContext) :
     /** Try to generate key from provided specification. */
     @Throws(GeneralSecurityException::class)
     override fun generateKey(spec: KeyGenParameterSpec): Key {
-
         val generator = KeyPairGenerator.getInstance(getEncryptionAlgorithm(), KEYSTORE_TYPE)
         generator.initialize(spec)
-
         return generator.generateKeyPair().private
     }
 }
