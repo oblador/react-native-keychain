@@ -164,14 +164,7 @@ abstract class CipherStorageBase(protected val applicationContext: Context) : Ci
   /** Get cipher instance and cache it for any next call. */
   @Throws(NoSuchAlgorithmException::class, NoSuchPaddingException::class)
   fun getCachedInstance(): Cipher {
-    if (cachedCipher == null) {
-      synchronized(this) {
-        if (cachedCipher == null) {
-          cachedCipher = Cipher.getInstance(getEncryptionTransformation())
-        }
-      }
-    }
-    return cachedCipher!!
+    return CipherCache.getCipher(getEncryptionTransformation())
   }
 
   /** Check requirements to the security level. */
@@ -464,7 +457,6 @@ abstract class CipherStorageBase(protected val applicationContext: Context) : Ci
   /** Override internal cipher instance cache. */
   @VisibleForTesting
   fun setCipher(cipher: Cipher): CipherStorageBase {
-    cachedCipher = cipher
     return this
   }
 
