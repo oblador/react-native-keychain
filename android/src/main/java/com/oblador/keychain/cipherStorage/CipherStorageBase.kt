@@ -339,7 +339,7 @@ abstract class CipherStorageBase(protected val applicationContext: Context) : Ci
 
   /** Decrypt provided bytes to a string. */
   @SuppressLint("NewApi")
-  @Throws(GeneralSecurityException::class, IOException::class)
+  @Throws(GeneralSecurityException::class, IOException::class, CryptoFailedException::class)
   protected open fun decryptBytes(
     key: Key,
     bytes: ByteArray,
@@ -361,7 +361,14 @@ abstract class CipherStorageBase(protected val applicationContext: Context) : Ci
                 e.cause?.message?.contains("Key user not authenticated") == true -> {
                 throw UserNotAuthenticatedException()
               }
-
+              e is javax.crypto.AEADBadTagException -> {
+                throw CryptoFailedException(
+                  "Decryption failed: Authentication tag verification failed. " +
+                  "This usually indicates that the encrypted data was modified, corrupted, " +
+                  "or is being decrypted with the wrong key.",
+                  e
+                )
+              }
               else -> throw e
             }
           }
