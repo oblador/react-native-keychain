@@ -164,7 +164,6 @@ jobs:
             KeychainExample/artifacts
             screenrecord.mp4
       - name: Upload AVD snapshots
-        if: ${{ failure() }}
         uses: actions/upload-artifact@v4
         with:
           name: avd-snapshots-${{ matrix.api-level }}
