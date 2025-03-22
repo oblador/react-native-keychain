@@ -125,7 +125,6 @@ jobs:
           arch: x86_64
           profile: pixel_6
           disable-animations: true
-          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
           avd-name: TestingAVD
           script: |
             echo "Starting the screen recording..."
@@ -154,8 +153,7 @@ jobs:
             adb shell "kill -2 \$(cat /data/local/tmp/screenrecord_pid.txt)"
             sleep 1
             adb pull /data/local/tmp/screenrecord.mp4 .
-            cd KeychainExample
-            yarn test:android:run
+            adb emu avd snapshot save enrolled_biometrics
       - name: Upload test artifacts
         if: ${{ failure() }}
         uses: actions/upload-artifact@v4
