@@ -1,6 +1,6 @@
 import { by, device, element, expect } from 'detox';
 import { matchLoadInfo } from '../utils/matchLoadInfo';
-import cp from 'child_process';
+import { enterBiometrics } from '../utils/authHelpers';
 
 describe(':android:Storage Types', () => {
   beforeEach(async () => {
@@ -42,15 +42,11 @@ describe(':android:Storage Types', () => {
       await element(by.text('AES_GCM')).tap();
 
       await expect(element(by.text('Save'))).toBeVisible();
-      setTimeout(() => {
-        cp.spawnSync('adb', ['-e', 'emu', 'finger', 'touch', '1']);
-      }, 1000);
       await element(by.text('Save')).tap();
+      await enterBiometrics();
       await expect(element(by.text(/^Credentials saved! .*$/))).toBeVisible();
-      setTimeout(() => {
-        cp.spawnSync('adb', ['-e', 'emu', 'finger', 'touch', '1']);
-      }, 1000);
       await element(by.text('Load')).tap();
+      await enterBiometrics();
       await matchLoadInfo(
         'testUsernameAESGCM',
         'testPasswordAESGCM',
@@ -103,10 +99,8 @@ describe(':android:Storage Types', () => {
       await expect(element(by.text('Save'))).toBeVisible();
       await element(by.text('Save')).tap();
       await expect(element(by.text(/^Credentials saved! .*$/))).toBeVisible();
-      setTimeout(() => {
-        cp.spawnSync('adb', ['-e', 'emu', 'finger', 'touch', '1']);
-      }, 1000);
       await element(by.text('Load')).tap();
+      await enterBiometrics();
       await expect(element(by.text(/^Credentials loaded! .*$/))).toBeVisible();
       await matchLoadInfo(
         'testUsernameRSA',
