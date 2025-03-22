@@ -165,9 +165,10 @@ jobs:
             KeychainExample/artifacts
             screenrecord.mp4
       - name: Upload AVD files as artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: avd-files
+          include-hidden-files: true
           path: |
             $HOME/.android/avd/*
             $HOME/.android/adb*
