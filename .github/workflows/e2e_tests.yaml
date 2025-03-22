@@ -156,6 +156,7 @@ jobs:
             sleep 1
             adb pull /data/local/tmp/screenrecord.mp4 .
             adb emu avd snapshot save enrolled_biometrics
+            ls ~/.android/avd
       - name: Upload test artifacts
         if: ${{ failure() }}
         uses: actions/upload-artifact@v4
@@ -170,8 +171,7 @@ jobs:
           name: avd-files
           include-hidden-files: true
           path: |
-            $HOME/.android/avd/*
-            $HOME/.android/adb*
+            $HOME/.android/avd
   build-ios:
     name: Build and Test iOS
     runs-on: macos-latest
