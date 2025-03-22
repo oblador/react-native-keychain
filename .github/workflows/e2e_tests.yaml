@@ -130,6 +130,7 @@ jobs:
             echo "Starting the screen recording..."
             sleep 3
             adb shell "screenrecord --bugreport /data/local/tmp/screenrecord.mp4 & echo \$! > /data/local/tmp/screenrecord_pid.txt" &
+            sleep 3
             adb shell settings put system pointer_location 1
             adb shell locksettings set-pin 1111
             sleep 3
@@ -162,7 +163,14 @@ jobs:
           path: |
             KeychainExample/artifacts
             screenrecord.mp4
-
+      - name: Upload AVD snapshots
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: avd-snapshots-${{ matrix.api-level }}
+          path: |
+            ~/.android/avd/*
+            ~/.android/adb*
   build-ios:
     name: Build and Test iOS
     runs-on: macos-latest
