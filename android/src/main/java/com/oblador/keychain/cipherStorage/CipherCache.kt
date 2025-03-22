@@ -24,7 +24,7 @@ object CipherCache {
             ciphers[transformation] = cipher
         }
 
-        return cipher
+        return cipher!!
     }
 
     fun clearCache() {
