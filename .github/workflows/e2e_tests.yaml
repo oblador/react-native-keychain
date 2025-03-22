@@ -125,6 +125,7 @@ jobs:
           arch: x86_64
           profile: pixel_6
           disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
           avd-name: TestingAVD
           script: |
             echo "Starting the screen recording..."
