@@ -1,6 +1,6 @@
 import { by, device, element, expect } from 'detox';
 import { matchLoadInfo } from '../utils/matchLoadInfo';
-import { enterBiometrics } from '../utils/authHelpers';
+import { enterBiometrics, waitForAuthValidity } from '../utils/authHelpers';
 
 describe(':android:Storage Types', () => {
   beforeEach(async () => {
@@ -45,6 +45,7 @@ describe(':android:Storage Types', () => {
       await element(by.text('Save')).tap();
       await enterBiometrics();
       await expect(element(by.text(/^Credentials saved! .*$/))).toBeVisible();
+      await waitForAuthValidity();
       await element(by.text('Load')).tap();
       await enterBiometrics();
       await matchLoadInfo(
