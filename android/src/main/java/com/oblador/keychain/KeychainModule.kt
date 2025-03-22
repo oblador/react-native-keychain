@@ -16,7 +16,6 @@ import com.facebook.react.module.annotations.ReactModule
 import com.oblador.keychain.cipherStorage.CipherStorage
 import com.oblador.keychain.cipherStorage.CipherStorage.DecryptionResult
 import com.oblador.keychain.cipherStorage.CipherStorageBase
-import com.oblador.keychain.cipherStorage.CipherStorageFacebookConceal
 import com.oblador.keychain.cipherStorage.CipherStorageKeystoreAesCbc
 import com.oblador.keychain.cipherStorage.CipherStorageKeystoreAesGcm
 import com.oblador.keychain.cipherStorage.CipherStorageKeystoreRsaEcb
@@ -103,16 +102,13 @@ class KeychainModule(reactContext: ReactApplicationContext) :
   }
 
   /** Supported ciphers. */
-  @StringDef(KnownCiphers.FB, KnownCiphers.AES_CBC, KnownCiphers.AES_GCM, KnownCiphers.RSA)
+  @StringDef(KnownCiphers.AES_CBC, KnownCiphers.AES_GCM, KnownCiphers.RSA)
   annotation class KnownCiphers {
     companion object {
-      /** Facebook conceal compatibility lib in use. */
-      const val FB = "FacebookConceal"
-
       /** AES CBC encryption. */
       const val AES_CBC = "KeystoreAESCBC"
 
-      /** Biometric Auth + AES GCM encryption. */
+      /** Auth + AES GCM encryption. */
       const val AES_GCM = "KeystoreAESGCM"
 
       /** AES GCM encryption. */
@@ -120,15 +116,6 @@ class KeychainModule(reactContext: ReactApplicationContext) :
 
       /** Biometric Auth + RSA ECB encryption */
       const val RSA = "KeystoreRSAECB"
-    }
-  }
-
-  /** Secret manipulation rules. */
-  @StringDef(Rules.AUTOMATIC_UPGRADE, Rules.NONE)
-  internal annotation class Rules {
-    companion object {
-      const val NONE = "none"
-      const val AUTOMATIC_UPGRADE = "automaticUpgradeToMoreSecuredStorage"
     }
   }
 
@@ -151,38 +138,10 @@ class KeychainModule(reactContext: ReactApplicationContext) :
   /** Default constructor. */
   init {
     prefsStorage = DataStorePrefsStorage(reactContext, coroutineScope)
-    addCipherStorageToMap(CipherStorageFacebookConceal(reactContext))
     addCipherStorageToMap(CipherStorageKeystoreAesCbc(reactContext))
     addCipherStorageToMap(CipherStorageKeystoreAesGcm(reactContext, false))
     addCipherStorageToMap(CipherStorageKeystoreAesGcm(reactContext, true))
-
-    // we have a references to newer api that will fail load of app classes in old androids OS
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-      addCipherStorageToMap(CipherStorageKeystoreRsaEcb(reactContext))
-    }
-  }
-
-  /** cipher (crypto api) warming up logic. force java load classes and initialization. */
-  private fun internalWarmingBestCipher() {
-    try {
-      val startTime = System.nanoTime()
-      Log.v(KEYCHAIN_MODULE, "warming up started at $startTime")
-      val best = cipherStorageForCurrentAPILevel as CipherStorageBase
-      val instance = best.getCachedInstance()
-      val isSecure = best.supportsSecureHardware()
-      val requiredLevel =
-        if (isSecure) SecurityLevel.SECURE_HARDWARE else SecurityLevel.SECURE_SOFTWARE
-      best.generateKeyAndStoreUnderAlias(WARMING_UP_ALIAS, requiredLevel)
-      best.getKeyStoreAndLoad()
-      Log.v(
-        KEYCHAIN_MODULE,
-        "warming up takes: " +
-          TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startTime) +
-          " ms"
-      )
-    } catch (ex: Throwable) {
-      Log.e(KEYCHAIN_MODULE, "warming up failed!", ex)
-    }
+    addCipherStorageToMap(CipherStorageKeystoreRsaEcb(reactContext))
   }
 
   // endregion
@@ -225,7 +184,8 @@ class KeychainModule(reactContext: ReactApplicationContext) :
           val storage = getSelectedStorage(options)
           throwIfInsufficientLevel(storage, level)
           val promptInfo = getPromptInfo(options)
-          val result = encryptToResult(alias, storage, username, password, level, promptInfo)
+          val result =
+            encryptToResult(alias, storage, username, password, level, promptInfo)
           prefsStorage.storeEncryptedEntry(alias, result)
           val results = Arguments.createMap()
           results.putString(Maps.SERVICE, alias)
@@ -261,6 +221,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
   private fun getSelectedStorage(options: ReadableMap?): CipherStorage {
     val accessControl = getAccessControlOrDefault(options)
     val useBiometry = getUseBiometry(accessControl)
+    val usePasscode = getUsePasscode(accessControl)
     val cipherName = getSpecificStorageOrDefault(options)
     var result: CipherStorage? = null
     if (null != cipherName) {
@@ -269,7 +230,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
 
     // attempt to access none existing storage will force fallback logic.
     if (null == result) {
-      result = getCipherStorageForCurrentAPILevel(useBiometry)
+      result = getCipherStorageForCurrentAPILevel(useBiometry, usePasscode)
     }
     return result
   }
@@ -285,22 +246,10 @@ class KeychainModule(reactContext: ReactApplicationContext) :
             return@launch
           }
           val storageName = resultSet.cipherStorageName
-          val rules = getSecurityRulesOrDefault(options)
           val promptInfo = getPromptInfo(options)
-          var cipher: CipherStorage? = null
-
-          // Only check for upgradable ciphers for FacebookConseal as that
-          // is the only cipher that can be upgraded
-          cipher =
-            if (rules == Rules.AUTOMATIC_UPGRADE && storageName == KnownCiphers.FB) {
-              // get the best storage
-              val accessControl = getAccessControlOrDefault(options)
-              val useBiometry = getUseBiometry(accessControl)
-              getCipherStorageForCurrentAPILevel(useBiometry)
-            } else {
-              getCipherStorageByName(storageName)
-            }
-          val decryptionResult = decryptCredentials(alias, cipher!!, resultSet, rules, promptInfo)
+          val cipher = getCipherStorageByName(storageName)
+          val decryptionResult =
+            decryptCredentials(alias, cipher!!, resultSet, promptInfo)
           val credentials = Arguments.createMap()
           credentials.putString(Maps.SERVICE, alias)
           credentials.putString(Maps.USERNAME, decryptionResult.username)
@@ -461,7 +410,8 @@ class KeychainModule(reactContext: ReactApplicationContext) :
   fun getSecurityLevel(options: ReadableMap?, promise: Promise) {
     val accessControl = getAccessControlOrDefault(options)
     val useBiometry = getUseBiometry(accessControl)
-    promise.resolve(getSecurityLevel(useBiometry).name)
+    val usePasscode = getUsePasscode(accessControl)
+    promise.resolve(getSecurityLevel(useBiometry, usePasscode).name)
   }
 
   private fun addCipherStorageToMap(cipherStorage: CipherStorage) {
@@ -477,7 +427,6 @@ class KeychainModule(reactContext: ReactApplicationContext) :
     alias: String,
     current: CipherStorage,
     resultSet: PrefsStorageBase.ResultSet,
-    @Rules rules: String,
     promptInfo: PromptInfo
   ): DecryptionResult {
     val storageName = resultSet.cipherStorageName
@@ -499,16 +448,6 @@ class KeychainModule(reactContext: ReactApplicationContext) :
 
     // decrypt using the older cipher storage
     val decryptionResult = decryptToResult(alias, oldStorage, resultSet, promptInfo)
-    if (Rules.AUTOMATIC_UPGRADE == rules) {
-      try {
-        // encrypt using the current cipher storage
-        migrateCipherStorage(alias, current, oldStorage, decryptionResult, promptInfo)
-      } catch (e: CryptoFailedException) {
-        Log.w(
-          KEYCHAIN_MODULE, "Migrating to a less safe storage is not allowed. Keeping the old one"
-        )
-      }
-    }
     return decryptionResult
   }
 
@@ -521,7 +460,13 @@ class KeychainModule(reactContext: ReactApplicationContext) :
     promptInfo: PromptInfo
   ): DecryptionResult {
     val handler = getInteractiveHandler(storage, promptInfo)
-    storage.decrypt(handler, alias, resultSet.username!!, resultSet.password!!, SecurityLevel.ANY)
+    storage.decrypt(
+      handler,
+      alias,
+      resultSet.username!!,
+      resultSet.password!!,
+      SecurityLevel.ANY
+    )
     CryptoFailedException.reThrowOnError(handler.error)
     if (null == handler.decryptionResult) {
       throw CryptoFailedException("No decryption results and no error. Something deeply wrong!")
@@ -560,7 +505,9 @@ class KeychainModule(reactContext: ReactApplicationContext) :
   /** Remove key from old storage and add it to the new storage. */
   /* package */
   @Throws(
-    KeyStoreAccessException::class, CryptoFailedException::class, IllegalArgumentException::class
+    KeyStoreAccessException::class,
+    CryptoFailedException::class,
+    IllegalArgumentException::class
   )
   private suspend fun migrateCipherStorage(
     service: String,
@@ -598,17 +545,21 @@ class KeychainModule(reactContext: ReactApplicationContext) :
      * The "Current" CipherStorage is the cipherStorage with the highest API level that is lower
      * than or equal to the current API level
      */
-    get() = getCipherStorageForCurrentAPILevel(true)
+    get() = getCipherStorageForCurrentAPILevel(true, true)
 
   /**
    * The "Current" CipherStorage is the cipherStorage with the highest API level that is lower than
    * or equal to the current API level. Parameter allow to reduce level.
    */
   @Throws(CryptoFailedException::class)
-  fun /* package */ getCipherStorageForCurrentAPILevel(useBiometry: Boolean): CipherStorage {
+  fun getCipherStorageForCurrentAPILevel(
+    useBiometry: Boolean,
+    usePasscode: Boolean
+  ): CipherStorage {
     val currentApiLevel = Build.VERSION.SDK_INT
     val isBiometry =
       useBiometry && (isFingerprintAuthAvailable || isFaceAuthAvailable || isIrisAuthAvailable)
+    val isPasscode = usePasscode && isPasscodeAvailable
     var foundCipher: CipherStorage? = null
     for (variant in cipherStorageMap.values) {
       Log.d(KEYCHAIN_MODULE, "Probe cipher storage: " + variant.getCipherStorageName())
@@ -625,7 +576,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
       if (foundCipher != null && capabilityLevel < foundCipher.getCapabilityLevel()) continue
 
       // if biometric supported but not configured properly than skip
-      if (variant.isBiometrySupported() && !isBiometry) continue
+      if (variant.isAuthSupported() && !isBiometry && !isPasscode) continue
 
       // remember storage with the best capabilities
       foundCipher = variant
@@ -638,7 +589,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
   }
 
   /** Extract cipher by it unique name. [CipherStorage.getCipherStorageName]. */
-  fun /* package */ getCipherStorageByName(@KnownCiphers knownName: String): CipherStorage? {
+  fun getCipherStorageByName(@KnownCiphers knownName: String): CipherStorage? {
     return cipherStorageMap[knownName]
   }
 
@@ -662,21 +613,20 @@ class KeychainModule(reactContext: ReactApplicationContext) :
 
   val isSecureHardwareAvailable: Boolean
     /** Is secured hardware a part of current storage or not. */
-    get() =
-      try {
-        cipherStorageForCurrentAPILevel.supportsSecureHardware()
-      } catch (e: CryptoFailedException) {
-        false
-      }
+    get() = DeviceAvailability.isStrongboxAvailable(reactApplicationContext)
+
+  val isPasscodeAvailable: Boolean
+    /** Is secured hardware a part of current storage or not. */
+    get() = DeviceAvailability.isDeviceCredentialAuthAvailable(reactApplicationContext)
 
   /** Resolve storage to security level it provides. */
-  private fun getSecurityLevel(useBiometry: Boolean): SecurityLevel {
+  private fun getSecurityLevel(useBiometry: Boolean, usePasscode: Boolean): SecurityLevel {
     return try {
-      val storage = getCipherStorageForCurrentAPILevel(useBiometry)
+      val storage = getCipherStorageForCurrentAPILevel(useBiometry, usePasscode)
       if (!storage.securityLevel().satisfiesSafetyThreshold(SecurityLevel.SECURE_SOFTWARE)) {
         return SecurityLevel.ANY
       }
-      if (storage.supportsSecureHardware()) {
+      if (isSecureHardwareAvailable) {
         SecurityLevel.SECURE_HARDWARE
       } else SecurityLevel.SECURE_SOFTWARE
     } catch (e: CryptoFailedException) {
@@ -696,16 +646,6 @@ class KeychainModule(reactContext: ReactApplicationContext) :
     const val WARMING_UP_ALIAS = "warmingUp"
     private val LOG_TAG = KeychainModule::class.java.simpleName
 
-    /** Allow initialization in chain. */
-    fun withWarming(reactContext: ReactApplicationContext): KeychainModule {
-      val instance = KeychainModule(reactContext)
-
-      // force initialization of the crypto api in background thread
-      val warmingUp = Thread({ instance.internalWarmingBestCipher() }, "keychain-warming-up")
-      warmingUp.isDaemon = true
-      warmingUp.start()
-      return instance
-    }
 
     // endregion
     // region Helpers
@@ -716,22 +656,6 @@ class KeychainModule(reactContext: ReactApplicationContext) :
         service = options.getString(Maps.SERVICE)
       }
       return getAliasOrDefault(service)
-    }
-
-    /** Get automatic secret manipulation rules, default: No upgrade. */
-    @Rules
-    private fun getSecurityRulesOrDefault(options: ReadableMap?): String {
-      return getSecurityRulesOrDefault(options, Rules.NONE)
-    }
-
-    /** Get automatic secret manipulation rules. */
-    @Rules
-    private fun getSecurityRulesOrDefault(options: ReadableMap?, @Rules rule: String): String {
-      var rules: String? = null
-      if (null != options && options.hasKey(Maps.RULES)) {
-        rules = options.getString(Maps.RULES)
-      }
-      return rules ?: rule
     }
 
     /** Extract user specified storage from options. */
@@ -769,7 +693,10 @@ class KeychainModule(reactContext: ReactApplicationContext) :
     }
 
     /** Get security level from options or fallback to default value. */
-    private fun getSecurityLevelOrDefault(options: ReadableMap?, fallback: String): SecurityLevel {
+    private fun getSecurityLevelOrDefault(
+      options: ReadableMap?,
+      fallback: String
+    ): SecurityLevel {
       var minimalSecurityLevel: String? = null
       if (null != options && options.hasKey(Maps.SECURITY_LEVEL)) {
         minimalSecurityLevel = options.getString(Maps.SECURITY_LEVEL)
@@ -780,44 +707,71 @@ class KeychainModule(reactContext: ReactApplicationContext) :
 
     // endregion
     // region Implementation
+
     /** Is provided access control string matching biometry use request? */
     fun getUseBiometry(@AccessControl accessControl: String?): Boolean {
-      return AccessControl.BIOMETRY_ANY == accessControl ||
-        AccessControl.BIOMETRY_CURRENT_SET == accessControl ||
-        AccessControl.BIOMETRY_ANY_OR_DEVICE_PASSCODE == accessControl ||
-        AccessControl.BIOMETRY_CURRENT_SET_OR_DEVICE_PASSCODE == accessControl
+      return accessControl in setOf(
+        AccessControl.BIOMETRY_ANY,
+        AccessControl.BIOMETRY_CURRENT_SET,
+        AccessControl.BIOMETRY_ANY_OR_DEVICE_PASSCODE,
+        AccessControl.BIOMETRY_CURRENT_SET_OR_DEVICE_PASSCODE
+      )
+    }
+
+    /** Is provided access control string matching passcode use request? */
+    fun getUsePasscode(@AccessControl accessControl: String?): Boolean {
+      return accessControl in setOf(
+        AccessControl.DEVICE_PASSCODE,
+        AccessControl.BIOMETRY_ANY_OR_DEVICE_PASSCODE,
+        AccessControl.BIOMETRY_CURRENT_SET_OR_DEVICE_PASSCODE
+      )
     }
 
     /** Extract user specified prompt info from options. */
     private fun getPromptInfo(options: ReadableMap?): PromptInfo {
+      val accessControl = getAccessControlOrDefault(options)
+      val usePasscode = getUsePasscode(accessControl)
+      val useBiometry = getUseBiometry(accessControl)
       val promptInfoOptionsMap =
         if (options != null && options.hasKey(Maps.AUTH_PROMPT)) options.getMap(Maps.AUTH_PROMPT)
         else null
+
       val promptInfoBuilder = PromptInfo.Builder()
-      if (null != promptInfoOptionsMap && promptInfoOptionsMap.hasKey(AuthPromptOptions.TITLE)) {
-        val promptInfoTitle = promptInfoOptionsMap.getString(AuthPromptOptions.TITLE)
-        promptInfoBuilder.setTitle(promptInfoTitle!!)
+      promptInfoOptionsMap?.getString(AuthPromptOptions.TITLE)?.let {
+        promptInfoBuilder.setTitle(it)
       }
-      if (null != promptInfoOptionsMap && promptInfoOptionsMap.hasKey(AuthPromptOptions.SUBTITLE)) {
-        val promptInfoSubtitle = promptInfoOptionsMap.getString(AuthPromptOptions.SUBTITLE)
-        promptInfoBuilder.setSubtitle(promptInfoSubtitle)
+      promptInfoOptionsMap?.getString(AuthPromptOptions.SUBTITLE)?.let {
+        promptInfoBuilder.setSubtitle(it)
       }
-      if (null != promptInfoOptionsMap &&
-        promptInfoOptionsMap.hasKey(AuthPromptOptions.DESCRIPTION)
-      ) {
-        val promptInfoDescription = promptInfoOptionsMap.getString(AuthPromptOptions.DESCRIPTION)
-        promptInfoBuilder.setDescription(promptInfoDescription)
-      }
-      if (null != promptInfoOptionsMap && promptInfoOptionsMap.hasKey(AuthPromptOptions.CANCEL)) {
-        val promptInfoNegativeButton = promptInfoOptionsMap.getString(AuthPromptOptions.CANCEL)
-        promptInfoBuilder.setNegativeButtonText(promptInfoNegativeButton!!)
+      promptInfoOptionsMap?.getString(AuthPromptOptions.DESCRIPTION)?.let {
+        promptInfoBuilder.setDescription(it)
       }
 
-      /* PromptInfo is only used in Biometric-enabled RSA storage and can only be unlocked by a strong biometric */ promptInfoBuilder
-        .setAllowedAuthenticators(BiometricManager.Authenticators.BIOMETRIC_STRONG)
+      val allowedAuthenticators = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+        when {
+          usePasscode && useBiometry ->
+            BiometricManager.Authenticators.BIOMETRIC_STRONG or BiometricManager.Authenticators.DEVICE_CREDENTIAL
 
-      /* Bypass confirmation to avoid KeyStore unlock timeout being exceeded when using passive biometrics */ promptInfoBuilder
-        .setConfirmationRequired(false)
+          usePasscode ->
+            BiometricManager.Authenticators.DEVICE_CREDENTIAL
+
+          else ->
+            BiometricManager.Authenticators.BIOMETRIC_STRONG
+        }
+      } else {
+        BiometricManager.Authenticators.BIOMETRIC_STRONG
+      }
+
+      promptInfoBuilder.setAllowedAuthenticators(allowedAuthenticators)
+
+      if (!usePasscode) {
+        promptInfoOptionsMap?.getString(AuthPromptOptions.CANCEL)?.let {
+          promptInfoBuilder.setNegativeButtonText(it)
+        }
+      }
+
+      /* Bypass confirmation to avoid KeyStore unlock timeout being exceeded when using passive biometrics */
+      promptInfoBuilder.setConfirmationRequired(false)
       return promptInfoBuilder.build()
     }
 

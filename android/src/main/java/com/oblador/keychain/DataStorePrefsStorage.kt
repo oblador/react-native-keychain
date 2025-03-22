@@ -10,7 +10,6 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.facebook.react.bridge.ReactApplicationContext
-import com.oblador.keychain.KeychainModule.KnownCiphers
 import com.oblador.keychain.PrefsStorageBase.Companion.KEYCHAIN_DATA
 import com.oblador.keychain.PrefsStorageBase.Companion.getKeyForCipherStorage
 import com.oblador.keychain.PrefsStorageBase.Companion.getKeyForPassword
@@ -42,15 +41,10 @@ class DataStorePrefsStorage(
   override fun getEncryptedEntry(service: String): ResultSet? {
     val bytesForUsername = getBytesForUsername(service)
     val bytesForPassword = getBytesForPassword(service)
-    var cipherStorageName = getCipherStorageName(service)
+    val cipherStorageName = getCipherStorageName(service)
 
-    // in case of wrong password or username
-    if (bytesForUsername == null || bytesForPassword == null) return null
-    if (cipherStorageName == null) {
-      // If the CipherStorage name is not found, we assume it is because the entry was written by an
-      // older version of this library which used Facebook Conceal, so we default to that.
-      cipherStorageName = KnownCiphers.FB
-    }
+    if (bytesForUsername == null || bytesForPassword == null || cipherStorageName == null) return null
+
     return ResultSet(cipherStorageName, bytesForUsername, bytesForPassword)
   }
 

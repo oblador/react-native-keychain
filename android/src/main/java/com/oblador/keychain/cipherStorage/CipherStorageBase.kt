@@ -2,13 +2,13 @@ package com.oblador.keychain.cipherStorage
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.content.pm.PackageManager
 import android.os.Build
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyInfo
 import android.security.keystore.UserNotAuthenticatedException
 import android.util.Log
 import androidx.annotation.VisibleForTesting
+import com.oblador.keychain.DeviceAvailability
 import com.oblador.keychain.SecurityLevel
 import com.oblador.keychain.cipherStorage.CipherStorageBase.DecryptBytesHandler
 import com.oblador.keychain.cipherStorage.CipherStorageBase.EncryptStringHandler
@@ -16,7 +16,6 @@ import com.oblador.keychain.exceptions.CryptoFailedException
 import com.oblador.keychain.exceptions.KeyStoreAccessException
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
-import java.io.Closeable
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
@@ -29,10 +28,8 @@ import java.security.NoSuchAlgorithmException
 import java.security.ProviderException
 import java.security.UnrecoverableKeyException
 import java.util.Collections
-import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import javax.crypto.Cipher
-import javax.crypto.CipherInputStream
 import javax.crypto.CipherOutputStream
 import javax.crypto.NoSuchPaddingException
 
@@ -46,9 +43,6 @@ abstract class CipherStorageBase(protected val applicationContext: Context) : Ci
   /** Default key storage type/name. */
   companion object {
     const val KEYSTORE_TYPE = "AndroidKeyStore"
-
-    /** Key used for testing storage capabilities. */
-    const val TEST_KEY_ALIAS = "$KEYSTORE_TYPE#supportsSecureHardware"
 
     /** Size of hash calculation buffer. Default: 4Kb. */
     private const val BUFFER_SIZE = 4 * 1024
@@ -84,21 +78,6 @@ abstract class CipherStorageBase(protected val applicationContext: Context) : Ci
   // endregion
 
   // region Members
-  /** Guard object for [isSupportsSecureHardware] field. */
-  protected val _sync = Any()
-
-  /** Try to resolve support of the StrongBox feature. */
-  protected val isStrongboxAvailable: Boolean by lazy {
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-      applicationContext.packageManager.hasSystemFeature(PackageManager.FEATURE_STRONGBOX_KEYSTORE)
-    } else {
-      false
-    }
-  }
-
-  /** Try to resolve it only once and cache result for all future calls. */
-  @Transient
-  protected var isSupportsSecureHardware: AtomicBoolean? = null
 
   /** Get cached instance of cipher. Get instance operation is slow. */
   @Transient
@@ -123,32 +102,7 @@ abstract class CipherStorageBase(protected val applicationContext: Context) : Ci
     // max: 1000 + 100 + 29 == 1129
     // min: 0000 + 000 + 19 == 0019
 
-    return (1000 * if (isBiometrySupported()) 1 else 0) + (getMinSupportedApiLevel())
-  }
-
-  /** Try device capabilities by creating temporary key in keystore. */
-  override fun supportsSecureHardware(): Boolean {
-    if (isSupportsSecureHardware != null) return isSupportsSecureHardware!!.get()
-
-    synchronized(_sync) {
-      // double check pattern in use
-      if (isSupportsSecureHardware != null) return isSupportsSecureHardware!!.get()
-
-      isSupportsSecureHardware = AtomicBoolean(false)
-
-      var sdk: SelfDestroyKey? = null
-
-      try {
-        sdk = SelfDestroyKey(TEST_KEY_ALIAS)
-        val newValue = validateKeySecurityLevel(SecurityLevel.SECURE_HARDWARE, sdk.key)
-        isSupportsSecureHardware!!.set(newValue)
-      } catch (ignored: Throwable) {
-      } finally {
-        sdk?.close()
-      }
-    }
-
-    return isSupportsSecureHardware!!.get()
+    return (1000 * if (isAuthSupported()) 1 else 0) + (getMinSupportedApiLevel())
   }
 
   /** {@inheritDoc} */
@@ -188,11 +142,6 @@ abstract class CipherStorageBase(protected val applicationContext: Context) : Ci
   @Throws(GeneralSecurityException::class)
   protected abstract fun getKeyGenSpecBuilder(alias: String): KeyGenParameterSpec.Builder
 
-  @Throws(GeneralSecurityException::class)
-  protected abstract fun getKeyGenSpecBuilder(
-    alias: String,
-    isForTesting: Boolean
-  ): KeyGenParameterSpec.Builder
 
   /** Get information about provided key. */
   @Throws(GeneralSecurityException::class)
@@ -315,14 +264,12 @@ abstract class CipherStorageBase(protected val applicationContext: Context) : Ci
   protected fun getSecurityLevel(key: Key): SecurityLevel {
     val keyInfo = getKeyInfo(key)
 
-    // lower API23 we don't have any hardware support
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-      val insideSecureHardware = keyInfo.isInsideSecureHardware
+    val insideSecureHardware = keyInfo.isInsideSecureHardware
 
-      if (insideSecureHardware) {
-        return SecurityLevel.SECURE_HARDWARE
-      }
+    if (insideSecureHardware) {
+      return SecurityLevel.SECURE_HARDWARE
     }
+
 
     return SecurityLevel.SECURE_SOFTWARE
   }
@@ -361,7 +308,11 @@ abstract class CipherStorageBase(protected val applicationContext: Context) : Ci
 
   /** Encrypt provided string value. */
   @Throws(IOException::class, GeneralSecurityException::class)
-  protected fun encryptString(key: Key, value: String, handler: EncryptStringHandler?): ByteArray {
+  protected fun encryptString(
+    key: Key,
+    value: String,
+    handler: EncryptStringHandler?
+  ): ByteArray {
     val cipher = getCachedInstance()
     try {
       ByteArrayOutputStream().use { output ->
@@ -370,7 +321,13 @@ abstract class CipherStorageBase(protected val applicationContext: Context) : Ci
           output.flush()
         }
 
-        CipherOutputStream(output, cipher).use { encrypt -> encrypt.write(value.toByteArray(UTF8)) }
+        CipherOutputStream(output, cipher).use { encrypt ->
+          encrypt.write(
+            value.toByteArray(
+              UTF8
+            )
+          )
+        }
 
         return output.toByteArray()
       }
@@ -382,7 +339,7 @@ abstract class CipherStorageBase(protected val applicationContext: Context) : Ci
 
   /** Decrypt provided bytes to a string. */
   @SuppressLint("NewApi")
-  @Throws(GeneralSecurityException::class, IOException::class)
+  @Throws(GeneralSecurityException::class, IOException::class, CryptoFailedException::class)
   protected open fun decryptBytes(
     key: Key,
     bytes: ByteArray,
@@ -404,6 +361,14 @@ abstract class CipherStorageBase(protected val applicationContext: Context) : Ci
                 e.cause?.message?.contains("Key user not authenticated") == true -> {
                 throw UserNotAuthenticatedException()
               }
+              e is javax.crypto.AEADBadTagException -> {
+                throw CryptoFailedException(
+                  "Decryption failed: Authentication tag verification failed. " +
+                  "This usually indicates that the encrypted data was modified, corrupted, " +
+                  "or is being decrypted with the wrong key.",
+                  e
+                )
+              }
               else -> throw e
             }
           }
@@ -424,8 +389,9 @@ abstract class CipherStorageBase(protected val applicationContext: Context) : Ci
     // see https://developer.android.com/training/articles/keystore#HardwareSecurityModule
 
     var secretKey: Key? = null
+    val supportsSecureHardware = DeviceAvailability.isStrongboxAvailable(applicationContext)
 
-    if (isStrongboxAvailable) {
+    if (supportsSecureHardware) {
       try {
         secretKey = tryGenerateStrongBoxSecurityKey(alias)
       } catch (ex: GeneralSecurityException) {
@@ -437,7 +403,7 @@ abstract class CipherStorageBase(protected val applicationContext: Context) : Ci
 
     // If that is not possible, we generate the key in a regular way
     // (it still might be generated in hardware, but not in StrongBox)
-    if (secretKey == null || !isStrongboxAvailable) {
+    if (secretKey == null || !supportsSecureHardware) {
       try {
         secretKey = tryGenerateRegularSecurityKey(alias)
       } catch (fail: GeneralSecurityException) {
@@ -460,14 +426,10 @@ abstract class CipherStorageBase(protected val applicationContext: Context) : Ci
       return false
     }
 
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-      return false
-    }
-
     try {
       val keyInfo = getKeyInfo(key)
       val blockModes = keyInfo.blockModes
-      if(keyInfo.isUserAuthenticationRequired != isBiometrySupported()){
+      if (keyInfo.isUserAuthenticationRequired != isAuthSupported()) {
         return false
       }
       val expectedBlockMode = getEncryptionTransformation()
@@ -481,39 +443,24 @@ abstract class CipherStorageBase(protected val applicationContext: Context) : Ci
     }
   }
 
-  /** Try to get secured keystore instance. */
+
   @Throws(GeneralSecurityException::class)
   protected fun tryGenerateRegularSecurityKey(alias: String): Key {
-    return tryGenerateRegularSecurityKey(alias, false)
-  }
-
-  @Throws(GeneralSecurityException::class)
-  protected fun tryGenerateRegularSecurityKey(alias: String, isForTesting: Boolean): Key {
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-      throw KeyStoreAccessException(
-        "Regular security keystore is not supported for old API${Build.VERSION.SDK_INT}."
-      )
-    }
-
-    val specification = getKeyGenSpecBuilder(alias, isForTesting).build()
+    val specification = getKeyGenSpecBuilder(alias).build()
     return generateKey(specification)
   }
 
-  /** Try to get strong secured keystore instance. (StrongBox security chip) */
-  @Throws(GeneralSecurityException::class)
-  protected fun tryGenerateStrongBoxSecurityKey(alias: String): Key {
-    return tryGenerateStrongBoxSecurityKey(alias, false)
-  }
 
   @Throws(GeneralSecurityException::class)
-  protected fun tryGenerateStrongBoxSecurityKey(alias: String, isForTesting: Boolean): Key {
+  protected fun tryGenerateStrongBoxSecurityKey(alias: String): Key {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
       throw KeyStoreAccessException(
         "Strong box security keystore is not supported for old API${Build.VERSION.SDK_INT}."
       )
     }
 
-    val specification = getKeyGenSpecBuilder(alias, isForTesting).setIsStrongBoxBacked(true).build()
+    val specification =
+      getKeyGenSpecBuilder(alias).setIsStrongBoxBacked(true).build()
     return generateKey(specification)
   }
 
@@ -541,10 +488,10 @@ abstract class CipherStorageBase(protected val applicationContext: Context) : Ci
 
   /** Generic cipher initialization. */
   object Defaults {
-    val encrypt = EncryptStringHandler { cipher, key, output ->
+    val encrypt = EncryptStringHandler { cipher, key, _ ->
       cipher.init(Cipher.ENCRYPT_MODE, key)
     }
-    val decrypt = DecryptBytesHandler { cipher, key, input ->
+    val decrypt = DecryptBytesHandler { cipher, key, _ ->
       cipher.init(Cipher.DECRYPT_MODE, key)
     }
   }
@@ -561,19 +508,5 @@ abstract class CipherStorageBase(protected val applicationContext: Context) : Ci
     fun initialize(cipher: Cipher, key: Key, input: InputStream)
   }
 
-  /** Auto remove keystore key. */
-  inner class SelfDestroyKey(val name: String, val key: Key) : Closeable {
-
-    @Throws(GeneralSecurityException::class)
-    constructor(name: String) : this(name, tryGenerateRegularSecurityKey(name, true))
-
-    override fun close() {
-      try {
-        removeKey(name)
-      } catch (ex: KeyStoreAccessException) {
-        Log.w(LOG_TAG, "AutoClose remove key failed. Error: ${ex.message}", ex)
-      }
-    }
-  }
   // endregion
 }

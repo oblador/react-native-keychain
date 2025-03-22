@@ -4,7 +4,6 @@ import {
   ACCESS_CONTROL,
   AUTHENTICATION_TYPE,
   SECURITY_LEVEL,
-  SECURITY_RULES,
   STORAGE_TYPE,
   BIOMETRY_TYPE,
 } from './enums';
@@ -19,11 +18,7 @@ import type {
   AuthenticationTypeOption,
   AccessControlOption,
 } from './types';
-import {
-  normalizeOptions,
-  normalizeServerOption,
-  normalizeServiceOption,
-} from './normalizeOptions';
+import { normalizeAuthPrompt } from './normalizeOptions';
 
 const { RNKeychainManager } = NativeModules;
 
@@ -32,7 +27,7 @@ const { RNKeychainManager } = NativeModules;
  *
  * @param {string} username - The username or e-mail to be saved.
  * @param {string} password - The password to be saved.
- * @param {SetOptions | string} [serviceOrOptions] - A keychain options object or a service name string. Passing a service name as a string is deprecated.
+ * @param {SetOptions} [options] - A keychain options object.
  *
  * @returns {Promise<false | Result>} Resolves to an object containing `service` and `storage` when successful, or `false` on failure.
  *
@@ -44,11 +39,10 @@ const { RNKeychainManager } = NativeModules;
 export function setGenericPassword(
   username: string,
   password: string,
-  serviceOrOptions?: string | SetOptions
+  options?: SetOptions
 ): Promise<false | Result> {
-  const options = normalizeOptions(serviceOrOptions);
   return RNKeychainManager.setGenericPasswordForOptions(
-    options,
+    normalizeAuthPrompt(options),
     username,
     password
   );
@@ -57,7 +51,7 @@ export function setGenericPassword(
 /**
  * Fetches the `username` and `password` combination for the given service.
  *
- * @param {GetOptions | string} [serviceOrOptions] - A keychain options object or a service name string.
+ * @param {GetOptions} [options] - A keychain options object.
  *
  * @returns {Promise<false | UserCredentials>} Resolves to an object containing `service`, `username`, `password`, and `storage` when successful, or `false` on failure.
  *
@@ -72,16 +66,17 @@ export function setGenericPassword(
  * ```
  */
 export function getGenericPassword(
-  serviceOrOptions?: string | GetOptions
+  options?: GetOptions
 ): Promise<false | UserCredentials> {
-  const options = normalizeOptions(serviceOrOptions);
-  return RNKeychainManager.getGenericPasswordForOptions(options);
+  return RNKeychainManager.getGenericPasswordForOptions(
+    normalizeAuthPrompt(options)
+  );
 }
 
 /**
  * Checks if generic password exists for the given service.
  *
- * @param {BaseOptions | string} [serviceOrOptions] - A keychain options object or a service name string.
+ * @param {BaseOptions} [options] - A keychain options object.
  *
  * @returns {Promise<boolean>} Resolves to `true` if a password exists, otherwise `false`.
  *
@@ -91,17 +86,14 @@ export function getGenericPassword(
  * console.log('Password exists:', hasPassword);
  * ```
  */
-export function hasGenericPassword(
-  serviceOrOptions?: string | BaseOptions
-): Promise<boolean> {
-  const options = normalizeServiceOption(serviceOrOptions);
+export function hasGenericPassword(options?: BaseOptions): Promise<boolean> {
   return RNKeychainManager.hasGenericPasswordForOptions(options);
 }
 
 /**
  * Deletes all generic password keychain entries for the given service.
  *
- * @param {BaseOptions | string} [serviceOrOptions] - A keychain options object or a service name string.
+ * @param {BaseOptions} [options] - A keychain options object.
  *
  * @returns {Promise<boolean>} Resolves to `true` when successful, otherwise `false`.
  *
@@ -111,10 +103,7 @@ export function hasGenericPassword(
  * console.log('Password reset successful:', success);
  * ```
  */
-export function resetGenericPassword(
-  serviceOrOptions?: string | BaseOptions
-): Promise<boolean> {
-  const options = normalizeServiceOption(serviceOrOptions);
+export function resetGenericPassword(options?: BaseOptions): Promise<boolean> {
   return RNKeychainManager.resetGenericPasswordForOptions(options);
 }
 
@@ -138,7 +127,7 @@ export function getAllGenericPasswordServices(
 /**
  * Checks if internet credentials exist for the given server.
  *
- * @param {string} serverOrOptions - A keychain options object or a server name string.
+ * @param {BaseOptions} options - A keychain options objectnormalizeAuthPrompt(options).
  *
  * @returns {Promise<boolean>} Resolves to `true` if internet credentials exist, otherwise `false`.
  *
@@ -149,9 +138,8 @@ export function getAllGenericPasswordServices(
  * ```
  */
 export function hasInternetCredentials(
-  serverOrOptions: string | BaseOptions
+  options: string | BaseOptions
 ): Promise<boolean> {
-  const options = normalizeServerOption(serverOrOptions);
   return RNKeychainManager.hasInternetCredentialsForOptions(options);
 }
 
@@ -180,7 +168,7 @@ export function setInternetCredentials(
     server,
     username,
     password,
-    normalizeOptions(options)
+    normalizeAuthPrompt(options)
   );
 }
 
@@ -208,14 +196,14 @@ export function getInternetCredentials(
 ): Promise<false | UserCredentials> {
   return RNKeychainManager.getInternetCredentialsForServer(
     server,
-    normalizeOptions(options)
+    normalizeAuthPrompt(options)
   );
 }
 
 /**
  * Deletes all internet password keychain entries for the given server.
  *
- * @param {BaseOptions | string} [serviceOrOptions] - A keychain options object or a service name string.
+ * @param {BaseOptions} [options] - A keychain options object.
  *
  * @returns {Promise<void>} Resolves when the operation is completed.
  *
@@ -225,10 +213,7 @@ export function getInternetCredentials(
  * console.log('Credentials reset for server');
  * ```
  */
-export function resetInternetCredentials(
-  serverOrOptions: string | BaseOptions
-): Promise<void> {
-  const options = normalizeServerOption(serverOrOptions);
+export function resetInternetCredentials(options: BaseOptions): Promise<void> {
   return RNKeychainManager.resetInternetCredentialsForOptions(options);
 }
 
@@ -375,7 +360,6 @@ export default {
   AUTHENTICATION_TYPE,
   BIOMETRY_TYPE,
   STORAGE_TYPE,
-  SECURITY_RULES,
   getSecurityLevel,
   canImplyAuthentication,
   getSupportedBiometryType,
