@@ -124,7 +124,9 @@ jobs:
           api-level: ${{ matrix.api-level }}
           arch: x86_64
           profile: pixel_6
-          disable-animations: true
+          force-avd-creation: false
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          disable-animations: false
           avd-name: TestingAVD
           script: |
             echo "Starting the screen recording..."
@@ -162,13 +164,13 @@ jobs:
           path: |
             KeychainExample/artifacts
             screenrecord.mp4
-      - name: Upload AVD snapshots
-        uses: actions/upload-artifact@v4
+      - name: Upload AVD files as artifacts
+        uses: actions/upload-artifact@v3
         with:
-          name: avd-snapshots-${{ matrix.api-level }}
+          name: avd-files
           path: |
-            ~/.android/avd/*
-            ~/.android/adb*
+            $HOME/.android/avd/*
+            $HOME/.android/adb*
   build-ios:
     name: Build and Test iOS
     runs-on: macos-latest
