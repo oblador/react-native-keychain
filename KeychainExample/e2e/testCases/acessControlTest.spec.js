@@ -1,4 +1,4 @@
-import { by, device, element, expect } from 'detox';
+import { by, device, element, expect, waitFor } from 'detox';
 import { matchLoadInfo } from '../utils/matchLoadInfo';
 import cp from 'child_process';
 
@@ -35,7 +35,9 @@ describe('Access Control', () => {
           }, 1000);
         }
         await element(by.text('Save')).tap();
-        await expect(element(by.text(/^Credentials saved! .*$/))).toBeVisible();
+        await waitFor(element(by.text(/^Credentials saved! .*$/)))
+          .toBeVisible()
+          .withTimeout(3000);
         // Biometric prompt is not available in the IOS simulator
         // https://github.com/oblador/react-native-keychain/issues/340
         if (device.getPlatform() === 'android') {
@@ -85,9 +87,11 @@ describe('Access Control', () => {
         }, 1500);
         setTimeout(() => {
           cp.spawnSync('adb', ['shell', 'input', 'keyevent', '66']);
-        }, 3000);
+        }, 3500);
         await element(by.text('Save')).tap();
-        await expect(element(by.text(/^Credentials saved! .*$/))).toBeVisible();
+        await waitFor(element(by.text(/^Credentials saved! .*$/)))
+          .toBeVisible()
+          .withTimeout(4000);
 
         setTimeout(() => {
           cp.spawnSync('adb', ['shell', 'input', 'text', '1111']);
@@ -122,7 +126,9 @@ describe('Access Control', () => {
 
         await expect(element(by.text('Save'))).toBeVisible();
         await element(by.text('Save')).tap();
-        await expect(element(by.text(/^Credentials saved! .*$/))).toBeVisible();
+        await waitFor(element(by.text(/^Credentials saved! .*$/)))
+          .toBeVisible()
+          .withTimeout(3000);
         await element(by.text('Load')).tap();
         await matchLoadInfo('testUsernameAny', 'testPasswordAny');
       }
