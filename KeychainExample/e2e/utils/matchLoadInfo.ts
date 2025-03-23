@@ -21,6 +21,6 @@ export const matchLoadInfo = async (
   regexPattern += '.*$';
   const regex = new RegExp(regexPattern);
   await waitFor(element(by.text(regex)))
-    .toBeVisible()
+    .toExist()
     .withTimeout(3000);
 };

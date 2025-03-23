@@ -46,7 +46,7 @@ describe(':android:Storage Types', () => {
       await expect(element(by.text('Save'))).toBeVisible();
       await element(by.text('Save')).tap();
       await enterBiometrics();
-      await expect(element(by.text(/^Credentials saved! .*$/)))
+      await waitFor(element(by.text(/^Credentials saved! .*$/)))
         .toExist()
         .withTimeout(3000);
       await waitForAuthValidity();
@@ -105,7 +105,7 @@ describe(':android:Storage Types', () => {
 
       await expect(element(by.text('Save'))).toBeVisible();
       await element(by.text('Save')).tap();
-      await expect(element(by.text(/^Credentials saved! .*$/)))
+      await waitFor(element(by.text(/^Credentials saved! .*$/)))
         .toExist()
         .withTimeout(3000);
       await element(by.text('Load')).tap();

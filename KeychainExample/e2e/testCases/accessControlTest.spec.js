@@ -36,7 +36,7 @@ describe('Access Control', () => {
         await element(by.text('Save')).tap();
         await enterBiometrics();
 
-        await expect(element(by.text(/^Credentials saved! .*$/)))
+        await waitFor(element(by.text(/^Credentials saved! .*$/)))
           .toExist()
           .withTimeout(3000);
 
@@ -77,7 +77,7 @@ describe('Access Control', () => {
 
         await element(by.text('Save')).tap();
         await enterPasscode();
-        await expect(element(by.text(/^Credentials saved! .*$/)))
+        await waitFor(element(by.text(/^Credentials saved! .*$/)))
           .toExist()
           .withTimeout(3000);
 
