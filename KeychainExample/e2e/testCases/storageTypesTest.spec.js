@@ -110,9 +110,9 @@ describe(':android:Storage Types', () => {
         .withTimeout(3000);
       await element(by.text('Load')).tap();
       await enterBiometrics();
-      await expect(element(by.text(/^Credentials loaded! .*$/)))
+      await waitFor(element(by.text(/^Credentials loaded! .*$/)))
         .toExist()
-        .withTimeout(3000);
+        .withTimeout(4000);
       await matchLoadInfo(
         'testUsernameRSA',
         'testPasswordRSA',

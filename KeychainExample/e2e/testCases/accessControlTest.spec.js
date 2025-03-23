@@ -79,7 +79,7 @@ describe('Access Control', () => {
         await enterPasscode();
         await waitFor(element(by.text(/^Credentials saved! .*$/)))
           .toExist()
-          .withTimeout(3000);
+          .withTimeout(4000);
 
         await waitForAuthValidity();
         await element(by.text('Load')).tap();

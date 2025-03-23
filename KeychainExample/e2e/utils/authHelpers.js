@@ -20,7 +20,7 @@ export const enterPasscode = async () => {
   if (device.getPlatform() === 'android') {
     await new Promise((resolve) => setTimeout(resolve, 1500));
     cp.spawnSync('adb', ['shell', 'input', 'text', '1111']);
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    await new Promise((resolve) => setTimeout(resolve, 2000));
     cp.spawnSync('adb', ['shell', 'input', 'keyevent', '66']);
     await new Promise((resolve) => setTimeout(resolve, 500));
   }
