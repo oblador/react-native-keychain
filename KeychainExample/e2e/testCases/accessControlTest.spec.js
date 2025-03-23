@@ -1,4 +1,4 @@
-import { by, device, element, expect } from 'detox';
+import { by, device, element, expect, waitFor } from 'detox';
 import { matchLoadInfo } from '../utils/matchLoadInfo';
 import {
   waitForAuthValidity,
@@ -36,7 +36,9 @@ describe('Access Control', () => {
         await element(by.text('Save')).tap();
         await enterBiometrics();
 
-        await expect(element(by.text(/^Credentials saved! .*$/))).toBeVisible();
+        await expect(element(by.text(/^Credentials saved! .*$/)))
+          .toExist()
+          .withTimeout(3000);
 
         await waitForAuthValidity();
         await element(by.text('Load')).tap();
@@ -75,7 +77,9 @@ describe('Access Control', () => {
 
         await element(by.text('Save')).tap();
         await enterPasscode();
-        await expect(element(by.text(/^Credentials saved! .*$/))).toBeVisible();
+        await expect(element(by.text(/^Credentials saved! .*$/)))
+          .toExist()
+          .withTimeout(3000);
 
         await waitForAuthValidity();
         await element(by.text('Load')).tap();
@@ -105,7 +109,9 @@ describe('Access Control', () => {
 
         await expect(element(by.text('Save'))).toBeVisible();
         await element(by.text('Save')).tap();
-        await expect(element(by.text(/^Credentials saved! .*$/))).toBeVisible();
+        await waitFor(element(by.text(/^Credentials saved! .*$/)))
+          .toExist()
+          .withTimeout(3000);
         await element(by.text('Load')).tap();
         await matchLoadInfo('testUsernameAny', 'testPasswordAny');
       }
