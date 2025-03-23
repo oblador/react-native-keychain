@@ -398,6 +398,22 @@ RCT_EXPORT_METHOD(canCheckAuthentication:(NSDictionary * __nullable)options
 }
 #endif
 
+#if TARGET_OS_IOS
+RCT_EXPORT_METHOD(isPasscodeAuthAvailable:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+{
+  NSError *aerr = nil;
+  LAContext *context = [LAContext new];
+  BOOL canBeProtected = [context canEvaluatePolicy:LAPolicyDeviceOwnerAuthentication error:&aerr];
+
+  if (!aerr && canBeProtected) {
+    return resolve(@(YES));
+  }
+
+  return resolve(@(NO));
+}
+#endif
+
 #if TARGET_OS_IOS || TARGET_OS_VISION
 RCT_EXPORT_METHOD(getSupportedBiometryType:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
