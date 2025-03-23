@@ -1,12 +1,49 @@
 import { by, device, element, expect, waitFor } from 'detox';
 import { matchLoadInfo } from '../utils/matchLoadInfo';
-import cp from 'child_process';
+import {
+  waitForAuthValidity,
+  enterBiometrics,
+  enterPasscode,
+} from '../utils/authHelpers';
 
 describe('Access Control', () => {
   beforeEach(async () => {
     await device.launchApp({ newInstance: true });
   });
   ['genericPassword', 'internetCredentials'].forEach((type) => {
+    it(
+      ':android:should save and retrieve username and password with passcode - ' +
+        type,
+      async () => {
+        await expect(element(by.text('Keychain Example'))).toExist();
+        await element(by.id('usernameInput')).typeText('testUsernamePasscode');
+        await element(by.id('passwordInput')).typeText('testPasswordPasscode');
+        // Hide keyboard
+        await element(by.text('Keychain Example')).tap();
+        await element(by.text('Passcode')).tap();
+
+        await expect(element(by.text('Save'))).toBeVisible();
+
+        await element(by.text('Save')).tap();
+        await enterPasscode();
+        // Hide keyboard if open
+        await element(by.text('Keychain Example')).tap();
+        await waitFor(element(by.text(/^Credentials saved! .*$/)))
+          .toExist()
+          .withTimeout(4000);
+
+        await waitForAuthValidity();
+        await element(by.text('Load')).tap();
+        await enterPasscode();
+        // Hide keyboard if open
+        await element(by.text('Keychain Example')).tap();
+        await matchLoadInfo(
+          'testUsernamePasscode',
+          'testPasswordPasscode',
+          'KeystoreAESGCM'
+        );
+      }
+    );
     it(
       ' should save and retrieve username and password with biometrics - ' +
         type,
@@ -29,23 +66,17 @@ describe('Access Control', () => {
         }
 
         await expect(element(by.text('Save'))).toBeVisible();
-        if (device.getPlatform() === 'android') {
-          setTimeout(() => {
-            cp.spawnSync('adb', ['-e', 'emu', 'finger', 'touch', '1']);
-          }, 1000);
-        }
         await element(by.text('Save')).tap();
+        await enterBiometrics();
+
         await waitFor(element(by.text(/^Credentials saved! .*$/)))
           .toExist()
           .withTimeout(3000);
-        // Biometric prompt is not available in the IOS simulator
-        // https://github.com/oblador/react-native-keychain/issues/340
-        if (device.getPlatform() === 'android') {
-          setTimeout(() => {
-            cp.spawnSync('adb', ['-e', 'emu', 'finger', 'touch', '1']);
-          }, 1000);
-        }
+
+        await waitForAuthValidity();
         await element(by.text('Load')).tap();
+        await enterBiometrics();
+
         await matchLoadInfo('testUsernameBiometrics', 'testPasswordBiometrics');
       }
     );
@@ -58,54 +89,9 @@ describe('Access Control', () => {
         await expect(
           element(by.text('hasGenericPassword: true'))
         ).toBeVisible();
-        // Biometric prompt is not available in the IOS simulator
-        // https://github.com/oblador/react-native-keychain/issues/340
-        if (device.getPlatform() === 'android') {
-          setTimeout(() => {
-            cp.spawnSync('adb', ['-e', 'emu', 'finger', 'touch', '1']);
-          }, 1000);
-        }
         await element(by.text('Load')).tap();
+        await enterBiometrics();
         await matchLoadInfo('testUsernameBiometrics', 'testPasswordBiometrics');
-      }
-    );
-
-    it(
-      ':android:should save and retrieve username and password with passcode - ' +
-        type,
-      async () => {
-        await expect(element(by.text('Keychain Example'))).toExist();
-        await element(by.id('usernameInput')).typeText('testUsernamePasscode');
-        await element(by.id('passwordInput')).typeText('testPasswordPasscode');
-        // Hide keyboard
-        await element(by.text('Keychain Example')).tap();
-        await element(by.text('Passcode')).tap();
-
-        await expect(element(by.text('Save'))).toBeVisible();
-        setTimeout(() => {
-          cp.spawnSync('adb', ['shell', 'input', 'text', '1111']);
-        }, 1500);
-        setTimeout(() => {
-          cp.spawnSync('adb', ['shell', 'input', 'keyevent', '66']);
-        }, 3500);
-        await element(by.text('Save')).tap();
-        await waitFor(element(by.text(/^Credentials saved! .*$/)))
-          .toExist()
-          .withTimeout(4000);
-
-        setTimeout(() => {
-          cp.spawnSync('adb', ['shell', 'input', 'text', '1111']);
-        }, 1500);
-        setTimeout(() => {
-          cp.spawnSync('adb', ['shell', 'input', 'keyevent', '66']);
-        }, 3000);
-
-        await element(by.text('Load')).tap();
-        await matchLoadInfo(
-          'testUsernamePasscode',
-          'testPasswordPasscode',
-          'KeystoreAESGCM'
-        );
       }
     );
 
