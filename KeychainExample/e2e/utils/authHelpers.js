@@ -22,6 +22,6 @@ export const enterPasscode = async () => {
     cp.spawnSync('adb', ['shell', 'input', 'text', '1111']);
     await new Promise((resolve) => setTimeout(resolve, 2000));
     cp.spawnSync('adb', ['shell', 'input', 'keyevent', '66']);
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    await new Promise((resolve) => setTimeout(resolve, 1500));
   }
 };
