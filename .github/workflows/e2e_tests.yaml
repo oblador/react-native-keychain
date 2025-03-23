@@ -157,6 +157,10 @@ jobs:
             adb pull /data/local/tmp/screenrecord.mp4 .
             adb emu avd snapshot save enrolled_biometrics
             ls ~/.android/avd
+      - name: Zip
+        run: |
+          cd ~/.android
+          zip -r $GITHUB_WORKSPACE/avd-api-${{ matrix.api-level }}.zip avd/
       - name: Upload test artifacts
         if: ${{ failure() }}
         uses: actions/upload-artifact@v4
@@ -171,7 +175,7 @@ jobs:
           name: avd-files
           include-hidden-files: true
           path: |
-            $HOME/.android/avd
+            avd-api-${{ matrix.api-level }}.zip
   build-ios:
     name: Build and Test iOS
     runs-on: macos-latest
