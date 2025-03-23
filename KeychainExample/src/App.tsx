@@ -253,8 +253,8 @@ export default function App() {
             />
             <Text style={styles.label}>Storage</Text>
             <SegmentedControlTab
-              tabTextStyle={{ fontSize: 12 }}
-              tabStyle={{ padding: 5, flex: 0 }}
+              tabTextStyle={styles.tabText}
+              tabStyle={styles.tab}
               selectedIndex={selectedStorageIndex}
               values={SECURITY_STORAGE_OPTIONS}
               onTabPress={(index) => {
@@ -363,5 +363,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     paddingHorizontal: 16,
     paddingVertical: 8,
+  },
+  tabText: {
+    fontSize: 12,
+  },
+  tab: {
+    padding: 5,
+    flex: 0,
   },
 });
