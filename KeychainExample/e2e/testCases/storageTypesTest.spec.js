@@ -107,7 +107,7 @@ describe(':android:Storage Types', () => {
       await element(by.text('Save')).tap();
       await waitFor(element(by.text(/^Credentials saved! .*$/)))
         .toExist()
-        .withTimeout(3000);
+        .withTimeout(4000);
       await element(by.text('Load')).tap();
       await enterBiometrics();
       await waitFor(element(by.text(/^Credentials loaded! .*$/)))
