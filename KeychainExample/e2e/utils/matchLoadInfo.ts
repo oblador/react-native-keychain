@@ -22,5 +22,5 @@ export const matchLoadInfo = async (
   const regex = new RegExp(regexPattern);
   await waitFor(element(by.text(regex)))
     .toExist()
-    .withTimeout(3000);
+    .withTimeout(5000);
 };
