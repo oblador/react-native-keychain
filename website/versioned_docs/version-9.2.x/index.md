@@ -10,17 +10,17 @@ import TabItem from '@theme/TabItem';
 
 **react-native-keychain** is a library that provides keychain/keystore access for React Native applications. It allows you to securely store and retrieve sensitive information such as passwords, internet credentials, and tokens using native encryption mechanisms provided by iOS and Android.
 
-This library supports various security features such as biometric authentication (Face ID, Touch ID, Fingerprint), passcode authentication, secure storage levels, as well as customizable options for accessing and storing data.
+This library supports various security features such as biometric authentication (Face ID, Touch ID, Fingerprint), secure storage levels, as well as customizable options for accessing and storing data.
 
 ## Support
 
 This library supports both iOS and Android platforms. Additionally, it has support for macOS Catalyst and visionOS.
-For iOS, the library uses the Keychain Services API, while on Android, it uses the Android Keystore.
+For iOS, the library uses the Keychain Services API, while on Android, it uses Facebook Conceal or the Android Keystore depending on the API level.
 
 Supported platforms and versions:
 
 - **iOS**: Requires iOS 9.0+
-- **Android**: API 23+
+- **Android**: API 16+ (uses Facebook Conceal for API levels 16-22, Android Keystore for API 23+)
 - **macOS Catalyst**: Supported
 - **visionOS**: Supported
 

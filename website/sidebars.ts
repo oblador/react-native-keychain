@@ -9,6 +9,16 @@ const sidebars: SidebarsConfig = {
     },
     {
       type: 'doc',
+      id: 'platform-value-storage',
+      label: 'Platform value storage',
+    },
+    {
+      type: 'doc',
+      id: 'data-persistence',
+      label: 'Data persistence',
+    },
+    {
+      type: 'doc',
       id: 'usage',
       label: 'Usage',
     },
@@ -21,22 +31,6 @@ const sidebars: SidebarsConfig = {
       type: 'doc',
       id: 'faq',
       label: 'Frequently Asked Questions',
-    },
-    {
-      type: 'category',
-      label: 'Android',
-      items: [
-        {
-          type: 'doc',
-          id: 'choosing-storage-type',
-          label: 'Choosing Storage Type',
-        },
-        {
-          type: 'doc',
-          id: 'secure-hardware-vs-software',
-          label: 'Secure Hardware vs Software',
-        },
-      ],
     },
   ],
   api: ['api/index', require('./docs/api/typedoc-sidebar.cjs')],
