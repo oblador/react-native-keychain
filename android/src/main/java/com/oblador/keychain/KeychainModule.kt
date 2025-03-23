@@ -186,7 +186,11 @@ class KeychainModule(reactContext: ReactApplicationContext) :
           val level = getSecurityLevelOrDefault(options)
           val storage = getSelectedStorage(options)
           throwIfInsufficientLevel(storage, level)
-          val promptInfo = getPromptInfo(options)
+          val accessControl = getAccessControlOrDefault(options)
+          val usePasscode = getUsePasscode(accessControl) && isPasscodeAvailable
+          val useBiometry =
+            getUseBiometry(accessControl) && (isFingerprintAuthAvailable || isFaceAuthAvailable || isIrisAuthAvailable)
+          val promptInfo = getPromptInfo(options, usePasscode, useBiometry)
           val result =
             encryptToResult(alias, storage, username, password, level, promptInfo)
           prefsStorage.storeEncryptedEntry(alias, result)
@@ -249,7 +253,11 @@ class KeychainModule(reactContext: ReactApplicationContext) :
             return@launch
           }
           val storageName = resultSet.cipherStorageName
-          val promptInfo = getPromptInfo(options)
+          val accessControl = getAccessControlOrDefault(options)
+          val usePasscode = getUsePasscode(accessControl) && isPasscodeAvailable
+          val useBiometry =
+            getUseBiometry(accessControl) && (isFingerprintAuthAvailable || isFaceAuthAvailable || isIrisAuthAvailable)
+          val promptInfo = getPromptInfo(options, usePasscode, useBiometry)
           val cipher = getCipherStorageByName(storageName)
           val decryptionResult =
             decryptCredentials(alias, cipher!!, resultSet, promptInfo)
@@ -295,9 +303,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
     for (cipher in ciphers) {
       val aliases = cipher!!.getAllKeys()
       for (alias in aliases) {
-        if (alias != WARMING_UP_ALIAS) {
-          result.add(alias)
-        }
+        result.add(alias)
       }
     }
     return result
@@ -382,6 +388,17 @@ class KeychainModule(reactContext: ReactApplicationContext) :
     val server = options.getString(Maps.SERVER)
     val alias = getAliasOrDefault(server)
     resetGenericPassword(alias, promise)
+  }
+
+  @ReactMethod
+  fun isPasscodeAuthAvailable(promise: Promise) {
+    try {
+      val reply: Boolean = DeviceAvailability.isDevicePasscodeAvailable(reactApplicationContext)
+      promise.resolve(reply)
+    } catch (fail: Throwable) {
+      Log.e(KEYCHAIN_MODULE, fail.message, fail)
+      promise.reject(Errors.E_UNKNOWN_ERROR, fail)
+    }
   }
 
   @ReactMethod
@@ -542,14 +559,6 @@ class KeychainModule(reactContext: ReactApplicationContext) :
     oldCipherStorage.removeKey(service)
   }
 
-  @get:Throws(CryptoFailedException::class)
-  val cipherStorageForCurrentAPILevel: CipherStorage
-    /**
-     * The "Current" CipherStorage is the cipherStorage with the highest API level that is lower
-     * than or equal to the current API level
-     */
-    get() = getCipherStorageForCurrentAPILevel(true, true)
-
   /**
    * The "Current" CipherStorage is the cipherStorage with the highest API level that is lower than
    * or equal to the current API level. Parameter allow to reduce level.
@@ -620,7 +629,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
 
   val isPasscodeAvailable: Boolean
     /** Is secured hardware a part of current storage or not. */
-    get() = DeviceAvailability.isDeviceCredentialAuthAvailable(reactApplicationContext)
+    get() = DeviceAvailability.isDevicePasscodeAvailable(reactApplicationContext)
 
   /** Resolve storage to security level it provides. */
   private fun getSecurityLevel(useBiometry: Boolean, usePasscode: Boolean): SecurityLevel {
@@ -646,7 +655,6 @@ class KeychainModule(reactContext: ReactApplicationContext) :
     const val FACE_SUPPORTED_NAME = "Face"
     const val IRIS_SUPPORTED_NAME = "Iris"
     const val EMPTY_STRING = ""
-    const val WARMING_UP_ALIAS = "warmingUp"
     private val LOG_TAG = KeychainModule::class.java.simpleName
 
 
@@ -731,10 +739,11 @@ class KeychainModule(reactContext: ReactApplicationContext) :
     }
 
     /** Extract user specified prompt info from options. */
-    private fun getPromptInfo(options: ReadableMap?): PromptInfo {
-      val accessControl = getAccessControlOrDefault(options)
-      val usePasscode = getUsePasscode(accessControl)
-      val useBiometry = getUseBiometry(accessControl)
+    private fun getPromptInfo(
+      options: ReadableMap?,
+      usePasscode: Boolean,
+      useBiometry: Boolean
+    ): PromptInfo {
       val promptInfoOptionsMap =
         if (options != null && options.hasKey(Maps.AUTH_PROMPT)) options.getMap(Maps.AUTH_PROMPT)
         else null
@@ -750,22 +759,20 @@ class KeychainModule(reactContext: ReactApplicationContext) :
         promptInfoBuilder.setDescription(it)
       }
 
-      val allowedAuthenticators = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-        when {
-          usePasscode && useBiometry ->
-            BiometricManager.Authenticators.BIOMETRIC_STRONG or BiometricManager.Authenticators.DEVICE_CREDENTIAL
+      val allowedAuthenticators = when {
+        usePasscode && useBiometry ->
+          BiometricManager.Authenticators.BIOMETRIC_STRONG or BiometricManager.Authenticators.DEVICE_CREDENTIAL
 
-          usePasscode ->
-            BiometricManager.Authenticators.DEVICE_CREDENTIAL
+        usePasscode ->
+          BiometricManager.Authenticators.DEVICE_CREDENTIAL
 
-          else ->
-            BiometricManager.Authenticators.BIOMETRIC_STRONG
-        }
-      } else {
-        BiometricManager.Authenticators.BIOMETRIC_STRONG
+        else ->
+          null
       }
 
-      promptInfoBuilder.setAllowedAuthenticators(allowedAuthenticators)
+      if (allowedAuthenticators != null) {
+        promptInfoBuilder.setAllowedAuthenticators(allowedAuthenticators)
+      }
 
       if (!usePasscode) {
         promptInfoOptionsMap?.getString(AuthPromptOptions.CANCEL)?.let {

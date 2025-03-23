@@ -350,6 +350,24 @@ export function getSecurityLevel(
   return RNKeychainManager.getSecurityLevel(options);
 }
 
+/**
+ * Checks if passcode authentication is available on the current device.
+ *
+ * @returns {Promise<boolean>} Resolves to `true` if passcode authentication is available, otherwise `false`.
+ *
+ * @example
+ * ```typescript
+ * const isAvailable = await Keychain.isPasscodeAuthAvailable();
+ * console.log('Passcode authentication available:', isAvailable);
+ * ```
+ */
+export function isPasscodeAuthAvailable(): Promise<boolean> {
+  if (!RNKeychainManager.isPasscodeAuthAvailable) {
+    return Promise.resolve(false);
+  }
+  return RNKeychainManager.isPasscodeAuthAvailable();
+}
+
 export * from './enums';
 export * from './types';
 /** @ignore */
@@ -364,6 +382,7 @@ export default {
   canImplyAuthentication,
   getSupportedBiometryType,
   setInternetCredentials,
+  isPasscodeAuthAvailable,
   getInternetCredentials,
   resetInternetCredentials,
   setGenericPassword,

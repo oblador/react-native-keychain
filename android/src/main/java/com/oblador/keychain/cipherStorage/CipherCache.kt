@@ -11,7 +11,7 @@ import javax.crypto.NoSuchPaddingException
  */
 object CipherCache {
     private val LOG_TAG = CipherCache::class.java.simpleName
-    
+
     private val cipherCache = ThreadLocal<MutableMap<String, Cipher>>()
 
     /**
@@ -19,18 +19,15 @@ object CipherCache {
      * This method is thread-safe and caches Cipher instances per thread.
      *
      * @param transformation The name of the transformation, e.g., "AES/CBC/PKCS7Padding"
-     * @param prefix An optional identifier added to the cache key to distinguish between different uses of the same transformation.
-     *              The prefix only affects how the cipher is stored in the cache and does not modify the cipher's behavior.
      * @return A Cipher instance for the requested transformation
      * @throws NoSuchAlgorithmException if the transformation algorithm is not available
      * @throws NoSuchPaddingException if the padding scheme is not available
      */
     @Throws(NoSuchAlgorithmException::class, NoSuchPaddingException::class)
-    fun getCipher(transformation: String, prefix: String? = null): Cipher {
+    fun getCipher(transformation: String): Cipher {
         return synchronized(this) {
-            val cacheKey = prefix?.let { "${it}_$transformation" } ?: transformation
             (cipherCache.get() ?: mutableMapOf<String, Cipher>().also { cipherCache.set(it) })
-                .getOrPut(cacheKey) { Cipher.getInstance(transformation) }
+                .getOrPut(transformation) { Cipher.getInstance(transformation) }
         }
     }
 
