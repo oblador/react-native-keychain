@@ -1,4 +1,4 @@
-import { by, device, element, expect } from 'detox';
+import { by, device, element, expect, waitFor } from 'detox';
 import { matchLoadInfo } from '../utils/matchLoadInfo';
 import cp from 'child_process';
 
@@ -20,7 +20,9 @@ describe(':android:Storage Types', () => {
 
       await expect(element(by.text('Save'))).toBeVisible();
       await element(by.text('Save')).tap();
-      await expect(element(by.text(/^Credentials saved! .*$/))).toBeVisible();
+      await waitFor(element(by.text(/^Credentials saved! .*$/)))
+        .toBeVisible()
+        .withTimeout(3000);
       await element(by.text('Load')).tap();
       await matchLoadInfo(
         'testUsernameAESCBC',
@@ -46,7 +48,9 @@ describe(':android:Storage Types', () => {
         cp.spawnSync('adb', ['-e', 'emu', 'finger', 'touch', '1']);
       }, 1000);
       await element(by.text('Save')).tap();
-      await expect(element(by.text(/^Credentials saved! .*$/))).toBeVisible();
+      await waitFor(element(by.text(/^Credentials saved! .*$/)))
+        .toBeVisible()
+        .withTimeout(3000);
       setTimeout(() => {
         cp.spawnSync('adb', ['-e', 'emu', 'finger', 'touch', '1']);
       }, 1000);
@@ -78,7 +82,9 @@ describe(':android:Storage Types', () => {
 
         await expect(element(by.text('Save'))).toBeVisible();
         await element(by.text('Save')).tap();
-        await expect(element(by.text(/^Credentials saved! .*$/))).toBeVisible();
+        await waitFor(element(by.text(/^Credentials saved! .*$/)))
+          .toBeVisible()
+          .withTimeout(3000);
         await element(by.text('Load')).tap();
         await matchLoadInfo(
           'testUsernameAESGCMNoAuth',
@@ -102,7 +108,9 @@ describe(':android:Storage Types', () => {
 
       await expect(element(by.text('Save'))).toBeVisible();
       await element(by.text('Save')).tap();
-      await expect(element(by.text(/^Credentials saved! .*$/))).toBeVisible();
+      await waitFor(element(by.text(/^Credentials saved! .*$/)))
+        .toBeVisible()
+        .withTimeout(3000);
       setTimeout(() => {
         cp.spawnSync('adb', ['-e', 'emu', 'finger', 'touch', '1']);
       }, 1000);
