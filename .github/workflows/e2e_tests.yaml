@@ -77,8 +77,6 @@ jobs:
       fail-fast: false
       matrix:
         api-level:
-          - 31
-          - 32
           - 33
           - 34
           - 35
@@ -172,7 +170,7 @@ jobs:
       - name: Upload AVD files as artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: avd-files
+          name: avd-files-${{ matrix.api-level }}
           include-hidden-files: true
           path: |
             avd-api-${{ matrix.api-level }}.zip
