@@ -62,6 +62,7 @@ module.exports = {
   },
   artifacts: {
     plugins: {
+      log: { enabled: true },
       screenshot: {
         enabled: true,
         shouldTakeAutomaticSnapshots: true,
@@ -70,6 +71,14 @@ module.exports = {
           testStart: true,
           testDone: true,
           appNotReady: true,
+        },
+      },
+      video: {
+        android: {
+          bitRate: 4000000,
+        },
+        simulator: {
+          codec: 'hevc',
         },
       },
     },

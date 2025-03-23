@@ -77,8 +77,6 @@ jobs:
       fail-fast: false
       matrix:
         api-level:
-          - 31
-          - 32
           - 33
           - 34
           - 35
@@ -92,6 +90,27 @@ jobs:
           ls /dev/kvm
 
       - uses: actions/checkout@v4
+
+      - name: Checkout AVD snapshots
+        uses: actions/checkout@v4
+        with:
+          repository: DorianMazur/react-native-keychain-avds
+          sparse-checkout: |
+            ${{ matrix.api-level }}
+          path: avd-snapshots
+          lfs: true
+
+      - name: Setup AVD snapshots
+        run: |
+          mkdir -p ~/.android/avd
+          if [ -d "avd-snapshots/${{ matrix.api-level }}" ]; then
+            echo "Found AVD snapshot for API ${{ matrix.api-level }}"
+            cp -r avd-snapshots/${{ matrix.api-level }}/* ~/.android/avd/
+          else
+            echo "ERROR: No pre-configured AVD snapshot found for API ${{ matrix.api-level }}"
+            echo "Please ensure the required snapshot exists in the repository."
+            exit 1
+          fi
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -124,34 +143,11 @@ jobs:
           api-level: ${{ matrix.api-level }}
           arch: x86_64
           profile: pixel_6
+          force-avd-creation: false
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: true
           avd-name: TestingAVD
           script: |
-            echo "Starting the screen recording..."
-            sleep 3
-            adb shell "screenrecord --bugreport /data/local/tmp/screenrecord.mp4 & echo \$! > /data/local/tmp/screenrecord_pid.txt" &
-            adb shell settings put system pointer_location 1
-            adb shell locksettings set-pin 1111
-            sleep 3
-            adb shell am start -a android.settings.BIOMETRIC_ENROLL
-            sleep 3
-            adb shell input text 1111
-            adb shell input keyevent 66
-            sleep 3
-            adb shell input tap 900 2200
-            sleep 3
-            adb shell input tap 900 2200
-            sleep 3
-            adb -e emu finger touch 1
-            sleep 3
-            adb -e emu finger touch 1
-            sleep 3
-            adb -e emu finger touch 1
-            sleep 3
-            adb shell input keyevent KEYCODE_HOME
-            adb shell "kill -2 \$(cat /data/local/tmp/screenrecord_pid.txt)"
-            sleep 1
-            adb pull /data/local/tmp/screenrecord.mp4 .
             cd KeychainExample
             yarn test:android:run
       - name: Upload test artifacts
@@ -162,7 +158,6 @@ jobs:
           path: |
             KeychainExample/artifacts
             screenrecord.mp4
-
   build-ios:
     name: Build and Test iOS
     runs-on: macos-latest
