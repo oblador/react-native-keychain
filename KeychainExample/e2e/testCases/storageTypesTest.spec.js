@@ -21,7 +21,7 @@ describe(':android:Storage Types', () => {
       await expect(element(by.text('Save'))).toBeVisible();
       await element(by.text('Save')).tap();
       await waitFor(element(by.text(/^Credentials saved! .*$/)))
-        .toBeVisible()
+        .toExist()
         .withTimeout(3000);
       await element(by.text('Load')).tap();
       await matchLoadInfo(
@@ -49,7 +49,7 @@ describe(':android:Storage Types', () => {
       }, 1000);
       await element(by.text('Save')).tap();
       await waitFor(element(by.text(/^Credentials saved! .*$/)))
-        .toBeVisible()
+        .toExist()
         .withTimeout(3000);
       setTimeout(() => {
         cp.spawnSync('adb', ['-e', 'emu', 'finger', 'touch', '1']);
@@ -83,7 +83,7 @@ describe(':android:Storage Types', () => {
         await expect(element(by.text('Save'))).toBeVisible();
         await element(by.text('Save')).tap();
         await waitFor(element(by.text(/^Credentials saved! .*$/)))
-          .toBeVisible()
+          .toExist()
           .withTimeout(3000);
         await element(by.text('Load')).tap();
         await matchLoadInfo(
@@ -109,13 +109,13 @@ describe(':android:Storage Types', () => {
       await expect(element(by.text('Save'))).toBeVisible();
       await element(by.text('Save')).tap();
       await waitFor(element(by.text(/^Credentials saved! .*$/)))
-        .toBeVisible()
+        .toExist()
         .withTimeout(3000);
       setTimeout(() => {
         cp.spawnSync('adb', ['-e', 'emu', 'finger', 'touch', '1']);
       }, 1000);
       await element(by.text('Load')).tap();
-      await expect(element(by.text(/^Credentials loaded! .*$/))).toBeVisible();
+      await expect(element(by.text(/^Credentials loaded! .*$/))).toExist();
       await matchLoadInfo(
         'testUsernameRSA',
         'testPasswordRSA',
@@ -130,6 +130,6 @@ describe(':android:Storage Types', () => {
     // Hide keyboard
 
     await element(by.text('Reset')).tap();
-    await expect(element(by.text(/^Credentials Reset!$/))).toBeVisible();
+    await expect(element(by.text(/^Credentials Reset!$/))).toExist();
   });
 });

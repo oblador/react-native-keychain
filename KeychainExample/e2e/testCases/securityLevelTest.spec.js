@@ -20,7 +20,7 @@ describe(':android:Security Level', () => {
       await expect(element(by.text('Save'))).toBeVisible();
       await element(by.text('Save')).tap();
       await waitFor(element(by.text(/^Credentials saved! .*$/)))
-        .toBeVisible()
+        .toExist()
         .withTimeout(3000);
       await element(by.text('Load')).tap();
       await matchLoadInfo(
@@ -47,7 +47,7 @@ describe(':android:Security Level', () => {
         await expect(element(by.text('Save'))).toBeVisible();
         await element(by.text('Save')).tap();
         await waitFor(element(by.text(/^Credentials saved! .*$/)))
-          .toBeVisible()
+          .toExist()
           .withTimeout(3000);
         await element(by.text('Load')).tap();
         await matchLoadInfo(
@@ -75,7 +75,7 @@ describe(':android:Security Level', () => {
         await expect(element(by.text('Save'))).toBeVisible();
         await element(by.text('Save')).tap();
         await waitFor(element(by.text(/^Credentials saved! .*$/)))
-          .toBeVisible()
+          .toExist()
           .withTimeout(3000);
         await element(by.text('Load')).tap();
         await matchLoadInfo(

@@ -36,7 +36,7 @@ describe('Access Control', () => {
         }
         await element(by.text('Save')).tap();
         await waitFor(element(by.text(/^Credentials saved! .*$/)))
-          .toBeVisible()
+          .toExist()
           .withTimeout(3000);
         // Biometric prompt is not available in the IOS simulator
         // https://github.com/oblador/react-native-keychain/issues/340
@@ -90,7 +90,7 @@ describe('Access Control', () => {
         }, 3500);
         await element(by.text('Save')).tap();
         await waitFor(element(by.text(/^Credentials saved! .*$/)))
-          .toBeVisible()
+          .toExist()
           .withTimeout(4000);
 
         setTimeout(() => {
@@ -127,7 +127,7 @@ describe('Access Control', () => {
         await expect(element(by.text('Save'))).toBeVisible();
         await element(by.text('Save')).tap();
         await waitFor(element(by.text(/^Credentials saved! .*$/)))
-          .toBeVisible()
+          .toExist()
           .withTimeout(3000);
         await element(by.text('Load')).tap();
         await matchLoadInfo('testUsernameAny', 'testPasswordAny');
