@@ -67,7 +67,7 @@ class CipherStorageKeystoreAesGcm(
     /** AES. */
     override fun getEncryptionAlgorithm(): String = ALGORITHM_AES
 
-    /** AES/CBC/PKCS7Padding */
+    /** AES/GCM/NoPadding */
     override fun getEncryptionTransformation(): String = ENCRYPTION_TRANSFORMATION
 
     // endregion
