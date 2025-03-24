@@ -1,4 +1,4 @@
-import { by, element, expect } from 'detox';
+import { by, element, expect, device } from 'detox';
 import { enterBiometrics, waitForAuthValidity } from '../utils/authHelpers';
 
 import {
@@ -6,11 +6,10 @@ import {
   expectCredentialsSavedMessage,
   expectCredentialsResetMessage,
 } from '../utils/statusMessageHelpers';
-import { ResetDevice } from '../utils/detoxHelpers';
 
 describe(':android:Storage Types', () => {
   beforeEach(async () => {
-    await ResetDevice();
+    await device.launchApp({ newInstance: true });
   });
   ['genericPassword', 'internetCredentials'].forEach((type) => {
     it(':android:should save with AES_CBC storage - ' + type, async () => {

@@ -1,14 +1,13 @@
-import { by, element, expect } from 'detox';
+import { by, element, expect, device } from 'detox';
 import {
   expectCredentialsLoadedMessage,
   expectCredentialsSavedMessage,
   expectCredentialsResetMessage,
 } from '../utils/statusMessageHelpers';
-import { ResetDevice } from '../utils/detoxHelpers';
 
 describe(':android:Security Level', () => {
   beforeEach(async () => {
-    await ResetDevice();
+    await device.launchApp({ newInstance: true });
   });
   ['genericPassword', 'internetCredentials'].forEach((type) => {
     it(':android:should save with Any security level - ' + type, async () => {

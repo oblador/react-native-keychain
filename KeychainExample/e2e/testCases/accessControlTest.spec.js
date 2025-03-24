@@ -9,11 +9,10 @@ import {
   expectCredentialsSavedMessage,
   expectCredentialsResetMessage,
 } from '../utils/statusMessageHelpers';
-import { ResetDevice } from '../utils/detoxHelpers';
 
 describe('Access Control', () => {
   beforeEach(async () => {
-    await ResetDevice();
+    await device.launchApp({ newInstance: true });
   });
   ['genericPassword', 'internetCredentials'].forEach((type) => {
     it(

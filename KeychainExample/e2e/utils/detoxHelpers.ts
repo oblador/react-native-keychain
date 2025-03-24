@@ -1,8 +1,4 @@
-import { by, element, waitFor, device, expect } from 'detox';
-
-export const ResetDevice = async () => {
-  await device.launchApp({ newInstance: true });
-};
+import { by, element, waitFor, expect } from 'detox';
 
 async function retry<T>(
   operation: () => Promise<T>,
