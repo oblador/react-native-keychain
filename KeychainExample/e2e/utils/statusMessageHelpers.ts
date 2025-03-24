@@ -34,6 +34,7 @@ async function expectRegexText(regex: RegExp) {
     const text = await expectCredentialsMessage();
     // @ts-expect-error - regex pattern is not recognized by TS
     await expect(text).toHaveText(regex);
+    return;
   }
   await expect(element(by.text(regex))).toBeVisible();
 }
