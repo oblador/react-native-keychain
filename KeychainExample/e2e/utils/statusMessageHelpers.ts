@@ -1,5 +1,4 @@
-import { by, element, expect, waitFor } from 'detox';
-const statusTestID = 'statusMessage';
+import { expectRegexText } from './detoxHelpers';
 
 function buildLoadedCredentialsRegex(
   username: string,
@@ -22,31 +21,14 @@ function buildLoadedCredentialsRegex(
   return new RegExp(pattern);
 }
 
-async function expectCredentialsMessage() {
-  await waitFor(element(by.id(statusTestID))).toBeVisible();
-  return element(by.id(statusTestID));
-}
-
-async function expectRegexText(regex: RegExp) {
-  // toHaveText does not support regex on iOS
-  // by.text(regex) is flakey on Android
-  if (device.getPlatform() === 'android') {
-    const text = await expectCredentialsMessage();
-    // @ts-expect-error - regex pattern is not recognized by TS
-    await expect(text).toHaveText(regex);
-    return;
-  }
-  await expect(element(by.text(regex))).toBeVisible();
-}
-
 export async function expectCredentialsSavedMessage() {
   const regex = /^Credentials saved! .*$/;
-  await expectRegexText(regex);
+  await expectRegexText(regex).toBeVisible();
 }
 
 export async function expectCredentialsResetMessage() {
   const regex = /^Credentials Reset!$/;
-  expectRegexText(regex);
+  await expectRegexText(regex).toBeVisible();
 }
 
 export async function expectCredentialsLoadedMessage(
@@ -61,5 +43,5 @@ export async function expectCredentialsLoadedMessage(
     storage,
     service
   );
-  expectRegexText(regex);
+  await expectRegexText(regex).toBeVisible();
 }
