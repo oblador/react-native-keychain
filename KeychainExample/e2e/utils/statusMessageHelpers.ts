@@ -1,4 +1,6 @@
-import { expectRegexText } from './detoxHelpers';
+import { waitForRegexText } from './detoxHelpers';
+
+const TIMEOUT = 10000;
 
 function buildLoadedCredentialsRegex(
   username: string,
@@ -23,12 +25,12 @@ function buildLoadedCredentialsRegex(
 
 export async function expectCredentialsSavedMessage() {
   const regex = /^Credentials saved! .*$/;
-  await expectRegexText(regex).toBeVisible();
+  await waitForRegexText(regex, TIMEOUT);
 }
 
 export async function expectCredentialsResetMessage() {
   const regex = /^Credentials Reset!$/;
-  await expectRegexText(regex).toBeVisible();
+  await waitForRegexText(regex, TIMEOUT);
 }
 
 export async function expectCredentialsLoadedMessage(
@@ -43,5 +45,5 @@ export async function expectCredentialsLoadedMessage(
     storage,
     service
   );
-  await expectRegexText(regex).toBeVisible();
+  await waitForRegexText(regex, TIMEOUT);
 }

@@ -1,9 +1,13 @@
-import { by, element, expect, device } from 'detox';
+import { by, element, waitFor, device } from 'detox';
 
 export const ResetDevice = async () => {
-  await device.launchApp({ delete: true, newInstance: true });
+  await device.launchApp({ newInstance: true });
 };
 
-export function expectRegexText(regex: RegExp) {
-  return expect(element(by.text(regex)));
+export function waitForRegexText(regex: RegExp, timeout?: number) {
+  return timeout
+    ? waitFor(element(by.text(regex)))
+        .toBeVisible()
+        .withTimeout(timeout)
+    : waitFor(element(by.text(regex))).toBeVisible();
 }
