@@ -1,5 +1,6 @@
-import { by, device, element, expect, waitFor } from 'detox';
+import { by, device, element, expect } from 'detox';
 import { matchLoadInfo } from '../utils/matchLoadInfo';
+import { expectCredentialsSavedMessage } from '../utils/authHelpers';
 
 describe(':android:Security Level', () => {
   beforeEach(async () => {
@@ -19,9 +20,7 @@ describe(':android:Security Level', () => {
 
       await expect(element(by.text('Save'))).toBeVisible();
       await element(by.text('Save')).tap();
-      await waitFor(element(by.text(/^Credentials saved! .*$/)))
-        .toExist()
-        .withTimeout(3000);
+      await expectCredentialsSavedMessage();
       await element(by.text('Load')).tap();
       await matchLoadInfo(
         'testUsernameAny',
@@ -46,9 +45,7 @@ describe(':android:Security Level', () => {
 
         await expect(element(by.text('Save'))).toBeVisible();
         await element(by.text('Save')).tap();
-        await waitFor(element(by.text(/^Credentials saved! .*$/)))
-          .toExist()
-          .withTimeout(3000);
+        await expectCredentialsSavedMessage();
         await element(by.text('Load')).tap();
         await matchLoadInfo(
           'testUsernameSoftware',
@@ -74,9 +71,7 @@ describe(':android:Security Level', () => {
 
         await expect(element(by.text('Save'))).toBeVisible();
         await element(by.text('Save')).tap();
-        await waitFor(element(by.text(/^Credentials saved! .*$/)))
-          .toExist()
-          .withTimeout(3000);
+        await expectCredentialsSavedMessage();
         await element(by.text('Load')).tap();
         await matchLoadInfo(
           'testUsernameHardware',

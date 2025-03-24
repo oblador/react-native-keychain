@@ -1,5 +1,6 @@
-import { device } from 'detox';
 import cp from 'child_process';
+import { by, device, element, expect, waitFor } from 'detox';
+const statusTestID = 'statusMessage';
 
 // Wait for 5 seconds to ensure auth validity period has expired
 export const waitForAuthValidity = async () => {
@@ -25,3 +26,10 @@ export const enterPasscode = async () => {
     await new Promise((resolve) => setTimeout(resolve, 1500));
   }
 };
+
+export async function expectCredentialsSavedMessage() {
+  await waitFor(element(by.id(statusTestID))).toBeVisible();
+  const text = await element(by.id(statusTestID));
+
+  expect(text).toHaveText(/^Credentials saved! .*$/);
+}

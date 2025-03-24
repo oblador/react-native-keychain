@@ -1,6 +1,10 @@
 import { by, device, element, expect, waitFor } from 'detox';
 import { matchLoadInfo } from '../utils/matchLoadInfo';
-import { enterBiometrics, waitForAuthValidity } from '../utils/authHelpers';
+import {
+  enterBiometrics,
+  expectCredentialsSavedMessage,
+  waitForAuthValidity,
+} from '../utils/authHelpers';
 
 describe(':android:Storage Types', () => {
   beforeEach(async () => {
@@ -20,9 +24,7 @@ describe(':android:Storage Types', () => {
 
       await expect(element(by.text('Save'))).toBeVisible();
       await element(by.text('Save')).tap();
-      await waitFor(element(by.text(/^Credentials saved! .*$/)))
-        .toExist()
-        .withTimeout(3000);
+      await expectCredentialsSavedMessage();
       await element(by.text('Load')).tap();
       await matchLoadInfo(
         'testUsernameAESCBC',
@@ -46,9 +48,7 @@ describe(':android:Storage Types', () => {
       await expect(element(by.text('Save'))).toBeVisible();
       await element(by.text('Save')).tap();
       await enterBiometrics();
-      await waitFor(element(by.text(/^Credentials saved! .*$/)))
-        .toExist()
-        .withTimeout(3000);
+      await expectCredentialsSavedMessage();
       await waitForAuthValidity();
       await element(by.text('Load')).tap();
       await enterBiometrics();
@@ -79,9 +79,7 @@ describe(':android:Storage Types', () => {
 
         await expect(element(by.text('Save'))).toBeVisible();
         await element(by.text('Save')).tap();
-        await waitFor(element(by.text(/^Credentials saved! .*$/)))
-          .toExist()
-          .withTimeout(3000);
+        await expectCredentialsSavedMessage();
         await element(by.text('Load')).tap();
         await matchLoadInfo(
           'testUsernameAESGCMNoAuth',
@@ -105,9 +103,7 @@ describe(':android:Storage Types', () => {
 
       await expect(element(by.text('Save'))).toBeVisible();
       await element(by.text('Save')).tap();
-      await waitFor(element(by.text(/^Credentials saved! .*$/)))
-        .toExist()
-        .withTimeout(5000);
+      await expectCredentialsSavedMessage();
       await element(by.text('Load')).tap();
       await enterBiometrics();
       await waitFor(element(by.text(/^Credentials loaded! .*$/)))
