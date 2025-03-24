@@ -31,5 +31,5 @@ export async function expectCredentialsSavedMessage() {
   await waitFor(element(by.id(statusTestID))).toBeVisible();
   const text = await element(by.id(statusTestID));
 
-  expect(text).toHaveText(/^Credentials saved! .*$/);
+  await expect(text).toHaveText(/^Credentials saved! .*$/);
 }
