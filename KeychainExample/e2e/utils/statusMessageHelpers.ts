@@ -27,18 +27,25 @@ async function expectCredentialsMessage() {
   return element(by.id(statusTestID));
 }
 
+async function expectRegexText(regex: RegExp) {
+  // toHaveText does not support regex on iOS
+  // by.text(regex) is flakey on Android
+  if (device.getPlatform() === 'android') {
+    const text = await expectCredentialsMessage();
+    // @ts-expect-error - regex pattern is not recognized by TS
+    await expect(text).toHaveText(regex);
+  }
+  await expect(element(by.text(regex))).toBeVisible();
+}
+
 export async function expectCredentialsSavedMessage() {
-  const text = await expectCredentialsMessage();
   const regex = /^Credentials saved! .*$/;
-  // @ts-expect-error - regex pattern is not recognized by TS
-  await expect(text).toHaveText(regex);
+  await expectRegexText(regex);
 }
 
 export async function expectCredentialsResetMessage() {
-  const text = await expectCredentialsMessage();
   const regex = /^Credentials Reset!$/;
-  // @ts-expect-error - regex pattern is not recognized by TS
-  await expect(text).toHaveText(regex);
+  expectRegexText(regex);
 }
 
 export async function expectCredentialsLoadedMessage(
@@ -47,13 +54,11 @@ export async function expectCredentialsLoadedMessage(
   storage?: string,
   service?: string
 ) {
-  const text = await expectCredentialsMessage();
   const regex = buildLoadedCredentialsRegex(
     username,
     password,
     storage,
     service
   );
-  // @ts-expect-error - regex pattern is not recognized by TS
-  await expect(text).toHaveText(regex);
+  expectRegexText(regex);
 }
