@@ -1,10 +1,11 @@
 import { by, device, element, expect, waitFor } from 'detox';
-import { matchLoadInfo } from '../utils/matchLoadInfo';
+import { enterBiometrics, waitForAuthValidity } from '../utils/authHelpers';
+
 import {
-  enterBiometrics,
+  expectCredentialsLoadedMessage,
   expectCredentialsSavedMessage,
-  waitForAuthValidity,
-} from '../utils/authHelpers';
+  expectCredentialsResetMessage,
+} from '../utils/statusMessageHelpers';
 
 describe(':android:Storage Types', () => {
   beforeEach(async () => {
@@ -26,7 +27,7 @@ describe(':android:Storage Types', () => {
       await element(by.text('Save')).tap();
       await expectCredentialsSavedMessage();
       await element(by.text('Load')).tap();
-      await matchLoadInfo(
+      await expectCredentialsLoadedMessage(
         'testUsernameAESCBC',
         'testPasswordAESCBC',
         'KeystoreAESCBC',
@@ -52,7 +53,7 @@ describe(':android:Storage Types', () => {
       await waitForAuthValidity();
       await element(by.text('Load')).tap();
       await enterBiometrics();
-      await matchLoadInfo(
+      await expectCredentialsLoadedMessage(
         'testUsernameAESGCM',
         'testPasswordAESGCM',
         'KeystoreAESGCM',
@@ -81,7 +82,7 @@ describe(':android:Storage Types', () => {
         await element(by.text('Save')).tap();
         await expectCredentialsSavedMessage();
         await element(by.text('Load')).tap();
-        await matchLoadInfo(
+        await expectCredentialsLoadedMessage(
           'testUsernameAESGCMNoAuth',
           'testPasswordAESGCMNoAuth',
           'KeystoreAESGCM_NoAuth',
@@ -109,7 +110,7 @@ describe(':android:Storage Types', () => {
       await waitFor(element(by.text(/^Credentials loaded! .*$/)))
         .toExist()
         .withTimeout(5000);
-      await matchLoadInfo(
+      await expectCredentialsLoadedMessage(
         'testUsernameRSA',
         'testPasswordRSA',
         'KeystoreRSAECB',
@@ -123,6 +124,6 @@ describe(':android:Storage Types', () => {
     // Hide keyboard
 
     await element(by.text('Reset')).tap();
-    await expect(element(by.text(/^Credentials Reset!$/))).toExist();
+    await expectCredentialsResetMessage();
   });
 });

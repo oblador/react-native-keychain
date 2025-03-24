@@ -1,6 +1,9 @@
 import { by, device, element, expect } from 'detox';
-import { matchLoadInfo } from '../utils/matchLoadInfo';
-import { expectCredentialsSavedMessage } from '../utils/authHelpers';
+import {
+  expectCredentialsLoadedMessage,
+  expectCredentialsSavedMessage,
+  expectCredentialsResetMessage,
+} from '../utils/statusMessageHelpers';
 
 describe(':android:Security Level', () => {
   beforeEach(async () => {
@@ -22,7 +25,7 @@ describe(':android:Security Level', () => {
       await element(by.text('Save')).tap();
       await expectCredentialsSavedMessage();
       await element(by.text('Load')).tap();
-      await matchLoadInfo(
+      await expectCredentialsLoadedMessage(
         'testUsernameAny',
         'testPasswordAny',
         undefined,
@@ -47,7 +50,7 @@ describe(':android:Security Level', () => {
         await element(by.text('Save')).tap();
         await expectCredentialsSavedMessage();
         await element(by.text('Load')).tap();
-        await matchLoadInfo(
+        await expectCredentialsLoadedMessage(
           'testUsernameSoftware',
           'testPasswordSoftware',
           undefined,
@@ -73,7 +76,7 @@ describe(':android:Security Level', () => {
         await element(by.text('Save')).tap();
         await expectCredentialsSavedMessage();
         await element(by.text('Load')).tap();
-        await matchLoadInfo(
+        await expectCredentialsLoadedMessage(
           'testUsernameHardware',
           'testPasswordHardware',
           undefined,
@@ -88,6 +91,6 @@ describe(':android:Security Level', () => {
     // Hide keyboard
 
     await element(by.text('Reset')).tap();
-    await expect(element(by.text(/^Credentials Reset!$/))).toBeVisible();
+    await expectCredentialsResetMessage();
   });
 });
