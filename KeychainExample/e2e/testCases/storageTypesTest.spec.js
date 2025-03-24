@@ -1,4 +1,4 @@
-import { by, element, expect, waitFor } from 'detox';
+import { by, element, expect } from 'detox';
 import { enterBiometrics, waitForAuthValidity } from '../utils/authHelpers';
 
 import {
@@ -108,9 +108,6 @@ describe(':android:Storage Types', () => {
       await expectCredentialsSavedMessage();
       await element(by.text('Load')).tap();
       await enterBiometrics();
-      await waitFor(element(by.text(/^Credentials loaded! .*$/)))
-        .toExist()
-        .withTimeout(5000);
       await expectCredentialsLoadedMessage(
         'testUsernameRSA',
         'testPasswordRSA',
