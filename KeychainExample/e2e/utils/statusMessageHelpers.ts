@@ -1,4 +1,4 @@
-import { waitForRegexText } from './detoxHelpers';
+import { expectRegexText } from './detoxHelpers';
 
 const TIMEOUT = 10000;
 
@@ -25,12 +25,12 @@ function buildLoadedCredentialsRegex(
 
 export async function expectCredentialsSavedMessage() {
   const regex = /^Credentials saved! .*$/;
-  await waitForRegexText(regex, TIMEOUT);
+  await expectRegexText(regex, TIMEOUT);
 }
 
 export async function expectCredentialsResetMessage() {
   const regex = /^Credentials Reset!$/;
-  await waitForRegexText(regex, TIMEOUT);
+  await expectRegexText(regex, TIMEOUT);
 }
 
 export async function expectCredentialsLoadedMessage(
@@ -45,5 +45,5 @@ export async function expectCredentialsLoadedMessage(
     storage,
     service
   );
-  await waitForRegexText(regex, TIMEOUT);
+  await expectRegexText(regex, TIMEOUT);
 }
