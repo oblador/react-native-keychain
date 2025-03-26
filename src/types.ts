@@ -43,7 +43,6 @@ export type BaseOptions = {
   accessGroup?: string;
 };
 
-/** Base options for keychain functions. */
 export type SetOptions = {
   /** Specifies when a keychain item is accessible.
    * @platform iOS, visionOS

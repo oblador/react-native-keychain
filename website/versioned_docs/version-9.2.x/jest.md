@@ -74,7 +74,6 @@ const keychainMock = {
   getSupportedBiometryType: jest.fn().mockResolvedValue('MOCK_TouchID'),
   canImplyAuthentication: jest.fn().mockResolvedValue(true),
   getSecurityLevel: jest.fn().mockResolvedValue('MOCK_SECURE_SOFTWARE'),
-  isPasscodeAuthAvailable: jest.fn().mockResolvedValue(true)
 };
 
 export default keychainMock;
