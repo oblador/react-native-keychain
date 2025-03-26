@@ -1,10 +1,14 @@
-import { by, device, element, expect, waitFor } from 'detox';
-import { matchLoadInfo } from '../utils/matchLoadInfo';
+import { by, device, element, expect } from 'detox';
 import {
   waitForAuthValidity,
   enterBiometrics,
   enterPasscode,
 } from '../utils/authHelpers';
+import {
+  expectCredentialsLoadedMessage,
+  expectCredentialsSavedMessage,
+  expectCredentialsResetMessage,
+} from '../utils/statusMessageHelpers';
 
 describe('Access Control', () => {
   beforeEach(async () => {
@@ -28,16 +32,14 @@ describe('Access Control', () => {
         await enterPasscode();
         // Hide keyboard if open
         await element(by.text('Keychain Example')).tap();
-        await waitFor(element(by.text(/^Credentials saved! .*$/)))
-          .toExist()
-          .withTimeout(4000);
+        await expectCredentialsSavedMessage();
 
         await waitForAuthValidity();
         await element(by.text('Load')).tap();
         await enterPasscode();
         // Hide keyboard if open
         await element(by.text('Keychain Example')).tap();
-        await matchLoadInfo(
+        await expectCredentialsLoadedMessage(
           'testUsernamePasscode',
           'testPasswordPasscode',
           'KeystoreAESGCM'
@@ -70,15 +72,16 @@ describe('Access Control', () => {
         await element(by.text('Save')).tap();
         await enterBiometrics();
 
-        await waitFor(element(by.text(/^Credentials saved! .*$/)))
-          .toExist()
-          .withTimeout(3000);
+        await expectCredentialsSavedMessage();
 
         await waitForAuthValidity();
         await element(by.text('Load')).tap();
         await enterBiometrics();
 
-        await matchLoadInfo('testUsernameBiometrics', 'testPasswordBiometrics');
+        await expectCredentialsLoadedMessage(
+          'testUsernameBiometrics',
+          'testPasswordBiometrics'
+        );
       }
     );
 
@@ -92,7 +95,10 @@ describe('Access Control', () => {
         ).toBeVisible();
         await element(by.text('Load')).tap();
         await enterBiometrics();
-        await matchLoadInfo('testUsernameBiometrics', 'testPasswordBiometrics');
+        await expectCredentialsLoadedMessage(
+          'testUsernameBiometrics',
+          'testPasswordBiometrics'
+        );
       }
     );
 
@@ -113,11 +119,12 @@ describe('Access Control', () => {
 
         await expect(element(by.text('Save'))).toBeVisible();
         await element(by.text('Save')).tap();
-        await waitFor(element(by.text(/^Credentials saved! .*$/)))
-          .toExist()
-          .withTimeout(3000);
+        await expectCredentialsSavedMessage();
         await element(by.text('Load')).tap();
-        await matchLoadInfo('testUsernameAny', 'testPasswordAny');
+        await expectCredentialsLoadedMessage(
+          'testUsernameAny',
+          'testPasswordAny'
+        );
       }
     );
 
@@ -130,7 +137,10 @@ describe('Access Control', () => {
           element(by.text('hasGenericPassword: true'))
         ).toBeVisible();
         await element(by.text('Load')).tap();
-        await matchLoadInfo('testUsernameAny', 'testPasswordAny');
+        await expectCredentialsLoadedMessage(
+          'testUsernameAny',
+          'testPasswordAny'
+        );
       }
     );
   });
@@ -140,6 +150,6 @@ describe('Access Control', () => {
     // Hide keyboard
 
     await element(by.text('Reset')).tap();
-    await expect(element(by.text(/^Credentials Reset!$/))).toBeVisible();
+    await expectCredentialsResetMessage();
   });
 });
