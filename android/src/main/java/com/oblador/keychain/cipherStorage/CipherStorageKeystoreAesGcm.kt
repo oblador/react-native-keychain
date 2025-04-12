@@ -217,9 +217,12 @@ class CipherStorageKeystoreAesGcm(
 
         /** Save Initialization vector to output stream. */
         val encrypt = EncryptStringHandler { cipher, key, output ->
-            cipher.init(Cipher.ENCRYPT_MODE, key)
-            val iv = cipher.iv
-            output.write(iv, 0, iv.size)
+          cipher.init(Cipher.ENCRYPT_MODE, key)
+          val iv = cipher.iv
+          if (iv.size != IV_LENGTH) {
+            throw CryptoFailedException("IV length mismatch: expected ${IV_LENGTH}, got ${iv.size}")
+          }
+          output.write(iv, 0, iv.size)
         }
 
         /** Read initialization vector from input stream and configure cipher by it. */

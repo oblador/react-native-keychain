@@ -311,6 +311,7 @@ const styles = StyleSheet.create({
     fontWeight: '200',
     textAlign: 'center',
     marginBottom: 20,
+    color: '#000',
   },
   field: {
     marginVertical: 5,
@@ -319,6 +320,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     fontSize: 15,
     marginBottom: 5,
+    color: '#000',
   },
   input: {
     color: '#000',

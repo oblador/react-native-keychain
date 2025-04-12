@@ -7,7 +7,6 @@ import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyInfo
 import android.security.keystore.UserNotAuthenticatedException
 import android.util.Log
-import androidx.annotation.VisibleForTesting
 import com.oblador.keychain.DeviceAvailability
 import com.oblador.keychain.SecurityLevel
 import com.oblador.keychain.cipherStorage.CipherStorageBase.DecryptBytesHandler
@@ -159,8 +158,8 @@ abstract class CipherStorageBase(protected val applicationContext: Context) : Ci
 
   /** Get cipher instance and cache it for any next call. */
   @Throws(NoSuchAlgorithmException::class, NoSuchPaddingException::class)
-  fun getCachedInstance(): Cipher {
-    return CipherCache.getCipher(getEncryptionTransformation())
+  fun getCipher(): Cipher {
+    return Cipher.getInstance(getEncryptionTransformation())
   }
 
   /** Check requirements to the security level. */
@@ -302,7 +301,7 @@ abstract class CipherStorageBase(protected val applicationContext: Context) : Ci
     value: String,
     handler: EncryptStringHandler?
   ): ByteArray {
-    val cipher = getCachedInstance()
+    val cipher = getCipher()
     try {
       ByteArrayOutputStream().use { output ->
         if (handler != null) {
@@ -334,7 +333,7 @@ abstract class CipherStorageBase(protected val applicationContext: Context) : Ci
     bytes: ByteArray,
     handler: DecryptBytesHandler?
   ): String {
-    val cipher = getCachedInstance()
+    val cipher = getCipher()
     try {
       ByteArrayInputStream(bytes).use { input ->
         ByteArrayOutputStream().use { output ->
@@ -353,8 +352,8 @@ abstract class CipherStorageBase(protected val applicationContext: Context) : Ci
               e is javax.crypto.AEADBadTagException -> {
                 throw CryptoFailedException(
                   "Decryption failed: Authentication tag verification failed. " +
-                  "This usually indicates that the encrypted data was modified, corrupted, " +
-                  "or is being decrypted with the wrong key.",
+                    "This usually indicates that the encrypted data was modified, corrupted, " +
+                    "or is being decrypted with the wrong key.",
                   e
                 )
               }
