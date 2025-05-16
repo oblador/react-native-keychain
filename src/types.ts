@@ -24,6 +24,12 @@ export type AuthenticationPrompt = {
    * @platform Android
    */
   cancel?: string;
+
+  /** Whether user confirmation (e.g. OK button) is required after authentication.
+   * Default is `false`.
+   * @platform Android
+   */
+  confirmationRequired?: boolean;
 };
 
 export type BaseOptions = {
