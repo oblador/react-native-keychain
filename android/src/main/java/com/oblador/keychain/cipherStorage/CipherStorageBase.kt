@@ -442,7 +442,7 @@ abstract class CipherStorageBase(protected val applicationContext: Context) : Ci
 
   @Throws(GeneralSecurityException::class)
   protected fun tryGenerateStrongBoxSecurityKey(alias: String): Key {
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
       throw KeyStoreAccessException(
         "Strong box security keystore is not supported for old API${Build.VERSION.SDK_INT}."
       )

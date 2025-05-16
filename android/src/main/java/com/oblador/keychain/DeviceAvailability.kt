@@ -15,7 +15,7 @@ import androidx.biometric.BiometricManager
 object DeviceAvailability {
 
   fun isStrongboxAvailable(context: Context): Boolean {
-    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
       context.packageManager.hasSystemFeature(PackageManager.FEATURE_STRONGBOX_KEYSTORE)
     } else {
       false
