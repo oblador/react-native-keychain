@@ -85,14 +85,16 @@ class CipherStorageKeystoreAesCbc(reactContext: ReactApplicationContext) :
 
         throwIfInsufficientLevel(level)
 
-        val safeAlias = getDefaultAliasIfEmpty(alias, getDefaultAliasServiceName())
+        val defaultAlias = getDefaultAliasIfEmpty(alias, getDefaultAliasServiceName())
+        val safeAlias = getPrefixedAlias(defaultAlias, PREFIX_AES_CBC)
         val retries = AtomicInteger(1)
 
         try {
             val key = extractGeneratedKey(safeAlias, level, retries)
-
             val result = CipherStorage.EncryptionResult(
-                encryptString(key, username), encryptString(key, password), this
+                encryptString(key, username),
+                encryptString(key, password),
+                this
             )
             handler.onEncrypt(result, null)
         } catch (e: GeneralSecurityException) {
@@ -118,18 +120,17 @@ class CipherStorageKeystoreAesCbc(reactContext: ReactApplicationContext) :
 
         throwIfInsufficientLevel(level)
 
-        val safeAlias = getDefaultAliasIfEmpty(alias, getDefaultAliasServiceName())
+        val defaultAlias = getDefaultAliasIfEmpty(alias, getDefaultAliasServiceName())
         val retries = AtomicInteger(1)
 
         try {
-            val key = extractGeneratedKey(safeAlias, level, retries)
-
+            val key = extractKeyWithMigration(defaultAlias, PREFIX_AES_CBC, handler, level, retries)
             val results = CipherStorage.DecryptionResult(
-                decryptBytes(key, username), decryptBytes(key, password), getSecurityLevel(key)
+                decryptBytes(key, username),
+                decryptBytes(key, password),
+                getSecurityLevel(key)
             )
             handler.onDecrypt(results, null)
-        } catch (e: GeneralSecurityException) {
-            throw CryptoFailedException("Could not decrypt data with alias: $alias", e)
         } catch (fail: Throwable) {
             handler.onDecrypt(null, fail)
         }
@@ -145,9 +146,10 @@ class CipherStorageKeystoreAesCbc(reactContext: ReactApplicationContext) :
     override fun getKeyGenSpecBuilder(
         alias: String
     ): KeyGenParameterSpec.Builder {
+        val safeAlias = getPrefixedAlias(alias, PREFIX_AES_CBC)
         val purposes = KeyProperties.PURPOSE_DECRYPT or KeyProperties.PURPOSE_ENCRYPT
 
-        return KeyGenParameterSpec.Builder(alias, purposes)
+        return KeyGenParameterSpec.Builder(safeAlias, purposes)
             .setBlockModes(BLOCK_MODE_CBC)
             .setEncryptionPaddings(PADDING_PKCS7)
             .setRandomizedEncryptionRequired(true)
@@ -172,7 +174,6 @@ class CipherStorageKeystoreAesCbc(reactContext: ReactApplicationContext) :
 
         // initialize key generator
         generator.init(spec)
-
         return generator.generateKey()
     }
 
