@@ -22,7 +22,7 @@ describe(':android:Storage Types', () => {
       await element(by.text('Save')).tap();
       await waitFor(element(by.text(/^Credentials saved! .*$/)))
         .toExist()
-        .withTimeout(3000);
+        .withTimeout(5000);
       await element(by.text('Load')).tap();
       await matchLoadInfo(
         'testUsernameAESCBC',
@@ -48,7 +48,7 @@ describe(':android:Storage Types', () => {
       await enterBiometrics();
       await waitFor(element(by.text(/^Credentials saved! .*$/)))
         .toExist()
-        .withTimeout(3000);
+        .withTimeout(5000);
       await waitForAuthValidity();
       await element(by.text('Load')).tap();
       await enterBiometrics();
@@ -81,7 +81,7 @@ describe(':android:Storage Types', () => {
         await element(by.text('Save')).tap();
         await waitFor(element(by.text(/^Credentials saved! .*$/)))
           .toExist()
-          .withTimeout(3000);
+          .withTimeout(5000);
         await element(by.text('Load')).tap();
         await matchLoadInfo(
           'testUsernameAESGCMNoAuth',

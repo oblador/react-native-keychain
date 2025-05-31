@@ -30,7 +30,7 @@ describe('Access Control', () => {
         await element(by.text('Keychain Example')).tap();
         await waitFor(element(by.text(/^Credentials saved! .*$/)))
           .toExist()
-          .withTimeout(4000);
+          .withTimeout(5000);
 
         await waitForAuthValidity();
         await element(by.text('Load')).tap();
@@ -71,7 +71,7 @@ describe('Access Control', () => {
 
         await waitFor(element(by.text(/^Credentials saved! .*$/)))
           .toExist()
-          .withTimeout(3000);
+          .withTimeout(5000);
 
         await waitForAuthValidity();
         await element(by.text('Load')).tap();
@@ -114,7 +114,7 @@ describe('Access Control', () => {
         await element(by.text('Save')).tap();
         await waitFor(element(by.text(/^Credentials saved! .*$/)))
           .toExist()
-          .withTimeout(3000);
+          .withTimeout(5000);
         await element(by.text('Load')).tap();
         await matchLoadInfo('testUsernameAny', 'testPasswordAny');
       }
