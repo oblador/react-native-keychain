@@ -1,6 +1,11 @@
-import { by, device, element, expect, waitFor } from 'detox';
-import { matchLoadInfo } from '../utils/matchLoadInfo';
+import { by, element, expect, device } from 'detox';
 import { enterBiometrics, waitForAuthValidity } from '../utils/authHelpers';
+
+import {
+  expectCredentialsLoadedMessage,
+  expectCredentialsSavedMessage,
+  expectCredentialsResetMessage,
+} from '../utils/statusMessageHelpers';
 
 describe(':android:Storage Types', () => {
   beforeEach(async () => {
@@ -20,11 +25,9 @@ describe(':android:Storage Types', () => {
 
       await expect(element(by.text('Save'))).toBeVisible();
       await element(by.text('Save')).tap();
-      await waitFor(element(by.text(/^Credentials saved! .*$/)))
-        .toExist()
-        .withTimeout(3000);
+      await expectCredentialsSavedMessage();
       await element(by.text('Load')).tap();
-      await matchLoadInfo(
+      await expectCredentialsLoadedMessage(
         'testUsernameAESCBC',
         'testPasswordAESCBC',
         'KeystoreAESCBC',
@@ -46,13 +49,11 @@ describe(':android:Storage Types', () => {
       await expect(element(by.text('Save'))).toBeVisible();
       await element(by.text('Save')).tap();
       await enterBiometrics();
-      await waitFor(element(by.text(/^Credentials saved! .*$/)))
-        .toExist()
-        .withTimeout(3000);
+      await expectCredentialsSavedMessage();
       await waitForAuthValidity();
       await element(by.text('Load')).tap();
       await enterBiometrics();
-      await matchLoadInfo(
+      await expectCredentialsLoadedMessage(
         'testUsernameAESGCM',
         'testPasswordAESGCM',
         'KeystoreAESGCM',
@@ -79,11 +80,9 @@ describe(':android:Storage Types', () => {
 
         await expect(element(by.text('Save'))).toBeVisible();
         await element(by.text('Save')).tap();
-        await waitFor(element(by.text(/^Credentials saved! .*$/)))
-          .toExist()
-          .withTimeout(3000);
+        await expectCredentialsSavedMessage();
         await element(by.text('Load')).tap();
-        await matchLoadInfo(
+        await expectCredentialsLoadedMessage(
           'testUsernameAESGCMNoAuth',
           'testPasswordAESGCMNoAuth',
           'KeystoreAESGCM_NoAuth',
@@ -105,15 +104,10 @@ describe(':android:Storage Types', () => {
 
       await expect(element(by.text('Save'))).toBeVisible();
       await element(by.text('Save')).tap();
-      await waitFor(element(by.text(/^Credentials saved! .*$/)))
-        .toExist()
-        .withTimeout(5000);
+      await expectCredentialsSavedMessage();
       await element(by.text('Load')).tap();
       await enterBiometrics();
-      await waitFor(element(by.text(/^Credentials loaded! .*$/)))
-        .toExist()
-        .withTimeout(5000);
-      await matchLoadInfo(
+      await expectCredentialsLoadedMessage(
         'testUsernameRSA',
         'testPasswordRSA',
         'KeystoreRSAECB',
@@ -127,6 +121,6 @@ describe(':android:Storage Types', () => {
     // Hide keyboard
 
     await element(by.text('Reset')).tap();
-    await expect(element(by.text(/^Credentials Reset!$/))).toExist();
+    await expectCredentialsResetMessage();
   });
 });

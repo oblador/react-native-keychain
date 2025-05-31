@@ -1,5 +1,9 @@
-import { by, device, element, expect, waitFor } from 'detox';
-import { matchLoadInfo } from '../utils/matchLoadInfo';
+import { by, element, expect, device } from 'detox';
+import {
+  expectCredentialsLoadedMessage,
+  expectCredentialsSavedMessage,
+  expectCredentialsResetMessage,
+} from '../utils/statusMessageHelpers';
 
 describe(':android:Security Level', () => {
   beforeEach(async () => {
@@ -19,11 +23,9 @@ describe(':android:Security Level', () => {
 
       await expect(element(by.text('Save'))).toBeVisible();
       await element(by.text('Save')).tap();
-      await waitFor(element(by.text(/^Credentials saved! .*$/)))
-        .toExist()
-        .withTimeout(3000);
+      await expectCredentialsSavedMessage();
       await element(by.text('Load')).tap();
-      await matchLoadInfo(
+      await expectCredentialsLoadedMessage(
         'testUsernameAny',
         'testPasswordAny',
         undefined,
@@ -46,11 +48,9 @@ describe(':android:Security Level', () => {
 
         await expect(element(by.text('Save'))).toBeVisible();
         await element(by.text('Save')).tap();
-        await waitFor(element(by.text(/^Credentials saved! .*$/)))
-          .toExist()
-          .withTimeout(3000);
+        await expectCredentialsSavedMessage();
         await element(by.text('Load')).tap();
-        await matchLoadInfo(
+        await expectCredentialsLoadedMessage(
           'testUsernameSoftware',
           'testPasswordSoftware',
           undefined,
@@ -74,11 +74,9 @@ describe(':android:Security Level', () => {
 
         await expect(element(by.text('Save'))).toBeVisible();
         await element(by.text('Save')).tap();
-        await waitFor(element(by.text(/^Credentials saved! .*$/)))
-          .toExist()
-          .withTimeout(3000);
+        await expectCredentialsSavedMessage();
         await element(by.text('Load')).tap();
-        await matchLoadInfo(
+        await expectCredentialsLoadedMessage(
           'testUsernameHardware',
           'testPasswordHardware',
           undefined,
@@ -93,6 +91,6 @@ describe(':android:Security Level', () => {
     // Hide keyboard
 
     await element(by.text('Reset')).tap();
-    await expect(element(by.text(/^Credentials Reset!$/))).toBeVisible();
+    await expectCredentialsResetMessage();
   });
 });
