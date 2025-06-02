@@ -104,5 +104,8 @@
         }
       ]
     ]
+  },
+  "resolutions": {
+    "react-native-test-app@4.2.1": "patch:react-native-test-app@npm%3A4.2.1#./.yarn/patches/react-native-test-app-npm-4.2.1-866b46545f.patch"
   }
 }

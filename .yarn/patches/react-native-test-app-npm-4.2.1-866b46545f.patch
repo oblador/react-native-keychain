@@ -1,0 +1,14 @@
+diff --git a/android/app/src/main/AndroidManifest.xml b/android/app/src/main/AndroidManifest.xml
+index f0e3634e693478c417f5d0edf18c1fa9f6398c21..5c2191ee6aec6e7e7cae404897cce03504396436 100644
+--- a/android/app/src/main/AndroidManifest.xml
++++ b/android/app/src/main/AndroidManifest.xml
+@@ -12,7 +12,8 @@
+ 
+     <application
+         android:name=".TestApp"
+-        android:allowBackup="true"
++        android:allowBackup="false"
++        android:fullBackupContent="false"
+         android:icon="@mipmap/ic_launcher"
+         android:label="@string/app_name"
+         android:roundIcon="@mipmap/ic_launcher_round"
