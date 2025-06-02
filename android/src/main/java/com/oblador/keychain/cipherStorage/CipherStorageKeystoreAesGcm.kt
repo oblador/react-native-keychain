@@ -25,7 +25,8 @@ import javax.crypto.SecretKeyFactory
 import javax.crypto.spec.GCMParameterSpec
 
 class CipherStorageKeystoreAesGcm(
-    reactContext: ReactApplicationContext, private val requiresAuth: Boolean
+    reactContext: ReactApplicationContext, 
+    private val requiresAuth: Boolean
 ) : CipherStorageBase(reactContext) {
 
     // region Constants
@@ -84,7 +85,8 @@ class CipherStorageKeystoreAesGcm(
 
         throwIfInsufficientLevel(level)
 
-        val safeAlias = getDefaultAliasIfEmpty(alias, getDefaultAliasServiceName())
+        val defaultAlias = getDefaultAliasIfEmpty(alias, getDefaultAliasServiceName())
+        val safeAlias = getPrefixedAuthAlias(defaultAlias) 
         val retries = AtomicInteger(1)
         var key: Key? = null
 
@@ -122,26 +124,24 @@ class CipherStorageKeystoreAesGcm(
     ) {
         throwIfInsufficientLevel(level)
 
-        val safeAlias = getDefaultAliasIfEmpty(alias, getDefaultAliasServiceName())
+        val defaultAlias = getDefaultAliasIfEmpty(alias, getDefaultAliasServiceName())
+        val prefix = if (requiresAuth) PREFIX_AES_GCM else PREFIX_AES_GCM_NO_AUTH
         val retries = AtomicInteger(1)
         var key: Key? = null
 
         try {
-            key = extractGeneratedKey(safeAlias, level, retries)
+            key = extractKeyWithMigration(defaultAlias, prefix, handler, level, retries)
             val results = CipherStorage.DecryptionResult(
-                decryptBytes(key, username), decryptBytes(key, password)
+                decryptBytes(key, username),
+                decryptBytes(key, password)
             )
-
             handler.onDecrypt(results, null)
         } catch (ex: UserNotAuthenticatedException) {
             Log.d(LOG_TAG, "Unlock of keystore is needed. Error: ${ex.message}", ex)
-            // expected that KEY instance is extracted and we caught exception on decryptBytes operation
-            val context =
-                CryptoContext(safeAlias, key!!, password, username, CryptoOperation.DECRYPT)
-
+            val context = CryptoContext(getPrefixedAlias(defaultAlias, prefix), 
+                key!!, password, username, CryptoOperation.DECRYPT)
             handler.askAccessPermissions(context)
         } catch (fail: Throwable) {
-            // any other exception treated as a failure
             handler.onDecrypt(null, fail)
         }
     }
@@ -159,8 +159,9 @@ class CipherStorageKeystoreAesGcm(
         val purposes = KeyProperties.PURPOSE_DECRYPT or KeyProperties.PURPOSE_ENCRYPT
 
         val validityDuration = 5
+        val safeAlias = getPrefixedAuthAlias(alias)
         val keyGenParameterSpecBuilder =
-            KeyGenParameterSpec.Builder(alias, purposes).setBlockModes(BLOCK_MODE_GCM)
+            KeyGenParameterSpec.Builder(safeAlias, purposes).setBlockModes(BLOCK_MODE_GCM)
                 .setEncryptionPaddings(PADDING_NONE).setRandomizedEncryptionRequired(true)
                 .setKeySize(ENCRYPTION_KEY_SIZE)
 
@@ -199,7 +200,6 @@ class CipherStorageKeystoreAesGcm(
 
         // initialize key generator
         generator.init(spec)
-
         return generator.generateKey()
     }
 
@@ -243,4 +243,14 @@ class CipherStorageKeystoreAesGcm(
         decryptBytes(key, bytes, IV.decrypt)
 
     // endregion
+
+    // region Alias Helpers
+    
+    private fun getPrefixedAuthAlias(alias: String): String {
+        val prefix = if (requiresAuth) PREFIX_AES_GCM else PREFIX_AES_GCM_NO_AUTH
+        return getPrefixedAlias(alias, prefix)
+    }
+
+    // endregion
+
 }
