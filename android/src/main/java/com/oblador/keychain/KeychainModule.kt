@@ -766,6 +766,9 @@ class KeychainModule(reactContext: ReactApplicationContext) :
         usePasscode ->
           BiometricManager.Authenticators.DEVICE_CREDENTIAL
 
+        useBiometry ->
+          BiometricManager.Authenticators.BIOMETRIC_STRONG
+
         else ->
           null
       }
