@@ -264,7 +264,11 @@ export default function App() {
             />
           </View>
         )}
-        {!!status && <Text style={styles.status}>{status}</Text>}
+        {!!status && (
+          <Text testID="statusMessage" style={styles.status}>
+            {status}
+          </Text>
+        )}
 
         <View style={styles.buttons}>
           <TouchableHighlight onPress={save} style={styles.button}>
