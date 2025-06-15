@@ -20,7 +20,11 @@ import type {
 } from './types';
 import { normalizeAuthPrompt } from './normalizeOptions';
 
-const { RNKeychainManager } = NativeModules;
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-expect-error
+const RNKeychainManager = global.__turboModuleProxy
+  ? require('./NativeKeychainManager').default
+  : NativeModules.RNKeychainManager;
 
 /**
  * Saves the `username` and `password` combination for the given service.
