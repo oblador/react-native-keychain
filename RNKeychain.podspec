@@ -16,7 +16,7 @@ Pod::Spec.new do |s|
   s.osx.deployment_target = '10.13'
   s.visionos.deployment_target = '1.0' if s.respond_to?(:visionos)
   s.source         = { :git => "https://github.com/oblador/react-native-keychain.git", :tag => "v#{s.version}" }
-  s.source_files   = 'ios/RNKeychainManager/**/*.{h,m}'
+  s.source_files   = 'ios/RNKeychainManager/**/*.{h,m,mm,cpp}'
   s.preserve_paths = "**/*.js"
 
   if respond_to?(:install_modules_dependencies, true)

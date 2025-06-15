@@ -8,7 +8,7 @@
     "build:android": "npm run mkdist && react-native bundle --entry-file index.js --platform android --dev false --bundle-output dist/main.android.jsbundle --assets-dest dist/res",
     "build:ios": "npm run mkdist && react-native bundle --entry-file index.js --platform ios --dev false --bundle-output dist/main.ios.jsbundle --assets-dest dist/assets",
     "mkdist": "node -e \"require('node:fs').mkdirSync('dist', { recursive: true, mode: 0o755 })\"",
-    "start": "react-native start",
+    "start": "react-native start --reset-cache",
     "test:android": "yarn test:android:build && yarn test:android:run",
     "test:android:build": "detox build --configuration android.emu.release",
     "test:android:run": "detox test --configuration android.emu.release",

@@ -1478,7 +1478,7 @@ PODS:
     - React-Core
     - React-jsi
   - ReactTestApp-Resources (1.0.0-dev)
-  - RNKeychain (9.2.3):
+  - RNKeychain (10.0.0):
     - DoubleConversion
     - glog
     - RCT-Folly (= 2024.11.18.00)
@@ -1783,7 +1783,7 @@ SPEC CHECKSUMS:
   ReactNativeHost: d683c981f1c99f15ace8fc185c62b7af5197e079
   ReactTestApp-DevSupport: 0580b002f78d63804f1609dce622c4f54820f3c6
   ReactTestApp-Resources: 1bd9ff10e4c24f2ad87101a32023721ae923bccf
-  RNKeychain: 115b0ad98801a5d006cf0faf5770d39b9c25d528
+  RNKeychain: 287242457ae695c8ee1d12f09dca49cb82ea1278
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
   Yoga: 1fd059161b449018342943b095a6d4e69bcaa719
 
