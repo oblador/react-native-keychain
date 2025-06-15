@@ -216,7 +216,7 @@ SecAccessControlCreateFlags accessControlValue(NSDictionary *options)
       (flags & kSecAccessControlDevicePasscode);
 
   if (requestedBiometric && requestedPasscode) {
-    NSError *error = nil;
+    NSError *aerr = nil;
     BOOL canAuthenticate = [[LAContext new] canEvaluatePolicy:LAPolicyDeviceOwnerAuthenticationWithBiometrics error:&aerr];
 
     if (!canAuthenticate)
