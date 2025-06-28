@@ -508,9 +508,12 @@ class KeychainModule(reactContext: ReactApplicationContext) :
       resultSet.password!!,
       SecurityLevel.ANY
     )
-    CryptoFailedException.reThrowOnError(handler.error)
-    if (null == handler.decryptionResult) {
-      throw CryptoFailedException("No decryption results and no error. Something deeply wrong!")
+    val error = handler.error
+    if (error != null) {
+      throw CryptoFailedException(error.message, error)
+    }
+    if (handler.decryptionResult == null) {
+      throw CryptoFailedException("No decryption results and no error. Something deeply wrong!", Errors.E_INTERNAL_ERROR)
     }
     return handler.decryptionResult!!
   }
@@ -527,9 +530,12 @@ class KeychainModule(reactContext: ReactApplicationContext) :
   ): CipherStorage.EncryptionResult {
     val handler = getInteractiveHandler(storage, promptInfo)
     storage.encrypt(handler, alias, username, password, securityLevel)
-    CryptoFailedException.reThrowOnError(handler.error)
-    if (null == handler.encryptionResult) {
-      throw CryptoFailedException("No decryption results and no error. Something deeply wrong!")
+    val error = handler.error
+    if (error != null) {
+      throw CryptoFailedException(error.message, error)
+    }
+    if (handler.encryptionResult == null) {
+      throw CryptoFailedException("No encryption results and no error. Something deeply wrong!", Errors.E_INTERNAL_ERROR)
     }
     return handler.encryptionResult!!
   }
