@@ -78,7 +78,7 @@ NSString *messageForError(NSError *error)
       return @"Internal error when a required entitlement isn't present.";
 
     default:
-      return error.localizedDescription;
+      return [NSString stringWithFormat:@"code: %li, msg: %@", (long)error.code, error.localizedDescription];
   }
 }
 
@@ -612,7 +612,7 @@ RCT_EXPORT_METHOD(getInternetCredentialsForServer:(NSString *)server
   CFBooleanRef cloudSync = cloudSyncValue(options);
   NSString *authenticationPrompt = authenticationPromptValue(options);
   NSString *accessGroup = accessGroupValue(options);
-  
+
   NSMutableDictionary *query = [@{
     (__bridge NSString *)kSecClass: (__bridge id)(kSecClassInternetPassword),
     (__bridge NSString *)kSecAttrServer: server,
