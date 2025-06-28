@@ -9,6 +9,7 @@ import android.security.keystore.UserNotAuthenticatedException
 import android.util.Log
 import androidx.annotation.VisibleForTesting
 import com.oblador.keychain.DeviceAvailability
+import com.oblador.keychain.KeychainModule.Errors
 import com.oblador.keychain.SecurityLevel
 import com.oblador.keychain.cipherStorage.CipherStorageBase.DecryptBytesHandler
 import com.oblador.keychain.cipherStorage.CipherStorageBase.EncryptStringHandler
@@ -168,7 +169,8 @@ abstract class CipherStorageBase(protected val applicationContext: Context) : Ci
   protected fun throwIfInsufficientLevel(level: SecurityLevel) {
     if (!securityLevel().satisfiesSafetyThreshold(level)) {
       throw CryptoFailedException(
-        "Insufficient security level (wants $level; got ${securityLevel()})"
+        "Insufficient security level (wants $level; got ${securityLevel()})",
+        Errors.E_INSUFFICIENT_SECURITY_LEVEL
       )
     }
   }
@@ -402,7 +404,7 @@ abstract class CipherStorageBase(protected val applicationContext: Context) : Ci
     }
 
     if (!validateKeySecurityLevel(requiredLevel, secretKey!!)) {
-      throw CryptoFailedException("Cannot generate keys with required security guarantees")
+      throw CryptoFailedException("Cannot generate keys with required security guarantees", Errors.E_SECURITY_LEVEL_NOT_SUPPORTED)
     }
   }
 

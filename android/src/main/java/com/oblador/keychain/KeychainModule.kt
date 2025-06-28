@@ -621,7 +621,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
       foundCipher = variant
     }
     if (foundCipher == null) {
-      throw CryptoFailedException("Unsupported Android SDK " + Build.VERSION.SDK_INT)
+      throw CryptoFailedException("Unsupported Android SDK " + Build.VERSION.SDK_INT, Errors.E_SDK_NOT_SUPPORTED)
     }
     Log.d(KEYCHAIN_MODULE, "Selected storage: " + foundCipher.getCipherStorageName())
     return foundCipher
@@ -836,7 +836,8 @@ class KeychainModule(reactContext: ReactApplicationContext) :
           "Cipher Storage is too weak. Required security level is: %s, but only %s is provided",
           level.name,
           storage.securityLevel().name
-        )
+        ),
+        Errors.E_INSUFFICIENT_SECURITY_LEVEL
       )
     }
 

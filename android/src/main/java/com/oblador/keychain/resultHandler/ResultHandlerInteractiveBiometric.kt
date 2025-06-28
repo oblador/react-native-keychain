@@ -7,6 +7,7 @@ import androidx.fragment.app.FragmentActivity
 import com.facebook.react.bridge.AssertionException
 import com.facebook.react.bridge.ReactApplicationContext
 import com.oblador.keychain.DeviceAvailability
+import com.oblador.keychain.KeychainModule.Errors
 import com.oblador.keychain.cipherStorage.CipherStorage
 import com.oblador.keychain.cipherStorage.CipherStorage.DecryptionResult
 import com.oblador.keychain.cipherStorage.CipherStorage.EncryptionResult
@@ -43,7 +44,8 @@ open class ResultHandlerInteractiveBiometric(
 
     if (!DeviceAvailability.isPermissionsGranted(reactContext)) {
       val failure = CryptoFailedException(
-        "Could not start biometric Authentication. No permissions granted."
+        "Could not start biometric Authentication. No permissions granted.",
+        Errors.E_BIOMETRIC_PERMISSION_DENIED
       )
       when (context.operation) {
         CryptoOperation.ENCRYPT -> onEncrypt(null, failure)
