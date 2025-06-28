@@ -224,7 +224,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
           promise.reject(Errors.E_INVALID_PARAMETERS, e)
         } catch (e: CryptoFailedException) {
           Log.e(KEYCHAIN_MODULE, e.message, e)
-          promise.reject(Errors.E_CRYPTO_FAILED, e)
+          promise.reject(e.errorCode, e)
         } catch (fail: Throwable) {
           Log.e(KEYCHAIN_MODULE, fail.message, fail)
           promise.reject(Errors.E_UNKNOWN_ERROR, fail)
@@ -293,7 +293,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
           promise.reject(Errors.E_ACCESS_ERROR, e)
         } catch (e: CryptoFailedException) {
           Log.e(KEYCHAIN_MODULE, e.message!!)
-          promise.reject(Errors.E_CRYPTO_FAILED, e)
+          promise.reject(e.errorCode, e)
         } catch (fail: Throwable) {
           Log.e(KEYCHAIN_MODULE, fail.message, fail)
           promise.reject(Errors.E_UNKNOWN_ERROR, fail)

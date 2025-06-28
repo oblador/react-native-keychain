@@ -66,27 +66,7 @@ class CipherStorageKeystoreRsaEcb(reactContext: ReactApplicationContext) :
             val result = innerEncryptedCredentials(safeAlias, password, username)
             handler.onEncrypt(result, null)
         } catch (e: Exception) {
-            when (e) {
-                is NoSuchAlgorithmException,
-                is InvalidKeySpecException,
-                is NoSuchPaddingException,
-                is InvalidKeyException -> {
-                    throw CryptoFailedException("Could not encrypt data for service $alias", e)
-                }
-
-                is KeyStoreException,
-                is KeyStoreAccessException -> {
-                    throw CryptoFailedException("Could not access Keystore for service $alias", e)
-                }
-
-                is IOException -> {
-                    throw CryptoFailedException("I/O error: ${e.message}", e)
-                }
-
-                else -> {
-                    throw CryptoFailedException("Unknown error: ${e.message}", e)
-                }
-            }
+            throw CryptoFailedException(e.message, e)
         }
     }
 
