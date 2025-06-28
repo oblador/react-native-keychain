@@ -438,9 +438,6 @@ class KeychainModule(reactContext: ReactApplicationContext) :
         }
       }
       promise.resolve(reply)
-    } catch (e: Exception) {
-      Log.e(KEYCHAIN_MODULE, e.message, e)
-      promise.reject(Errors.E_SUPPORTED_BIOMETRY_ERROR, e)
     } catch (fail: Throwable) {
       Log.e(KEYCHAIN_MODULE, fail.message, fail)
       promise.reject(Errors.E_UNKNOWN_ERROR, fail)
