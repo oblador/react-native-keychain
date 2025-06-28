@@ -76,11 +76,58 @@ open class ResultHandlerInteractiveBiometric(
 
   /** Called when an unrecoverable error has been encountered and the operation is complete. */
   override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
-    val error = CryptoFailedException("code: $errorCode, msg: $errString")
+    val error = createBiometricError(errorCode, errString.toString())
     when (context?.operation) {
       CryptoOperation.ENCRYPT -> onEncrypt(null, error)
       CryptoOperation.DECRYPT -> onDecrypt(null, error)
       null -> Log.e(LOG_TAG, "No operation context available")
+    }
+  }
+
+  /* Maps BiometricPrompt error codes to our custom error codes. */
+  private fun createBiometricError(errorCode: Int, errorMessage: String): CryptoFailedException {
+    return when (errorCode) {
+      BiometricPrompt.ERROR_CANCELED ->
+        CryptoFailedException(errorMessage, Errors.E_BIOMETRIC_USER_CANCEL)
+
+      BiometricPrompt.ERROR_USER_CANCELED ->
+        CryptoFailedException(errorMessage, Errors.E_BIOMETRIC_USER_CANCEL)
+
+      BiometricPrompt.ERROR_NO_BIOMETRICS ->
+        CryptoFailedException(errorMessage, Errors.E_BIOMETRIC_NOT_ENROLLED)
+
+      BiometricPrompt.ERROR_TIMEOUT ->
+        CryptoFailedException(errorMessage, Errors.E_BIOMETRIC_TIMEOUT)
+
+      BiometricPrompt.ERROR_HW_UNAVAILABLE ->
+        CryptoFailedException(errorMessage, Errors.E_BIOMETRIC_HARDWARE_UNAVAILABLE)
+
+      BiometricPrompt.ERROR_LOCKOUT ->
+        CryptoFailedException(errorMessage, Errors.E_BIOMETRIC_LOCKOUT)
+
+      BiometricPrompt.ERROR_LOCKOUT_PERMANENT ->
+        CryptoFailedException(errorMessage, Errors.E_BIOMETRIC_LOCKOUT_PERMANENT)
+
+      BiometricPrompt.ERROR_HW_NOT_PRESENT ->
+        CryptoFailedException(errorMessage, Errors.E_BIOMETRIC_HARDWARE_NOT_PRESENT)
+
+      BiometricPrompt.ERROR_NO_SPACE ->
+        CryptoFailedException(errorMessage, Errors.E_BIOMETRIC_NO_SPACE)
+
+      BiometricPrompt.ERROR_UNABLE_TO_PROCESS ->
+        CryptoFailedException(errorMessage, Errors.E_BIOMETRIC_UNABLE_TO_PROCESS)
+
+      BiometricPrompt.ERROR_NEGATIVE_BUTTON ->
+        CryptoFailedException(errorMessage, Errors.E_BIOMETRIC_USER_CANCEL)
+
+      BiometricPrompt.ERROR_NO_DEVICE_CREDENTIAL ->
+        CryptoFailedException(errorMessage, Errors.E_BIOMETRIC_NO_DEVICE_CREDENTIAL)
+
+      BiometricPrompt.ERROR_VENDOR ->
+        CryptoFailedException(errorMessage, Errors.E_BIOMETRIC_VENDOR_ERROR)
+
+      else ->
+        CryptoFailedException("code: $errorCode, msg: $errorMessage", Errors.E_BIOMETRIC_UNKNOWN_ERROR)
     }
   }
 
