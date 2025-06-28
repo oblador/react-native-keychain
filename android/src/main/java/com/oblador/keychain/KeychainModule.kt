@@ -92,13 +92,34 @@ class KeychainModule(reactContext: ReactApplicationContext) :
   /** Known error codes. */
   internal annotation class Errors {
     companion object {
-      const val E_EMPTY_PARAMETERS = "E_EMPTY_PARAMETERS"
+      const val E_INVALID_PARAMETERS = "E_INVALID_PARAMETERS"
+      const val E_INTERACTIVE_MODE_UNAVAILABLE = "E_INTERACTIVE_MODE_UNAVAILABLE"
+      const val E_SECURITY_LEVEL_NOT_SUPPORTED = "E_SECURITY_LEVEL_NOT_SUPPORTED"
+      const val E_INSUFFICIENT_SECURITY_LEVEL = "E_INSUFFICIENT_SECURITY_LEVEL"
+      const val E_SDK_NOT_SUPPORTED = "E_SDK_NOT_SUPPORTED"
       const val E_CRYPTO_FAILED = "E_CRYPTO_FAILED"
-      const val E_KEYSTORE_ACCESS_ERROR = "E_KEYSTORE_ACCESS_ERROR"
-      const val E_SUPPORTED_BIOMETRY_ERROR = "E_SUPPORTED_BIOMETRY_ERROR"
-
-      /** Raised for unexpected errors. */
+      const val E_ACCESS_ERROR = "E_ACCESS_ERROR"
+      const val E_INTERNAL_ERROR = "E_INTERNAL_ERROR"
       const val E_UNKNOWN_ERROR = "E_UNKNOWN_ERROR"
+
+      // Biometric errors
+      const val E_BIOMETRIC_LOCKOUT = "E_BIOMETRIC_LOCKOUT"
+      const val E_BIOMETRIC_LOCKOUT_PERMANENT = "E_BIOMETRIC_LOCKOUT_PERMANENT"
+      const val E_BIOMETRIC_USER_CANCEL = "E_BIOMETRIC_USER_CANCEL"
+      const val E_BIOMETRIC_NOT_ENROLLED = "E_BIOMETRIC_NOT_ENROLLED"
+      const val E_BIOMETRIC_HARDWARE_NOT_PRESENT = "E_BIOMETRIC_HARDWARE_NOT_PRESENT"
+      const val E_BIOMETRIC_HARDWARE_UNAVAILABLE = "E_BIOMETRIC_HARDWARE_UNAVAILABLE"
+      const val E_BIOMETRIC_NO_SPACE = "E_BIOMETRIC_NO_SPACE"
+      const val E_BIOMETRIC_TIMEOUT = "E_BIOMETRIC_TIMEOUT"
+      const val E_BIOMETRIC_UNABLE_TO_PROCESS = "E_BIOMETRIC_UNABLE_TO_PROCESS"
+      const val E_BIOMETRIC_NO_DEVICE_CREDENTIAL = "E_BIOMETRIC_NO_DEVICE_CREDENTIAL"
+      const val E_BIOMETRIC_VENDOR_ERROR = "E_BIOMETRIC_VENDOR_ERROR"
+      const val E_BIOMETRIC_UNKNOWN_ERROR = "E_BIOMETRIC_UNKNOWN_ERROR"
+      const val E_BIOMETRIC_PERMISSION_DENIED = "E_BIOMETRIC_PERMISSION_DENIED"
+
+      // Keystore error codes
+      const val E_KEYSTORE_KEY_INVALIDATED = "E_KEYSTORE_KEY_INVALIDATED"
+      const val E_KEYSTORE_USER_NOT_AUTHENTICATED = "E_KEYSTORE_USER_NOT_AUTHENTICATED"
     }
   }
 
@@ -200,7 +221,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
           promise.resolve(results)
         } catch (e: EmptyParameterException) {
           Log.e(KEYCHAIN_MODULE, e.message, e)
-          promise.reject(Errors.E_EMPTY_PARAMETERS, e)
+          promise.reject(Errors.E_INVALID_PARAMETERS, e)
         } catch (e: CryptoFailedException) {
           Log.e(KEYCHAIN_MODULE, e.message, e)
           promise.reject(Errors.E_CRYPTO_FAILED, e)
@@ -269,7 +290,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
           promise.resolve(credentials)
         } catch (e: KeyStoreAccessException) {
           Log.e(KEYCHAIN_MODULE, e.message!!)
-          promise.reject(Errors.E_KEYSTORE_ACCESS_ERROR, e)
+          promise.reject(Errors.E_ACCESS_ERROR, e)
         } catch (e: CryptoFailedException) {
           Log.e(KEYCHAIN_MODULE, e.message!!)
           promise.reject(Errors.E_CRYPTO_FAILED, e)
@@ -287,7 +308,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
       val services = doGetAllGenericPasswordServices()
       promise.resolve(Arguments.makeNativeArray<Any>(services.toTypedArray()))
     } catch (e: KeyStoreAccessException) {
-      promise.reject(Errors.E_KEYSTORE_ACCESS_ERROR, e)
+      promise.reject(Errors.E_ACCESS_ERROR, e)
     }
   }
 
@@ -329,7 +350,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
       promise.resolve(true)
     } catch (e: KeyStoreAccessException) {
       Log.e(KEYCHAIN_MODULE, e.message!!)
-      promise.reject(Errors.E_KEYSTORE_ACCESS_ERROR, e)
+      promise.reject(Errors.E_ACCESS_ERROR, e)
     } catch (fail: Throwable) {
       Log.e(KEYCHAIN_MODULE, fail.message, fail)
       promise.reject(Errors.E_UNKNOWN_ERROR, fail)

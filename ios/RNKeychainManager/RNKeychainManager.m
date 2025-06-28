@@ -84,7 +84,36 @@ NSString *messageForError(NSError *error)
 
 NSString *codeForError(NSError *error)
 {
-  return [NSString stringWithFormat:@"%li", (long)error.code];
+  switch (error.code) {
+    case errSecUserCanceled:
+      return @"E_BIOMETRIC_USER_CANCEL";
+
+    case errSecInteractionNotAllowed:
+      return @"E_KEYCHAIN_INTERACTION_NOT_ALLOWED";
+
+    case errSecAuthFailed:
+      return @"E_BIOMETRIC_AUTH_FAILED";
+
+    case errSecParam:
+      return @"E_INVALID_PARAMETERS";
+
+    case errSecDecode:
+      return @"E_CRYPTO_FAILED";
+
+    case errSecDuplicateItem:
+      return @"E_KEYCHAIN_DUPLICATE_ITEM";
+
+    case errSecUnimplemented:
+    case errSecIO:
+    case errSecNotAvailable:
+    case errSecAllocate:
+    case errSecBadReq:
+    case errSecMissingEntitlement:
+      return @"E_ACCESS_ERROR";
+
+    default:
+      return @"E_UNKNOWN_ERROR";
+  }
 }
 
 void rejectWithError(RCTPromiseRejectBlock reject, NSError *error)
