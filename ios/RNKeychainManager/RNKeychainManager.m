@@ -108,8 +108,6 @@ NSDictionary *errorInfo(NSError *error)
         @"message": @"User interaction is not allowed."
       };
 
-    case errSecDuplicateItem:
-    case errSecItemNotFound:
     default:
       return @{
         @"code": RNKeychainErrorUnknown,
