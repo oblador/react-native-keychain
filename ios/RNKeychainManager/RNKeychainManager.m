@@ -268,7 +268,8 @@ SecAccessControlCreateFlags accessControlValue(NSDictionary *options)
                                                                  &error);
 
     if (error) {
-      return rejectWithError(reject, aerr);
+      NSError *nsError = (__bridge NSError *)error;
+      return rejectWithError(reject, nsError);
     }
     mAttributes[(__bridge NSString *)kSecAttrAccessControl] = (__bridge id)sacRef;
   } else {
