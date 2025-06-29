@@ -33,7 +33,7 @@ RCT_EXPORT_MODULE();
 
 static NSString * const RNKeychainErrorStorageAccess = @"E_STORAGE_ACCESS_ERROR";
 static NSString * const RNKeychainErrorInvalidParameters = @"E_INVALID_PARAMETERS";
-static NSString * const RNKeychainErrorAuthUserCancel = @"E_AUTH_USER_CANCEL";
+static NSString * const RNKeychainErrorAuthCanceled = @"E_AUTH_CANCELED";
 static NSString * const RNKeychainErrorAuthFailed = @"E_AUTH_FAILED";
 static NSString * const RNKeychainErrorInteractionNotAllowed = @"E_IOS_INTERACTION_NOT_ALLOWED";
 static NSString * const RNKeychainErrorPasscodeNotSet = @"E_PASSCODE_NOT_SET";
@@ -59,9 +59,9 @@ NSString *laErrorCode(NSError *error)
       return RNKeychainErrorBiometricNotEnrolled;
 
     case LAErrorUserCancel:
-    // case LAErrorSystemCancel:
-    // case LAErrorAppCancel:
-      return RNKeychainErrorAuthUserCancel;
+    case LAErrorSystemCancel:
+    case LAErrorAppCancel:
+      return RNKeychainErrorAuthCanceled;
 
     case LAErrorAuthenticationFailed:
       return RNKeychainErrorAuthFailed;
@@ -132,7 +132,7 @@ NSDictionary *secErrorInfo(NSError *error)
 
     case errSecUserCanceled:
       return @{
-        @"code": RNKeychainErrorAuthUserCancel,
+        @"code": RNKeychainErrorAuthCanceled,
         @"message": @"User canceled the operation."
       };
 

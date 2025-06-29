@@ -88,10 +88,10 @@ open class ResultHandlerInteractiveBiometric(
   private fun createBiometricError(errorCode: Int, errorMessage: String): KeychainException {
     return when (errorCode) {
       BiometricPrompt.ERROR_CANCELED ->
-        KeychainException(errorMessage, Errors.E_AUTH_USER_CANCEL)
+        KeychainException(errorMessage, Errors.E_AUTH_CANCELED)
 
       BiometricPrompt.ERROR_USER_CANCELED ->
-        KeychainException(errorMessage, Errors.E_AUTH_USER_CANCEL)
+        KeychainException(errorMessage, Errors.E_AUTH_CANCELED)
 
       BiometricPrompt.ERROR_NO_BIOMETRICS ->
         KeychainException(errorMessage, Errors.E_BIOMETRIC_NOT_ENROLLED)
@@ -118,7 +118,7 @@ open class ResultHandlerInteractiveBiometric(
         KeychainException(errorMessage, Errors.E_BIOMETRIC_UNABLE_TO_PROCESS)
 
       BiometricPrompt.ERROR_NEGATIVE_BUTTON ->
-        KeychainException(errorMessage, Errors.E_AUTH_USER_CANCEL)
+        KeychainException(errorMessage, Errors.E_AUTH_CANCELED)
 
       BiometricPrompt.ERROR_NO_DEVICE_CREDENTIAL ->
         KeychainException(errorMessage, Errors.E_PASSCODE_NOT_SET)
