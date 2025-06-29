@@ -97,9 +97,6 @@ NSString *codeForError(NSError *error)
     case errSecParam:
       return @"E_INVALID_PARAMETERS";
 
-    case errSecDecode:
-      return @"E_CRYPTO_FAILED";
-
     case errSecDuplicateItem:
       return @"E_KEYCHAIN_DUPLICATE_ITEM";
 
