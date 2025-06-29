@@ -6,6 +6,7 @@ import {
   SECURITY_LEVEL,
   STORAGE_TYPE,
   BIOMETRY_TYPE,
+  ERRORS,
 } from './enums';
 import type {
   Result,
@@ -378,6 +379,7 @@ export default {
   AUTHENTICATION_TYPE,
   BIOMETRY_TYPE,
   STORAGE_TYPE,
+  ERRORS,
   getSecurityLevel,
   canImplyAuthentication,
   getSupportedBiometryType,
