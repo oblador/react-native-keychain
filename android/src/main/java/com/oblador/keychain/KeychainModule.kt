@@ -93,7 +93,6 @@ class KeychainModule(reactContext: ReactApplicationContext) :
   internal annotation class Errors {
     companion object {
       const val E_INVALID_PARAMETERS = "E_INVALID_PARAMETERS"
-      const val E_INTERACTIVE_MODE_UNAVAILABLE = "E_INTERACTIVE_MODE_UNAVAILABLE"
       const val E_SECURITY_LEVEL_NOT_SUPPORTED = "E_SECURITY_LEVEL_NOT_SUPPORTED"
       const val E_SECURITY_LEVEL_INSUFFICIENT = "E_SECURITY_LEVEL_INSUFFICIENT"
       const val E_STORAGE_ACCESS_ERROR = "E_STORAGE_ACCESS_ERROR"

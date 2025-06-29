@@ -11,7 +11,7 @@ class ResultHandlerNonInteractive : ResultHandler {
   override var error: Throwable? = null
 
   override fun askAccessPermissions(context: CryptoContext) {
-    val failure = KeychainException("Interactive mode required but unavailable.", Errors.E_INTERACTIVE_MODE_UNAVAILABLE)
+    val failure = KeychainException("Interactive mode required but unavailable.")
     onDecrypt(null, failure)
   }
 
