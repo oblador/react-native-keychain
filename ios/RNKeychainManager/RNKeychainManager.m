@@ -99,9 +99,6 @@ NSString *codeForError(NSError *error)
     case errSecMissingEntitlement:
       return @"E_INVALID_PARAMETERS";
 
-    case errSecDuplicateItem:
-      return @"E_KEYCHAIN_DUPLICATE_ITEM";
-
     case errSecUnimplemented:
     case errSecIO:
     case errSecNotAvailable:
