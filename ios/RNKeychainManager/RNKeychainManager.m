@@ -419,10 +419,10 @@ RCT_EXPORT_METHOD(canCheckAuthentication:(NSDictionary * __nullable)options
   NSError *aerr = nil;
   BOOL canBeProtected = [[LAContext new] canEvaluatePolicy:policyToEvaluate error:&aerr];
 
-  if (aerr || !canBeProtected) {
+  if (aerr) {
     return resolve(@(NO));
   } else {
-    return resolve(@(YES));
+    return resolve(@(canBeProtected));
   }
 }
 #endif
