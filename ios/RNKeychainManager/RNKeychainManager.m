@@ -31,88 +31,97 @@ RCT_EXPORT_MODULE();
   return dispatch_queue_create("com.oblador.KeychainQueue", DISPATCH_QUEUE_SERIAL);
 }
 
-// Messages from the comments in <Security/SecBase.h>
-NSString *messageForError(NSError *error)
+// Error constants using iOS conventions
+static NSString * const RNKeychainErrorStorageAccess = @"E_STORAGE_ACCESS_ERROR";
+static NSString * const RNKeychainErrorInvalidParameters = @"E_INVALID_PARAMETERS";
+static NSString * const RNKeychainErrorAuthUserCancel = @"E_AUTH_USER_CANCEL";
+static NSString * const RNKeychainErrorAuthFailed = @"E_AUTH_FAILED";
+static NSString * const RNKeychainErrorInteractionNotAllowed = @"E_IOS_INTERACTION_NOT_ALLOWED";
+static NSString * const RNKeychainErrorUnknown = @"E_UNKNOWN_ERROR";
+
+// Simple error info function - maps error.code to our standardized error info
+NSDictionary *errorInfo(NSError *error)
 {
   switch (error.code) {
     case errSecUnimplemented:
-      return @"Function or operation not implemented.";
-
+      return @{
+        @"code": RNKeychainErrorStorageAccess,
+        @"message": @"Function or operation not implemented."
+      };
     case errSecIO:
-      return @"I/O error.";
-
+      return @{
+        @"code": RNKeychainErrorStorageAccess,
+        @"message": @"I/O error."
+      };
     case errSecOpWr:
-      return @"File already open with with write permission.";
+      return @{
+        @"code": RNKeychainErrorStorageAccess,
+        @"message": @"File already open with write permission."
+      };
+    case errSecAllocate:
+      return @{
+        @"code": RNKeychainErrorStorageAccess,
+        @"message": @"Failed to allocate memory."
+      };
+    case errSecNotAvailable:
+      return @{
+        @"code": RNKeychainErrorStorageAccess,
+        @"message": @"No keychain is available. You may need to restart your computer."
+      };
+    case errSecDecode:
+      return @{
+        @"code": RNKeychainErrorStorageAccess,
+        @"message": @"Unable to decode the provided data."
+      };
 
     case errSecParam:
-      return @"One or more parameters passed to a function where not valid.";
-
-    case errSecAllocate:
-      return @"Failed to allocate memory.";
+      return @{
+        @"code": RNKeychainErrorInvalidParameters,
+        @"message": @"One or more parameters passed to a function where not valid."
+      };
+    case errSecBadReq:
+      return @{
+        @"code": RNKeychainErrorInvalidParameters,
+        @"message": @"Bad parameter or invalid state for operation."
+      };
+    case errSecMissingEntitlement:
+      return @{
+        @"code": RNKeychainErrorInvalidParameters,
+        @"message": @"Internal error when a required entitlement isn't present."
+      };
 
     case errSecUserCanceled:
-      return @"User canceled the operation.";
+      return @{
+        @"code": RNKeychainErrorAuthUserCancel,
+        @"message": @"User canceled the operation."
+      };
 
-    case errSecBadReq:
-      return @"Bad parameter or invalid state for operation.";
+    case errSecAuthFailed:
+      return @{
+        @"code": RNKeychainErrorAuthFailed,
+        @"message": @"The user name or passphrase you entered is not correct."
+      };
 
-    case errSecNotAvailable:
-      return @"No keychain is available. You may need to restart your computer.";
+    case errSecInteractionNotAllowed:
+      return @{
+        @"code": RNKeychainErrorInteractionNotAllowed,
+        @"message": @"User interaction is not allowed."
+      };
 
     case errSecDuplicateItem:
-      return @"The specified item already exists in the keychain.";
-
     case errSecItemNotFound:
-      return @"The specified item could not be found in the keychain.";
-
-    case errSecInteractionNotAllowed:
-      return @"User interaction is not allowed.";
-
-    case errSecDecode:
-      return @"Unable to decode the provided data.";
-
-    case errSecAuthFailed:
-      return @"The user name or passphrase you entered is not correct.";
-
-    case errSecMissingEntitlement:
-      return @"Internal error when a required entitlement isn't present.";
-
     default:
-      return [NSString stringWithFormat:@"code: %li, msg: %@", (long)error.code, error.localizedDescription];
-  }
-}
-
-NSString *codeForError(NSError *error)
-{
-  switch (error.code) {
-    case errSecUserCanceled:
-      return @"E_AUTH_USER_CANCEL";
-
-    case errSecInteractionNotAllowed:
-      return @"E_IOS_INTERACTION_NOT_ALLOWED";
-
-    case errSecAuthFailed:
-      return @"E_AUTH_FAILED";
-
-    case errSecParam:
-    case errSecBadReq:
-    case errSecMissingEntitlement:
-      return @"E_INVALID_PARAMETERS";
-
-    case errSecUnimplemented:
-    case errSecIO:
-    case errSecNotAvailable:
-    case errSecAllocate:
-      return @"E_STORAGE_ACCESS_ERROR";
-
-    default:
-      return @"E_UNKNOWN_ERROR";
+      return @{
+        @"code": RNKeychainErrorUnknown,
+        @"message": [NSString stringWithFormat:@"code: %li, msg: %@", (long)error.code, error.localizedDescription]
+      };
   }
 }
 
 void rejectWithError(RCTPromiseRejectBlock reject, NSError *error)
 {
-  return reject(codeForError(error), messageForError(error), nil);
+  NSDictionary *info = errorInfo(error);
+  return reject(info[@"code"], info[@"message"], nil);
 }
 
 CFStringRef accessibleValue(NSDictionary *options)
