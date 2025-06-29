@@ -31,7 +31,6 @@ RCT_EXPORT_MODULE();
   return dispatch_queue_create("com.oblador.KeychainQueue", DISPATCH_QUEUE_SERIAL);
 }
 
-// Error constants using iOS conventions
 static NSString * const RNKeychainErrorStorageAccess = @"E_STORAGE_ACCESS_ERROR";
 static NSString * const RNKeychainErrorInvalidParameters = @"E_INVALID_PARAMETERS";
 static NSString * const RNKeychainErrorAuthUserCancel = @"E_AUTH_USER_CANCEL";
@@ -39,7 +38,6 @@ static NSString * const RNKeychainErrorAuthFailed = @"E_AUTH_FAILED";
 static NSString * const RNKeychainErrorInteractionNotAllowed = @"E_IOS_INTERACTION_NOT_ALLOWED";
 static NSString * const RNKeychainErrorUnknown = @"E_UNKNOWN_ERROR";
 
-// Simple error info function - maps error.code to our standardized error info
 NSDictionary *errorInfo(NSError *error)
 {
   switch (error.code) {
@@ -257,8 +255,8 @@ SecAccessControlCreateFlags accessControlValue(NSDictionary *options)
   if (accessControl) {
     NSError *aerr = nil;
     #if TARGET_OS_IOS || TARGET_OS_VISION
-    BOOL canAuthenticate = [[LAContext new] canEvaluatePolicy:LAPolicyDeviceOwnerAuthentication error:&aerr];
-    if (aerr || !canAuthenticate) {
+    [[LAContext new] canEvaluatePolicy:LAPolicyDeviceOwnerAuthentication error:&aerr];
+    if (aerr) {
       return rejectWithError(reject, aerr);
     }
     #endif
