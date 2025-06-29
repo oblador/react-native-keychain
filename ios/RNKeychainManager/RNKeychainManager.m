@@ -36,9 +36,51 @@ static NSString * const RNKeychainErrorInvalidParameters = @"E_INVALID_PARAMETER
 static NSString * const RNKeychainErrorAuthUserCancel = @"E_AUTH_USER_CANCEL";
 static NSString * const RNKeychainErrorAuthFailed = @"E_AUTH_FAILED";
 static NSString * const RNKeychainErrorInteractionNotAllowed = @"E_IOS_INTERACTION_NOT_ALLOWED";
+static NSString * const RNKeychainErrorPasscodeNotSet = @"E_PASSCODE_NOT_SET";
+static NSString * const RNKeychainErrorBiometricNotEnrolled = @"E_BIOMETRIC_NOT_ENROLLED";
+static NSString * const RNKeychainErrorBiometricHardwareNotPresent = @"E_BIOMETRIC_HARDWARE_NOT_PRESENT";
+static NSString * const RNKeychainErrorBiometricLockout = @"E_BIOMETRIC_LOCKOUT";
 static NSString * const RNKeychainErrorUnknown = @"E_UNKNOWN_ERROR";
 
-NSDictionary *errorInfo(NSError *error)
+#if TARGET_OS_IOS || TARGET_OS_VISION
+// Maps LocalAuthentication errors to our standardized error codes
+NSString *laErrorCode(NSError *error)
+{
+  switch (error.code) {
+    case LAErrorPasscodeNotSet:
+      return RNKeychainErrorPasscodeNotSet;
+
+    case LAErrorTouchIDNotAvailable:
+    case LAErrorBiometryNotAvailable:
+      return RNKeychainErrorBiometricHardwareNotPresent;
+
+    case LAErrorTouchIDNotEnrolled:
+    case LAErrorBiometryNotEnrolled:
+      return RNKeychainErrorBiometricNotEnrolled;
+
+    case LAErrorUserCancel:
+    case LAErrorSystemCancel:
+    case LAErrorAppCancel:
+      return RNKeychainErrorAuthUserCancel;
+
+    case LAErrorAuthenticationFailed:
+      return RNKeychainErrorAuthFailed;
+
+    case LAErrorTouchIDLockout:
+    case LAErrorBiometryLockout:
+      return RNKeychainErrorBiometricLockout;
+
+    case LAErrorNotInteractive:
+      return RNKeychainErrorInteractionNotAllowed;
+
+    default:
+      return RNKeychainErrorUnknown;
+  }
+}
+#endif
+
+// Maps Security Framework errors to our standardized error codes
+NSDictionary *secErrorInfo(NSError *error)
 {
   switch (error.code) {
     case errSecUnimplemented:
@@ -112,6 +154,29 @@ NSDictionary *errorInfo(NSError *error)
         @"message": [NSString stringWithFormat:@"code: %li, msg: %@", (long)error.code, error.localizedDescription]
       };
   }
+}
+
+NSDictionary *errorInfo(NSError *error)
+{
+  #if TARGET_OS_IOS || TARGET_OS_VISION
+    if ([error.domain isEqualToString:LAErrorDomain]) {
+      NSString *code = laErrorCode(error);
+      return @{
+        @"code": code,
+        @"message": error.localizedDescription
+      };
+    }
+  #endif
+
+  if ([error.domain isEqualToString:NSOSStatusErrorDomain]) {
+    return secErrorInfo(error);
+  }
+
+  // Unknown error domain
+  return @{
+    @"code": RNKeychainErrorUnknown,
+    @"message": error.localizedDescription
+  };
 }
 
 void rejectWithError(RCTPromiseRejectBlock reject, NSError *error)
