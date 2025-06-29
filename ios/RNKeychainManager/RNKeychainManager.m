@@ -86,13 +86,13 @@ NSString *codeForError(NSError *error)
 {
   switch (error.code) {
     case errSecUserCanceled:
-      return @"E_BIOMETRIC_USER_CANCEL";
+      return @"E_AUTH_USER_CANCEL";
 
     case errSecInteractionNotAllowed:
       return @"E_IOS_INTERACTION_NOT_ALLOWED";
 
     case errSecAuthFailed:
-      return @"E_BIOMETRIC_AUTH_FAILED";
+      return @"E_AUTH_FAILED";
 
     case errSecParam:
     case errSecBadReq:
