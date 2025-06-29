@@ -98,7 +98,6 @@ class KeychainModule(reactContext: ReactApplicationContext) :
       const val E_INSUFFICIENT_SECURITY_LEVEL = "E_INSUFFICIENT_SECURITY_LEVEL"
       const val E_SDK_NOT_SUPPORTED = "E_SDK_NOT_SUPPORTED"
       const val E_ACCESS_ERROR = "E_ACCESS_ERROR"
-      const val E_INTERNAL_ERROR = "E_INTERNAL_ERROR"
       const val E_UNKNOWN_ERROR = "E_UNKNOWN_ERROR"
 
       // Biometric errors
