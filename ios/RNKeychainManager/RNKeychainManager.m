@@ -89,7 +89,7 @@ NSString *codeForError(NSError *error)
       return @"E_BIOMETRIC_USER_CANCEL";
 
     case errSecInteractionNotAllowed:
-      return @"E_KEYCHAIN_INTERACTION_NOT_ALLOWED";
+      return @"E_IOS_INTERACTION_NOT_ALLOWED";
 
     case errSecAuthFailed:
       return @"E_BIOMETRIC_AUTH_FAILED";
