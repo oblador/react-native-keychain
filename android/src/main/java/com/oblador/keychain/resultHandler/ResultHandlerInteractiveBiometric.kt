@@ -12,7 +12,7 @@ import com.oblador.keychain.cipherStorage.CipherStorage
 import com.oblador.keychain.cipherStorage.CipherStorage.DecryptionResult
 import com.oblador.keychain.cipherStorage.CipherStorage.EncryptionResult
 import com.oblador.keychain.cipherStorage.CipherStorageBase
-import com.oblador.keychain.exceptions.CryptoFailedException
+import com.oblador.keychain.exceptions.KeychainException
 import java.util.concurrent.Executor
 import java.util.concurrent.Executors
 import java.util.concurrent.locks.ReentrantLock
@@ -43,7 +43,7 @@ open class ResultHandlerInteractiveBiometric(
     this.context = context
 
     if (!DeviceAvailability.isPermissionsGranted(reactContext)) {
-      val failure = CryptoFailedException(
+      val failure = KeychainException(
         "Could not start biometric Authentication. No permissions granted.",
         Errors.E_BIOMETRIC_PERMISSION_DENIED
       )
@@ -85,49 +85,49 @@ open class ResultHandlerInteractiveBiometric(
   }
 
   /* Maps BiometricPrompt error codes to our custom error codes. */
-  private fun createBiometricError(errorCode: Int, errorMessage: String): CryptoFailedException {
+  private fun createBiometricError(errorCode: Int, errorMessage: String): KeychainException {
     return when (errorCode) {
       BiometricPrompt.ERROR_CANCELED ->
-        CryptoFailedException(errorMessage, Errors.E_BIOMETRIC_USER_CANCEL)
+        KeychainException(errorMessage, Errors.E_BIOMETRIC_USER_CANCEL)
 
       BiometricPrompt.ERROR_USER_CANCELED ->
-        CryptoFailedException(errorMessage, Errors.E_BIOMETRIC_USER_CANCEL)
+        KeychainException(errorMessage, Errors.E_BIOMETRIC_USER_CANCEL)
 
       BiometricPrompt.ERROR_NO_BIOMETRICS ->
-        CryptoFailedException(errorMessage, Errors.E_BIOMETRIC_NOT_ENROLLED)
+        KeychainException(errorMessage, Errors.E_BIOMETRIC_NOT_ENROLLED)
 
       BiometricPrompt.ERROR_TIMEOUT ->
-        CryptoFailedException(errorMessage, Errors.E_BIOMETRIC_TIMEOUT)
+        KeychainException(errorMessage, Errors.E_BIOMETRIC_TIMEOUT)
 
       BiometricPrompt.ERROR_HW_UNAVAILABLE ->
-        CryptoFailedException(errorMessage, Errors.E_BIOMETRIC_HARDWARE_UNAVAILABLE)
+        KeychainException(errorMessage, Errors.E_BIOMETRIC_HARDWARE_UNAVAILABLE)
 
       BiometricPrompt.ERROR_LOCKOUT ->
-        CryptoFailedException(errorMessage, Errors.E_BIOMETRIC_LOCKOUT)
+        KeychainException(errorMessage, Errors.E_BIOMETRIC_LOCKOUT)
 
       BiometricPrompt.ERROR_LOCKOUT_PERMANENT ->
-        CryptoFailedException(errorMessage, Errors.E_BIOMETRIC_LOCKOUT_PERMANENT)
+        KeychainException(errorMessage, Errors.E_BIOMETRIC_LOCKOUT_PERMANENT)
 
       BiometricPrompt.ERROR_HW_NOT_PRESENT ->
-        CryptoFailedException(errorMessage, Errors.E_BIOMETRIC_HARDWARE_NOT_PRESENT)
+        KeychainException(errorMessage, Errors.E_BIOMETRIC_HARDWARE_NOT_PRESENT)
 
       BiometricPrompt.ERROR_NO_SPACE ->
-        CryptoFailedException(errorMessage, Errors.E_BIOMETRIC_NO_SPACE)
+        KeychainException(errorMessage, Errors.E_BIOMETRIC_NO_SPACE)
 
       BiometricPrompt.ERROR_UNABLE_TO_PROCESS ->
-        CryptoFailedException(errorMessage, Errors.E_BIOMETRIC_UNABLE_TO_PROCESS)
+        KeychainException(errorMessage, Errors.E_BIOMETRIC_UNABLE_TO_PROCESS)
 
       BiometricPrompt.ERROR_NEGATIVE_BUTTON ->
-        CryptoFailedException(errorMessage, Errors.E_BIOMETRIC_USER_CANCEL)
+        KeychainException(errorMessage, Errors.E_BIOMETRIC_USER_CANCEL)
 
       BiometricPrompt.ERROR_NO_DEVICE_CREDENTIAL ->
-        CryptoFailedException(errorMessage, Errors.E_BIOMETRIC_NO_DEVICE_CREDENTIAL)
+        KeychainException(errorMessage, Errors.E_BIOMETRIC_NO_DEVICE_CREDENTIAL)
 
       BiometricPrompt.ERROR_VENDOR ->
-        CryptoFailedException(errorMessage, Errors.E_BIOMETRIC_VENDOR_ERROR)
+        KeychainException(errorMessage, Errors.E_BIOMETRIC_VENDOR_ERROR)
 
       else ->
-        CryptoFailedException("code: $errorCode, msg: $errorMessage", Errors.E_BIOMETRIC_UNKNOWN_ERROR)
+        KeychainException("code: $errorCode, msg: $errorMessage", Errors.E_BIOMETRIC_UNKNOWN_ERROR)
     }
   }
 

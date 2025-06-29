@@ -5,7 +5,7 @@ import android.security.keystore.UserNotAuthenticatedException
 import com.oblador.keychain.KeychainModule.Errors
 import java.security.GeneralSecurityException
 
-class CryptoFailedException : GeneralSecurityException {
+class KeychainException : GeneralSecurityException {
   val errorCode: String
 
   constructor(message: String?) : super(message) {
@@ -20,7 +20,7 @@ class CryptoFailedException : GeneralSecurityException {
     this.errorCode = when (t) {
       is UserNotAuthenticatedException -> Errors.E_KEYSTORE_USER_NOT_AUTHENTICATED
       is KeyPermanentlyInvalidatedException -> Errors.E_KEYSTORE_KEY_INVALIDATED
-      is CryptoFailedException -> t.errorCode
+      is KeychainException -> t.errorCode
       else -> Errors.E_CRYPTO_FAILED
     }
   }
