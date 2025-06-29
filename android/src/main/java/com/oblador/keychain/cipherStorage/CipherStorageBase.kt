@@ -170,7 +170,7 @@ abstract class CipherStorageBase(protected val applicationContext: Context) : Ci
     if (!securityLevel().satisfiesSafetyThreshold(level)) {
       throw KeychainException(
         "Insufficient security level (wants $level; got ${securityLevel()})",
-        Errors.E_INSUFFICIENT_SECURITY_LEVEL
+        Errors.E_SECURITY_LEVEL_INSUFFICIENT
       )
     }
   }

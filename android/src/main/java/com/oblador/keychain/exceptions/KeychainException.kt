@@ -18,8 +18,8 @@ class KeychainException : GeneralSecurityException {
 
   constructor(message: String?, t: Throwable?) : super(message, t) {
     this.errorCode = when (t) {
-      is UserNotAuthenticatedException -> Errors.E_KEYSTORE_USER_NOT_AUTHENTICATED
-      is KeyPermanentlyInvalidatedException -> Errors.E_KEYSTORE_KEY_INVALIDATED
+      is UserNotAuthenticatedException -> Errors.E_ANDROID_USER_NOT_AUTHENTICATED
+      is KeyPermanentlyInvalidatedException -> Errors.E_ANDROID_KEY_INVALIDATED
       is KeychainException -> t.errorCode
       else -> Errors.E_UNKNOWN_ERROR
     }

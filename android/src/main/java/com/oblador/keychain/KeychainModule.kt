@@ -95,9 +95,8 @@ class KeychainModule(reactContext: ReactApplicationContext) :
       const val E_INVALID_PARAMETERS = "E_INVALID_PARAMETERS"
       const val E_INTERACTIVE_MODE_UNAVAILABLE = "E_INTERACTIVE_MODE_UNAVAILABLE"
       const val E_SECURITY_LEVEL_NOT_SUPPORTED = "E_SECURITY_LEVEL_NOT_SUPPORTED"
-      const val E_INSUFFICIENT_SECURITY_LEVEL = "E_INSUFFICIENT_SECURITY_LEVEL"
-      const val E_SDK_NOT_SUPPORTED = "E_SDK_NOT_SUPPORTED"
-      const val E_ACCESS_ERROR = "E_ACCESS_ERROR"
+      const val E_SECURITY_LEVEL_INSUFFICIENT = "E_SECURITY_LEVEL_INSUFFICIENT"
+      const val E_STORAGE_ACCESS_ERROR = "E_STORAGE_ACCESS_ERROR"
       const val E_UNKNOWN_ERROR = "E_UNKNOWN_ERROR"
 
       // Biometric errors
@@ -115,9 +114,10 @@ class KeychainModule(reactContext: ReactApplicationContext) :
       const val E_BIOMETRIC_UNKNOWN_ERROR = "E_BIOMETRIC_UNKNOWN_ERROR"
       const val E_BIOMETRIC_PERMISSION_DENIED = "E_BIOMETRIC_PERMISSION_DENIED"
 
-      // Keystore error codes
-      const val E_KEYSTORE_KEY_INVALIDATED = "E_KEYSTORE_KEY_INVALIDATED"
-      const val E_KEYSTORE_USER_NOT_AUTHENTICATED = "E_KEYSTORE_USER_NOT_AUTHENTICATED"
+      // Android-specific error codes
+      const val E_ANDROID_SDK_NOT_SUPPORTED = "E_ANDROID_SDK_NOT_SUPPORTED"
+      const val E_ANDROID_KEY_INVALIDATED = "E_ANDROID_KEY_INVALIDATED"
+      const val E_ANDROID_USER_NOT_AUTHENTICATED = "E_ANDROID_USER_NOT_AUTHENTICATED"
     }
   }
 
@@ -288,7 +288,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
           promise.resolve(credentials)
         } catch (e: KeyStoreAccessException) {
           Log.e(KEYCHAIN_MODULE, e.message!!)
-          promise.reject(Errors.E_ACCESS_ERROR, e)
+          promise.reject(Errors.E_STORAGE_ACCESS_ERROR, e)
         } catch (e: KeychainException) {
           Log.e(KEYCHAIN_MODULE, e.message!!)
           promise.reject(e.errorCode, e)
@@ -306,7 +306,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
       val services = doGetAllGenericPasswordServices()
       promise.resolve(Arguments.makeNativeArray<Any>(services.toTypedArray()))
     } catch (e: KeyStoreAccessException) {
-      promise.reject(Errors.E_ACCESS_ERROR, e)
+      promise.reject(Errors.E_STORAGE_ACCESS_ERROR, e)
     }
   }
 
@@ -348,7 +348,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
       promise.resolve(true)
     } catch (e: KeyStoreAccessException) {
       Log.e(KEYCHAIN_MODULE, e.message!!)
-      promise.reject(Errors.E_ACCESS_ERROR, e)
+      promise.reject(Errors.E_STORAGE_ACCESS_ERROR, e)
     } catch (fail: Throwable) {
       Log.e(KEYCHAIN_MODULE, fail.message, fail)
       promise.reject(Errors.E_UNKNOWN_ERROR, fail)
@@ -508,7 +508,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
       throw KeychainException(error.message, error)
     }
     if (handler.decryptionResult == null) {
-      throw KeychainException("No decryption results and no error. Something deeply wrong!", Errors.E_INTERNAL_ERROR)
+      throw KeychainException("No decryption results and no error. Something deeply wrong!")
     }
     return handler.decryptionResult!!
   }
@@ -530,7 +530,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
       throw KeychainException(error.message, error)
     }
     if (handler.encryptionResult == null) {
-      throw KeychainException("No encryption results and no error. Something deeply wrong!", Errors.E_INTERNAL_ERROR)
+      throw KeychainException("No encryption results and no error. Something deeply wrong!")
     }
     return handler.encryptionResult!!
   }
@@ -616,7 +616,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
       foundCipher = variant
     }
     if (foundCipher == null) {
-      throw KeychainException("Unsupported Android SDK " + Build.VERSION.SDK_INT, Errors.E_SDK_NOT_SUPPORTED)
+      throw KeychainException("Unsupported Android SDK " + Build.VERSION.SDK_INT, Errors.E_ANDROID_SDK_NOT_SUPPORTED)
     }
     Log.d(KEYCHAIN_MODULE, "Selected storage: " + foundCipher.getCipherStorageName())
     return foundCipher
@@ -832,7 +832,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
           level.name,
           storage.securityLevel().name
         ),
-        Errors.E_INSUFFICIENT_SECURITY_LEVEL
+        Errors.E_SECURITY_LEVEL_INSUFFICIENT
       )
     }
 
