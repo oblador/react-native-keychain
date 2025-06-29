@@ -45,7 +45,7 @@ open class ResultHandlerInteractiveBiometric(
     if (!DeviceAvailability.isPermissionsGranted(reactContext)) {
       val failure = KeychainException(
         "Could not start biometric Authentication. No permissions granted.",
-        Errors.E_BIOMETRIC_PERMISSION_DENIED
+        Errors.E_AUTH_PERMISSION_DENIED
       )
       when (context.operation) {
         CryptoOperation.ENCRYPT -> onEncrypt(null, failure)
@@ -88,10 +88,10 @@ open class ResultHandlerInteractiveBiometric(
   private fun createBiometricError(errorCode: Int, errorMessage: String): KeychainException {
     return when (errorCode) {
       BiometricPrompt.ERROR_CANCELED ->
-        KeychainException(errorMessage, Errors.E_BIOMETRIC_USER_CANCEL)
+        KeychainException(errorMessage, Errors.E_AUTH_USER_CANCEL)
 
       BiometricPrompt.ERROR_USER_CANCELED ->
-        KeychainException(errorMessage, Errors.E_BIOMETRIC_USER_CANCEL)
+        KeychainException(errorMessage, Errors.E_AUTH_USER_CANCEL)
 
       BiometricPrompt.ERROR_NO_BIOMETRICS ->
         KeychainException(errorMessage, Errors.E_BIOMETRIC_NOT_ENROLLED)
@@ -118,16 +118,16 @@ open class ResultHandlerInteractiveBiometric(
         KeychainException(errorMessage, Errors.E_BIOMETRIC_UNABLE_TO_PROCESS)
 
       BiometricPrompt.ERROR_NEGATIVE_BUTTON ->
-        KeychainException(errorMessage, Errors.E_BIOMETRIC_USER_CANCEL)
+        KeychainException(errorMessage, Errors.E_AUTH_USER_CANCEL)
 
       BiometricPrompt.ERROR_NO_DEVICE_CREDENTIAL ->
-        KeychainException(errorMessage, Errors.E_BIOMETRIC_NO_DEVICE_CREDENTIAL)
+        KeychainException(errorMessage, Errors.E_PASSCODE_NOT_SET)
 
       BiometricPrompt.ERROR_VENDOR ->
         KeychainException(errorMessage, Errors.E_BIOMETRIC_VENDOR_ERROR)
 
       else ->
-        KeychainException("code: $errorCode, msg: $errorMessage", Errors.E_BIOMETRIC_UNKNOWN_ERROR)
+        KeychainException("code: $errorCode, msg: $errorMessage", Errors.E_AUTH_UNKNOWN_ERROR)
     }
   }
 
