@@ -95,6 +95,8 @@ NSString *codeForError(NSError *error)
       return @"E_BIOMETRIC_AUTH_FAILED";
 
     case errSecParam:
+    case errSecBadReq:
+    case errSecMissingEntitlement:
       return @"E_INVALID_PARAMETERS";
 
     case errSecDuplicateItem:
@@ -104,9 +106,7 @@ NSString *codeForError(NSError *error)
     case errSecIO:
     case errSecNotAvailable:
     case errSecAllocate:
-    case errSecBadReq:
-    case errSecMissingEntitlement:
-      return @"E_ACCESS_ERROR";
+      return @"E_STORAGE_ACCESS_ERROR";
 
     default:
       return @"E_UNKNOWN_ERROR";
