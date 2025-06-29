@@ -99,7 +99,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
       const val E_UNKNOWN_ERROR = "E_UNKNOWN_ERROR"
 
       // Authentication errors
-      const val E_AUTH_USER_CANCEL = "E_AUTH_USER_CANCEL"
+      const val E_AUTH_CANCELED = "E_AUTH_CANCELED"
       const val E_AUTH_UNKNOWN_ERROR = "E_AUTH_UNKNOWN_ERROR"
       const val E_AUTH_PERMISSION_DENIED = "E_AUTH_PERMISSION_DENIED"
       const val E_AUTH_FAILED = "E_AUTH_FAILED"
