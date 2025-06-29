@@ -9,7 +9,7 @@ class KeychainException : GeneralSecurityException {
   val errorCode: String
 
   constructor(message: String?) : super(message) {
-    this.errorCode = Errors.E_CRYPTO_FAILED
+    this.errorCode = Errors.E_UNKNOWN_ERROR
   }
 
   constructor(message: String?, errorCode: String) : super(message) {
@@ -21,7 +21,7 @@ class KeychainException : GeneralSecurityException {
       is UserNotAuthenticatedException -> Errors.E_KEYSTORE_USER_NOT_AUTHENTICATED
       is KeyPermanentlyInvalidatedException -> Errors.E_KEYSTORE_KEY_INVALIDATED
       is KeychainException -> t.errorCode
-      else -> Errors.E_CRYPTO_FAILED
+      else -> Errors.E_UNKNOWN_ERROR
     }
   }
 }
