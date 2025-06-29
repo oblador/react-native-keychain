@@ -59,8 +59,8 @@ NSString *laErrorCode(NSError *error)
       return RNKeychainErrorBiometricNotEnrolled;
 
     case LAErrorUserCancel:
-    case LAErrorSystemCancel:
-    case LAErrorAppCancel:
+    // case LAErrorSystemCancel:
+    // case LAErrorAppCancel:
       return RNKeychainErrorAuthUserCancel;
 
     case LAErrorAuthenticationFailed:
