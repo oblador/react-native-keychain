@@ -10,7 +10,7 @@ import com.oblador.keychain.KeychainModule.KnownCiphers
 import com.oblador.keychain.SecurityLevel
 import com.oblador.keychain.cipherStorage.CipherStorageKeystoreAesCbc.IV.IV_LENGTH
 import com.oblador.keychain.resultHandler.ResultHandler
-import com.oblador.keychain.exceptions.CryptoFailedException
+import com.oblador.keychain.exceptions.KeychainException
 import java.io.IOException
 import java.security.GeneralSecurityException
 import java.security.Key
@@ -74,7 +74,7 @@ class CipherStorageKeystoreAesCbc(reactContext: ReactApplicationContext) :
 
     // region Overrides
 
-    @Throws(CryptoFailedException::class)
+    @Throws(KeychainException::class)
     override fun encrypt(
         handler: ResultHandler,
         alias: String,
@@ -96,13 +96,13 @@ class CipherStorageKeystoreAesCbc(reactContext: ReactApplicationContext) :
             )
             handler.onEncrypt(result, null)
         } catch (e: Throwable) {
-            throw CryptoFailedException(e.message, e)
+            throw KeychainException(e.message, e)
         }
     }
 
 
     /** Redirect call to [decrypt] method. */
-    @Throws(CryptoFailedException::class)
+    @Throws(KeychainException::class)
     override fun decrypt(
         handler: ResultHandler,
         alias: String,
@@ -124,7 +124,7 @@ class CipherStorageKeystoreAesCbc(reactContext: ReactApplicationContext) :
             )
             handler.onDecrypt(results, null)
         } catch (e: GeneralSecurityException) {
-            throw CryptoFailedException(e.message, e)
+            throw KeychainException(e.message, e)
         } catch (fail: Throwable) {
             handler.onDecrypt(null, fail)
         }

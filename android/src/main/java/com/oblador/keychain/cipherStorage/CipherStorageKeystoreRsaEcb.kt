@@ -12,7 +12,7 @@ import com.oblador.keychain.SecurityLevel
 import com.oblador.keychain.resultHandler.CryptoContext
 import com.oblador.keychain.resultHandler.CryptoOperation
 import com.oblador.keychain.resultHandler.ResultHandler
-import com.oblador.keychain.exceptions.CryptoFailedException
+import com.oblador.keychain.exceptions.KeychainException
 import com.oblador.keychain.exceptions.KeyStoreAccessException
 import java.io.IOException
 import java.security.GeneralSecurityException
@@ -49,7 +49,7 @@ class CipherStorageKeystoreRsaEcb(reactContext: ReactApplicationContext) :
         const val ENCRYPTION_KEY_SIZE = 2048
     }
 
-    @Throws(CryptoFailedException::class)
+    @Throws(KeychainException::class)
     override fun encrypt(
         handler: ResultHandler,
         alias: String,
@@ -66,12 +66,12 @@ class CipherStorageKeystoreRsaEcb(reactContext: ReactApplicationContext) :
             val result = innerEncryptedCredentials(safeAlias, password, username)
             handler.onEncrypt(result, null)
         } catch (e: Exception) {
-            throw CryptoFailedException(e.message, e)
+            throw KeychainException(e.message, e)
         }
     }
 
 
-    @Throws(CryptoFailedException::class)
+    @Throws(KeychainException::class)
     override fun decrypt(
         handler: ResultHandler,
         alias: String,

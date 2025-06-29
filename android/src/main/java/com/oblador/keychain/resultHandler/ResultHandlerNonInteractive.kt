@@ -3,7 +3,7 @@ package com.oblador.keychain.resultHandler
 import com.oblador.keychain.KeychainModule.Errors
 import com.oblador.keychain.cipherStorage.CipherStorage.DecryptionResult
 import com.oblador.keychain.cipherStorage.CipherStorage.EncryptionResult
-import com.oblador.keychain.exceptions.CryptoFailedException
+import com.oblador.keychain.exceptions.KeychainException
 
 class ResultHandlerNonInteractive : ResultHandler {
   override var decryptionResult: DecryptionResult? = null
@@ -11,7 +11,7 @@ class ResultHandlerNonInteractive : ResultHandler {
   override var error: Throwable? = null
 
   override fun askAccessPermissions(context: CryptoContext) {
-    val failure = CryptoFailedException("Interactive mode required but unavailable.", Errors.E_INTERACTIVE_MODE_UNAVAILABLE)
+    val failure = KeychainException("Interactive mode required but unavailable.", Errors.E_INTERACTIVE_MODE_UNAVAILABLE)
     onDecrypt(null, failure)
   }
 
