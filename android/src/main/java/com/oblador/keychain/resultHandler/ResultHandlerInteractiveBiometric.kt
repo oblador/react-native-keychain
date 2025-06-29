@@ -76,7 +76,7 @@ open class ResultHandlerInteractiveBiometric(
 
   /** Called when an unrecoverable error has been encountered and the operation is complete. */
   override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
-    val error = createBiometricError(errorCode, errString.toString())
+    val error = mapBiometricPromptError(errorCode, errString.toString())
     when (context?.operation) {
       CryptoOperation.ENCRYPT -> onEncrypt(null, error)
       CryptoOperation.DECRYPT -> onDecrypt(null, error)
@@ -85,7 +85,7 @@ open class ResultHandlerInteractiveBiometric(
   }
 
   /* Maps BiometricPrompt error codes to our custom error codes. */
-  private fun createBiometricError(errorCode: Int, errorMessage: String): KeychainException {
+  private fun mapBiometricPromptError(errorCode: Int, errorMessage: String): KeychainException {
     return when (errorCode) {
       BiometricPrompt.ERROR_CANCELED ->
         KeychainException(errorMessage, Errors.E_AUTH_CANCELED)
