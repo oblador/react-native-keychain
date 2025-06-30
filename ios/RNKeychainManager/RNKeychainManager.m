@@ -152,7 +152,7 @@ NSDictionary *secErrorInfo(NSError *error)
 
     default:
       return @{
-        @"code": RNKeychainErrorBiometricError,
+        @"code": RNKeychainErrorUnknown,
         @"message": [NSString stringWithFormat:@"code: %li, msg: %@", (long)error.code, error.localizedDescription]
       };
   }
@@ -174,11 +174,9 @@ NSDictionary *errorInfo(NSError *error)
     return secErrorInfo(error);
   }
 
-  // Unknown error domain
   return @{
     @"code": RNKeychainErrorUnknown,
-    // TODO: Format this as 'code: X, msg: Y'
-    @"message": error.localizedDescription
+    @"message": [NSString stringWithFormat:@"code: %li, msg: %@", (long)error.code, error.localizedDescription]
   };
 }
 
