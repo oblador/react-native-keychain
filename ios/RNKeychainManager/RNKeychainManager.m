@@ -75,7 +75,6 @@ NSString *laErrorCode(NSError *error)
       return RNKeychainErrorInteractionNotAllowed;
 
     default:
-      // TODO: Handle formatting this as 'code: X, msg: Y'
       return RNKeychainErrorBiometricError;
   }
 }
@@ -163,6 +162,14 @@ NSDictionary *errorInfo(NSError *error)
   #if TARGET_OS_IOS || TARGET_OS_VISION
     if ([error.domain isEqualToString:LAErrorDomain]) {
       NSString *code = laErrorCode(error);
+
+      if ([code isEqualToString:RNKeychainErrorBiometricError]) {
+        return @{
+          @"code": code,
+          @"message": [NSString stringWithFormat:@"code: %li, msg: %@", (long)error.code, error.localizedDescription]
+        };
+      }
+
       return @{
         @"code": code,
         @"message": error.localizedDescription
