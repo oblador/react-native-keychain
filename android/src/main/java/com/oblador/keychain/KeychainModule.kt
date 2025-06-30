@@ -117,6 +117,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
       const val E_BIOMETRIC_NO_SPACE = "E_BIOMETRIC_NO_SPACE"
       const val E_BIOMETRIC_UNABLE_TO_PROCESS = "E_BIOMETRIC_UNABLE_TO_PROCESS"
       const val E_BIOMETRIC_VENDOR_ERROR = "E_BIOMETRIC_VENDOR_ERROR"
+      const val E_BIOMETRIC_ERROR = "E_BIOMETRIC_ERROR"
 
       // Android error codes
       const val E_ANDROID_SDK_NOT_SUPPORTED = "E_ANDROID_SDK_NOT_SUPPORTED"

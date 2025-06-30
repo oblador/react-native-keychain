@@ -40,6 +40,7 @@ static NSString * const RNKeychainErrorPasscodeNotSet = @"E_PASSCODE_NOT_SET";
 static NSString * const RNKeychainErrorBiometricNotEnrolled = @"E_BIOMETRIC_NOT_ENROLLED";
 static NSString * const RNKeychainErrorBiometricHardwareNotPresent = @"E_BIOMETRIC_HARDWARE_NOT_PRESENT";
 static NSString * const RNKeychainErrorBiometricLockout = @"E_BIOMETRIC_LOCKOUT";
+static NSString * const RNKeychainErrorBiometricError = @"E_BIOMETRIC_ERROR";
 static NSString * const RNKeychainErrorUnknown = @"E_UNKNOWN_ERROR";
 
 #if TARGET_OS_IOS || TARGET_OS_VISION
@@ -74,7 +75,8 @@ NSString *laErrorCode(NSError *error)
       return RNKeychainErrorInteractionNotAllowed;
 
     default:
-      return RNKeychainErrorUnknown;
+      // TODO: Handle formatting this as 'code: X, msg: Y'
+      return RNKeychainErrorBiometricError;
   }
 }
 #endif
@@ -150,7 +152,7 @@ NSDictionary *secErrorInfo(NSError *error)
 
     default:
       return @{
-        @"code": RNKeychainErrorUnknown,
+        @"code": RNKeychainErrorBiometricError,
         @"message": [NSString stringWithFormat:@"code: %li, msg: %@", (long)error.code, error.localizedDescription]
       };
   }
@@ -175,6 +177,7 @@ NSDictionary *errorInfo(NSError *error)
   // Unknown error domain
   return @{
     @"code": RNKeychainErrorUnknown,
+    // TODO: Format this as 'code: X, msg: Y'
     @"message": error.localizedDescription
   };
 }
