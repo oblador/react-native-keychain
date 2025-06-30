@@ -121,7 +121,6 @@ class KeychainModule(reactContext: ReactApplicationContext) :
       // Android error codes
       const val E_ANDROID_SDK_NOT_SUPPORTED = "E_ANDROID_SDK_NOT_SUPPORTED"
       const val E_KEY_PERMANENTLY_INVALIDATED = "E_KEY_PERMANENTLY_INVALIDATED"
-      const val E_ANDROID_USER_NOT_AUTHENTICATED = "E_ANDROID_USER_NOT_AUTHENTICATED"
     }
   }
 
