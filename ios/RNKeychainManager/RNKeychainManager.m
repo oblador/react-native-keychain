@@ -37,7 +37,7 @@ static NSString * const RNKeychainErrorInvalidParameters = @"E_INVALID_PARAMETER
 // Authentication errors
 static NSString * const RNKeychainErrorPasscodeNotSet = @"E_PASSCODE_NOT_SET";
 static NSString * const RNKeychainErrorBiometricNotEnrolled = @"E_BIOMETRIC_NOT_ENROLLED";
-static NSString * const RNKeychainErrorBiometricHardwareNotPresent = @"E_BIOMETRIC_HARDWARE_NOT_PRESENT";
+static NSString * const RNKeychainErrorBiometricUnavailable = @"E_BIOMETRIC_UNAVAILABLE";
 static NSString * const RNKeychainErrorBiometricLockout = @"E_BIOMETRIC_LOCKOUT";
 static NSString * const RNKeychainErrorAuthInteractionNotAllowed = @"E_AUTH_INTERACTION_NOT_ALLOWED";
 static NSString * const RNKeychainErrorAuthCanceled = @"E_AUTH_CANCELED";
@@ -57,7 +57,7 @@ NSString *laErrorCode(NSError *error)
 
     case LAErrorTouchIDNotAvailable:
     case LAErrorBiometryNotAvailable:
-      return RNKeychainErrorBiometricHardwareNotPresent;
+      return RNKeychainErrorBiometricUnavailable;
 
     case LAErrorTouchIDNotEnrolled:
     case LAErrorBiometryNotEnrolled:

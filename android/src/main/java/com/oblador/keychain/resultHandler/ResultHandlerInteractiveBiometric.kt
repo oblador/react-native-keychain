@@ -100,7 +100,7 @@ open class ResultHandlerInteractiveBiometric(
         KeychainException(errorMessage, Errors.E_BIOMETRIC_TIMEOUT)
 
       BiometricPrompt.ERROR_HW_UNAVAILABLE ->
-        KeychainException(errorMessage, Errors.E_BIOMETRIC_HARDWARE_UNAVAILABLE)
+        KeychainException(errorMessage, Errors.E_BIOMETRIC_TEMPORARILY_UNAVAILABLE)
 
       BiometricPrompt.ERROR_LOCKOUT ->
         KeychainException(errorMessage, Errors.E_BIOMETRIC_LOCKOUT)
@@ -109,7 +109,7 @@ open class ResultHandlerInteractiveBiometric(
         KeychainException(errorMessage, Errors.E_BIOMETRIC_LOCKOUT_PERMANENT)
 
       BiometricPrompt.ERROR_HW_NOT_PRESENT ->
-        KeychainException(errorMessage, Errors.E_BIOMETRIC_HARDWARE_NOT_PRESENT)
+        KeychainException(errorMessage, Errors.E_BIOMETRIC_UNAVAILABLE)
 
       BiometricPrompt.ERROR_NEGATIVE_BUTTON ->
         KeychainException(errorMessage, Errors.E_AUTH_CANCELED)
