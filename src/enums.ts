@@ -142,8 +142,7 @@ export enum STORAGE_TYPE {
  * Enum representing keychain error codes for reliable, language-independent error handling.
  * These codes are returned in the `error.code` property when keychain operations fail.
  *
- * Use these constants instead of parsing error messages for reliable error detection
- * across different device languages and Android versions.
+ * Use these constants instead of parsing error messages for reliable error detection.
  */
 export enum ERRORS {
   // Configuration errors
