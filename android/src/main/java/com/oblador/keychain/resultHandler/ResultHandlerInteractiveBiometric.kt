@@ -111,12 +111,6 @@ open class ResultHandlerInteractiveBiometric(
       BiometricPrompt.ERROR_HW_NOT_PRESENT ->
         KeychainException(errorMessage, Errors.E_BIOMETRIC_HARDWARE_NOT_PRESENT)
 
-      BiometricPrompt.ERROR_NO_SPACE ->
-        KeychainException(errorMessage, Errors.E_BIOMETRIC_INSUFFICIENT_SPACE)
-
-      BiometricPrompt.ERROR_UNABLE_TO_PROCESS ->
-        KeychainException(errorMessage, Errors.E_BIOMETRIC_UNABLE_TO_PROCESS)
-
       BiometricPrompt.ERROR_NEGATIVE_BUTTON ->
         KeychainException(errorMessage, Errors.E_AUTH_CANCELED)
 
