@@ -31,16 +31,21 @@ RCT_EXPORT_MODULE();
   return dispatch_queue_create("com.oblador.KeychainQueue", DISPATCH_QUEUE_SERIAL);
 }
 
-static NSString * const RNKeychainErrorStorageAccess = @"E_STORAGE_ACCESS_ERROR";
+// Configuration errors
 static NSString * const RNKeychainErrorInvalidParameters = @"E_INVALID_PARAMETERS";
-static NSString * const RNKeychainErrorAuthCanceled = @"E_AUTH_CANCELED";
-static NSString * const RNKeychainErrorAuthError = @"E_AUTH_ERROR";
-static NSString * const RNKeychainErrorAuthInteractionNotAllowed = @"E_AUTH_INTERACTION_NOT_ALLOWED";
+
+// Authentication errors
 static NSString * const RNKeychainErrorPasscodeNotSet = @"E_PASSCODE_NOT_SET";
 static NSString * const RNKeychainErrorBiometricNotEnrolled = @"E_BIOMETRIC_NOT_ENROLLED";
 static NSString * const RNKeychainErrorBiometricHardwareNotPresent = @"E_BIOMETRIC_HARDWARE_NOT_PRESENT";
 static NSString * const RNKeychainErrorBiometricLockout = @"E_BIOMETRIC_LOCKOUT";
-static NSString * const RNKeychainErrorUnknown = @"E_UNKNOWN_ERROR";
+static NSString * const RNKeychainErrorAuthInteractionNotAllowed = @"E_AUTH_INTERACTION_NOT_ALLOWED";
+static NSString * const RNKeychainErrorAuthCanceled = @"E_AUTH_CANCELED";
+static NSString * const RNKeychainErrorAuthError = @"E_AUTH_ERROR";
+
+// Misc errors
+static NSString * const RNKeychainErrorStorageAccessError = @"E_STORAGE_ACCESS_ERROR";
+static NSString * const RNKeychainErrorUnknownError = @"E_UNKNOWN_ERROR";
 
 #if TARGET_OS_IOS || TARGET_OS_VISION
 // Maps LocalAuthentication errors to our standardized error codes
@@ -82,32 +87,32 @@ NSDictionary *secErrorInfo(NSError *error)
   switch (error.code) {
     case errSecUnimplemented:
       return @{
-        @"code": RNKeychainErrorStorageAccess,
+        @"code": RNKeychainErrorStorageAccessError,
         @"message": @"Function or operation not implemented."
       };
     case errSecIO:
       return @{
-        @"code": RNKeychainErrorStorageAccess,
+        @"code": RNKeychainErrorStorageAccessError,
         @"message": @"I/O error."
       };
     case errSecOpWr:
       return @{
-        @"code": RNKeychainErrorStorageAccess,
+        @"code": RNKeychainErrorStorageAccessError,
         @"message": @"File already open with write permission."
       };
     case errSecAllocate:
       return @{
-        @"code": RNKeychainErrorStorageAccess,
+        @"code": RNKeychainErrorStorageAccessError,
         @"message": @"Failed to allocate memory."
       };
     case errSecNotAvailable:
       return @{
-        @"code": RNKeychainErrorStorageAccess,
+        @"code": RNKeychainErrorStorageAccessError,
         @"message": @"No keychain is available. You may need to restart your computer."
       };
     case errSecDecode:
       return @{
-        @"code": RNKeychainErrorStorageAccess,
+        @"code": RNKeychainErrorStorageAccessError,
         @"message": @"Unable to decode the provided data."
       };
 
@@ -147,7 +152,7 @@ NSDictionary *secErrorInfo(NSError *error)
 
     default:
       return @{
-        @"code": RNKeychainErrorUnknown,
+        @"code": RNKeychainErrorUnknownError,
         @"message": [NSString stringWithFormat:@"code: %li, msg: %@", (long)error.code, error.localizedDescription]
       };
   }
@@ -178,7 +183,7 @@ NSDictionary *errorInfo(NSError *error)
   }
 
   return @{
-    @"code": RNKeychainErrorUnknown,
+    @"code": RNKeychainErrorUnknownError,
     @"message": [NSString stringWithFormat:@"code: %li, msg: %@", (long)error.code, error.localizedDescription]
   };
 }

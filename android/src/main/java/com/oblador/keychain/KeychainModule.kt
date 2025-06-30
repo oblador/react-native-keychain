@@ -92,22 +92,14 @@ class KeychainModule(reactContext: ReactApplicationContext) :
   /** Known error codes. */
   internal annotation class Errors {
     companion object {
+      // Configuration errors
       const val E_INVALID_PARAMETERS = "E_INVALID_PARAMETERS"
-      const val E_SECURITY_LEVEL_NOT_SUPPORTED = "E_SECURITY_LEVEL_NOT_SUPPORTED"
       const val E_SECURITY_LEVEL_INSUFFICIENT = "E_SECURITY_LEVEL_INSUFFICIENT"
-      const val E_STORAGE_ACCESS_ERROR = "E_STORAGE_ACCESS_ERROR"
-      const val E_INTERNAL_ERROR = "E_INTERNAL_ERROR"
-      const val E_UNKNOWN_ERROR = "E_UNKNOWN_ERROR"
+      const val E_SECURITY_LEVEL_NOT_SUPPORTED = "E_SECURITY_LEVEL_NOT_SUPPORTED"
+      const val E_ANDROID_SDK_NOT_SUPPORTED = "E_ANDROID_SDK_NOT_SUPPORTED"
 
       // Authentication errors
-      const val E_AUTH_CANCELED = "E_AUTH_CANCELED"
-      const val E_AUTH_PERMISSION_DENIED = "E_AUTH_PERMISSION_DENIED"
-      const val E_AUTH_ERROR = "E_AUTH_ERROR"
-
-      // Passcode errors
       const val E_PASSCODE_NOT_SET = "E_PASSCODE_NOT_SET"
-
-      // Biometric errors
       const val E_BIOMETRIC_NOT_ENROLLED = "E_BIOMETRIC_NOT_ENROLLED"
       const val E_BIOMETRIC_TIMEOUT = "E_BIOMETRIC_TIMEOUT"
       const val E_BIOMETRIC_HARDWARE_UNAVAILABLE = "E_BIOMETRIC_HARDWARE_UNAVAILABLE"
@@ -117,10 +109,15 @@ class KeychainModule(reactContext: ReactApplicationContext) :
       const val E_BIOMETRIC_INSUFFICIENT_SPACE = "E_BIOMETRIC_INSUFFICIENT_SPACE"
       const val E_BIOMETRIC_UNABLE_TO_PROCESS = "E_BIOMETRIC_UNABLE_TO_PROCESS"
       const val E_BIOMETRIC_VENDOR_ERROR = "E_BIOMETRIC_VENDOR_ERROR"
+      const val E_AUTH_PERMISSION_DENIED = "E_AUTH_PERMISSION_DENIED"
+      const val E_AUTH_CANCELED = "E_AUTH_CANCELED"
+      const val E_AUTH_ERROR = "E_AUTH_ERROR"
 
-      // Android error codes
-      const val E_ANDROID_SDK_NOT_SUPPORTED = "E_ANDROID_SDK_NOT_SUPPORTED"
+      // Misc errors
+      const val E_STORAGE_ACCESS_ERROR = "E_STORAGE_ACCESS_ERROR"
       const val E_KEY_PERMANENTLY_INVALIDATED = "E_KEY_PERMANENTLY_INVALIDATED"
+      const val E_INTERNAL_ERROR = "E_INTERNAL_ERROR"
+      const val E_UNKNOWN_ERROR = "E_UNKNOWN_ERROR"
     }
   }
 
