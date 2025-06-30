@@ -34,13 +34,12 @@ RCT_EXPORT_MODULE();
 static NSString * const RNKeychainErrorStorageAccess = @"E_STORAGE_ACCESS_ERROR";
 static NSString * const RNKeychainErrorInvalidParameters = @"E_INVALID_PARAMETERS";
 static NSString * const RNKeychainErrorAuthCanceled = @"E_AUTH_CANCELED";
-static NSString * const RNKeychainErrorAuthFailed = @"E_AUTH_FAILED";
+static NSString * const RNKeychainErrorAuthError = @"E_AUTH_ERROR";
 static NSString * const RNKeychainErrorInteractionNotAllowed = @"E_IOS_INTERACTION_NOT_ALLOWED";
 static NSString * const RNKeychainErrorPasscodeNotSet = @"E_PASSCODE_NOT_SET";
 static NSString * const RNKeychainErrorBiometricNotEnrolled = @"E_BIOMETRIC_NOT_ENROLLED";
 static NSString * const RNKeychainErrorBiometricHardwareNotPresent = @"E_BIOMETRIC_HARDWARE_NOT_PRESENT";
 static NSString * const RNKeychainErrorBiometricLockout = @"E_BIOMETRIC_LOCKOUT";
-static NSString * const RNKeychainErrorBiometricError = @"E_BIOMETRIC_ERROR";
 static NSString * const RNKeychainErrorUnknown = @"E_UNKNOWN_ERROR";
 
 #if TARGET_OS_IOS || TARGET_OS_VISION
@@ -64,9 +63,6 @@ NSString *laErrorCode(NSError *error)
     case LAErrorAppCancel:
       return RNKeychainErrorAuthCanceled;
 
-    case LAErrorAuthenticationFailed:
-      return RNKeychainErrorAuthFailed;
-
     case LAErrorTouchIDLockout:
     case LAErrorBiometryLockout:
       return RNKeychainErrorBiometricLockout;
@@ -75,7 +71,7 @@ NSString *laErrorCode(NSError *error)
       return RNKeychainErrorInteractionNotAllowed;
 
     default:
-      return RNKeychainErrorBiometricError;
+      return RNKeychainErrorAuthError;
   }
 }
 #endif
@@ -139,7 +135,7 @@ NSDictionary *secErrorInfo(NSError *error)
 
     case errSecAuthFailed:
       return @{
-        @"code": RNKeychainErrorAuthFailed,
+        @"code": RNKeychainErrorAuthError,
         @"message": @"The user name or passphrase you entered is not correct."
       };
 
@@ -163,7 +159,7 @@ NSDictionary *errorInfo(NSError *error)
     if ([error.domain isEqualToString:LAErrorDomain]) {
       NSString *code = laErrorCode(error);
 
-      if ([code isEqualToString:RNKeychainErrorBiometricError]) {
+      if ([code isEqualToString:RNKeychainErrorAuthError]) {
         return @{
           @"code": code,
           @"message": [NSString stringWithFormat:@"code: %li, msg: %@", (long)error.code, error.localizedDescription]
