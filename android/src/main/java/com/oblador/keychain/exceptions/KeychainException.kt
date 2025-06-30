@@ -9,7 +9,7 @@ class KeychainException : GeneralSecurityException {
   val errorCode: String
 
   constructor(message: String?) : super(message) {
-    this.errorCode = Errors.E_UNKNOWN_ERROR
+    this.errorCode = Errors.E_INTERNAL_ERROR
   }
 
   constructor(message: String?, errorCode: String) : super(message) {
