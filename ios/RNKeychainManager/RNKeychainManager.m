@@ -35,7 +35,7 @@ static NSString * const RNKeychainErrorStorageAccess = @"E_STORAGE_ACCESS_ERROR"
 static NSString * const RNKeychainErrorInvalidParameters = @"E_INVALID_PARAMETERS";
 static NSString * const RNKeychainErrorAuthCanceled = @"E_AUTH_CANCELED";
 static NSString * const RNKeychainErrorAuthError = @"E_AUTH_ERROR";
-static NSString * const RNKeychainErrorInteractionNotAllowed = @"E_IOS_INTERACTION_NOT_ALLOWED";
+static NSString * const RNKeychainErrorAuthInteractionNotAllowed = @"E_AUTH_INTERACTION_NOT_ALLOWED";
 static NSString * const RNKeychainErrorPasscodeNotSet = @"E_PASSCODE_NOT_SET";
 static NSString * const RNKeychainErrorBiometricNotEnrolled = @"E_BIOMETRIC_NOT_ENROLLED";
 static NSString * const RNKeychainErrorBiometricHardwareNotPresent = @"E_BIOMETRIC_HARDWARE_NOT_PRESENT";
@@ -68,7 +68,7 @@ NSString *laErrorCode(NSError *error)
       return RNKeychainErrorBiometricLockout;
 
     case LAErrorNotInteractive:
-      return RNKeychainErrorInteractionNotAllowed;
+      return RNKeychainErrorAuthInteractionNotAllowed;
 
     default:
       return RNKeychainErrorAuthError;
@@ -141,7 +141,7 @@ NSDictionary *secErrorInfo(NSError *error)
 
     case errSecInteractionNotAllowed:
       return @{
-        @"code": RNKeychainErrorInteractionNotAllowed,
+        @"code": RNKeychainErrorAuthInteractionNotAllowed,
         @"message": @"User interaction is not allowed."
       };
 
