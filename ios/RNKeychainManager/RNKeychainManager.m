@@ -7,6 +7,7 @@
 //
 
 #import <Security/Security.h>
+#import <LocalAuthentication/LocalAuthentication.h>
 #import "RNKeychainManager.h"
 #import <React/RCTConvert.h>
 #import <React/RCTBridge.h>
@@ -55,11 +56,9 @@ NSString *laErrorCode(NSError *error)
     case LAErrorPasscodeNotSet:
       return RNKeychainErrorPasscodeNotSet;
 
-    case LAErrorTouchIDNotAvailable:
     case LAErrorBiometryNotAvailable:
       return RNKeychainErrorBiometricUnavailable;
 
-    case LAErrorTouchIDNotEnrolled:
     case LAErrorBiometryNotEnrolled:
       return RNKeychainErrorBiometricNotEnrolled;
 
@@ -68,7 +67,6 @@ NSString *laErrorCode(NSError *error)
     case LAErrorAppCancel:
       return RNKeychainErrorAuthCanceled;
 
-    case LAErrorTouchIDLockout:
     case LAErrorBiometryLockout:
       return RNKeychainErrorBiometricLockout;
 
