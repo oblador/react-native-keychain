@@ -154,7 +154,7 @@ NSDictionary *secErrorInfo(NSError *error)
     default:
       return @{
         @"code": RNKeychainErrorUnknownError,
-        @"message": [NSString stringWithFormat:@"code: %li, msg: %@", (long)error.code, error.localizedDescription]
+        @"message": error.localizedDescription
       };
   }
 }
@@ -164,13 +164,6 @@ NSDictionary *errorInfo(NSError *error)
   #if TARGET_OS_IOS || TARGET_OS_VISION
     if ([error.domain isEqualToString:LAErrorDomain]) {
       NSString *code = laErrorCode(error);
-
-      if ([code isEqualToString:RNKeychainErrorUnknownError]) {
-        return @{
-          @"code": code,
-          @"message": [NSString stringWithFormat:@"code: %li, msg: %@", (long)error.code, error.localizedDescription]
-        };
-      }
 
       return @{
         @"code": code,
@@ -185,7 +178,7 @@ NSDictionary *errorInfo(NSError *error)
 
   return @{
     @"code": RNKeychainErrorUnknownError,
-    @"message": [NSString stringWithFormat:@"code: %li, msg: %@", (long)error.code, error.localizedDescription]
+    @"message": error.localizedDescription
   };
 }
 
