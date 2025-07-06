@@ -44,8 +44,7 @@ open class ResultHandlerInteractiveBiometric(
 
     if (!DeviceAvailability.isPermissionsGranted(reactContext)) {
       val failure = KeychainException(
-        "Could not start biometric Authentication. No permissions granted.",
-        Errors.E_AUTH_PERMISSION_DENIED
+        "Could not start biometric Authentication. No permissions granted."
       )
       when (context.operation) {
         CryptoOperation.ENCRYPT -> onEncrypt(null, failure)
