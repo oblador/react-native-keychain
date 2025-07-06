@@ -73,8 +73,11 @@ NSString *laErrorCode(NSError *error)
     case LAErrorNotInteractive:
       return RNKeychainErrorAuthInteractionNotAllowed;
 
-    default:
+    case LAErrorAuthenticationFailed:
       return RNKeychainErrorAuthError;
+
+    default:
+      return RNKeychainErrorUnknownError;
   }
 }
 #endif
@@ -162,7 +165,7 @@ NSDictionary *errorInfo(NSError *error)
     if ([error.domain isEqualToString:LAErrorDomain]) {
       NSString *code = laErrorCode(error);
 
-      if ([code isEqualToString:RNKeychainErrorAuthError]) {
+      if ([code isEqualToString:RNKeychainErrorUnknownError]) {
         return @{
           @"code": code,
           @"message": [NSString stringWithFormat:@"code: %li, msg: %@", (long)error.code, error.localizedDescription]

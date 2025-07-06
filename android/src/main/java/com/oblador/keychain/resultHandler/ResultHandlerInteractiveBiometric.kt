@@ -120,7 +120,7 @@ open class ResultHandlerInteractiveBiometric(
         KeychainException(errorMessage, Errors.E_BIOMETRIC_VENDOR_ERROR)
 
       else ->
-        KeychainException("code: $errorCode, msg: $errorMessage", Errors.E_AUTH_ERROR)
+        KeychainException(errorMessage, Errors.E_AUTH_ERROR)
     }
   }
 
