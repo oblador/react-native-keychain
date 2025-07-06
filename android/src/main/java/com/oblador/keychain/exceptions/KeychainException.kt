@@ -17,7 +17,7 @@ class KeychainException : GeneralSecurityException {
 
   constructor(message: String?, t: Throwable?) : super(message, t) {
     this.errorCode = when (t) {
-      is KeyPermanentlyInvalidatedException -> Errors.E_KEY_PERMANENTLY_INVALIDATED
+      is KeyPermanentlyInvalidatedException -> Errors.E_AUTH_INVALIDATED
       is KeychainException -> t.errorCode
       else -> Errors.E_UNKNOWN_ERROR
     }
