@@ -144,7 +144,7 @@ export enum STORAGE_TYPE {
  *
  * Use these constants instead of parsing error messages for reliable error detection.
  */
-export enum ERRORS {
+export enum ERROR_CODE {
   // Configuration errors
   INVALID_PARAMETERS = 'E_INVALID_PARAMETERS',
   SECURITY_LEVEL_INSUFFICIENT = 'E_SECURITY_LEVEL_INSUFFICIENT',
