@@ -145,9 +145,6 @@ export enum STORAGE_TYPE {
  * Use these constants instead of parsing error messages for reliable error detection.
  */
 export enum ERROR_CODE {
-  // Configuration errors
-  INVALID_PARAMETERS = 'E_INVALID_PARAMETERS',
-
   // Authentication errors
   PASSCODE_NOT_SET = 'E_PASSCODE_NOT_SET',
   BIOMETRIC_NOT_ENROLLED = 'E_BIOMETRIC_NOT_ENROLLED',
@@ -163,6 +160,7 @@ export enum ERROR_CODE {
   AUTH_ERROR = 'E_AUTH_ERROR',
 
   // Misc errors
+  INVALID_PARAMETERS = 'E_INVALID_PARAMETERS',
   STORAGE_ACCESS_ERROR = 'E_STORAGE_ACCESS_ERROR',
   INTERNAL_ERROR = 'E_INTERNAL_ERROR',
   UNKNOWN_ERROR = 'E_UNKNOWN_ERROR',

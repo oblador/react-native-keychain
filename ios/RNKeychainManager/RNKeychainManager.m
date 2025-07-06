@@ -32,9 +32,6 @@ RCT_EXPORT_MODULE();
   return dispatch_queue_create("com.oblador.KeychainQueue", DISPATCH_QUEUE_SERIAL);
 }
 
-// Configuration errors
-static NSString * const RNKeychainErrorInvalidParameters = @"E_INVALID_PARAMETERS";
-
 // Authentication errors
 static NSString * const RNKeychainErrorPasscodeNotSet = @"E_PASSCODE_NOT_SET";
 static NSString * const RNKeychainErrorBiometricNotEnrolled = @"E_BIOMETRIC_NOT_ENROLLED";
@@ -45,6 +42,7 @@ static NSString * const RNKeychainErrorAuthCanceled = @"E_AUTH_CANCELED";
 static NSString * const RNKeychainErrorAuthError = @"E_AUTH_ERROR";
 
 // Misc errors
+static NSString * const RNKeychainErrorInvalidParameters = @"E_INVALID_PARAMETERS";
 static NSString * const RNKeychainErrorStorageAccessError = @"E_STORAGE_ACCESS_ERROR";
 static NSString * const RNKeychainErrorUnknownError = @"E_UNKNOWN_ERROR";
 

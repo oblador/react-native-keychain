@@ -92,9 +92,6 @@ class KeychainModule(reactContext: ReactApplicationContext) :
   /** Known error codes. */
   internal annotation class Errors {
     companion object {
-      // Configuration errors
-      const val E_INVALID_PARAMETERS = "E_INVALID_PARAMETERS"
-
       // Authentication errors
       const val E_PASSCODE_NOT_SET = "E_PASSCODE_NOT_SET"
       const val E_BIOMETRIC_NOT_ENROLLED = "E_BIOMETRIC_NOT_ENROLLED"
@@ -109,6 +106,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
       const val E_AUTH_ERROR = "E_AUTH_ERROR"
 
       // Misc errors
+      const val E_INVALID_PARAMETERS = "E_INVALID_PARAMETERS"
       const val E_STORAGE_ACCESS_ERROR = "E_STORAGE_ACCESS_ERROR"
       const val E_INTERNAL_ERROR = "E_INTERNAL_ERROR"
       const val E_UNKNOWN_ERROR = "E_UNKNOWN_ERROR"
