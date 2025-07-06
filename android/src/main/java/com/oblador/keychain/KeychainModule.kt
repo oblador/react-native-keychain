@@ -94,9 +94,6 @@ class KeychainModule(reactContext: ReactApplicationContext) :
     companion object {
       // Configuration errors
       const val E_INVALID_PARAMETERS = "E_INVALID_PARAMETERS"
-      const val E_SECURITY_LEVEL_INSUFFICIENT = "E_SECURITY_LEVEL_INSUFFICIENT"
-      const val E_SECURITY_LEVEL_NOT_SUPPORTED = "E_SECURITY_LEVEL_NOT_SUPPORTED"
-      const val E_ANDROID_SDK_NOT_SUPPORTED = "E_ANDROID_SDK_NOT_SUPPORTED"
 
       // Authentication errors
       const val E_PASSCODE_NOT_SET = "E_PASSCODE_NOT_SET"
@@ -613,7 +610,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
       foundCipher = variant
     }
     if (foundCipher == null) {
-      throw KeychainException("Unsupported Android SDK " + Build.VERSION.SDK_INT, Errors.E_ANDROID_SDK_NOT_SUPPORTED)
+      throw KeychainException("Unsupported Android SDK " + Build.VERSION.SDK_INT, Errors.E_INVALID_PARAMETERS)
     }
     Log.d(KEYCHAIN_MODULE, "Selected storage: " + foundCipher.getCipherStorageName())
     return foundCipher
@@ -829,7 +826,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
           level.name,
           storage.securityLevel().name
         ),
-        Errors.E_SECURITY_LEVEL_INSUFFICIENT
+        Errors.E_INVALID_PARAMETERS
       )
     }
 

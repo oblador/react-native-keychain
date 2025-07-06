@@ -170,7 +170,7 @@ abstract class CipherStorageBase(protected val applicationContext: Context) : Ci
     if (!securityLevel().satisfiesSafetyThreshold(level)) {
       throw KeychainException(
         "Insufficient security level (wants $level; got ${securityLevel()})",
-        Errors.E_SECURITY_LEVEL_INSUFFICIENT
+        Errors.E_INVALID_PARAMETERS
       )
     }
   }
@@ -404,7 +404,7 @@ abstract class CipherStorageBase(protected val applicationContext: Context) : Ci
     }
 
     if (!validateKeySecurityLevel(requiredLevel, secretKey!!)) {
-      throw KeychainException("Cannot generate keys with required security guarantees", Errors.E_SECURITY_LEVEL_NOT_SUPPORTED)
+      throw KeychainException("Cannot generate keys with required security guarantees", Errors.E_INVALID_PARAMETERS)
     }
   }
 
