@@ -44,7 +44,7 @@ static NSString * const RNKeychainErrorAuthError = @"E_AUTH_ERROR";
 // Misc errors
 static NSString * const RNKeychainErrorInvalidParameters = @"E_INVALID_PARAMETERS";
 static NSString * const RNKeychainErrorStorageAccessError = @"E_STORAGE_ACCESS_ERROR";
-static NSString * const RNKeychainErrorUnknownError = @"E_UNKNOWN_ERROR";
+static NSString * const RNKeychainErrorInternalError = @"E_INTERNAL_ERROR";
 
 #if TARGET_OS_IOS || TARGET_OS_VISION
 // Maps LocalAuthentication errors to our standardized error codes
@@ -75,7 +75,7 @@ NSString *laErrorCode(NSError *error)
       return RNKeychainErrorAuthError;
 
     default:
-      return RNKeychainErrorUnknownError;
+      return RNKeychainErrorInternalError;
   }
 }
 #endif
@@ -151,7 +151,7 @@ NSDictionary *secErrorInfo(NSError *error)
 
     default:
       return @{
-        @"code": RNKeychainErrorUnknownError,
+        @"code": RNKeychainErrorInternalError,
         @"message": error.localizedDescription
       };
   }
@@ -175,7 +175,7 @@ NSDictionary *errorInfo(NSError *error)
   }
 
   return @{
-    @"code": RNKeychainErrorUnknownError,
+    @"code": RNKeychainErrorInternalError,
     @"message": error.localizedDescription
   };
 }

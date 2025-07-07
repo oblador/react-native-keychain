@@ -19,7 +19,7 @@ class KeychainException : GeneralSecurityException {
     this.errorCode = when (t) {
       is KeyPermanentlyInvalidatedException -> Errors.E_AUTH_INVALIDATED
       is KeychainException -> t.errorCode
-      else -> Errors.E_UNKNOWN_ERROR
+      else -> Errors.E_INTERNAL_ERROR
     }
   }
 }

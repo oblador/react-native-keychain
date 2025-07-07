@@ -109,7 +109,6 @@ class KeychainModule(reactContext: ReactApplicationContext) :
       const val E_INVALID_PARAMETERS = "E_INVALID_PARAMETERS"
       const val E_STORAGE_ACCESS_ERROR = "E_STORAGE_ACCESS_ERROR"
       const val E_INTERNAL_ERROR = "E_INTERNAL_ERROR"
-      const val E_UNKNOWN_ERROR = "E_UNKNOWN_ERROR"
     }
   }
 
@@ -217,7 +216,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
           promise.reject(e.errorCode, e)
         } catch (fail: Throwable) {
           Log.e(KEYCHAIN_MODULE, fail.message, fail)
-          promise.reject(Errors.E_UNKNOWN_ERROR, fail)
+          promise.reject(Errors.E_INTERNAL_ERROR, fail)
         }
       }
     }
@@ -286,7 +285,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
           promise.reject(e.errorCode, e)
         } catch (fail: Throwable) {
           Log.e(KEYCHAIN_MODULE, fail.message, fail)
-          promise.reject(Errors.E_UNKNOWN_ERROR, fail)
+          promise.reject(Errors.E_INTERNAL_ERROR, fail)
         }
       }
     }
@@ -343,7 +342,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
       promise.reject(Errors.E_STORAGE_ACCESS_ERROR, e)
     } catch (fail: Throwable) {
       Log.e(KEYCHAIN_MODULE, fail.message, fail)
-      promise.reject(Errors.E_UNKNOWN_ERROR, fail)
+      promise.reject(Errors.E_INTERNAL_ERROR, fail)
     }
   }
 
@@ -408,7 +407,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
       promise.resolve(reply)
     } catch (fail: Throwable) {
       Log.e(KEYCHAIN_MODULE, fail.message, fail)
-      promise.reject(Errors.E_UNKNOWN_ERROR, fail)
+      promise.reject(Errors.E_INTERNAL_ERROR, fail)
     }
   }
 
@@ -430,7 +429,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
       promise.resolve(reply)
     } catch (fail: Throwable) {
       Log.e(KEYCHAIN_MODULE, fail.message, fail)
-      promise.reject(Errors.E_UNKNOWN_ERROR, fail)
+      promise.reject(Errors.E_INTERNAL_ERROR, fail)
     }
   }
 
