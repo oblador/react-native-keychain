@@ -137,3 +137,30 @@ export enum STORAGE_TYPE {
    */
   RSA = 'KeystoreRSAECB',
 }
+
+/**
+ * Enum representing keychain error codes for reliable, language-independent error handling.
+ * These codes are returned in the `error.code` property when keychain operations fail.
+ *
+ * Use these constants instead of parsing error messages for reliable error detection.
+ */
+export enum ERROR_CODE {
+  // Authentication errors
+  PASSCODE_NOT_SET = 'E_PASSCODE_NOT_SET',
+  BIOMETRIC_NOT_ENROLLED = 'E_BIOMETRIC_NOT_ENROLLED',
+  BIOMETRIC_TIMEOUT = 'E_BIOMETRIC_TIMEOUT',
+  BIOMETRIC_LOCKOUT = 'E_BIOMETRIC_LOCKOUT',
+  BIOMETRIC_LOCKOUT_PERMANENT = 'E_BIOMETRIC_LOCKOUT_PERMANENT',
+  BIOMETRIC_TEMPORARILY_UNAVAILABLE = 'E_BIOMETRIC_TEMPORARILY_UNAVAILABLE',
+  BIOMETRIC_UNAVAILABLE = 'E_BIOMETRIC_UNAVAILABLE',
+  BIOMETRIC_VENDOR_ERROR = 'E_BIOMETRIC_VENDOR_ERROR',
+  AUTH_INTERACTION_NOT_ALLOWED = 'E_AUTH_INTERACTION_NOT_ALLOWED',
+  AUTH_INVALIDATED = 'E_AUTH_INVALIDATED',
+  AUTH_CANCELED = 'E_AUTH_CANCELED',
+  AUTH_ERROR = 'E_AUTH_ERROR',
+
+  // Misc errors
+  INVALID_PARAMETERS = 'E_INVALID_PARAMETERS',
+  STORAGE_ACCESS_ERROR = 'E_STORAGE_ACCESS_ERROR',
+  INTERNAL_ERROR = 'E_INTERNAL_ERROR',
+}

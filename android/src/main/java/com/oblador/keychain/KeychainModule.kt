@@ -22,7 +22,7 @@ import com.oblador.keychain.cipherStorage.CipherStorageKeystoreAesGcm
 import com.oblador.keychain.cipherStorage.CipherStorageKeystoreRsaEcb
 import com.oblador.keychain.resultHandler.ResultHandler
 import com.oblador.keychain.resultHandler.ResultHandlerProvider
-import com.oblador.keychain.exceptions.CryptoFailedException
+import com.oblador.keychain.exceptions.KeychainException
 import com.oblador.keychain.exceptions.EmptyParameterException
 import com.oblador.keychain.exceptions.KeyStoreAccessException
 import kotlinx.coroutines.CoroutineScope
@@ -92,13 +92,23 @@ class KeychainModule(reactContext: ReactApplicationContext) :
   /** Known error codes. */
   internal annotation class Errors {
     companion object {
-      const val E_EMPTY_PARAMETERS = "E_EMPTY_PARAMETERS"
-      const val E_CRYPTO_FAILED = "E_CRYPTO_FAILED"
-      const val E_KEYSTORE_ACCESS_ERROR = "E_KEYSTORE_ACCESS_ERROR"
-      const val E_SUPPORTED_BIOMETRY_ERROR = "E_SUPPORTED_BIOMETRY_ERROR"
+      // Authentication errors
+      const val E_PASSCODE_NOT_SET = "E_PASSCODE_NOT_SET"
+      const val E_BIOMETRIC_NOT_ENROLLED = "E_BIOMETRIC_NOT_ENROLLED"
+      const val E_BIOMETRIC_TIMEOUT = "E_BIOMETRIC_TIMEOUT"
+      const val E_BIOMETRIC_LOCKOUT = "E_BIOMETRIC_LOCKOUT"
+      const val E_BIOMETRIC_LOCKOUT_PERMANENT = "E_BIOMETRIC_LOCKOUT_PERMANENT"
+      const val E_BIOMETRIC_TEMPORARILY_UNAVAILABLE = "E_BIOMETRIC_TEMPORARILY_UNAVAILABLE"
+      const val E_BIOMETRIC_UNAVAILABLE = "E_BIOMETRIC_UNAVAILABLE"
+      const val E_BIOMETRIC_VENDOR_ERROR = "E_BIOMETRIC_VENDOR_ERROR"
+      const val E_AUTH_INVALIDATED = "E_AUTH_INVALIDATED"
+      const val E_AUTH_CANCELED = "E_AUTH_CANCELED"
+      const val E_AUTH_ERROR = "E_AUTH_ERROR"
 
-      /** Raised for unexpected errors. */
-      const val E_UNKNOWN_ERROR = "E_UNKNOWN_ERROR"
+      // Misc errors
+      const val E_INVALID_PARAMETERS = "E_INVALID_PARAMETERS"
+      const val E_STORAGE_ACCESS_ERROR = "E_STORAGE_ACCESS_ERROR"
+      const val E_INTERNAL_ERROR = "E_INTERNAL_ERROR"
     }
   }
 
@@ -200,13 +210,13 @@ class KeychainModule(reactContext: ReactApplicationContext) :
           promise.resolve(results)
         } catch (e: EmptyParameterException) {
           Log.e(KEYCHAIN_MODULE, e.message, e)
-          promise.reject(Errors.E_EMPTY_PARAMETERS, e)
-        } catch (e: CryptoFailedException) {
+          promise.reject(Errors.E_INVALID_PARAMETERS, e)
+        } catch (e: KeychainException) {
           Log.e(KEYCHAIN_MODULE, e.message, e)
-          promise.reject(Errors.E_CRYPTO_FAILED, e)
+          promise.reject(e.errorCode, e)
         } catch (fail: Throwable) {
           Log.e(KEYCHAIN_MODULE, fail.message, fail)
-          promise.reject(Errors.E_UNKNOWN_ERROR, fail)
+          promise.reject(Errors.E_INTERNAL_ERROR, fail)
         }
       }
     }
@@ -224,7 +234,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
   }
 
   /** Get Cipher storage instance based on user provided options. */
-  @Throws(CryptoFailedException::class)
+  @Throws(KeychainException::class)
   private fun getSelectedStorage(options: ReadableMap?): CipherStorage {
     val accessControl = getAccessControlOrDefault(options)
     val useBiometry = getUseBiometry(accessControl)
@@ -269,13 +279,13 @@ class KeychainModule(reactContext: ReactApplicationContext) :
           promise.resolve(credentials)
         } catch (e: KeyStoreAccessException) {
           Log.e(KEYCHAIN_MODULE, e.message!!)
-          promise.reject(Errors.E_KEYSTORE_ACCESS_ERROR, e)
-        } catch (e: CryptoFailedException) {
+          promise.reject(Errors.E_STORAGE_ACCESS_ERROR, e)
+        } catch (e: KeychainException) {
           Log.e(KEYCHAIN_MODULE, e.message!!)
-          promise.reject(Errors.E_CRYPTO_FAILED, e)
+          promise.reject(e.errorCode, e)
         } catch (fail: Throwable) {
           Log.e(KEYCHAIN_MODULE, fail.message, fail)
-          promise.reject(Errors.E_UNKNOWN_ERROR, fail)
+          promise.reject(Errors.E_INTERNAL_ERROR, fail)
         }
       }
     }
@@ -287,7 +297,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
       val services = doGetAllGenericPasswordServices()
       promise.resolve(Arguments.makeNativeArray<Any>(services.toTypedArray()))
     } catch (e: KeyStoreAccessException) {
-      promise.reject(Errors.E_KEYSTORE_ACCESS_ERROR, e)
+      promise.reject(Errors.E_STORAGE_ACCESS_ERROR, e)
     }
   }
 
@@ -329,10 +339,10 @@ class KeychainModule(reactContext: ReactApplicationContext) :
       promise.resolve(true)
     } catch (e: KeyStoreAccessException) {
       Log.e(KEYCHAIN_MODULE, e.message!!)
-      promise.reject(Errors.E_KEYSTORE_ACCESS_ERROR, e)
+      promise.reject(Errors.E_STORAGE_ACCESS_ERROR, e)
     } catch (fail: Throwable) {
       Log.e(KEYCHAIN_MODULE, fail.message, fail)
-      promise.reject(Errors.E_UNKNOWN_ERROR, fail)
+      promise.reject(Errors.E_INTERNAL_ERROR, fail)
     }
   }
 
@@ -397,7 +407,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
       promise.resolve(reply)
     } catch (fail: Throwable) {
       Log.e(KEYCHAIN_MODULE, fail.message, fail)
-      promise.reject(Errors.E_UNKNOWN_ERROR, fail)
+      promise.reject(Errors.E_INTERNAL_ERROR, fail)
     }
   }
 
@@ -417,12 +427,9 @@ class KeychainModule(reactContext: ReactApplicationContext) :
         }
       }
       promise.resolve(reply)
-    } catch (e: Exception) {
-      Log.e(KEYCHAIN_MODULE, e.message, e)
-      promise.reject(Errors.E_SUPPORTED_BIOMETRY_ERROR, e)
     } catch (fail: Throwable) {
       Log.e(KEYCHAIN_MODULE, fail.message, fail)
-      promise.reject(Errors.E_UNKNOWN_ERROR, fail)
+      promise.reject(Errors.E_INTERNAL_ERROR, fail)
     }
   }
 
@@ -442,7 +449,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
    * Extract credentials from current storage. In case if current storage is not matching results
    * set then executed migration.
    */
-  @Throws(CryptoFailedException::class, KeyStoreAccessException::class)
+  @Throws(KeychainException::class, KeyStoreAccessException::class)
   private suspend fun decryptCredentials(
     alias: String,
     current: CipherStorage,
@@ -472,7 +479,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
   }
 
   /** Try to decrypt with provided storage. */
-  @Throws(CryptoFailedException::class)
+  @Throws(KeychainException::class)
   private suspend fun decryptToResult(
     alias: String,
     storage: CipherStorage,
@@ -487,15 +494,18 @@ class KeychainModule(reactContext: ReactApplicationContext) :
       resultSet.password!!,
       SecurityLevel.ANY
     )
-    CryptoFailedException.reThrowOnError(handler.error)
-    if (null == handler.decryptionResult) {
-      throw CryptoFailedException("No decryption results and no error. Something deeply wrong!")
+    val error = handler.error
+    if (error != null) {
+      throw KeychainException(error.message, error)
+    }
+    if (handler.decryptionResult == null) {
+      throw KeychainException("No decryption results and no error. Something deeply wrong!")
     }
     return handler.decryptionResult!!
   }
 
   /** Try to encrypt with provided storage. */
-  @Throws(CryptoFailedException::class)
+  @Throws(KeychainException::class)
   private suspend fun encryptToResult(
     alias: String,
     storage: CipherStorage,
@@ -506,9 +516,12 @@ class KeychainModule(reactContext: ReactApplicationContext) :
   ): CipherStorage.EncryptionResult {
     val handler = getInteractiveHandler(storage, promptInfo)
     storage.encrypt(handler, alias, username, password, securityLevel)
-    CryptoFailedException.reThrowOnError(handler.error)
-    if (null == handler.encryptionResult) {
-      throw CryptoFailedException("No decryption results and no error. Something deeply wrong!")
+    val error = handler.error
+    if (error != null) {
+      throw KeychainException(error.message, error)
+    }
+    if (handler.encryptionResult == null) {
+      throw KeychainException("No encryption results and no error. Something deeply wrong!")
     }
     return handler.encryptionResult!!
   }
@@ -526,7 +539,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
   /* package */
   @Throws(
     KeyStoreAccessException::class,
-    CryptoFailedException::class,
+    KeychainException::class,
     IllegalArgumentException::class
   )
   private suspend fun migrateCipherStorage(
@@ -563,7 +576,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
    * The "Current" CipherStorage is the cipherStorage with the highest API level that is lower than
    * or equal to the current API level. Parameter allow to reduce level.
    */
-  @Throws(CryptoFailedException::class)
+  @Throws(KeychainException::class)
   fun getCipherStorageForCurrentAPILevel(
     useBiometry: Boolean,
     usePasscode: Boolean
@@ -594,7 +607,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
       foundCipher = variant
     }
     if (foundCipher == null) {
-      throw CryptoFailedException("Unsupported Android SDK " + Build.VERSION.SDK_INT)
+      throw KeychainException("Unsupported Android SDK " + Build.VERSION.SDK_INT, Errors.E_INVALID_PARAMETERS)
     }
     Log.d(KEYCHAIN_MODULE, "Selected storage: " + foundCipher.getCipherStorageName())
     return foundCipher
@@ -641,7 +654,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
       if (isSecureHardwareAvailable) {
         SecurityLevel.SECURE_HARDWARE
       } else SecurityLevel.SECURE_SOFTWARE
-    } catch (e: CryptoFailedException) {
+    } catch (e: KeychainException) {
       Log.w(KEYCHAIN_MODULE, "Security Level Exception: " + e.message, e)
       SecurityLevel.ANY
     }
@@ -799,17 +812,18 @@ class KeychainModule(reactContext: ReactApplicationContext) :
     /**
      * Throw exception if required security level does not match storage provided security level.
      */
-    @Throws(CryptoFailedException::class)
+    @Throws(KeychainException::class)
     fun throwIfInsufficientLevel(storage: CipherStorage, level: SecurityLevel) {
       if (storage.securityLevel().satisfiesSafetyThreshold(level)) {
         return
       }
-      throw CryptoFailedException(
+      throw KeychainException(
         String.format(
           "Cipher Storage is too weak. Required security level is: %s, but only %s is provided",
           level.name,
           storage.securityLevel().name
-        )
+        ),
+        Errors.E_INVALID_PARAMETERS
       )
     }
 

@@ -2,7 +2,7 @@ package com.oblador.keychain.cipherStorage
 
 import com.oblador.keychain.SecurityLevel
 import com.oblador.keychain.resultHandler.ResultHandler
-import com.oblador.keychain.exceptions.CryptoFailedException
+import com.oblador.keychain.exceptions.KeychainException
 import com.oblador.keychain.exceptions.KeyStoreAccessException
 
 @Suppress("unused", "MemberVisibilityCanBePrivate")
@@ -44,10 +44,10 @@ interface CipherStorage {
   /**
    * Encrypt credentials with provided key (by alias) and required security level.
    *
-   * @throws CryptoFailedException If encryption fails.
+   * @throws KeychainException If encryption fails.
    */
 
-  @Throws(CryptoFailedException::class)
+  @Throws(KeychainException::class)
   fun encrypt(
     handler: ResultHandler,
     alias: String,
@@ -60,9 +60,9 @@ interface CipherStorage {
   /**
    * Decrypt the credentials but redirect results of operation to handler.
    *
-   * @throws CryptoFailedException If decryption fails.
+   * @throws KeychainException If decryption fails.
    */
-  @Throws(CryptoFailedException::class)
+  @Throws(KeychainException::class)
   fun decrypt(
     handler: ResultHandler,
     alias: String,
