@@ -1,7 +1,8 @@
 {
-  "name": "react-native-keychain",
+  "name": "@jabrahearing/react-native-keychain",
   "version": "10.0.0",
   "description": "Keychain Access for React Native",
+  "private": false,
   "main": "./lib/commonjs/index.js",
   "module": "./lib/module/index",
   "types": "./lib/typescript/index.d.ts",

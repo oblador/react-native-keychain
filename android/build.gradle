@@ -73,7 +73,8 @@ dependencies {
   implementation 'androidx.fragment:fragment-ktx:1.8.6'
 
   // https://mvnrepository.com/artifact/androidx.biometric/biometric
-  implementation 'androidx.biometric:biometric:1.1.0@aar'
+  //implementation 'androidx.biometric:biometric:1.1.0@aar'
+  implementation files('libs/biometric.aar')
 
   // https://mvnrepository.com/artifact/androidx.lifecycle/lifecycle-viewmodel
   // Needed for BiometricPrompt in androidx.biometric
