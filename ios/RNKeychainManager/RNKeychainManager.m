@@ -321,9 +321,11 @@ SecAccessControlCreateFlags accessControlValue(NSDictionary *options)
   if (accessControl) {
     NSError *aerr = nil;
     #if TARGET_OS_IOS || TARGET_OS_VISION
-    [[LAContext new] canEvaluatePolicy:LAPolicyDeviceOwnerAuthentication error:&aerr];
-    if (aerr) {
-      return rejectWithError(reject, aerr);
+    BOOL canAuthenticate = [[LAContext new] canEvaluatePolicy:LAPolicyDeviceOwnerAuthentication error:&aerr];
+    if (aerr || !canAuthenticate) {
+      NSError *authError = aerr ?: [NSError errorWithDomain:@"RNKeychainManager" code:-1 userInfo:@{NSLocalizedDescriptionKey: @"Authentication policy cannot be evaluated."}];
+
+      return rejectWithError(reject, authError);
     }
     #endif
 
