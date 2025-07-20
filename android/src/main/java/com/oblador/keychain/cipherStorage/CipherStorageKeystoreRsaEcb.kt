@@ -65,8 +65,28 @@ class CipherStorageKeystoreRsaEcb(reactContext: ReactApplicationContext) :
             extractGeneratedKey(safeAlias, level, retries)
             val result = innerEncryptedCredentials(safeAlias, password, username)
             handler.onEncrypt(result, null)
-        } catch (e: Exception) {
-            throw KeychainException(e.message, e)
+        } catch (fail: Throwable) {
+            when (e) {
+                is NoSuchAlgorithmException,
+                is InvalidKeySpecException,
+                is NoSuchPaddingException,
+                is InvalidKeyException -> {
+                   throw KeychainException("Could not encrypt data with alias $safeAlias, error: ${fail.message}", fail)
+                }
+
+                is KeyStoreException,
+                is KeyStoreAccessException -> {
+                    throw KeychainException("Could not access Keystore with alias $safeAlias, error: ${fail.message}", fail)
+                }
+
+                is IOException -> {
+                    throw KeychainException("I/O error with alias $safeAlias, error: ${fail.message}", fail)
+                }
+
+                else -> {
+                    throw KeychainException("Unknown error encrypting data with alias $safeAlias, error: ${fail.message}", fail)
+                }
+            }
         }
     }
 

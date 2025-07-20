@@ -95,8 +95,8 @@ class CipherStorageKeystoreAesCbc(reactContext: ReactApplicationContext) :
                 encryptString(key, username), encryptString(key, password), this
             )
             handler.onEncrypt(result, null)
-        } catch (e: Throwable) {
-            throw KeychainException(e.message, e)
+        } catch (fail: Throwable) {
+            throw KeychainException("Could not encrypt data with alias: $alias, error: ${fail.message}", fail)
         }
     }
 
@@ -124,7 +124,7 @@ class CipherStorageKeystoreAesCbc(reactContext: ReactApplicationContext) :
             )
             handler.onDecrypt(results, null)
         } catch (e: GeneralSecurityException) {
-            throw KeychainException(e.message, e)
+            throw KeychainException("Could not decrypt data with alias: $alias, error: ${e.message}", e)
         } catch (fail: Throwable) {
             handler.onDecrypt(null, fail)
         }
