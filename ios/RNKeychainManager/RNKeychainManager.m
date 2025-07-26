@@ -7,6 +7,7 @@
 //
 
 #import <Security/Security.h>
+#import <LocalAuthentication/LocalAuthentication.h>
 #import "RNKeychainManager.h"
 #import <React/RCTConvert.h>
 #import <React/RCTBridge.h>
@@ -31,65 +32,158 @@ RCT_EXPORT_MODULE();
   return dispatch_queue_create("com.oblador.KeychainQueue", DISPATCH_QUEUE_SERIAL);
 }
 
-// Messages from the comments in <Security/SecBase.h>
-NSString *messageForError(NSError *error)
+// Authentication errors
+static NSString * const RNKeychainErrorPasscodeNotSet = @"E_PASSCODE_NOT_SET";
+static NSString * const RNKeychainErrorBiometricNotEnrolled = @"E_BIOMETRIC_NOT_ENROLLED";
+static NSString * const RNKeychainErrorBiometricUnavailable = @"E_BIOMETRIC_UNAVAILABLE";
+static NSString * const RNKeychainErrorBiometricLockout = @"E_BIOMETRIC_LOCKOUT";
+static NSString * const RNKeychainErrorAuthInteractionNotAllowed = @"E_AUTH_INTERACTION_NOT_ALLOWED";
+static NSString * const RNKeychainErrorAuthCanceled = @"E_AUTH_CANCELED";
+static NSString * const RNKeychainErrorAuthError = @"E_AUTH_ERROR";
+
+// Misc errors
+static NSString * const RNKeychainErrorInvalidParameters = @"E_INVALID_PARAMETERS";
+static NSString * const RNKeychainErrorStorageAccessError = @"E_STORAGE_ACCESS_ERROR";
+static NSString * const RNKeychainErrorInternalError = @"E_INTERNAL_ERROR";
+
+#if TARGET_OS_IOS || TARGET_OS_VISION
+// Maps LocalAuthentication errors to our standardized error codes
+NSString *laErrorCode(NSError *error)
+{
+  switch (error.code) {
+    case LAErrorPasscodeNotSet:
+      return RNKeychainErrorPasscodeNotSet;
+
+    case LAErrorBiometryNotAvailable:
+      return RNKeychainErrorBiometricUnavailable;
+
+    case LAErrorBiometryNotEnrolled:
+      return RNKeychainErrorBiometricNotEnrolled;
+
+    case LAErrorUserCancel:
+    case LAErrorSystemCancel:
+    case LAErrorAppCancel:
+      return RNKeychainErrorAuthCanceled;
+
+    case LAErrorBiometryLockout:
+      return RNKeychainErrorBiometricLockout;
+
+    case LAErrorNotInteractive:
+      return RNKeychainErrorAuthInteractionNotAllowed;
+
+    case LAErrorAuthenticationFailed:
+      return RNKeychainErrorAuthError;
+
+    default:
+      return RNKeychainErrorInternalError;
+  }
+}
+#endif
+
+// Maps Security Framework errors to our standardized error codes
+NSDictionary *secErrorInfo(NSError *error)
 {
   switch (error.code) {
     case errSecUnimplemented:
-      return @"Function or operation not implemented.";
-
+      return @{
+        @"code": RNKeychainErrorStorageAccessError,
+        @"message": @"Function or operation not implemented."
+      };
     case errSecIO:
-      return @"I/O error.";
-
+      return @{
+        @"code": RNKeychainErrorStorageAccessError,
+        @"message": @"I/O error."
+      };
     case errSecOpWr:
-      return @"File already open with with write permission.";
+      return @{
+        @"code": RNKeychainErrorStorageAccessError,
+        @"message": @"File already open with write permission."
+      };
+    case errSecAllocate:
+      return @{
+        @"code": RNKeychainErrorStorageAccessError,
+        @"message": @"Failed to allocate memory."
+      };
+    case errSecNotAvailable:
+      return @{
+        @"code": RNKeychainErrorStorageAccessError,
+        @"message": @"No keychain is available. You may need to restart your computer."
+      };
+    case errSecDecode:
+      return @{
+        @"code": RNKeychainErrorStorageAccessError,
+        @"message": @"Unable to decode the provided data."
+      };
 
     case errSecParam:
-      return @"One or more parameters passed to a function where not valid.";
-
-    case errSecAllocate:
-      return @"Failed to allocate memory.";
+      return @{
+        @"code": RNKeychainErrorInvalidParameters,
+        @"message": @"One or more parameters passed to a function where not valid."
+      };
+    case errSecBadReq:
+      return @{
+        @"code": RNKeychainErrorInvalidParameters,
+        @"message": @"Bad parameter or invalid state for operation."
+      };
+    case errSecMissingEntitlement:
+      return @{
+        @"code": RNKeychainErrorInvalidParameters,
+        @"message": @"Internal error when a required entitlement isn't present."
+      };
 
     case errSecUserCanceled:
-      return @"User canceled the operation.";
-
-    case errSecBadReq:
-      return @"Bad parameter or invalid state for operation.";
-
-    case errSecNotAvailable:
-      return @"No keychain is available. You may need to restart your computer.";
-
-    case errSecDuplicateItem:
-      return @"The specified item already exists in the keychain.";
-
-    case errSecItemNotFound:
-      return @"The specified item could not be found in the keychain.";
-
-    case errSecInteractionNotAllowed:
-      return @"User interaction is not allowed.";
-
-    case errSecDecode:
-      return @"Unable to decode the provided data.";
+      return @{
+        @"code": RNKeychainErrorAuthCanceled,
+        @"message": @"User canceled the operation."
+      };
 
     case errSecAuthFailed:
-      return @"The user name or passphrase you entered is not correct.";
+      return @{
+        @"code": RNKeychainErrorAuthError,
+        @"message": @"The user name or passphrase you entered is not correct."
+      };
 
-    case errSecMissingEntitlement:
-      return @"Internal error when a required entitlement isn't present.";
+    case errSecInteractionNotAllowed:
+      return @{
+        @"code": RNKeychainErrorAuthInteractionNotAllowed,
+        @"message": @"User interaction is not allowed."
+      };
 
     default:
-      return error.localizedDescription;
+      return @{
+        @"code": RNKeychainErrorInternalError,
+        @"message": error.localizedDescription
+      };
   }
 }
 
-NSString *codeForError(NSError *error)
+NSDictionary *errorInfo(NSError *error)
 {
-  return [NSString stringWithFormat:@"%li", (long)error.code];
+  #if TARGET_OS_IOS || TARGET_OS_VISION
+    if ([error.domain isEqualToString:LAErrorDomain]) {
+      NSString *code = laErrorCode(error);
+
+      return @{
+        @"code": code,
+        @"message": error.localizedDescription
+      };
+    }
+  #endif
+
+  if ([error.domain isEqualToString:NSOSStatusErrorDomain]) {
+    return secErrorInfo(error);
+  }
+
+  return @{
+    @"code": RNKeychainErrorInternalError,
+    @"message": error.localizedDescription
+  };
 }
 
 void rejectWithError(RCTPromiseRejectBlock reject, NSError *error)
 {
-  return reject(codeForError(error), messageForError(error), nil);
+  NSDictionary *info = errorInfo(error);
+  return reject(info[@"code"], info[@"message"], nil);
 }
 
 CFStringRef accessibleValue(NSDictionary *options)
@@ -229,7 +323,9 @@ SecAccessControlCreateFlags accessControlValue(NSDictionary *options)
     #if TARGET_OS_IOS || TARGET_OS_VISION
     BOOL canAuthenticate = [[LAContext new] canEvaluatePolicy:LAPolicyDeviceOwnerAuthentication error:&aerr];
     if (aerr || !canAuthenticate) {
-      return rejectWithError(reject, aerr);
+      NSError *authError = aerr ?: [NSError errorWithDomain:@"RNKeychainManager" code:-1 userInfo:@{NSLocalizedDescriptionKey: @"Authentication policy cannot be evaluated."}];
+
+      return rejectWithError(reject, authError);
     }
     #endif
 
@@ -240,7 +336,8 @@ SecAccessControlCreateFlags accessControlValue(NSDictionary *options)
                                                                  &error);
 
     if (error) {
-      return rejectWithError(reject, aerr);
+      NSError *nsError = (__bridge NSError *)error;
+      return rejectWithError(reject, nsError);
     }
     mAttributes[(__bridge NSString *)kSecAttrAccessControl] = (__bridge id)sacRef;
   } else {
@@ -390,10 +487,10 @@ RCT_EXPORT_METHOD(canCheckAuthentication:(NSDictionary * __nullable)options
   NSError *aerr = nil;
   BOOL canBeProtected = [[LAContext new] canEvaluatePolicy:policyToEvaluate error:&aerr];
 
-  if (aerr || !canBeProtected) {
+  if (aerr) {
     return resolve(@(NO));
   } else {
-    return resolve(@(YES));
+    return resolve(@(canBeProtected));
   }
 }
 #endif
@@ -583,7 +680,7 @@ RCT_EXPORT_METHOD(getInternetCredentialsForServer:(NSString *)server
   CFBooleanRef cloudSync = cloudSyncValue(options);
   NSString *authenticationPrompt = authenticationPromptValue(options);
   NSString *accessGroup = accessGroupValue(options);
-  
+
   NSMutableDictionary *query = [@{
     (__bridge NSString *)kSecClass: (__bridge id)(kSecClassInternetPassword),
     (__bridge NSString *)kSecAttrServer: server,

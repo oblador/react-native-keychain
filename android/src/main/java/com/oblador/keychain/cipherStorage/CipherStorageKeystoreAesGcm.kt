@@ -12,7 +12,7 @@ import com.oblador.keychain.SecurityLevel
 import com.oblador.keychain.resultHandler.CryptoContext
 import com.oblador.keychain.resultHandler.CryptoOperation
 import com.oblador.keychain.resultHandler.ResultHandler
-import com.oblador.keychain.exceptions.CryptoFailedException
+import com.oblador.keychain.exceptions.KeychainException
 import java.io.IOException
 import java.security.GeneralSecurityException
 import java.security.Key
@@ -73,7 +73,7 @@ class CipherStorageKeystoreAesGcm(
 
     // region Overrides
 
-    @Throws(CryptoFailedException::class)
+    @Throws(KeychainException::class)
     override fun encrypt(
         handler: ResultHandler,
         alias: String,
@@ -112,7 +112,7 @@ class CipherStorageKeystoreAesGcm(
     }
 
     /** Redirect call to [decrypt] method. */
-    @Throws(CryptoFailedException::class)
+    @Throws(KeychainException::class)
     override fun decrypt(
         handler: ResultHandler,
         alias: String,

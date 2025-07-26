@@ -10,7 +10,7 @@ import com.oblador.keychain.KeychainModule.KnownCiphers
 import com.oblador.keychain.SecurityLevel
 import com.oblador.keychain.cipherStorage.CipherStorageKeystoreAesCbc.IV.IV_LENGTH
 import com.oblador.keychain.resultHandler.ResultHandler
-import com.oblador.keychain.exceptions.CryptoFailedException
+import com.oblador.keychain.exceptions.KeychainException
 import java.io.IOException
 import java.security.GeneralSecurityException
 import java.security.Key
@@ -74,7 +74,7 @@ class CipherStorageKeystoreAesCbc(reactContext: ReactApplicationContext) :
 
     // region Overrides
 
-    @Throws(CryptoFailedException::class)
+    @Throws(KeychainException::class)
     override fun encrypt(
         handler: ResultHandler,
         alias: String,
@@ -95,19 +95,14 @@ class CipherStorageKeystoreAesCbc(reactContext: ReactApplicationContext) :
                 encryptString(key, username), encryptString(key, password), this
             )
             handler.onEncrypt(result, null)
-        } catch (e: GeneralSecurityException) {
-            throw CryptoFailedException("Could not encrypt data with alias: $alias", e)
         } catch (fail: Throwable) {
-            throw CryptoFailedException(
-                "Unknown error with alias: $alias, error: ${fail.message}",
-                fail
-            )
+            throw KeychainException("Could not encrypt data with alias: $alias, error: ${fail.message}", fail)
         }
     }
 
 
     /** Redirect call to [decrypt] method. */
-    @Throws(CryptoFailedException::class)
+    @Throws(KeychainException::class)
     override fun decrypt(
         handler: ResultHandler,
         alias: String,
@@ -129,7 +124,7 @@ class CipherStorageKeystoreAesCbc(reactContext: ReactApplicationContext) :
             )
             handler.onDecrypt(results, null)
         } catch (e: GeneralSecurityException) {
-            throw CryptoFailedException("Could not decrypt data with alias: $alias", e)
+            throw KeychainException("Could not decrypt data with alias: $alias, error: ${e.message}", e)
         } catch (fail: Throwable) {
             handler.onDecrypt(null, fail)
         }
