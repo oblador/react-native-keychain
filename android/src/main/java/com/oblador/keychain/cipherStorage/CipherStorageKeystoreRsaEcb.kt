@@ -66,7 +66,7 @@ class CipherStorageKeystoreRsaEcb(reactContext: ReactApplicationContext) :
             val result = innerEncryptedCredentials(safeAlias, password, username)
             handler.onEncrypt(result, null)
         } catch (fail: Throwable) {
-            when (e) {
+            when (fail) {
                 is NoSuchAlgorithmException,
                 is InvalidKeySpecException,
                 is NoSuchPaddingException,
