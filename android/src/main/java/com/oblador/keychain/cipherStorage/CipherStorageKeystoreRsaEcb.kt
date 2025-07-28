@@ -12,7 +12,7 @@ import com.oblador.keychain.SecurityLevel
 import com.oblador.keychain.resultHandler.CryptoContext
 import com.oblador.keychain.resultHandler.CryptoOperation
 import com.oblador.keychain.resultHandler.ResultHandler
-import com.oblador.keychain.exceptions.CryptoFailedException
+import com.oblador.keychain.exceptions.KeychainException
 import com.oblador.keychain.exceptions.KeyStoreAccessException
 import java.io.IOException
 import java.security.GeneralSecurityException
@@ -49,7 +49,7 @@ class CipherStorageKeystoreRsaEcb(reactContext: ReactApplicationContext) :
         const val ENCRYPTION_KEY_SIZE = 2048
     }
 
-    @Throws(CryptoFailedException::class)
+    @Throws(KeychainException::class)
     override fun encrypt(
         handler: ResultHandler,
         alias: String,
@@ -65,33 +65,33 @@ class CipherStorageKeystoreRsaEcb(reactContext: ReactApplicationContext) :
             extractGeneratedKey(safeAlias, level, retries)
             val result = innerEncryptedCredentials(safeAlias, password, username)
             handler.onEncrypt(result, null)
-        } catch (e: Exception) {
-            when (e) {
+        } catch (fail: Throwable) {
+            when (fail) {
                 is NoSuchAlgorithmException,
                 is InvalidKeySpecException,
                 is NoSuchPaddingException,
                 is InvalidKeyException -> {
-                    throw CryptoFailedException("Could not encrypt data for service $alias", e)
+                   throw KeychainException("Could not encrypt data with alias $safeAlias, error: ${fail.message}", fail)
                 }
 
                 is KeyStoreException,
                 is KeyStoreAccessException -> {
-                    throw CryptoFailedException("Could not access Keystore for service $alias", e)
+                    throw KeychainException("Could not access Keystore with alias $safeAlias, error: ${fail.message}", fail)
                 }
 
                 is IOException -> {
-                    throw CryptoFailedException("I/O error: ${e.message}", e)
+                    throw KeychainException("I/O error with alias $safeAlias, error: ${fail.message}", fail)
                 }
 
                 else -> {
-                    throw CryptoFailedException("Unknown error: ${e.message}", e)
+                    throw KeychainException("Unknown error encrypting data with alias $safeAlias, error: ${fail.message}", fail)
                 }
             }
         }
     }
 
 
-    @Throws(CryptoFailedException::class)
+    @Throws(KeychainException::class)
     override fun decrypt(
         handler: ResultHandler,
         alias: String,
