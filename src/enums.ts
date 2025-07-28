@@ -145,22 +145,140 @@ export enum STORAGE_TYPE {
  * Use these constants instead of parsing error messages for reliable error detection.
  */
 export enum ERROR_CODE {
-  // Authentication errors
+  /**
+   * The device does not have a passcode, PIN, pattern, or password set up.
+   * This occurs when `ACCESS_CONTROL` requires device passcode authentication.
+   *
+   * Action: User must configure device lock screen security (passcode/PIN/pattern) in Settings.
+   * This error cannot be resolved by retrying the operation.
+   */
   PASSCODE_NOT_SET = 'E_PASSCODE_NOT_SET',
+  /**
+   * No biometric authentication methods (fingerprint, face, iris) are enrolled on the device.
+   * This occurs when `ACCESS_CONTROL` requires biometric authentication.
+   *
+   * Action: User must enroll biometric authentication (fingerprint/face recognition) in device Settings.
+   * This error cannot be resolved by retrying the operation.
+   */
   BIOMETRIC_NOT_ENROLLED = 'E_BIOMETRIC_NOT_ENROLLED',
+  /**
+   * The biometric authentication process timed out. The user took too long to provide biometric
+   * input or the system canceled the authentication request. This occurs when `ACCESS_CONTROL` requires
+   * biometric authentication.
+   *
+   * Action: Consider implementing retry logic with user-friendly messaging to prompt authentication again.
+   *
+   * @platform Android
+   */
   BIOMETRIC_TIMEOUT = 'E_BIOMETRIC_TIMEOUT',
+  /**
+   * Biometric authentication is temporarily locked due to too many failed attempts. The device has disabled
+   * biometric authentication for a short period. This occurs when `ACCESS_CONTROL` requires biometric authentication.
+   *
+   * Action: User must wait for lockout period to expire or use device passcode as alternative authentication.
+   * Lockout typically lasts 30 seconds to a few minutes.
+   */
   BIOMETRIC_LOCKOUT = 'E_BIOMETRIC_LOCKOUT',
+  /**
+   * Biometric authentication is permanently locked due to too many failed attempts. This occurs when
+   * `ACCESS_CONTROL` requires biometric authentication.
+   *
+   * Action: User must unlock device through lock screen to restore biometric authentication functionality.
+   * This error cannot be resolved by retrying the operation.
+   *
+   * @platform Android
+   */
   BIOMETRIC_LOCKOUT_PERMANENT = 'E_BIOMETRIC_LOCKOUT_PERMANENT',
+  /**
+   * Biometric authentication hardware is temporarily unavailable, perhaps when the hardware is being used by
+   * another app or is temporarily disabled. This occurs when `ACCESS_CONTROL` requires biometric authentication.
+   *
+   * Action: Consider implementing retry logic with exponential backoff.
+   *
+   * @platform Android
+   */
   BIOMETRIC_TEMPORARILY_UNAVAILABLE = 'E_BIOMETRIC_TEMPORARILY_UNAVAILABLE',
+  /**
+   * Biometric authentication is not available on this device. This can occur when the device lacks biometric
+   * hardware. This occurs when `ACCESS_CONTROL` requires biometric authentication.
+   *
+   * Action: Use `getSupportedBiometryType` to detect availability and/or consider using `ACCESS_CONTROL` options
+   * that include passcode authentication as a fallback.
+   *
+   * @platform Android
+   */
   BIOMETRIC_UNAVAILABLE = 'E_BIOMETRIC_UNAVAILABLE',
+  /**
+   * An Android vendor-specific biometric authentication error occurred. These are custom errors from device
+   * manufacturers that don't fit into standard `BiometricPrompt` error codes. This occurs when `ACCESS_CONTROL`
+   * requires biometric authentication.
+   *
+   * Action: Display the vendor error message directly to users as intended by the device manufacturer.
+   *
+   * @platform Android
+   */
   BIOMETRIC_VENDOR_ERROR = 'E_BIOMETRIC_VENDOR_ERROR',
+  /**
+   * Authentication interaction is not allowed in the current context. This typically occurs when the app is
+   * in the background or another authentication prompt is already active. This occurs when `ACCESS_CONTROL`
+   * requires biometric authentication.
+   *
+   * Action: Ensure authentication requests are only made when the app is active and consider checking
+   * React Native's `AppState` before requesting authentication.
+   *
+   * @platform iOS
+   */
   AUTH_INTERACTION_NOT_ALLOWED = 'E_AUTH_INTERACTION_NOT_ALLOWED',
+  /**
+   * Stored credentials are no longer accessible. This is happens when the biometric set (i.e. fingerprints) or
+   * device passcode have been modified since the credentials were stored. This occurs when `ACCESS_CONTROL`
+   * requires biometric authentication and the current set is specified. Due to the way this library currently
+   * handles user authentication validity duration, this error code is never thrown.
+   *
+   * Action: Display user-friendly messaging for awareness before restoring the value.
+   *
+   * @platform Android
+   */
   AUTH_INVALIDATED = 'E_AUTH_INVALIDATED',
+  /**
+   * The user canceled the authentication process. This occurs when users explicitly dismiss authentication
+   * prompts or use cancel buttons.
+   *
+   * Action: Handle gracefully by providing alternative authentication methods or allowing users to manually
+   * retry when ready. Avoid immediately re-prompting for authentication.
+   */
   AUTH_CANCELED = 'E_AUTH_CANCELED',
+  /**
+   * A general authentication error occurred that doesn't fit into more specific error codes. This represents
+   * unexpected authentication failures that don't match other defined error categories.
+   *
+   * Action: Handle as a catch-all condition. Display a user-friendly generic error message to users and consider providing
+   * alternative authentication methods.
+   */
   AUTH_ERROR = 'E_AUTH_ERROR',
-
-  // Misc errors
+  /**
+   * Invalid or missing parameters were provided. This includes invalid security levels, unsupported Android
+   * SDK versions, and incorrect parameter combinations.
+   *
+   * Action: Review and correct the parameters passed to the library. Check documentation for required fields
+   * and valid parameter combinations.
+   */
   INVALID_PARAMETERS = 'E_INVALID_PARAMETERS',
+  /**
+   * Unable to access iOS Keychain or Android KeyStore. This includes I/O errors, memory allocation failures,
+   * storage unavailability, or system-level storage access problems.
+   *
+   * Users should try restarting the app or device, freeing up storage space, or checking device storage
+   * health. If issues persist, users should consider disabling biometric/passcode authentication in favour
+   * of alternative authentication methods. This error cannot be resolved by retrying the operation.
+   */
   STORAGE_ACCESS_ERROR = 'E_STORAGE_ACCESS_ERROR',
+  /**
+   * An internal or unexpected error occurred. This represents error conditions that don't map to specific
+   * error codes. This error cannot be resolved by retrying the operation.
+   *
+   * Action: Handle as a catch-all condition. Display a user-friendly generic error message and review
+   * underlying error message for specific guidance when available.
+   */
   INTERNAL_ERROR = 'E_INTERNAL_ERROR',
 }
