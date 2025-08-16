@@ -17,6 +17,7 @@ import type {
   SetOptions,
   AuthenticationTypeOption,
   AccessControlOption,
+  GenericCredentialItem,
 } from './types';
 import { normalizeAuthPrompt } from './normalizeOptions';
 
@@ -368,6 +369,103 @@ export function isPasscodeAuthAvailable(): Promise<boolean> {
   return RNKeychainManager.isPasscodeAuthAvailable();
 }
 
+
+/**
+ * Fetches the item object for a specific key.
+ *
+ * @param {string} key - The key to retrieve the value for.
+ * @param {SetOptions} [options] - A keychain options object.
+ *
+ * @returns {Promise<GenericCredentialItem | undefined>} Resolves to the value string when successful, or throws an error if unsuccessful
+ *
+ * @example
+ * ```typescript
+ * const item = await Keychain.getItemForKey('myKey', options);
+ * if (item) {
+ *   console.log('Item loaded:', item);
+ * } else {
+ *   console.log('No item stored for key');
+ * }
+ * ```
+ */
+export function getItemForKey(key: string, options: SetOptions): Promise<GenericCredentialItem | undefined> {
+  return RNKeychainManager.getItemForKey(key, options);
+}
+
+
+/**
+ * Gets all items.
+ *
+ * @param {SetOptions} [options] - A keychain options object.
+ *
+ * @returns {Promise<Array<GenericCredentialItem>>} Resolves to an array of items.
+ *
+ * @example
+ * ```typescript
+ * const items = await Keychain.getAllItems(options);
+ * console.log('All items:', items);
+ * ```
+ */
+export function getAllItems(options: SetOptions): Array<GenericCredentialItem> {
+  return RNKeychainManager.getAllItems(options);
+}
+
+
+/**
+ * Saves a value for a specific key.
+ *
+ * @param {string} key - The key to associate with the value.
+ * @param {string} value - The value to be saved.
+ * @param {SetOptions} [options] - A keychain options object.
+ *
+ * @returns {Promise<GenericCredentialItem>} Resolves to a result object when successful
+ *
+ * @example
+ * ```typescript
+ * await Keychain.setItemForKey('myKey', 'value', options);
+ * ```
+ */
+export function setItemForKey(key: string, value: string, options: SetOptions): Promise<GenericCredentialItem> {
+  return RNKeychainManager.setItemForKey(key, value, options);
+}
+
+
+/**
+ * Removes the generic value for a specific key.
+ *
+ * @param {string} key - The key to remove.
+ * @param {SetOptions} [options] - A keychain options object.
+ *
+ * @returns {Promise<boolean>} Resolves to `true` when successful, or throws an error if unsuccessful
+ *
+ * @example
+ * ```typescript
+ * const success = await Keychain.removeItemForKey('myKey', options);
+ * console.log('Key removed:', success);
+ * ```
+ */
+export function removeItemForKey(key: string, options: SetOptions): Promise<boolean> {
+  return RNKeychainManager.removeItemForKey(key, options);
+}
+
+
+/**
+ * Removes all items matching the service.
+ *
+ * @param {SetOptions} [options] - A keychain options object.
+ *
+ * @returns {Promise<boolean>} Resolves to `true` when successful, or throws an error if unsuccessful
+ *
+ * @example
+ * ```typescript
+ * const success = await Keychain.clearItems(options);
+ * console.log('All items cleared:', success);
+ * ```
+ */
+export function clearItems(options: SetOptions): Promise<boolean> {
+  return RNKeychainManager.clearItems(options);
+}
+
 export * from './enums';
 export * from './types';
 /** @ignore */
@@ -391,4 +489,9 @@ export default {
   resetGenericPassword,
   requestSharedWebCredentials,
   setSharedWebCredentials,
+  getItemForKey,
+  getAllItems,
+  setItemForKey,
+  removeItemForKey,
+  clearItems
 };
