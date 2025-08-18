@@ -137,10 +137,3 @@ export type SharedWebCredentials = {
   /** The server associated with the keychain item. */
   server: string;
 } & UserCredentials;
-
-export type GenericCredentialItem = {
-  /** The key associated with the generic password item. */
-  key: string;
-  /** The password value associated with the generic password item. */
-  value: string;
-} & Result;

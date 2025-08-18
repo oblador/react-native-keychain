@@ -446,10 +446,8 @@ class KeychainModule(reactContext: ReactApplicationContext) :
       val value = prefs.getString(key, null)
       
       if (value != null) {
-        // Return the value directly to match old format
         promise.resolve(value)
       } else {
-        // Return undefined/null when key doesn't exist
         promise.resolve(null)
       }
     } catch (e: Exception) {
@@ -491,7 +489,6 @@ class KeychainModule(reactContext: ReactApplicationContext) :
       editor.putString(key, value)
       editor.apply()
       
-      // Return the value to match old format
       promise.resolve(value)
     } catch (e: Exception) {
       Log.e(KEYCHAIN_MODULE, "Error setting item for key: ${e.message}", e)
