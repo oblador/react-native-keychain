@@ -1,5 +1,7 @@
 package com.oblador.keychain
 
+import android.content.Context
+import android.content.SharedPreferences
 import android.os.Build
 import android.text.TextUtils
 import android.util.Log
@@ -433,6 +435,115 @@ class KeychainModule(reactContext: ReactApplicationContext) :
     val usePasscode = getUsePasscode(accessControl)
     promise.resolve(getSecurityLevel(useBiometry, usePasscode).name)
   }
+
+  /**
+   * Get value for a specific key from SharedPreferences
+   */
+  @ReactMethod
+  fun getItemForKey(key: String, options: ReadableMap?, promise: Promise) {
+    try {
+      val prefs = getSharedPrefs(options)
+      val value = prefs.getString(key, null)
+      
+      if (value != null) {
+        // Return the value directly to match old format
+        promise.resolve(value)
+      } else {
+        // Return undefined/null when key doesn't exist
+        promise.resolve(null)
+      }
+    } catch (e: Exception) {
+      Log.e(KEYCHAIN_MODULE, "Error getting item for key: ${e.message}", e)
+      promise.reject(Errors.E_UNKNOWN_ERROR, e)
+    }
+  }
+
+  /**
+   * Get all items from SharedPreferences
+   */
+  @ReactMethod
+  fun getAllItems(options: ReadableMap?, promise: Promise) {
+    try {
+      val prefs = getSharedPrefs(options)
+      val allEntries = prefs.all
+      val resultMap = Arguments.createMap()
+      
+      for ((key, value) in allEntries) {
+        // Convert value to string and add to result map
+        resultMap.putString(key, value?.toString())
+      }
+      
+      promise.resolve(resultMap)
+    } catch (e: Exception) {
+      Log.e(KEYCHAIN_MODULE, "Error getting all items: ${e.message}", e)
+      promise.reject(Errors.E_UNKNOWN_ERROR, e)
+    }
+  }
+
+  /**
+   * Set value for a specific key in SharedPreferences
+   */
+  @ReactMethod
+  fun setItemForKey(key: String, value: String, options: ReadableMap?, promise: Promise) {
+    try {
+      val prefs = getSharedPrefs(options)
+      val editor = prefs.edit()
+      editor.putString(key, value)
+      editor.apply()
+      
+      // Return the value to match old format
+      promise.resolve(value)
+    } catch (e: Exception) {
+      Log.e(KEYCHAIN_MODULE, "Error setting item for key: ${e.message}", e)
+      promise.reject(Errors.E_UNKNOWN_ERROR, e)
+    }
+  }
+
+  /**
+   * Remove item for a specific key from SharedPreferences
+   */
+  @ReactMethod
+  fun removeItemForKey(key: String, options: ReadableMap?, promise: Promise) {
+    try {
+      val prefs = getSharedPrefs(options)
+      val editor = prefs.edit()
+      editor.remove(key)
+      editor.apply()
+      
+      promise.resolve(true)
+    } catch (e: Exception) {
+      Log.e(KEYCHAIN_MODULE, "Error removing item for key: ${e.message}", e)
+      promise.reject(Errors.E_UNKNOWN_ERROR, e)
+    }
+  }
+
+  /**
+   * Clear all items from SharedPreferences for the given service
+   */
+  @ReactMethod
+  fun clearItems(options: ReadableMap?, promise: Promise) {
+    try {
+      val prefs = getSharedPrefs(options)
+      val editor = prefs.edit()
+      editor.clear()
+      editor.apply()
+      
+      promise.resolve(true)
+    } catch (e: Exception) {
+      Log.e(KEYCHAIN_MODULE, "Error clearing items: ${e.message}", e)
+      promise.reject(Errors.E_UNKNOWN_ERROR, e)
+    }
+  }
+
+  /**
+   * Helper function to get SharedPreferences instance with the correct name
+   */
+  private fun getSharedPrefs(options: ReadableMap?): SharedPreferences {
+    val service = options?.getString(Maps.SERVICE) ?: "shared_preferences"
+    return reactApplicationContext.getSharedPreferences(service, Context.MODE_PRIVATE)
+  }
+  
+  // endregion
 
   private fun addCipherStorageToMap(cipherStorage: CipherStorage) {
     cipherStorageMap[cipherStorage.getCipherStorageName()] = cipherStorage
