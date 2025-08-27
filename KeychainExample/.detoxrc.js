@@ -43,7 +43,7 @@ module.exports = {
       type: 'ios.simulator',
       headless: Boolean(process.env.CI),
       device: {
-        type: 'iPhone 15 Pro',
+        type: 'iPhone 16 Pro',
       },
     },
     attached: {
