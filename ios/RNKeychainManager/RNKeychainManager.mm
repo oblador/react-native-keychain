@@ -10,7 +10,12 @@
 #import "RNKeychainManager.h"
 #import <React/RCTConvert.h>
 #import <React/RCTBridge.h>
+
+#if __has_include("RCTUtils.h")
+#import "RCTUtils.h"
+#else
 #import <React/RCTUtils.h>
+#endif
 
 #if TARGET_OS_IOS || TARGET_OS_VISION
 #import <LocalAuthentication/LAContext.h>
@@ -651,7 +656,7 @@ RCT_EXPORT_METHOD(requestSharedWebCredentials:(RCTPromiseResolveBlock)resolve re
     }
 
     if (CFArrayGetCount(credentials) > 0) {
-      CFDictionaryRef credentialDict = CFArrayGetValueAtIndex(credentials, 0);
+      CFDictionaryRef credentialDict = static_cast<CFDictionaryRef>(CFArrayGetValueAtIndex(credentials, 0));
       NSString *server = (__bridge NSString *)CFDictionaryGetValue(credentialDict, kSecAttrServer);
       NSString *username = (__bridge NSString *)CFDictionaryGetValue(credentialDict, kSecAttrAccount);
       NSString *password = (__bridge NSString *)CFDictionaryGetValue(credentialDict, kSecSharedPassword);

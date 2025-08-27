@@ -1467,6 +1467,7 @@ PODS:
     - React-ImageManager
     - React-jsi
     - React-NativeModulesApple
+    - React-RCTAppDelegate
     - React-RCTFabric
     - React-rendererdebug
     - React-utils
@@ -1532,6 +1533,7 @@ DEPENDENCIES:
   - React-idlecallbacksnativemodule (from `../node_modules/react-native/ReactCommon/react/nativemodule/idlecallbacks`)
   - React-ImageManager (from `../node_modules/react-native/ReactCommon/react/renderer/imagemanager/platform/ios`)
   - React-jsc (from `../node_modules/react-native/ReactCommon/jsc`)
+  - React-jsc/Fabric (from `../node_modules/react-native/ReactCommon/jsc`)
   - React-jserrorhandler (from `../node_modules/react-native/ReactCommon/jserrorhandler`)
   - React-jsi (from `../node_modules/react-native/ReactCommon/jsi`)
   - React-jsiexecutor (from `../node_modules/react-native/ReactCommon/jsiexecutor`)
@@ -1758,10 +1760,10 @@ SPEC CHECKSUMS:
   React-performancetimeline: 3ef4a640b56f9c7ec5f52bd93217b9b607c37cf4
   React-RCTActionSheet: 0fdf55fb8724856d63ca8c63cdb4e2325e15e8ec
   React-RCTAnimation: b93f5a1675cc2599e96851fec13c909fdfb1d6bb
-  React-RCTAppDelegate: 2dd0a42a5f6a47501a3661713c823e0bfdbc6637
+  React-RCTAppDelegate: e3127aff7db7100ee0000e3f67956e9c6cbaa13f
   React-RCTBlob: 53dc2afa8ccdc1b6d6885d81f6862fcb918a1875
-  React-RCTFabric: eb45f7d8e2c6645fe043d6d6dcef5da35b9b41b4
-  React-RCTFBReactNativeSpec: cc43d8898158818752ee6e1986083d79803318f1
+  React-RCTFabric: 0a4c2a18d0ef3368f900dc08ea15ab532dd3dcf3
+  React-RCTFBReactNativeSpec: ec50e74af2993fb51c1f9991cc7226fea21aaa26
   React-RCTImage: 028171a4d7017ea96a2e605c817cd76f01ed3836
   React-RCTLinking: e3f5431ab5f8f56b82387d41a2c484a278a8e645
   React-RCTNetwork: 6de20da228ffe8bd9c9e3bafe3f7d1dfe1d7bd55
@@ -1780,13 +1782,13 @@ SPEC CHECKSUMS:
   ReactAppDependencyProvider: e7e92253013754a8c35ebdbf8ad700f4e8956f62
   ReactCodegen: 6efd314e2f59c2eae0898c6d1e0d933876a1666c
   ReactCommon: cec0154a884747940be235f16acbd4fc9c959f89
-  ReactNativeHost: d683c981f1c99f15ace8fc185c62b7af5197e079
+  ReactNativeHost: ed1bfdec90022adfb476124fbc5df536bf4a1880
   ReactTestApp-DevSupport: 0580b002f78d63804f1609dce622c4f54820f3c6
   ReactTestApp-Resources: 1bd9ff10e4c24f2ad87101a32023721ae923bccf
-  RNKeychain: 287242457ae695c8ee1d12f09dca49cb82ea1278
+  RNKeychain: 321983bd3b70a343dcbc9bda36c4423791d50b2d
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
   Yoga: 1fd059161b449018342943b095a6d4e69bcaa719
 
-PODFILE CHECKSUM: 8daf094af2120901c020904ed4ae6b82bfbd5642
+PODFILE CHECKSUM: 1c897424f85ad1d61479dd5c3cd2cf10505acd55
 
 COCOAPODS: 1.15.2
