@@ -179,7 +179,7 @@ class CipherStorageKeystoreAesCbc(reactContext: ReactApplicationContext) :
         bytes: ByteArray,
         handler: DecryptBytesHandler?
     ): String {
-        val cipher = getCachedInstance()
+        val cipher = getCipher()
 
         return try {
             // read the initialization vector from bytes array

@@ -13,7 +13,6 @@ import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
 import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.module.annotations.ReactModule
-import com.oblador.keychain.cipherStorage.CipherCache
 import com.oblador.keychain.cipherStorage.CipherStorage
 import com.oblador.keychain.cipherStorage.CipherStorage.DecryptionResult
 import com.oblador.keychain.cipherStorage.CipherStorageBase
@@ -167,8 +166,6 @@ class KeychainModule(reactContext: ReactApplicationContext) :
     if (coroutineScope.isActive) {
       coroutineScope.cancel("$KEYCHAIN_MODULE has been destroyed.")
     }
-    // Clean up cipher cache
-    CipherCache.clearCache()
   }
 
   /** {@inheritDoc} */
