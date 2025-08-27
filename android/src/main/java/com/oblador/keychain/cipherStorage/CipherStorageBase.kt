@@ -9,10 +9,11 @@ import android.security.keystore.UserNotAuthenticatedException
 import android.util.Log
 import androidx.annotation.VisibleForTesting
 import com.oblador.keychain.DeviceAvailability
+import com.oblador.keychain.KeychainModule.Errors
 import com.oblador.keychain.SecurityLevel
 import com.oblador.keychain.cipherStorage.CipherStorageBase.DecryptBytesHandler
 import com.oblador.keychain.cipherStorage.CipherStorageBase.EncryptStringHandler
-import com.oblador.keychain.exceptions.CryptoFailedException
+import com.oblador.keychain.exceptions.KeychainException
 import com.oblador.keychain.exceptions.KeyStoreAccessException
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
@@ -164,11 +165,12 @@ abstract class CipherStorageBase(protected val applicationContext: Context) : Ci
   }
 
   /** Check requirements to the security level. */
-  @Throws(CryptoFailedException::class)
+  @Throws(KeychainException::class)
   protected fun throwIfInsufficientLevel(level: SecurityLevel) {
     if (!securityLevel().satisfiesSafetyThreshold(level)) {
-      throw CryptoFailedException(
-        "Insufficient security level (wants $level; got ${securityLevel()})"
+      throw KeychainException(
+        "Insufficient security level (wants $level; got ${securityLevel()})",
+        Errors.E_INVALID_PARAMETERS
       )
     }
   }
@@ -328,7 +330,7 @@ abstract class CipherStorageBase(protected val applicationContext: Context) : Ci
 
   /** Decrypt provided bytes to a string. */
   @SuppressLint("NewApi")
-  @Throws(GeneralSecurityException::class, IOException::class, CryptoFailedException::class)
+  @Throws(GeneralSecurityException::class, IOException::class, KeychainException::class)
   protected open fun decryptBytes(
     key: Key,
     bytes: ByteArray,
@@ -351,7 +353,7 @@ abstract class CipherStorageBase(protected val applicationContext: Context) : Ci
                 throw UserNotAuthenticatedException()
               }
               e is javax.crypto.AEADBadTagException -> {
-                throw CryptoFailedException(
+                throw KeychainException(
                   "Decryption failed: Authentication tag verification failed. " +
                   "This usually indicates that the encrypted data was modified, corrupted, " +
                   "or is being decrypted with the wrong key.",
@@ -402,7 +404,7 @@ abstract class CipherStorageBase(protected val applicationContext: Context) : Ci
     }
 
     if (!validateKeySecurityLevel(requiredLevel, secretKey!!)) {
-      throw CryptoFailedException("Cannot generate keys with required security guarantees")
+      throw KeychainException("Cannot generate keys with required security guarantees", Errors.E_INVALID_PARAMETERS)
     }
   }
 

@@ -7,11 +7,12 @@ import androidx.fragment.app.FragmentActivity
 import com.facebook.react.bridge.AssertionException
 import com.facebook.react.bridge.ReactApplicationContext
 import com.oblador.keychain.DeviceAvailability
+import com.oblador.keychain.KeychainModule.Errors
 import com.oblador.keychain.cipherStorage.CipherStorage
 import com.oblador.keychain.cipherStorage.CipherStorage.DecryptionResult
 import com.oblador.keychain.cipherStorage.CipherStorage.EncryptionResult
 import com.oblador.keychain.cipherStorage.CipherStorageBase
-import com.oblador.keychain.exceptions.CryptoFailedException
+import com.oblador.keychain.exceptions.KeychainException
 import java.util.concurrent.Executor
 import java.util.concurrent.Executors
 import java.util.concurrent.locks.ReentrantLock
@@ -42,7 +43,7 @@ open class ResultHandlerInteractiveBiometric(
     this.context = context
 
     if (!DeviceAvailability.isPermissionsGranted(reactContext)) {
-      val failure = CryptoFailedException(
+      val failure = KeychainException(
         "Could not start biometric Authentication. No permissions granted."
       )
       when (context.operation) {
@@ -74,11 +75,52 @@ open class ResultHandlerInteractiveBiometric(
 
   /** Called when an unrecoverable error has been encountered and the operation is complete. */
   override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
-    val error = CryptoFailedException("code: $errorCode, msg: $errString")
+    val error = mapBiometricPromptError(errorCode, errString.toString())
     when (context?.operation) {
       CryptoOperation.ENCRYPT -> onEncrypt(null, error)
       CryptoOperation.DECRYPT -> onDecrypt(null, error)
       null -> Log.e(LOG_TAG, "No operation context available")
+    }
+  }
+
+  /* Maps BiometricPrompt error codes to our custom error codes. */
+  private fun mapBiometricPromptError(errorCode: Int, errorMessage: String): KeychainException {
+    return when (errorCode) {
+      BiometricPrompt.ERROR_CANCELED ->
+        KeychainException(errorMessage, Errors.E_AUTH_CANCELED)
+
+      BiometricPrompt.ERROR_USER_CANCELED ->
+        KeychainException(errorMessage, Errors.E_AUTH_CANCELED)
+
+      BiometricPrompt.ERROR_NO_BIOMETRICS ->
+        KeychainException(errorMessage, Errors.E_BIOMETRIC_NOT_ENROLLED)
+
+      BiometricPrompt.ERROR_TIMEOUT ->
+        KeychainException(errorMessage, Errors.E_BIOMETRIC_TIMEOUT)
+
+      BiometricPrompt.ERROR_HW_UNAVAILABLE ->
+        KeychainException(errorMessage, Errors.E_BIOMETRIC_TEMPORARILY_UNAVAILABLE)
+
+      BiometricPrompt.ERROR_LOCKOUT ->
+        KeychainException(errorMessage, Errors.E_BIOMETRIC_LOCKOUT)
+
+      BiometricPrompt.ERROR_LOCKOUT_PERMANENT ->
+        KeychainException(errorMessage, Errors.E_BIOMETRIC_LOCKOUT_PERMANENT)
+
+      BiometricPrompt.ERROR_HW_NOT_PRESENT ->
+        KeychainException(errorMessage, Errors.E_BIOMETRIC_UNAVAILABLE)
+
+      BiometricPrompt.ERROR_NEGATIVE_BUTTON ->
+        KeychainException(errorMessage, Errors.E_AUTH_CANCELED)
+
+      BiometricPrompt.ERROR_NO_DEVICE_CREDENTIAL ->
+        KeychainException(errorMessage, Errors.E_PASSCODE_NOT_SET)
+
+      BiometricPrompt.ERROR_VENDOR ->
+        KeychainException(errorMessage, Errors.E_BIOMETRIC_VENDOR_ERROR)
+
+      else ->
+        KeychainException(errorMessage, Errors.E_AUTH_ERROR)
     }
   }
 
