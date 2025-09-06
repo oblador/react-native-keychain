@@ -44,11 +44,11 @@ export async function setGenericPassword(
   options?: SetOptions
 ): Promise<false | Result> {
   try {
-    return RNKeychainManager.setGenericPasswordForOptions(
+    return await RNKeychainManager.setGenericPasswordForOptions(
       normalizeAuthPrompt(options),
       username,
       password
-    )
+    );
   } catch (err) {
     throw KeychainError.parse(err);
   }
@@ -75,7 +75,7 @@ export async function getGenericPassword(
   options?: GetOptions
 ): Promise<false | UserCredentials> {
   try {
-    return RNKeychainManager.getGenericPasswordForOptions(
+    return await RNKeychainManager.getGenericPasswordForOptions(
       normalizeAuthPrompt(options)
     );
   } catch (err) {
@@ -96,9 +96,11 @@ export async function getGenericPassword(
  * console.log('Password exists:', hasPassword);
  * ```
  */
-export async function hasGenericPassword(options?: BaseOptions): Promise<boolean> {
+export async function hasGenericPassword(
+  options?: BaseOptions
+): Promise<boolean> {
   try {
-    return RNKeychainManager.hasGenericPasswordForOptions(options);
+    return await RNKeychainManager.hasGenericPasswordForOptions(options);
   } catch (err) {
     throw KeychainError.parse(err);
   }
@@ -117,9 +119,11 @@ export async function hasGenericPassword(options?: BaseOptions): Promise<boolean
  * console.log('Password reset successful:', success);
  * ```
  */
-export async function resetGenericPassword(options?: BaseOptions): Promise<boolean> {
+export async function resetGenericPassword(
+  options?: BaseOptions
+): Promise<boolean> {
   try {
-    return RNKeychainManager.resetGenericPasswordForOptions(options);
+    return await RNKeychainManager.resetGenericPasswordForOptions(options);
   } catch (err) {
     throw KeychainError.parse(err);
   }
@@ -140,7 +144,7 @@ export async function getAllGenericPasswordServices(
   options?: GetAllOptions
 ): Promise<string[]> {
   try {
-    return RNKeychainManager.getAllGenericPasswordServices(options);
+    return await RNKeychainManager.getAllGenericPasswordServices(options);
   } catch (err) {
     throw KeychainError.parse(err);
   }
@@ -163,7 +167,7 @@ export async function hasInternetCredentials(
   options: string | BaseOptions
 ): Promise<boolean> {
   try {
-    return RNKeychainManager.hasInternetCredentialsForOptions(options);
+    return await RNKeychainManager.hasInternetCredentialsForOptions(options);
   } catch (err) {
     throw KeychainError.parse(err);
   }
@@ -191,7 +195,7 @@ export async function setInternetCredentials(
   options?: SetOptions
 ): Promise<false | Result> {
   try {
-    return RNKeychainManager.setInternetCredentialsForServer(
+    return await RNKeychainManager.setInternetCredentialsForServer(
       server,
       username,
       password,
@@ -225,7 +229,7 @@ export async function getInternetCredentials(
   options?: GetOptions
 ): Promise<false | UserCredentials> {
   try {
-    return RNKeychainManager.getInternetCredentialsForServer(
+    return await RNKeychainManager.getInternetCredentialsForServer(
       server,
       normalizeAuthPrompt(options)
     );
@@ -247,9 +251,11 @@ export async function getInternetCredentials(
  * console.log('Credentials reset for server');
  * ```
  */
-export async function resetInternetCredentials(options: BaseOptions): Promise<void> {
+export async function resetInternetCredentials(
+  options: BaseOptions
+): Promise<void> {
   try {
-    return RNKeychainManager.resetInternetCredentialsForOptions(options);
+    return await RNKeychainManager.resetInternetCredentialsForOptions(options);
   } catch (err) {
     throw KeychainError.parse(err);
   }
@@ -267,12 +273,12 @@ export async function resetInternetCredentials(options: BaseOptions): Promise<vo
  * ```
  */
 export async function getSupportedBiometryType(): Promise<null | BIOMETRY_TYPE> {
-  try {
-    if (!RNKeychainManager.getSupportedBiometryType) {
-      return Promise.resolve(null);
-    }
+  if (!RNKeychainManager.getSupportedBiometryType) {
+    return null;
+  }
 
-    return RNKeychainManager.getSupportedBiometryType();
+  try {
+    return await RNKeychainManager.getSupportedBiometryType();
   } catch (err) {
     throw KeychainError.parse(err);
   }
@@ -298,16 +304,14 @@ export async function getSupportedBiometryType(): Promise<null | BIOMETRY_TYPE> 
 export async function requestSharedWebCredentials(): Promise<
   false | SharedWebCredentials
 > {
-  try {
-    if (Platform.OS !== 'ios') {
-      return Promise.reject(
-        new Error(
-          `requestSharedWebCredentials() is not supported on ${Platform.OS} yet`
-        )
-      );
-    }
+  if (Platform.OS !== 'ios') {
+    throw new Error(
+      `requestSharedWebCredentials() is not supported on ${Platform.OS} yet`
+    );
+  }
 
-    return RNKeychainManager.requestSharedWebCredentials();
+  try {
+    return await RNKeychainManager.requestSharedWebCredentials();
   } catch (err) {
     throw KeychainError.parse(err);
   }
@@ -335,16 +339,14 @@ export async function setSharedWebCredentials(
   username: string,
   password?: string
 ): Promise<void> {
-  try {
-    if (Platform.OS !== 'ios') {
-      return Promise.reject(
-        new Error(
-          `setSharedWebCredentials() is not supported on ${Platform.OS} yet`
-        )
-      );
-    }
+  if (Platform.OS !== 'ios') {
+    throw new Error(
+      `setSharedWebCredentials() is not supported on ${Platform.OS} yet`
+    );
+  }
 
-    return RNKeychainManager.setSharedWebCredentialsForServer(
+  try {
+    return await RNKeychainManager.setSharedWebCredentialsForServer(
       server,
       username,
       password
@@ -372,12 +374,12 @@ export async function setSharedWebCredentials(
 export async function canImplyAuthentication(
   options?: AuthenticationTypeOption
 ): Promise<boolean> {
-  try {
-    if (!RNKeychainManager.canCheckAuthentication) {
-      return Promise.resolve(false);
-    }
+  if (!RNKeychainManager.canCheckAuthentication) {
+    return false;
+  }
 
-    return RNKeychainManager.canCheckAuthentication(options);
+  try {
+    return await RNKeychainManager.canCheckAuthentication(options);
   } catch (err) {
     throw KeychainError.parse(err);
   }
@@ -401,12 +403,12 @@ export async function canImplyAuthentication(
 export async function getSecurityLevel(
   options?: AccessControlOption
 ): Promise<null | SECURITY_LEVEL> {
-  try {
-    if (!RNKeychainManager.getSecurityLevel) {
-      return Promise.resolve(null);
-    }
+  if (!RNKeychainManager.getSecurityLevel) {
+    return null;
+  }
 
-    return RNKeychainManager.getSecurityLevel(options);
+  try {
+    return await RNKeychainManager.getSecurityLevel(options);
   } catch (err) {
     throw KeychainError.parse(err);
   }
@@ -424,12 +426,12 @@ export async function getSecurityLevel(
  * ```
  */
 export async function isPasscodeAuthAvailable(): Promise<boolean> {
-  try {
-    if (!RNKeychainManager.isPasscodeAuthAvailable) {
-      return Promise.resolve(false);
-    }
+  if (!RNKeychainManager.isPasscodeAuthAvailable) {
+    return false;
+  }
 
-    return RNKeychainManager.isPasscodeAuthAvailable();
+  try {
+    return await RNKeychainManager.isPasscodeAuthAvailable();
   } catch (err) {
     throw KeychainError.parse(err);
   }
