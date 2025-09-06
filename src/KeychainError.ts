@@ -1,4 +1,5 @@
 import { ERROR_CODE } from './enums';
+
 /**
  * Custom error class for encapsulating the native error objects.
  */
