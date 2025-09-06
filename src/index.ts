@@ -437,6 +437,7 @@ export async function isPasscodeAuthAvailable(): Promise<boolean> {
 
 export * from './enums';
 export * from './types';
+export * from './KeychainError';
 /** @ignore */
 export default {
   SECURITY_LEVEL,
@@ -446,6 +447,7 @@ export default {
   BIOMETRY_TYPE,
   STORAGE_TYPE,
   ERROR_CODE,
+  KeychainError,
   getSecurityLevel,
   canImplyAuthentication,
   getSupportedBiometryType,
