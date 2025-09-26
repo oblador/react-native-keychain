@@ -244,6 +244,32 @@ abstract class CipherStorageBase(protected val applicationContext: Context) : Ci
     return key
   }
 
+  /**
+   * Fetch an existing key for the provided alias without creating a new one.
+   *
+   * Why: Reads (decrypt) should not have side effects. Historically, decrypt
+   * used {@link extractGeneratedKey} which auto-created a key when missing.
+   * After a reinstall with backups enabled, preferences (ciphertext) can be
+   * restored while Android Keystore is wiped. Auto-creating a key on decrypt
+   * cannot recover old ciphertext and unexpectedly mutates observable state
+   * (new alias appears in keystore listings). Using this helper allows decrypt
+   * to treat missing keys gracefully (caller can map to "not found") without
+   * changing keystore state.
+   *
+   * @return the existing key or null if the alias does not exist.
+   */
+  @Throws(KeyStoreAccessException::class)
+  fun getExistingKeyOrNull(alias: String): Key? {
+    val safeAlias = getDefaultAliasIfEmpty(alias, getDefaultAliasServiceName())
+    val keyStore = getKeyStoreAndLoad()
+    return try {
+      if (!keyStore.containsAlias(safeAlias)) return null
+      keyStore.getKey(safeAlias, null)
+    } catch (fail: Throwable) {
+      throw KeyStoreAccessException("Could not access Keystore for alias $safeAlias", fail)
+    }
+  }
+
   /** Verify that provided key satisfy minimal needed level. */
   @Throws(GeneralSecurityException::class)
   protected fun validateKeySecurityLevel(level: SecurityLevel, key: Key): Boolean {
