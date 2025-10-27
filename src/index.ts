@@ -139,7 +139,7 @@ export function getAllGenericPasswordServices(
  * ```
  */
 export function hasInternetCredentials(
-  options: string | BaseOptions
+  options: BaseOptions
 ): Promise<boolean> {
   return RNKeychainManager.hasInternetCredentialsForOptions(options);
 }
