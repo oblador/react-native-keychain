@@ -369,28 +369,78 @@ export function isPasscodeAuthAvailable(): Promise<boolean> {
   return RNKeychainManager.isPasscodeAuthAvailable();
 }
 
+/**
+ * Checks if Samsung Knox (TIMA/Vault) is available on the device.
+ *
+ * @platform Android
+ *
+ * @returns {Promise<boolean>} Resolves to `true` if Knox is available, otherwise `false`.
+ */
+export function isKnoxAvailable(): Promise<boolean> {
+  if (!RNKeychainManager.isKnoxAvailable) {
+    return Promise.resolve(false);
+  }
+  return RNKeychainManager.isKnoxAvailable();
+}
+
+/**
+ * Generates a key in Samsung Knox (TIMA/Vault).
+ *
+ * @platform Android
+ *
+ * @param {string} alias - The alias for the key.
+ * @returns {Promise<boolean>} Resolves to `true` if successful.
+ */
+export function generateKnoxKey(alias: string): Promise<boolean> {
+  if (!RNKeychainManager.generateKnoxKey) {
+    return Promise.reject(new Error('Knox not supported on this platform'));
+  }
+  return RNKeychainManager.generateKnoxKey(alias);
+}
+
+/**
+ * Signs data using a key stored in Samsung Knox.
+ *
+ * @platform Android
+ *
+ * @param {string} alias - The alias of the key to use.
+ * @param {string} data - The data to sign (base64 encoded).
+ * @returns {Promise<string>} Resolves to the signature (base64 encoded).
+ */
+export function signWithKnoxKey(alias: string, data: string): Promise<string> {
+  if (!RNKeychainManager.signWithKnoxKey) {
+    return Promise.reject(new Error('Knox not supported on this platform'));
+  }
+  return RNKeychainManager.signWithKnoxKey(alias, data);
+}
+
 export * from './enums';
 export * from './types';
 /** @ignore */
 export default {
-  SECURITY_LEVEL,
   ACCESSIBLE,
+  SECURITY_LEVEL,
   ACCESS_CONTROL,
   AUTHENTICATION_TYPE,
-  BIOMETRY_TYPE,
   STORAGE_TYPE,
+  BIOMETRY_TYPE,
   ERROR_CODE,
+  getGenericPassword,
+  setGenericPassword,
+  resetGenericPassword,
+  getInternetCredentials,
+  setInternetCredentials,
+  resetInternetCredentials,
+  hasGenericPassword,
+  hasInternetCredentials,
+  getSupportedBiometryType,
   getSecurityLevel,
   canImplyAuthentication,
-  getSupportedBiometryType,
-  setInternetCredentials,
   isPasscodeAuthAvailable,
-  getInternetCredentials,
-  resetInternetCredentials,
-  setGenericPassword,
-  getGenericPassword,
   getAllGenericPasswordServices,
-  resetGenericPassword,
   requestSharedWebCredentials,
   setSharedWebCredentials,
+  isKnoxAvailable,
+  generateKnoxKey,
+  signWithKnoxKey,
 };

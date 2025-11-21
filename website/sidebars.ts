@@ -24,6 +24,11 @@ const sidebars: SidebarsConfig = {
     },
     {
       type: 'doc',
+      id: 'knox-integration',
+      label: 'Samsung Knox Integration',
+    },
+    {
+      type: 'doc',
       id: 'jest',
       label: 'Unit Testing with Jest',
     },

@@ -16,6 +16,7 @@ We offer three security levels for data storage:
 
 - **AES_GCM**: Symmetric encryption with biometric protection
 - **RSA**: Asymmetric encryption with biometric protection
+- **KNOX**: Samsung Knox hardware-backed encryption (Samsung devices)
 - Best for: Passwords, personal data, sensitive keys
 
 #### 2. Medium Security (without Authentication)
@@ -51,6 +52,16 @@ When using `react-native-keychain` on Android, the library relies on the Android
 
 1. **StrongBox Enabled Devices**: If a device supports StrongBox, `react-native-keychain` can store keys in the **Secure Hardware**, offering the highest level of security.
 2. **TEE-Only Devices**: If StrongBox is not available, the keys are stored in the **TEE**, which is still secure but less resistant to physical attacks.
+
+#### **Samsung Knox Integration**
+
+On Samsung devices, `react-native-keychain` provides additional Knox storage options:
+
+- **Knox on API 31+**: Uses StrongBox Keymaster for hardware-backed encryption
+- **Knox on API 23-30**: Uses TIMA (Trusted Integrity Management Architecture) KeyStore
+- **Knox Fallback**: On non-Samsung devices, Knox storage gracefully falls back to standard Android Keystore
+
+Knox storage is ideal for government and enterprise applications requiring FIPS 140-2 compliance or Samsung Knox certification. For more details, see the [Knox Integration Guide](/docs/knox-integration).
 
 
 ## iOS

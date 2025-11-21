@@ -5,7 +5,7 @@
 
 [![Tests](https://github.com/oblador/react-native-keychain/actions/workflows/e2e_tests.yaml/badge.svg)](https://github.com/oblador/react-native-keychain/actions/workflows/e2e_tests.yaml) [![npm](https://img.shields.io/npm/v/react-native-keychain.svg)](https://npmjs.com/package/react-native-keychain) [![npm](https://img.shields.io/npm/dm/react-native-keychain.svg)](https://npmjs.com/package/react-native-keychain)
 
-This library provides access to the Keychain (iOS) and Keystore (Android) for securely storing credentials like passwords, tokens, or other sensitive information in React Native apps.
+This library provides access to the Keychain (iOS) and Keystore (Android) for securely storing credentials like passwords, tokens, or other sensitive information in React Native apps. It includes built-in support for Samsung Knox hardware-backed encryption on compatible devices.
 
 - [Installation](#installation)
 - [Documentation](#documentation)
@@ -75,6 +75,15 @@ Check the [GitHub Releases page](https://github.com/oblador/react-native-keychai
           <img width="100" height="100" src="https://github.com/OleksandrKucherenko.png?v=3&s=150">
           <br />
           <strong>Oleksandr Kucherenko</strong>
+        </a>
+        <br />
+        Contributor
+      </td>
+       <td align="center">
+        <a href="https://github.com/athexweb3">
+          <img width="100" height="100" src="https://github.com/athexweb3.png?v=3&s=150">
+          <br />
+          <strong>Athex Web3</strong>
         </a>
         <br />
         Contributor

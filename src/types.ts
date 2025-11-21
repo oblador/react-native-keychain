@@ -41,6 +41,11 @@ export type BaseOptions = {
    * @platform iOS, visionOS
    */
   accessGroup?: string;
+  /** Whether to use Samsung Knox (TIMA/Vault) if available.
+   * @platform Android
+   * @default true
+   */
+  useKnox?: boolean;
 };
 
 export type SetOptions = {
