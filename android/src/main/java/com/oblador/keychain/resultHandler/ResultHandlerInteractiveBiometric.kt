@@ -16,6 +16,7 @@ import com.oblador.keychain.exceptions.KeychainException
 import java.util.concurrent.Executor
 import java.util.concurrent.Executors
 import java.util.concurrent.locks.ReentrantLock
+import javax.crypto.Cipher
 import kotlin.concurrent.withLock
 
 open class ResultHandlerInteractiveBiometric(
@@ -130,21 +131,45 @@ open class ResultHandlerInteractiveBiometric(
     try {
       context ?: throw NullPointerException("Crypto context is not assigned yet.")
 
+      // If we have a CryptoObject, the cipher is already authenticated and ready to use.
+      // This prevents the "User not authenticated" error caused by timing issues.
+      val authenticatedCipher = result.cryptoObject?.cipher
+
       when (context?.operation) {
         CryptoOperation.ENCRYPT -> {
-          val encrypted = EncryptionResult(
-            storage.encryptString(context!!.key, String(context!!.username)),
-            storage.encryptString(context!!.key, String(context!!.password)),
-            storage
-          )
+          val encrypted = if (authenticatedCipher != null) {
+            // Use the authenticated cipher from CryptoObject
+            EncryptionResult(
+              encryptWithAuthenticatedCipher(authenticatedCipher, String(context!!.username)),
+              encryptWithAuthenticatedCipher(getCipherForSecondOperation(context!!.key, Cipher.ENCRYPT_MODE), String(context!!.password)),
+              storage
+            )
+          } else {
+            // Fallback to original behavior (may cause timing issues on some devices)
+            EncryptionResult(
+              storage.encryptString(context!!.key, String(context!!.username)),
+              storage.encryptString(context!!.key, String(context!!.password)),
+              storage
+            )
+          }
           onEncrypt(encrypted, null)
         }
 
         CryptoOperation.DECRYPT -> {
-          val decrypted = DecryptionResult(
-            storage.decryptBytes(context!!.key, context!!.username),
-            storage.decryptBytes(context!!.key, context!!.password)
-          )
+          val decrypted = if (authenticatedCipher != null) {
+            // Use the authenticated cipher from CryptoObject for the first decryption
+            // For the second value, we need a new cipher since GCM cipher can't be reused
+            DecryptionResult(
+              decryptWithAuthenticatedCipher(authenticatedCipher, context!!.username),
+              storage.decryptBytes(context!!.key, context!!.password)
+            )
+          } else {
+            // Fallback to original behavior (may cause timing issues on some devices)
+            DecryptionResult(
+              storage.decryptBytes(context!!.key, context!!.username),
+              storage.decryptBytes(context!!.key, context!!.password)
+            )
+          }
           onDecrypt(decrypted, null)
         }
 
@@ -157,6 +182,31 @@ open class ResultHandlerInteractiveBiometric(
         null -> Log.e(LOG_TAG, "No operation context available")
       }
     }
+  }
+
+  /** Encrypt using an already-authenticated cipher. */
+  private fun encryptWithAuthenticatedCipher(cipher: Cipher, value: String): ByteArray {
+    val iv = cipher.iv
+    val encrypted = cipher.doFinal(value.toByteArray(CipherStorageBase.UTF8))
+    // Prepend IV to the encrypted data (same format as storage.encryptString)
+    return iv + encrypted
+  }
+
+  /** Decrypt using an already-authenticated cipher. */
+  private fun decryptWithAuthenticatedCipher(cipher: Cipher, bytes: ByteArray): String {
+    // For GCM, the IV is prepended to the data and was already used to initialize the cipher
+    // Skip the IV bytes and decrypt the rest
+    val ivLength = 12 // GCM IV length
+    val encryptedData = bytes.copyOfRange(ivLength, bytes.size)
+    val decrypted = cipher.doFinal(encryptedData)
+    return String(decrypted, CipherStorageBase.UTF8)
+  }
+
+  /** Get a new cipher for the second crypto operation (since GCM ciphers can't be reused). */
+  private fun getCipherForSecondOperation(key: java.security.Key, mode: Int): Cipher {
+    val cipher = storage.getCachedInstance()
+    cipher.init(mode, key)
+    return cipher
   }
 
 
@@ -181,7 +231,21 @@ open class ResultHandlerInteractiveBiometric(
 
   protected fun authenticateWithPrompt(activity: FragmentActivity): BiometricPrompt {
     val prompt = BiometricPrompt(activity, executor, this)
-    prompt.authenticate(this.promptInfo)
+
+    // If we have a pre-initialized cipher, use it with CryptoObject to atomically
+    // bind the biometric authentication to the crypto operation.
+    // This prevents "User not authenticated" errors caused by timing issues
+    // between BiometricPrompt.onAuthenticationSucceeded and the subsequent crypto operation.
+    val cipher = context?.cipher
+    if (cipher != null) {
+      Log.d(LOG_TAG, "Using CryptoObject for biometric authentication")
+      val cryptoObject = BiometricPrompt.CryptoObject(cipher)
+      prompt.authenticate(this.promptInfo, cryptoObject)
+    } else {
+      Log.d(LOG_TAG, "No cipher available, using standard authentication (may cause timing issues on some devices)")
+      prompt.authenticate(this.promptInfo)
+    }
+
     return prompt
   }
 

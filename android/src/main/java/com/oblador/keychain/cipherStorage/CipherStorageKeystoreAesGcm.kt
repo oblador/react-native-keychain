@@ -97,12 +97,25 @@ class CipherStorageKeystoreAesGcm(
             handler.onEncrypt(result, null)
         } catch (ex: UserNotAuthenticatedException) {
             Log.d(LOG_TAG, "Unlock of keystore is needed. Error: ${ex.message}", ex)
+
+            // Prepare cipher for CryptoObject binding to prevent timing issues
+            // between biometric authentication and crypto operations.
+            val cipher = try {
+                val c = getCachedInstance()
+                c.init(Cipher.ENCRYPT_MODE, key)
+                c
+            } catch (e: Throwable) {
+                Log.w(LOG_TAG, "Failed to initialize cipher for CryptoObject: ${e.message}", e)
+                null
+            }
+
             val context = CryptoContext(
                 safeAlias,
                 key!!,
                 password.toByteArray(),
                 username.toByteArray(),
-                CryptoOperation.ENCRYPT
+                CryptoOperation.ENCRYPT,
+                cipher
             )
 
             handler.askAccessPermissions(context)
@@ -135,9 +148,26 @@ class CipherStorageKeystoreAesGcm(
             handler.onDecrypt(results, null)
         } catch (ex: UserNotAuthenticatedException) {
             Log.d(LOG_TAG, "Unlock of keystore is needed. Error: ${ex.message}", ex)
+
+            // Prepare cipher for CryptoObject binding to prevent timing issues
+            // between biometric authentication and crypto operations.
+            // For AES-GCM decrypt, we need the IV from the encrypted data to initialize the cipher.
+            // We use the password's IV since that's what will be decrypted first.
+            val cipher = try {
+                val c = getCachedInstance()
+                // Extract IV from the first IV_LENGTH bytes of password
+                val iv = password.copyOfRange(0, IV.IV_LENGTH)
+                val spec = GCMParameterSpec(IV.TAG_LENGTH, iv)
+                c.init(Cipher.DECRYPT_MODE, key, spec)
+                c
+            } catch (e: Throwable) {
+                Log.w(LOG_TAG, "Failed to initialize cipher for CryptoObject: ${e.message}", e)
+                null
+            }
+
             // expected that KEY instance is extracted and we caught exception on decryptBytes operation
             val context =
-                CryptoContext(safeAlias, key!!, password, username, CryptoOperation.DECRYPT)
+                CryptoContext(safeAlias, key!!, password, username, CryptoOperation.DECRYPT, cipher)
 
             handler.askAccessPermissions(context)
         } catch (fail: Throwable) {
