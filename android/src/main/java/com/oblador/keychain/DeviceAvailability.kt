@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import androidx.biometric.BiometricManager
+import java.util.Locale
 
 /**
  * @see
@@ -14,12 +15,20 @@ import androidx.biometric.BiometricManager
 @Suppress("deprecation")
 object DeviceAvailability {
 
+  private val SLOW_STRONGBOX_MANUFACTURERS = setOf("motorola", "xiaomi")
+
   fun isStrongboxAvailable(context: Context): Boolean {
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
       context.packageManager.hasSystemFeature(PackageManager.FEATURE_STRONGBOX_KEYSTORE)
     } else {
       false
     }
+  }
+
+  fun isSlowStrongBoxManufacturer(): Boolean {
+      val manufacturer = (Build.MANUFACTURER ?: "").trim().lowercase(Locale.ROOT)
+      val brand = (Build.BRAND ?: "").trim().lowercase(Locale.ROOT)
+      return manufacturer in SLOW_STRONGBOX_MANUFACTURERS || brand in SLOW_STRONGBOX_MANUFACTURERS
   }
 
   fun isStrongBiometricAuthAvailable(context: Context): Boolean {

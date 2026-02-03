@@ -11,6 +11,7 @@ import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
+import com.facebook.react.bridge.WritableMap
 import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.module.annotations.ReactModule
 import com.oblador.keychain.cipherStorage.CipherCache
@@ -210,13 +211,13 @@ class KeychainModule(reactContext: ReactApplicationContext) :
           promise.resolve(results)
         } catch (e: EmptyParameterException) {
           Log.e(KEYCHAIN_MODULE, e.message, e)
-          promise.reject(Errors.E_INVALID_PARAMETERS, e)
+          promise.reject(Errors.E_INVALID_PARAMETERS, e, generateUserInfo(e))
         } catch (e: KeychainException) {
           Log.e(KEYCHAIN_MODULE, e.message, e)
-          promise.reject(e.errorCode, e)
+          promise.reject(e.errorCode, e, generateUserInfo(e))
         } catch (fail: Throwable) {
           Log.e(KEYCHAIN_MODULE, fail.message, fail)
-          promise.reject(Errors.E_INTERNAL_ERROR, fail)
+          promise.reject(Errors.E_INTERNAL_ERROR, fail, generateUserInfo(fail))
         }
       }
     }
@@ -231,6 +232,15 @@ class KeychainModule(reactContext: ReactApplicationContext) :
   ) {
     val service = getServiceOrDefault(options)
     setGenericPassword(service, username, password, options, promise)
+  }
+
+  // adding additional stackTrace to the errors
+  // https://github.com/react-native-community/releases/blob/master/CHANGELOG.md#android-specific-70
+  private fun generateUserInfo(e: Throwable): WritableMap {
+    val stackTrace = Log.getStackTraceString(e)
+    return Arguments.createMap().apply {
+      putString("stack", stackTrace)
+    }
   }
 
   /** Get Cipher storage instance based on user provided options. */
@@ -279,13 +289,13 @@ class KeychainModule(reactContext: ReactApplicationContext) :
           promise.resolve(credentials)
         } catch (e: KeyStoreAccessException) {
           Log.e(KEYCHAIN_MODULE, e.message!!)
-          promise.reject(Errors.E_STORAGE_ACCESS_ERROR, e)
+          promise.reject(Errors.E_STORAGE_ACCESS_ERROR, e, generateUserInfo(e))
         } catch (e: KeychainException) {
           Log.e(KEYCHAIN_MODULE, e.message!!)
-          promise.reject(e.errorCode, e)
+          promise.reject(e.errorCode, e, generateUserInfo(e))
         } catch (fail: Throwable) {
           Log.e(KEYCHAIN_MODULE, fail.message, fail)
-          promise.reject(Errors.E_INTERNAL_ERROR, fail)
+          promise.reject(Errors.E_INTERNAL_ERROR, fail, generateUserInfo(fail))
         }
       }
     }
@@ -297,7 +307,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
       val services = doGetAllGenericPasswordServices()
       promise.resolve(Arguments.makeNativeArray<Any>(services.toTypedArray()))
     } catch (e: KeyStoreAccessException) {
-      promise.reject(Errors.E_STORAGE_ACCESS_ERROR, e)
+      promise.reject(Errors.E_STORAGE_ACCESS_ERROR, e, generateUserInfo(e))
     }
   }
 
@@ -339,10 +349,10 @@ class KeychainModule(reactContext: ReactApplicationContext) :
       promise.resolve(true)
     } catch (e: KeyStoreAccessException) {
       Log.e(KEYCHAIN_MODULE, e.message!!)
-      promise.reject(Errors.E_STORAGE_ACCESS_ERROR, e)
+      promise.reject(Errors.E_STORAGE_ACCESS_ERROR, e, generateUserInfo(e))
     } catch (fail: Throwable) {
       Log.e(KEYCHAIN_MODULE, fail.message, fail)
-      promise.reject(Errors.E_INTERNAL_ERROR, fail)
+      promise.reject(Errors.E_INTERNAL_ERROR, fail, generateUserInfo(fail))
     }
   }
 
@@ -407,7 +417,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
       promise.resolve(reply)
     } catch (fail: Throwable) {
       Log.e(KEYCHAIN_MODULE, fail.message, fail)
-      promise.reject(Errors.E_INTERNAL_ERROR, fail)
+      promise.reject(Errors.E_INTERNAL_ERROR, fail, generateUserInfo(fail))
     }
   }
 
@@ -429,7 +439,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
       promise.resolve(reply)
     } catch (fail: Throwable) {
       Log.e(KEYCHAIN_MODULE, fail.message, fail)
-      promise.reject(Errors.E_INTERNAL_ERROR, fail)
+      promise.reject(Errors.E_INTERNAL_ERROR, fail, generateUserInfo(fail))
     }
   }
 
