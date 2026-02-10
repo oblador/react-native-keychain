@@ -22,7 +22,8 @@ import kotlin.concurrent.withLock
 open class ResultHandlerInteractiveBiometric(
   protected val reactContext: ReactApplicationContext,
   storage: CipherStorage,
-  protected var promptInfo: BiometricPrompt.PromptInfo
+  protected var promptInfo: BiometricPrompt.PromptInfo,
+  protected val authenticateWithCryptoObject: Boolean = false
 ) : BiometricPrompt.AuthenticationCallback(), ResultHandler {
 
   // Explicitly declare the visibility and use 'override' to match the interface
@@ -232,17 +233,25 @@ open class ResultHandlerInteractiveBiometric(
   protected fun authenticateWithPrompt(activity: FragmentActivity): BiometricPrompt {
     val prompt = BiometricPrompt(activity, executor, this)
 
-    // If we have a pre-initialized cipher, use it with CryptoObject to atomically
-    // bind the biometric authentication to the crypto operation.
-    // This prevents "User not authenticated" errors caused by timing issues
-    // between BiometricPrompt.onAuthenticationSucceeded and the subsequent crypto operation.
+    // If authenticateWithCryptoObject is enabled and we have a pre-initialized cipher,
+    // use CryptoObject to atomically bind the biometric authentication to the crypto operation.
+    // This prevents "User not authenticated" errors caused by timing issues between
+    // BiometricPrompt.onAuthenticationSucceeded and the subsequent crypto operation.
+    //
+    // Note: When using CryptoObject, only Class 3 (Strong) biometrics are allowed.
+    // This typically means fingerprint only - Face Unlock may not work on devices
+    // where it's classified as Class 2 (Weak).
     val cipher = context?.cipher
-    if (cipher != null) {
-      Log.d(LOG_TAG, "Using CryptoObject for biometric authentication")
+    if (authenticateWithCryptoObject && cipher != null) {
+      Log.d(LOG_TAG, "Using CryptoObject for biometric authentication (Class 3 biometrics only)")
       val cryptoObject = BiometricPrompt.CryptoObject(cipher)
       prompt.authenticate(this.promptInfo, cryptoObject)
     } else {
-      Log.d(LOG_TAG, "No cipher available, using standard authentication (may cause timing issues on some devices)")
+      if (!authenticateWithCryptoObject) {
+        Log.d(LOG_TAG, "CryptoObject binding disabled, using standard authentication")
+      } else {
+        Log.d(LOG_TAG, "No cipher available, using standard authentication (may cause timing issues on some devices)")
+      }
       prompt.authenticate(this.promptInfo)
     }
 

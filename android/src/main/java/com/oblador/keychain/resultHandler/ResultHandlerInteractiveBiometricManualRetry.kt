@@ -11,9 +11,10 @@ import com.oblador.keychain.cipherStorage.CipherStorage.EncryptionResult
 class ResultHandlerInteractiveBiometricManualRetry(
   reactContext: ReactApplicationContext,
   storage: CipherStorage,
-  promptInfo: BiometricPrompt.PromptInfo
+  promptInfo: BiometricPrompt.PromptInfo,
+  authenticateWithCryptoObject: Boolean = false
 ) :
-  ResultHandlerInteractiveBiometric(reactContext, storage, promptInfo),
+  ResultHandlerInteractiveBiometric(reactContext, storage, promptInfo, authenticateWithCryptoObject),
   ResultHandler {
 
   // Explicitly declare visibility and use 'override' to match the interface
