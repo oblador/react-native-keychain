@@ -86,6 +86,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
       const val USERNAME = "username"
       const val PASSWORD = "password"
       const val STORAGE = "storage"
+      const val AUTHENTICATE_WITH_CRYPTO_OBJECT = "authenticateWithCryptoObject"
     }
   }
 
@@ -201,8 +202,9 @@ class KeychainModule(reactContext: ReactApplicationContext) :
           val useBiometry =
             getUseBiometry(accessControl) && (isFingerprintAuthAvailable || isFaceAuthAvailable || isIrisAuthAvailable)
           val promptInfo = getPromptInfo(options, usePasscode, useBiometry)
+          val authenticateWithCryptoObject = getAuthenticateWithCryptoObject(options)
           val result =
-            encryptToResult(alias, storage, username, password, level, promptInfo)
+            encryptToResult(alias, storage, username, password, level, promptInfo, authenticateWithCryptoObject)
           prefsStorage.storeEncryptedEntry(alias, result)
           val results = Arguments.createMap()
           results.putString(Maps.SERVICE, alias)
@@ -268,9 +270,10 @@ class KeychainModule(reactContext: ReactApplicationContext) :
           val useBiometry =
             getUseBiometry(accessControl) && (isFingerprintAuthAvailable || isFaceAuthAvailable || isIrisAuthAvailable)
           val promptInfo = getPromptInfo(options, usePasscode, useBiometry)
+          val authenticateWithCryptoObject = getAuthenticateWithCryptoObject(options)
           val cipher = getCipherStorageByName(storageName)
           val decryptionResult =
-            decryptCredentials(alias, cipher!!, resultSet, promptInfo)
+            decryptCredentials(alias, cipher!!, resultSet, promptInfo, authenticateWithCryptoObject)
           val credentials = Arguments.createMap()
           credentials.putString(Maps.SERVICE, alias)
           credentials.putString(Maps.USERNAME, decryptionResult.username)
@@ -454,14 +457,15 @@ class KeychainModule(reactContext: ReactApplicationContext) :
     alias: String,
     current: CipherStorage,
     resultSet: PrefsStorageBase.ResultSet,
-    promptInfo: PromptInfo
+    promptInfo: PromptInfo,
+    authenticateWithCryptoObject: Boolean = false
   ): DecryptionResult {
     val storageName = resultSet.cipherStorageName
 
     // The encrypted data is encrypted using the current CipherStorage, so we just decrypt and
     // return
     if (storageName == current.getCipherStorageName()) {
-      return decryptToResult(alias, current, resultSet, promptInfo)
+      return decryptToResult(alias, current, resultSet, promptInfo, authenticateWithCryptoObject)
     }
 
     // The encrypted data is encrypted using an older CipherStorage, so we need to decrypt the data
@@ -474,7 +478,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
         )
 
     // decrypt using the older cipher storage
-    val decryptionResult = decryptToResult(alias, oldStorage, resultSet, promptInfo)
+    val decryptionResult = decryptToResult(alias, oldStorage, resultSet, promptInfo, authenticateWithCryptoObject)
     return decryptionResult
   }
 
@@ -484,9 +488,10 @@ class KeychainModule(reactContext: ReactApplicationContext) :
     alias: String,
     storage: CipherStorage,
     resultSet: PrefsStorageBase.ResultSet,
-    promptInfo: PromptInfo
+    promptInfo: PromptInfo,
+    authenticateWithCryptoObject: Boolean = false
   ): DecryptionResult {
-    val handler = getInteractiveHandler(storage, promptInfo)
+    val handler = getInteractiveHandler(storage, promptInfo, authenticateWithCryptoObject)
     storage.decrypt(
       handler,
       alias,
@@ -512,9 +517,10 @@ class KeychainModule(reactContext: ReactApplicationContext) :
     username: String,
     password: String,
     securityLevel: SecurityLevel,
-    promptInfo: PromptInfo
+    promptInfo: PromptInfo,
+    authenticateWithCryptoObject: Boolean = false
   ): CipherStorage.EncryptionResult {
-    val handler = getInteractiveHandler(storage, promptInfo)
+    val handler = getInteractiveHandler(storage, promptInfo, authenticateWithCryptoObject)
     storage.encrypt(handler, alias, username, password, securityLevel)
     val error = handler.error
     if (error != null) {
@@ -529,10 +535,11 @@ class KeychainModule(reactContext: ReactApplicationContext) :
   /** Get instance of handler that resolves access to the keystore on system request. */
   private fun getInteractiveHandler(
     current: CipherStorage,
-    promptInfo: PromptInfo
+    promptInfo: PromptInfo,
+    authenticateWithCryptoObject: Boolean = false
   ): ResultHandler {
     val reactContext = reactApplicationContext
-    return ResultHandlerProvider.getHandler(reactContext, current, promptInfo)
+    return ResultHandlerProvider.getHandler(reactContext, current, promptInfo, authenticateWithCryptoObject)
   }
 
   /** Remove key from old storage and add it to the new storage. */
@@ -714,6 +721,14 @@ class KeychainModule(reactContext: ReactApplicationContext) :
     /** Get security level from options or fallback [SecurityLevel.ANY] value. */
     private fun getSecurityLevelOrDefault(options: ReadableMap?): SecurityLevel {
       return getSecurityLevelOrDefault(options, SecurityLevel.ANY.name)
+    }
+
+    /** Get authenticateWithCryptoObject flag from options, defaulting to false. */
+    private fun getAuthenticateWithCryptoObject(options: ReadableMap?): Boolean {
+      if (options != null && options.hasKey(Maps.AUTHENTICATE_WITH_CRYPTO_OBJECT)) {
+        return options.getBoolean(Maps.AUTHENTICATE_WITH_CRYPTO_OBJECT)
+      }
+      return false
     }
 
     /** Get security level from options or fallback to default value. */
