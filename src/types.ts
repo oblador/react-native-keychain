@@ -43,7 +43,7 @@ export type BaseOptions = {
   accessGroup?: string;
   /** Whether to use Samsung Knox (TIMA/Vault) if available.
    * @platform Android
-   * @default true
+   * @default false
    */
   useKnox?: boolean;
 };

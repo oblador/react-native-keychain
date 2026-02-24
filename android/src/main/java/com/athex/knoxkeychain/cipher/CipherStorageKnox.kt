@@ -78,7 +78,7 @@ class CipherStorageKnox(
             level: SecurityLevel
     ) {
         if (!KnoxUtils.isKnoxAvailable()) {
-            handler.onEncrypt(null, KeychainException("Knox KeyStore not available"))
+            handler.onEncrypt(null, KeychainException("Samsung Knox TIMA KeyStore is not available on this device."))
             return
         }
 
@@ -121,7 +121,7 @@ class CipherStorageKnox(
             level: SecurityLevel
     ) {
         if (!KnoxUtils.isKnoxAvailable()) {
-            handler.onDecrypt(null, KeychainException("Knox KeyStore not available"))
+            handler.onDecrypt(null, KeychainException("Samsung Knox TIMA KeyStore is not available on this device."))
             return
         }
 
@@ -165,7 +165,7 @@ class CipherStorageKnox(
             return generator.generateKey()
         }
 
-        throw GeneralSecurityException("No suitable KeyStore found for Knox")
+        throw GeneralSecurityException("No suitable Samsung Knox TIMA KeyStore found for storage.")
     }
 
     @Throws(GeneralSecurityException::class)
@@ -246,7 +246,7 @@ class CipherStorageKnox(
         val storeName = if (useAndroidKeyStore) "AndroidKeyStore" else knoxKeyStoreName
 
         if (storeName == null) {
-            throw GeneralSecurityException("Knox KeyStore not available")
+            throw GeneralSecurityException("Samsung Knox TIMA KeyStore is not available on this device.")
         }
 
         val keyPairGenerator =

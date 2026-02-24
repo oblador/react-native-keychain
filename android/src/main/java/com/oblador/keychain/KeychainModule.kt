@@ -258,6 +258,11 @@ class KeychainModule(reactContext: ReactApplicationContext) :
 
     if (null != cipherName) {
       result = getCipherStorageByName(cipherName)
+
+      // Explicitly requested Knox storage must be available, otherwise throw error
+      if (result is CipherStorageKnox && !KnoxUtils.isKnoxAvailable()) {
+        throw KeychainException("Samsung Knox storage is not available on this device.", Errors.E_STORAGE_ACCESS_ERROR)
+      }
     }
 
     // Check for Knox preference or default availability
@@ -483,7 +488,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
   fun generateKnoxKey(alias: String, promise: Promise) {
     try {
       if (!KnoxUtils.isKnoxAvailable()) {
-        promise.reject(Errors.E_INTERNAL_ERROR, "Knox not available")
+        promise.reject(Errors.E_INTERNAL_ERROR, "Samsung Knox TIMA KeyStore is not available on this device.")
         return
       }
       val storage = getCipherStorageByName(CipherStorageKnox.CIPHER_NAME) as? CipherStorageKnox
@@ -504,7 +509,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
   fun signWithKnoxKey(alias: String, data: String, promise: Promise) {
     try {
       if (!KnoxUtils.isKnoxAvailable()) {
-        promise.reject(Errors.E_INTERNAL_ERROR, "Knox not available")
+        promise.reject(Errors.E_INTERNAL_ERROR, "Samsung Knox TIMA KeyStore is not available on this device.")
         return
       }
       val storage = getCipherStorageByName(CipherStorageKnox.CIPHER_NAME) as? CipherStorageKnox
@@ -620,30 +625,8 @@ class KeychainModule(reactContext: ReactApplicationContext) :
   ): ResultHandler {
     val reactContext = reactApplicationContext
 
-    // Check if we should allow fallback to passcode
-    // This logic depends on how we constructed the promptInfo, but since we don't have easy access
-    // to the original options here,
-    // we can infer it from the allowed authenticators in promptInfo if possible, or we need to pass
-    // the options down.
-    // However, promptInfo.allowedAuthenticators is only available on API 30+.
-
-    // A safer way is to check if the promptInfo allows device credential.
-    // But we can't easily check that on older APIs without reflection or parsing.
-
-    // Given the constraint, we will modify getInteractiveHandler to take the 'usePasscode' and
-    // 'useBiometry' flags
-    // or just pass a boolean 'retryWithPasscode'.
-    // But we need to change the signature of getInteractiveHandler which is called from
-    // encryptToResult/decryptToResult.
-
-    // Let's check where getInteractiveHandler is called.
-    // It is called from encryptToResult and decryptToResult.
-    // Those methods take promptInfo.
-
-    // We need to change encryptToResult/decryptToResult to also take 'retryWithPasscode' boolean.
-    // And update their callers: setGenericPassword and getGenericPassword.
-
-    // Wait, let's look at ResultHandlerProvider.getHandler signature.
+    // The ResultHandlerProvider handles the complexity of showing biometric/passcode prompts
+    // and correctly processing the results based on the current API level and requested security.
     return ResultHandlerProvider.getHandler(reactContext, current, promptInfo, retryWithPasscode)
   }
 

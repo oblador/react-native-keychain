@@ -118,10 +118,10 @@ export default function App() {
 
       await Keychain.setGenericPassword(username, password, options);
 
-      setStatus(`✅ Saved successfully!\nOptions: ${JSON.stringify(options, null, 2)}`);
+      setStatus(`Credentials saved successfully!\nOptions: ${JSON.stringify(options, null, 2)}`);
       setHasCredentials(true);
     } catch (err: any) {
-      setStatus(`❌ Error: ${err.message || err}`);
+      setStatus(`Error: ${err.message || err}`);
       console.error('Save error:', err);
     }
   };
@@ -129,21 +129,19 @@ export default function App() {
   // Load credentials
   const load = async () => {
     try {
-      setStatus('📂 Loading...');
-      const creds = await Keychain.getGenericPassword();
-      console.log('Save options:', creds)
+      setStatus('Loading...');
+      const options = getOptions();
+      const creds = await Keychain.getGenericPassword(options);
+      console.log('Load result:', creds)
 
       if (creds) {
         setUsername(creds.username);
         setPassword(creds.password);
         setStatus(
-          `✅ Loaded!\n` +
-          `Username: ${creds.username}\n` +
-          `Password: ${creds.password}\n` +
-          `Storage: ${creds.storage || 'default'}`
+          `Credentials loaded! ${JSON.stringify(creds)}`
         );
       } else {
-        setStatus('❌ No credentials found');
+        setStatus('Credentials not found');
       }
     } catch (err: any) {
       setStatus(`❌ Error: ${err.message || err}`);
@@ -154,14 +152,14 @@ export default function App() {
   // Reset credentials
   const reset = async () => {
     try {
-      setStatus('🗑️ Clearing...');
+      setStatus('Clearing...');
       await Keychain.resetGenericPassword();
       setUsername('');
       setPassword('');
-      setStatus('✅ Credentials cleared');
+      setStatus('Credentials cleared');
       setHasCredentials(false);
     } catch (err: any) {
-      setStatus(`❌ Error: ${err.message || err}`);
+      setStatus(`Error: ${err.message || err}`);
     }
   };
 
@@ -171,7 +169,7 @@ export default function App() {
       style={styles.container}
     >
       <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.title} onPress={Keyboard.dismiss}>
+        <Text style={styles.title} accessibilityLabel="Keychain Example" onPress={Keyboard.dismiss}>
           🔐 React Native Keychain
         </Text>
 
@@ -196,6 +194,7 @@ export default function App() {
           <Text style={styles.sectionTitle}>📝 Credentials</Text>
           <TextInput
             style={styles.input}
+            testID="usernameInput"
             placeholder="Username"
             value={username}
             onChangeText={setUsername}
@@ -203,6 +202,7 @@ export default function App() {
           />
           <TextInput
             style={styles.input}
+            testID="passwordInput"
             placeholder="Password"
             value={password}
             onChangeText={setPassword}
@@ -283,13 +283,25 @@ export default function App() {
 
         {/* Action Buttons */}
         <View style={styles.buttonContainer}>
-          <TouchableOpacity style={[styles.button, styles.saveButton]} onPress={save}>
+          <TouchableOpacity
+            style={[styles.button, styles.saveButton]}
+            onPress={save}
+            testID="saveButton"
+          >
             <Text style={styles.buttonText}>💾 Save</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.button, styles.loadButton]} onPress={load}>
+          <TouchableOpacity
+            style={[styles.button, styles.loadButton]}
+            onPress={load}
+            testID="loadButton"
+          >
             <Text style={styles.buttonText}>📂 Load</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.button, styles.resetButton]} onPress={reset}>
+          <TouchableOpacity
+            style={[styles.button, styles.resetButton]}
+            onPress={reset}
+            testID="resetButton"
+          >
             <Text style={styles.buttonText}>🗑️ Clear</Text>
           </TouchableOpacity>
         </View>

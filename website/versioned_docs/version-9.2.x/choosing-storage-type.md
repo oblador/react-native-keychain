@@ -13,6 +13,7 @@ We offer three security levels for data storage:
 
 - **AES_GCM**: Symmetric encryption with biometric protection
 - **RSA**: Asymmetric encryption with biometric protection
+- Best for: Passwords, personal data, sensitive keys
 
 
 ### 2. Medium Security (without Authentication)

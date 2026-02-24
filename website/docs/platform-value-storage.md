@@ -10,21 +10,23 @@ The Keystore supports various encryption algorithms, such as AES and RSA. Securi
 
 ### Security Levels
 
-We offer three security levels for data storage:
+We offer four security levels for data storage:
 
 #### 1. High Security (with Biometric Authentication)
 
 - **AES_GCM**: Symmetric encryption with biometric protection
 - **RSA**: Asymmetric encryption with biometric protection
-- **KNOX**: Samsung Knox hardware-backed encryption (Samsung devices)
-- Best for: Passwords, personal data, sensitive keys
-
 #### 2. Medium Security (without Authentication)
 
 - **AES_GCM_NO_AUTH**: Symmetric encryption without biometric requirements
 - Best for: Cached data, non-sensitive encrypted data
 
-#### 3. Legacy/Deprecated
+#### 3. Enterprise Security (Samsung Knox)
+
+- **KNOX**: Samsung Knox hardware-backed encryption (Samsung devices)
+- Best for: Government, enterprise, and high-security compliance (FIPS 140-2)
+
+#### 4. Legacy/Deprecated
 
 - **AES_CBC**
 - ⚠️ Not recommended for new implementations
@@ -59,7 +61,7 @@ On Samsung devices, `react-native-keychain` provides additional Knox storage opt
 
 - **Knox on API 31+**: Uses StrongBox Keymaster for hardware-backed encryption
 - **Knox on API 23-30**: Uses TIMA (Trusted Integrity Management Architecture) KeyStore
-- **Knox Fallback**: On non-Samsung devices, Knox storage gracefully falls back to standard Android Keystore
+- **Knox Fallback**: When using the `useKnox` option, the library gracefully falls back to standard Android Keystore on non-Samsung devices. However, explicitly selecting `STORAGE_TYPE.KNOX` on a non-Samsung device will result in an error.
 
 Knox storage is ideal for government and enterprise applications requiring FIPS 140-2 compliance or Samsung Knox certification. For more details, see the [Knox Integration Guide](/docs/knox-integration).
 

@@ -56,7 +56,7 @@ module.exports = {
       type: 'android.emulator',
       headless: Boolean(process.env.CI),
       device: {
-        avdName: 'Medium_Phone_API_36.1',
+        avdName: 'TestingAVD',
       },
     },
   },

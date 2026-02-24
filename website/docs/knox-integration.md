@@ -37,7 +37,7 @@ Knox storage is available on:
 - **Samsung devices** with Knox platform (most Samsung devices since 2013)
 - **API Level 23+** (Android 6.0+)
 
-On non-Samsung devices, Knox storage types will gracefully fall back to standard Android Keystore encryption.
+On non-Samsung devices, Knox storage will gracefully fall back to standard Android Keystore encryption if the `useKnox` flag is used. However, if `STORAGE_TYPE.KNOX` is explicitly requested via the `storage` option, the operation will fail with an error if Knox is unavailable.
 
 ### Knox Security Architecture
 

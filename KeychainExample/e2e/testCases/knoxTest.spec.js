@@ -29,8 +29,8 @@ describe(':android:Knox Storage', () => {
         // Select Knox Storage
         await element(by.text('Knox')).tap();
 
-        await expect(element(by.text('Save'))).toBeVisible();
-        await element(by.text('Save')).tap();
+        await expect(element(by.id('saveButton'))).toBeVisible();
+        await element(by.id('saveButton')).tap();
 
         // Knox usually requires auth, so we might need to enter biometrics depending on implementation
         // But based on App.tsx, we are using the default Access Control (Biometry + Passcode)
@@ -40,7 +40,7 @@ describe(':android:Knox Storage', () => {
         await expectCredentialsSavedMessage();
         await waitForAuthValidity();
 
-        await element(by.text('Load')).tap();
+        await element(by.id('loadButton')).tap();
         await enterBiometrics();
 
         await expectCredentialsLoadedMessage(
