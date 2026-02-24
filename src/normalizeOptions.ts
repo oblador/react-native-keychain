@@ -10,12 +10,11 @@ export function normalizeAuthPrompt<T extends SetOptions | GetOptions>(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   options: T = {} as any
 ) {
-  const { authenticationPrompt } = options;
-
-  options.authenticationPrompt = {
-    ...AUTH_PROMPT_DEFAULTS,
-    ...authenticationPrompt,
+  return {
+    ...options,
+    authenticationPrompt: {
+      ...AUTH_PROMPT_DEFAULTS,
+      ...options.authenticationPrompt,
+    },
   };
-
-  return options;
 }
