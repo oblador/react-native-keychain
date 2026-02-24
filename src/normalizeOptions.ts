@@ -15,6 +15,6 @@ export function normalizeAuthPrompt<T extends SetOptions | GetOptions>(
     authenticationPrompt: {
       ...AUTH_PROMPT_DEFAULTS,
       ...options.authenticationPrompt,
-    }
+    },
   };
 }

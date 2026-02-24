@@ -138,9 +138,7 @@ export function getAllGenericPasswordServices(
  * console.log('Internet credentials exist:', hasCredentials);
  * ```
  */
-export function hasInternetCredentials(
-  options: BaseOptions
-): Promise<boolean> {
+export function hasInternetCredentials(options: BaseOptions): Promise<boolean> {
   return RNKeychainManager.hasInternetCredentialsForOptions(options);
 }
 
