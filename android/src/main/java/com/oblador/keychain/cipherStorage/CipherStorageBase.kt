@@ -381,8 +381,9 @@ abstract class CipherStorageBase(protected val applicationContext: Context) : Ci
 
     var secretKey: Key? = null
     val supportsSecureHardware = DeviceAvailability.isStrongboxAvailable(applicationContext)
+    val slowStrongBox = DeviceAvailability.isSlowStrongBoxManufacturer()
 
-    if (supportsSecureHardware) {
+    if (supportsSecureHardware && !slowStrongBox) {
       try {
         secretKey = tryGenerateStrongBoxSecurityKey(alias)
       } catch (ex: GeneralSecurityException) {
@@ -390,6 +391,8 @@ abstract class CipherStorageBase(protected val applicationContext: Context) : Ci
       } catch (ex: ProviderException) {
         Log.w(LOG_TAG, "StrongBox security storage is not available.", ex)
       }
+    } else if (supportsSecureHardware && slowStrongBox) {
+        Log.w(LOG_TAG, "Skipping StrongBox generation due to slow OEM implementation.")
     }
 
     // If that is not possible, we generate the key in a regular way
