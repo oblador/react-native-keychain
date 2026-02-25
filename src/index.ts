@@ -367,6 +367,103 @@ export function isPasscodeAuthAvailable(): Promise<boolean> {
   return RNKeychainManager.isPasscodeAuthAvailable();
 }
 
+
+/**
+ * Fetches the value for a specific key.
+ *
+ * @param {string} key - The key to retrieve the value for.
+ * @param {BaseOptions} [options] - A keychain options object.
+ *
+ * @returns {Promise<string | null>} Resolves to the value string when successful, or null if not found
+ *
+ * @example
+ * ```typescript
+ * const value = await Keychain.getItemForKey('myKey', options);
+ * if (value) {
+ *   console.log('Value loaded:', value);
+ * } else {
+ *   console.log('No value stored for key');
+ * }
+ * ```
+ */
+export function getItemForKey(key: string, options?: BaseOptions): Promise<string | null> {
+  return RNKeychainManager.getItemForKey(key, options);
+}
+
+
+/**
+ * Gets all items.
+ *
+ * @param {BaseOptions} [options] - A keychain options object.
+ *
+ * @returns {Promise<Record<string, string>>} Resolves to an object with all key-value pairs.
+ *
+ * @example
+ * ```typescript
+ * const items = await Keychain.getAllItems(options);
+ * console.log('All items:', items);
+ * ```
+ */
+export function getAllItems(options?: BaseOptions): Promise<Record<string, string>> {
+  return RNKeychainManager.getAllItems(options);
+}
+
+
+/**
+ * Saves a value for a specific key.
+ *
+ * @param {string} key - The key to associate with the value.
+ * @param {string} value - The value to be saved.
+ * @param {BaseOptions} [options] - A keychain options object.
+ *
+ * @returns {Promise<string>} Resolves to the stored value when successful
+ *
+ * @example
+ * ```typescript
+ * await Keychain.setItemForKey('myKey', 'value', options);
+ * ```
+ */
+export function setItemForKey(key: string, value: string, options?: BaseOptions): Promise<string> {
+  return RNKeychainManager.setItemForKey(key, value, options);
+}
+
+
+/**
+ * Removes the value for a specific key.
+ *
+ * @param {string} key - The key to remove.
+ * @param {BaseOptions} [options] - A keychain options object.
+ *
+ * @returns {Promise<boolean>} Resolves to `true` when successful
+ *
+ * @example
+ * ```typescript
+ * const success = await Keychain.removeItemForKey('myKey', options);
+ * console.log('Key removed:', success);
+ * ```
+ */
+export function removeItemForKey(key: string, options?: BaseOptions): Promise<boolean> {
+  return RNKeychainManager.removeItemForKey(key, options);
+}
+
+
+/**
+ * Removes all items matching the service.
+ *
+ * @param {BaseOptions} [options] - A keychain options object.
+ *
+ * @returns {Promise<boolean>} Resolves to `true` when successful
+ *
+ * @example
+ * ```typescript
+ * const success = await Keychain.clearItems(options);
+ * console.log('All items cleared:', success);
+ * ```
+ */
+export function clearItems(options?: BaseOptions): Promise<boolean> {
+  return RNKeychainManager.clearItems(options);
+}
+
 export * from './enums';
 export * from './types';
 /** @ignore */
@@ -391,4 +488,9 @@ export default {
   resetGenericPassword,
   requestSharedWebCredentials,
   setSharedWebCredentials,
+  getItemForKey,
+  getAllItems,
+  setItemForKey,
+  removeItemForKey,
+  clearItems
 };
