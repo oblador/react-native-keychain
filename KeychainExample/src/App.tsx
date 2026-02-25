@@ -1,298 +1,335 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Keyboard,
-  KeyboardAvoidingView,
-  Platform,
   StyleSheet,
   Text,
-  TextInput,
-  TouchableHighlight,
   View,
+  TextInput,
+  TouchableOpacity,
+  ScrollView,
+  Platform,
+  KeyboardAvoidingView,
+  Keyboard,
 } from 'react-native';
 import SegmentedControlTab from 'react-native-segmented-control-tab';
 import * as Keychain from 'react-native-keychain';
 
-const ACCESS_CONTROL_OPTIONS = ['None', 'Passcode', 'Password'];
-const ACCESS_CONTROL_OPTIONS_ANDROID = ['None', 'Passcode'];
-const ACCESS_CONTROL_MAP = [
-  null,
-  Keychain.ACCESS_CONTROL.DEVICE_PASSCODE,
-  Keychain.ACCESS_CONTROL.APPLICATION_PASSWORD,
-  Keychain.ACCESS_CONTROL.BIOMETRY_CURRENT_SET,
-];
-const ACCESS_CONTROL_MAP_ANDROID = [
-  null,
-  Keychain.ACCESS_CONTROL.DEVICE_PASSCODE,
-  Keychain.ACCESS_CONTROL.BIOMETRY_CURRENT_SET,
-];
-const SECURITY_LEVEL_OPTIONS = ['Any', 'Software', 'Hardware'];
-const SECURITY_LEVEL_MAP = [
-  Keychain.SECURITY_LEVEL.ANY,
-  Keychain.SECURITY_LEVEL.SECURE_SOFTWARE,
-  Keychain.SECURITY_LEVEL.SECURE_HARDWARE,
+// Storage Type Options
+const STORAGE_TYPES = [
+  { label: 'Default', value: undefined },
+  { label: 'AES (No Auth)', value: Keychain.STORAGE_TYPE.AES_GCM_NO_AUTH },
+  { label: 'AES (Auth)', value: Keychain.STORAGE_TYPE.AES_GCM },
+  { label: 'RSA', value: Keychain.STORAGE_TYPE.RSA },
+  { label: 'Knox', value: Keychain.STORAGE_TYPE.KNOX },
 ];
 
-const SECURITY_STORAGE_OPTIONS = [
-  'Best',
-  'AES_CBC',
-  'AES_GCM',
-  'AES_GCM_NO_AUTH',
-  'RSA',
-];
-const SECURITY_STORAGE_MAP = [
-  null,
-  Keychain.STORAGE_TYPE.AES_CBC,
-  Keychain.STORAGE_TYPE.AES_GCM,
-  Keychain.STORAGE_TYPE.AES_GCM_NO_AUTH,
-  Keychain.STORAGE_TYPE.RSA,
+// Access Control Options
+const ACCESS_CONTROLS_IOS = [
+  { label: 'None', value: undefined },
+  { label: 'Biometry', value: Keychain.ACCESS_CONTROL.BIOMETRY_ANY },
+  { label: 'Biometry + Passcode', value: Keychain.ACCESS_CONTROL.BIOMETRY_ANY_OR_DEVICE_PASSCODE },
+  { label: 'Passcode', value: Keychain.ACCESS_CONTROL.DEVICE_PASSCODE },
 ];
 
-const TYPE_OPTIONS = ['genericPassword', 'internetCredentials'];
+const ACCESS_CONTROLS_ANDROID = [
+  { label: 'None', value: undefined },
+  { label: 'Biometry', value: Keychain.ACCESS_CONTROL.BIOMETRY_CURRENT_SET },
+  { label: 'Biometry + Passcode', value: Keychain.ACCESS_CONTROL.BIOMETRY_ANY_OR_DEVICE_PASSCODE },
+  { label: 'Passcode', value: Keychain.ACCESS_CONTROL.DEVICE_PASSCODE },
+];
+
+// Security Levels
+const SECURITY_LEVELS = [
+  { label: 'Any', value: Keychain.SECURITY_LEVEL.ANY },
+  { label: 'Software', value: Keychain.SECURITY_LEVEL.SECURE_SOFTWARE },
+  { label: 'Hardware', value: Keychain.SECURITY_LEVEL.SECURE_HARDWARE },
+];
 
 export default function App() {
+  // State
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [status, setStatus] = useState('');
-  const [type, setType] = useState(TYPE_OPTIONS[0]);
-  const [biometryType, setBiometryType] =
-    useState<Keychain.BIOMETRY_TYPE | null>(null);
-  const [accessControl, setAccessControl] = useState<
-    Keychain.ACCESS_CONTROL | undefined
-  >(undefined);
-  const [securityLevel, setSecurityLevel] = useState<
-    Keychain.SECURITY_LEVEL | undefined
-  >(undefined);
-  const [storage, setStorage] = useState<Keychain.STORAGE_TYPE | undefined>(
-    undefined
-  );
+
+  // Options
   const [selectedStorageIndex, setSelectedStorageIndex] = useState(0);
+  const [selectedAccessIndex, setSelectedAccessIndex] = useState(2);
   const [selectedSecurityIndex, setSelectedSecurityIndex] = useState(0);
-  const [selectedAccessControlIndex, setSelectedAccessControlIndex] =
-    useState(0);
-  const [hasGenericPassword, setHasGenericPassword] = useState(false);
-  const [hasInternetCredentials, setHasInternetCredentials] = useState(false);
+  const [useKnox, setUseKnox] = useState(false);
+
+  // Info
+  const [biometryType, setBiometryType] = useState<Keychain.BIOMETRY_TYPE | null>(null);
+  const [isKnoxAvailable, setIsKnoxAvailable] = useState(false);
+  const [hasCredentials, setHasCredentials] = useState(false);
+
+  const accessControls = Platform.OS === 'ios' ? ACCESS_CONTROLS_IOS : ACCESS_CONTROLS_ANDROID;
 
   useEffect(() => {
-    Keychain.getSupportedBiometryType().then((result) => {
-      setBiometryType(result);
-    });
-    Keychain.hasGenericPassword().then((result) => {
-      setHasGenericPassword(result);
-    });
-    Keychain.hasInternetCredentials({ server: 'https://example.com' }).then(
-      (result) => {
-        setHasInternetCredentials(result);
-      }
-    );
+    // Check capabilities
+    Keychain.getSupportedBiometryType().then(setBiometryType);
+    Keychain.hasGenericPassword().then(setHasCredentials);
+
+    if (Platform.OS === 'android') {
+      Keychain.isKnoxAvailable().then((available) => {
+        setIsKnoxAvailable(available);
+        // Auto-select Knox in storage if available
+        if (available) {
+          const knoxIndex = STORAGE_TYPES.findIndex(t => t.value === Keychain.STORAGE_TYPE.KNOX);
+          if (knoxIndex > 0) setSelectedStorageIndex(knoxIndex);
+        }
+      });
+    }
   }, []);
 
+  // Build options object
+  const getOptions = () => {
+    const options: any = {};
+
+    // Storage type
+    const selectedStorage = STORAGE_TYPES[selectedStorageIndex];
+    if (selectedStorage.value) {
+      options.storage = selectedStorage.value;
+    }
+
+    // Access control
+    const selectedAccess = accessControls[selectedAccessIndex];
+    if (selectedAccess.value) {
+      options.accessControl = selectedAccess.value;
+    }
+
+    // Security level
+    const selectedSecurity = SECURITY_LEVELS[selectedSecurityIndex];
+    options.securityLevel = selectedSecurity.value;
+
+    // Knox flag (alternative to storage type)
+    if (useKnox && Platform.OS === 'android') {
+      options.useKnox = true;
+    }
+
+    return options;
+  };
+
+  // Save credentials
   const save = async () => {
     try {
-      const options = {
-        authenticationPrompt: {
-          title: 'Authentication needed',
-          subtitle: 'Subtitle',
-          description: 'Some descriptive text',
-          cancel: 'Cancel',
-        },
-      };
-      const start = new Date();
-      if (type === 'internetCredentials') {
-        await Keychain.setInternetCredentials(
-          'https://example.com',
-          username,
-          password,
-          {
-            ...options,
-            accessControl,
-            securityLevel,
-            storage,
-          }
-        );
-      } else {
-        await Keychain.setGenericPassword(username, password, {
-          ...options,
-          accessControl,
-          securityLevel,
-          storage,
-        });
-      }
+      setStatus('💾 Saving...');
+      const options = getOptions();
 
-      const end = new Date();
-      setUsername('');
-      setPassword('');
-      setStatus(
-        `Credentials saved! takes: ${end.getTime() - start.getTime()} millis`
-      );
-    } catch (err) {
-      setStatus('Could not save credentials, ' + err);
+      console.log('Save options:', options);
+
+      await Keychain.setGenericPassword(username, password, options);
+
+      setStatus(`Credentials saved successfully!\nOptions: ${JSON.stringify(options, null, 2)}`);
+      setHasCredentials(true);
+    } catch (err: any) {
+      setStatus(`Error: ${err.message || err}`);
+      console.error('Save error:', err);
     }
   };
 
+  // Load credentials
   const load = async () => {
     try {
-      const options = {
-        authenticationPrompt: {
-          title: 'Authentication needed',
-          subtitle: 'Subtitle',
-          description: 'Some descriptive text',
-          cancel: 'Cancel',
-        },
-      };
-      let credentials;
-      if (type === 'internetCredentials') {
-        credentials = await Keychain.getInternetCredentials(
-          'https://example.com',
-          {
-            ...options,
-            accessControl,
-          }
+      setStatus('Loading...');
+      const options = getOptions();
+      const creds = await Keychain.getGenericPassword(options);
+      console.log('Load result:', creds)
+
+      if (creds) {
+        setUsername(creds.username);
+        setPassword(creds.password);
+        setStatus(
+          `Credentials loaded! ${JSON.stringify(creds)}`
         );
       } else {
-        credentials = await Keychain.getGenericPassword({
-          ...options,
-          accessControl,
-        });
+        setStatus('Credentials not found');
       }
-      if (credentials) {
-        setStatus('Credentials loaded! ' + JSON.stringify(credentials));
-      } else {
-        setStatus('No credentials stored.');
-      }
-    } catch (err) {
-      setStatus('Could not load credentials. ' + err);
+    } catch (err: any) {
+      setStatus(`❌ Error: ${err.message || err}`);
+      console.error('Load error:', err);
     }
   };
 
+  // Reset credentials
   const reset = async () => {
     try {
+      setStatus('Clearing...');
       await Keychain.resetGenericPassword();
-      await Keychain.resetInternetCredentials({
-        server: 'https://example.com',
-      });
-      setStatus('Credentials Reset!');
       setUsername('');
       setPassword('');
-    } catch (err) {
-      setStatus('Could not reset credentials, ' + err);
+      setStatus('Credentials cleared');
+      setHasCredentials(false);
+    } catch (err: any) {
+      setStatus(`Error: ${err.message || err}`);
     }
   };
-
-  const AC_VALUES =
-    Platform.OS === 'ios'
-      ? ACCESS_CONTROL_OPTIONS
-      : ACCESS_CONTROL_OPTIONS_ANDROID;
-  const AC_MAP =
-    Platform.OS === 'ios' ? ACCESS_CONTROL_MAP : ACCESS_CONTROL_MAP_ANDROID;
 
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       style={styles.container}
     >
-      <View style={styles.content}>
-        <Text style={styles.title} onPress={() => Keyboard.dismiss()}>
-          Keychain Example
+      <ScrollView contentContainerStyle={styles.content}>
+        <Text style={styles.title} accessibilityLabel="Keychain Example" onPress={Keyboard.dismiss}>
+          🔐 React Native Keychain
         </Text>
-        <View style={styles.field}>
-          <Text style={styles.label}>Username</Text>
+
+        {/* Device Info */}
+        <View style={styles.infoCard}>
+          <Text style={styles.infoTitle}>📱 Device Info</Text>
+          <Text style={styles.infoText}>
+            Biometry: <Text style={styles.bold}>{biometryType || 'Not available'}</Text>
+          </Text>
+          {Platform.OS === 'android' && (
+            <Text style={styles.infoText}>
+              Knox: <Text style={styles.bold}>{isKnoxAvailable ? '✅ Available' : '❌ Not available'}</Text>
+            </Text>
+          )}
+          <Text style={styles.infoText}>
+            Saved: <Text style={styles.bold}>{hasCredentials ? '✅ Yes' : '❌ No'}</Text>
+          </Text>
+        </View>
+
+        {/* Credentials Input */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>📝 Credentials</Text>
           <TextInput
             style={styles.input}
             testID="usernameInput"
-            autoCapitalize="none"
+            placeholder="Username"
             value={username}
-            onChange={(event) => setUsername(event.nativeEvent.text)}
-            underlineColorAndroid="transparent"
-            blurOnSubmit={false}
-            returnKeyType="next"
+            onChangeText={setUsername}
+            autoCapitalize="none"
           />
-        </View>
-        <View style={styles.field}>
-          <Text style={styles.label}>Password</Text>
           <TextInput
             style={styles.input}
             testID="passwordInput"
-            secureTextEntry
-            autoCapitalize="none"
+            placeholder="Password"
             value={password}
-            onChange={(event) => setPassword(event.nativeEvent.text)}
-            underlineColorAndroid="transparent"
+            onChangeText={setPassword}
+            secureTextEntry
           />
         </View>
-        <View style={styles.field}>
-          <Text style={styles.label}>Type</Text>
+
+        {/* Storage Type */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>💾 Storage Type</Text>
+          <Text style={styles.hint}>Choose encryption method</Text>
           <SegmentedControlTab
-            selectedIndex={TYPE_OPTIONS.indexOf(type)}
-            values={TYPE_OPTIONS}
-            onTabPress={(index) => {
-              setType(TYPE_OPTIONS[index]);
-            }}
+            tabTextStyle={styles.tabText}
+            tabStyle={styles.tab}
+            activeTabStyle={styles.activeTab}
+            selectedIndex={selectedStorageIndex}
+            values={STORAGE_TYPES.map(t => t.label)}
+            onTabPress={setSelectedStorageIndex}
           />
+          {STORAGE_TYPES[selectedStorageIndex].value === Keychain.STORAGE_TYPE.KNOX && (
+            <Text style={styles.infoSmall}>
+              ℹ️ Knox uses hardware-backed encryption on Samsung devices
+            </Text>
+          )}
         </View>
-        <View style={styles.field}>
-          <Text style={styles.label}>Access Control</Text>
+
+        {/* Access Control */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>🔒 Access Control</Text>
+          <Text style={styles.hint}>Authentication requirement</Text>
           <SegmentedControlTab
-            selectedIndex={selectedAccessControlIndex}
-            values={biometryType ? [...AC_VALUES, biometryType] : AC_VALUES}
-            onTabPress={(index) => {
-              setAccessControl(AC_MAP[index] || undefined);
-              setSelectedAccessControlIndex(index);
-            }}
+            tabTextStyle={styles.tabText}
+            tabStyle={styles.tab}
+            activeTabStyle={styles.activeTab}
+            selectedIndex={selectedAccessIndex}
+            values={accessControls.map(a => a.label)}
+            onTabPress={setSelectedAccessIndex}
+          />
+          {selectedAccessIndex > 0 && (
+            <Text style={styles.infoSmall}>
+              ℹ️ Will require {accessControls[selectedAccessIndex].label.toLowerCase()} to access
+            </Text>
+          )}
+        </View>
+
+        {/* Security Level */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>🛡️ Security Level</Text>
+          <Text style={styles.hint}>Hardware vs Software encryption</Text>
+          <SegmentedControlTab
+            tabTextStyle={styles.tabText}
+            tabStyle={styles.tab}
+            activeTabStyle={styles.activeTab}
+            selectedIndex={selectedSecurityIndex}
+            values={SECURITY_LEVELS.map(s => s.label)}
+            onTabPress={setSelectedSecurityIndex}
           />
         </View>
-        {Platform.OS === 'android' && (
-          <View style={styles.field}>
-            <Text style={styles.label}>Security Level</Text>
-            <SegmentedControlTab
-              selectedIndex={selectedSecurityIndex}
-              values={SECURITY_LEVEL_OPTIONS}
-              onTabPress={(index) => {
-                setSecurityLevel(SECURITY_LEVEL_MAP[index] || undefined);
-                setSelectedSecurityIndex(index);
-              }}
-            />
-            <Text style={styles.label}>Storage</Text>
+
+        {/* Knox Toggle (Android only) */}
+        {Platform.OS === 'android' && isKnoxAvailable && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>🔐 Knox Options</Text>
+            <Text style={styles.hint}>Alternative: Use Knox flag instead of storage type</Text>
             <SegmentedControlTab
               tabTextStyle={styles.tabText}
               tabStyle={styles.tab}
-              selectedIndex={selectedStorageIndex}
-              values={SECURITY_STORAGE_OPTIONS}
-              onTabPress={(index) => {
-                setStorage(SECURITY_STORAGE_MAP[index] || undefined);
-                setSelectedStorageIndex(index);
-              }}
+              activeTabStyle={styles.activeTab}
+              selectedIndex={useKnox ? 0 : 1}
+              values={['Use Knox', "Don't Use Knox"]}
+              onTabPress={(index) => setUseKnox(index === 0)}
             />
+            <Text style={styles.infoSmall}>
+              ℹ️ When enabled, Knox hardware security will be used regardless of storage type selection
+            </Text>
           </View>
         )}
-        {!!status && <Text style={styles.status}>{status}</Text>}
 
-        <View style={styles.buttons}>
-          <TouchableHighlight onPress={save} style={styles.button}>
-            <View style={styles.save}>
-              <Text style={styles.buttonText}>Save</Text>
-            </View>
-          </TouchableHighlight>
-
-          <TouchableHighlight onPress={load} style={styles.button}>
-            <View style={styles.load}>
-              <Text style={styles.buttonText}>Load</Text>
-            </View>
-          </TouchableHighlight>
-
-          <TouchableHighlight onPress={reset} style={styles.button}>
-            <View style={styles.reset}>
-              <Text style={styles.buttonText}>Reset</Text>
-            </View>
-          </TouchableHighlight>
+        {/* Action Buttons */}
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity
+            style={[styles.button, styles.saveButton]}
+            onPress={save}
+            testID="saveButton"
+          >
+            <Text style={styles.buttonText}>💾 Save</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.button, styles.loadButton]}
+            onPress={load}
+            testID="loadButton"
+          >
+            <Text style={styles.buttonText}>📂 Load</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.button, styles.resetButton]}
+            onPress={reset}
+            testID="resetButton"
+          >
+            <Text style={styles.buttonText}>🗑️ Clear</Text>
+          </TouchableOpacity>
         </View>
 
-        <Text style={styles.status}>
-          hasGenericPassword: {String(hasGenericPassword)}
-        </Text>
-        <Text style={styles.status}>
-          hasInternetCredentials: {String(hasInternetCredentials)}
-        </Text>
-      </View>
+        {/* Status Display */}
+        {!!status && (
+          <View style={styles.statusCard}>
+            <Text style={styles.statusText}>{status}</Text>
+          </View>
+        )}
+
+        {/* Help Section */}
+        <View style={styles.helpCard}>
+          <Text style={styles.helpTitle}>💡 Quick Guide</Text>
+          <Text style={styles.helpText}>
+            • <Text style={styles.bold}>Storage Type:</Text> Encryption method (AES, RSA, Knox)
+          </Text>
+          <Text style={styles.helpText}>
+            • <Text style={styles.bold}>Access Control:</Text> When to ask for biometric/passcode
+          </Text>
+          <Text style={styles.helpText}>
+            • <Text style={styles.bold}>Security Level:</Text> Hardware (secure) vs Software
+          </Text>
+          <Text style={styles.helpText}>
+            • <Text style={styles.bold}>Knox:</Text> Samsung hardware security (if available)
+          </Text>
+        </View>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 }
@@ -300,75 +337,163 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    backgroundColor: '#F5FCFF',
+    backgroundColor: '#f8f9fa',
   },
   content: {
-    marginHorizontal: 20,
+    padding: 20,
+    paddingBottom: 40,
   },
   title: {
-    fontSize: 28,
-    fontWeight: '200',
+    fontSize: 26,
+    fontWeight: 'bold',
     textAlign: 'center',
-    marginBottom: 20,
+    marginVertical: 20,
+    color: '#212529',
   },
-  field: {
-    marginVertical: 5,
+
+  // Cards & Sections
+  infoCard: {
+    backgroundColor: '#e7f3ff',
+    padding: 15,
+    borderRadius: 12,
+    marginBottom: 15,
+    borderLeftWidth: 4,
+    borderLeftColor: '#0066cc',
   },
-  label: {
-    fontWeight: '500',
-    fontSize: 15,
-    marginBottom: 5,
-  },
-  input: {
-    color: '#000',
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: '#ccc',
+  section: {
     backgroundColor: 'white',
-    height: 32,
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 15,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    marginBottom: 4,
+    color: '#212529',
+  },
+  hint: {
+    fontSize: 13,
+    color: '#6c757d',
+    marginBottom: 12,
+  },
+  infoTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 8,
+    color: '#212529',
+  },
+  infoText: {
     fontSize: 14,
+    color: '#495057',
+    marginBottom: 4,
+  },
+  infoSmall: {
+    fontSize: 12,
+    color: '#6c757d',
+    marginTop: 10,
+    fontStyle: 'italic',
+  },
+  bold: {
+    fontWeight: '700',
+  },
+
+  // Input
+  input: {
+    borderWidth: 1,
+    borderColor: '#dee2e6',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 10,
+    fontSize: 16,
+    backgroundColor: '#ffffff',
+    color: '#212529',
+  },
+
+  // Tabs
+  tabText: {
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  tab: {
     padding: 8,
+    borderColor: '#dee2e6',
+    backgroundColor: '#f8f9fa',
   },
-  status: {
-    color: '#333',
-    fontSize: 12,
-    marginTop: 15,
+  activeTab: {
+    backgroundColor: '#0066cc',
   },
-  biometryType: {
-    color: '#333',
-    fontSize: 12,
-    marginTop: 15,
-  },
-  buttons: {
+
+  // Buttons
+  buttonContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 20,
+    gap: 10,
+    marginTop: 10,
   },
   button: {
-    borderRadius: 3,
-    padding: 2,
-    overflow: 'hidden',
+    flex: 1,
+    padding: 16,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
   },
-  save: {
-    backgroundColor: '#0c0',
+  saveButton: {
+    backgroundColor: '#28a745',
   },
-  load: {
-    backgroundColor: '#333',
+  loadButton: {
+    backgroundColor: '#007bff',
   },
-  reset: {
-    backgroundColor: '#c00',
+  resetButton: {
+    backgroundColor: '#dc3545',
   },
   buttonText: {
     color: 'white',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+
+  // Status
+  statusCard: {
+    backgroundColor: '#fff3cd',
+    padding: 15,
+    borderRadius: 12,
+    marginTop: 15,
+    borderLeftWidth: 4,
+    borderLeftColor: '#ffc107',
+  },
+  statusText: {
     fontSize: 14,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    color: '#212529',
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
   },
-  tabText: {
-    fontSize: 12,
+
+  // Help
+  helpCard: {
+    backgroundColor: '#f1f3f5',
+    padding: 15,
+    borderRadius: 12,
+    marginTop: 15,
   },
-  tab: {
-    padding: 5,
-    flex: 0,
+  helpTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 10,
+    color: '#212529',
+  },
+  helpText: {
+    fontSize: 13,
+    color: '#495057',
+    marginBottom: 6,
+    lineHeight: 20,
   },
 });

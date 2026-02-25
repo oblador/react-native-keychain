@@ -10,39 +10,40 @@ import com.oblador.keychain.cipherStorage.CipherStorage
 object ResultHandlerProvider {
   private const val ONE_PLUS_BRAND = "oneplus"
   private val ONE_PLUS_MODELS_WITHOUT_BIOMETRIC_BUG =
-    arrayOf(
-      "A0001", // OnePlus One
-      "ONE A2001",
-      "ONE A2003",
-      "ONE A2005", // OnePlus 2
-      "ONE E1001",
-      "ONE E1003",
-      "ONE E1005", // OnePlus X
-      "ONEPLUS A3000",
-      "ONEPLUS SM-A3000",
-      "ONEPLUS A3003", // OnePlus 3
-      "ONEPLUS A3010", // OnePlus 3T
-      "ONEPLUS A5000", // OnePlus 5
-      "ONEPLUS A5010", // OnePlus 5T
-      "ONEPLUS A6000",
-      "ONEPLUS A6003" // OnePlus 6
-    )
+          arrayOf(
+                  "A0001", // OnePlus One
+                  "ONE A2001",
+                  "ONE A2003",
+                  "ONE A2005", // OnePlus 2
+                  "ONE E1001",
+                  "ONE E1003",
+                  "ONE E1005", // OnePlus X
+                  "ONEPLUS A3000",
+                  "ONEPLUS SM-A3000",
+                  "ONEPLUS A3003", // OnePlus 3
+                  "ONEPLUS A3010", // OnePlus 3T
+                  "ONEPLUS A5000", // OnePlus 5
+                  "ONEPLUS A5010", // OnePlus 5T
+                  "ONEPLUS A6000",
+                  "ONEPLUS A6003" // OnePlus 6
+          )
 
   private fun hasOnePlusBiometricBug(): Boolean {
     return Build.BRAND.equals(ONE_PLUS_BRAND, ignoreCase = true) &&
-      !ONE_PLUS_MODELS_WITHOUT_BIOMETRIC_BUG.contains(Build.MODEL)
+            !ONE_PLUS_MODELS_WITHOUT_BIOMETRIC_BUG.contains(Build.MODEL)
   }
 
   fun getHandler(
-    reactContext: ReactApplicationContext,
-    storage: CipherStorage,
-    promptInfo: BiometricPrompt.PromptInfo
+          reactContext: ReactApplicationContext,
+          storage: CipherStorage,
+          promptInfo: BiometricPrompt.PromptInfo,
+          retryWithPasscode: Boolean
   ): ResultHandler {
     return if (storage.isAuthSupported()) {
       if (hasOnePlusBiometricBug()) {
         ResultHandlerInteractiveBiometricManualRetry(reactContext, storage, promptInfo)
       } else {
-        ResultHandlerInteractiveBiometric(reactContext, storage, promptInfo)
+        ResultHandlerInteractiveBiometric(reactContext, storage, promptInfo, retryWithPasscode)
       }
     } else {
       ResultHandlerNonInteractive()

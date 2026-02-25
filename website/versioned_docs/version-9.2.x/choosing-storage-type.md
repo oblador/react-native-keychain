@@ -15,6 +15,7 @@ We offer three security levels for data storage:
 - **RSA**: Asymmetric encryption with biometric protection
 - Best for: Passwords, personal data, sensitive keys
 
+
 ### 2. Medium Security (without Authentication)
 
 - **AES_GCM_NO_AUTH**: Symmetric encryption without biometric requirements
@@ -104,3 +105,4 @@ await setGenericPassword(
 - No biometric requirement
 - Still provides authenticated encryption
 - Good balance of security and usability for non-sensitive data
+

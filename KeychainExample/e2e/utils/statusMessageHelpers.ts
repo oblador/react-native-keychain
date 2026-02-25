@@ -8,7 +8,7 @@ function buildLoadedCredentialsRegex(
   storage?: string,
   service?: string
 ): RegExp {
-  let pattern = '^Credentials loaded! .*';
+  let pattern = '^Credentials loaded!.*';
   // Conditionally add storage if provided.
   if (storage) {
     pattern += `"storage":"${storage}",`;
@@ -24,12 +24,12 @@ function buildLoadedCredentialsRegex(
 }
 
 export async function expectCredentialsSavedMessage() {
-  const regex = /^Credentials saved! .*$/;
+  const regex = /^Credentials saved successfully!.*$/;
   await expectRegexText(regex, TIMEOUT);
 }
 
 export async function expectCredentialsResetMessage() {
-  const regex = /^Credentials Reset!$/;
+  const regex = /^Credentials cleared$/;
   await expectRegexText(regex, TIMEOUT);
 }
 
