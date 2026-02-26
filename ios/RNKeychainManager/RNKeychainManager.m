@@ -277,30 +277,51 @@ LAPolicy authPolicy(NSDictionary *options)
 
 SecAccessControlCreateFlags accessControlValue(NSDictionary *options)
 {
+  SecAccessControlCreateFlags flags = 0;
   if (options && options[kAccessControlType] && [options[kAccessControlType] isKindOfClass:[NSString class]]) {
-    if ([options[kAccessControlType] isEqualToString: kAccessControlUserPresence]) {
-      return kSecAccessControlUserPresence;
-    }
-    else if ([options[kAccessControlType] isEqualToString: kAccessControlBiometryAny]) {
-      return kSecAccessControlTouchIDAny;
-    }
-    else if ([options[kAccessControlType] isEqualToString: kAccessControlBiometryCurrentSet]) {
-      return kSecAccessControlTouchIDCurrentSet;
-    }
-    else if ([options[kAccessControlType] isEqualToString: kAccessControlDevicePasscode]) {
-      return kSecAccessControlDevicePasscode;
-    }
-    else if ([options[kAccessControlType] isEqualToString: kAccessControlBiometryAnyOrDevicePasscode]) {
-      return kSecAccessControlTouchIDAny|kSecAccessControlOr|kSecAccessControlDevicePasscode;
-    }
-    else if ([options[kAccessControlType] isEqualToString: kAccessControlBiometryCurrentSetOrDevicePasscode]) {
-      return kSecAccessControlTouchIDCurrentSet|kSecAccessControlOr|kSecAccessControlDevicePasscode;
-    }
-    else if ([options[kAccessControlType] isEqualToString: kAccessControlApplicationPassword]) {
-      return kSecAccessControlApplicationPassword;
+    NSString *type = options[kAccessControlType];
+
+    if ([type isEqualToString:kAccessControlUserPresence]) {
+      flags = kSecAccessControlUserPresence;
+    } else if ([type isEqualToString:kAccessControlBiometryAny]) {
+      flags = kSecAccessControlTouchIDAny;
+    } else if ([type isEqualToString:kAccessControlBiometryCurrentSet]) {
+      flags = kSecAccessControlTouchIDCurrentSet;
+    } else if ([type isEqualToString:kAccessControlDevicePasscode]) {
+      flags = kSecAccessControlDevicePasscode;
+    } else if ([type isEqualToString:kAccessControlBiometryAnyOrDevicePasscode]) {
+      flags = kSecAccessControlTouchIDAny |
+              kSecAccessControlOr |
+              kSecAccessControlDevicePasscode;
+    } else if ([type isEqualToString:kAccessControlBiometryCurrentSetOrDevicePasscode]) {
+      flags = kSecAccessControlTouchIDCurrentSet |
+              kSecAccessControlOr |
+              kSecAccessControlDevicePasscode;
+    } else if ([type isEqualToString:kAccessControlApplicationPassword]) {
+      flags = kSecAccessControlApplicationPassword;
     }
   }
-  return 0;
+#if TARGET_OS_IOS || TARGET_OS_VISION
+  BOOL requestedBiometric =
+      (flags & kSecAccessControlTouchIDAny) ||
+      (flags & kSecAccessControlTouchIDCurrentSet);
+
+  BOOL requestedPasscode =
+      (flags & kSecAccessControlDevicePasscode);
+
+  if (requestedBiometric && requestedPasscode) {
+    NSError *aerr = nil;
+    BOOL canAuthenticate = [[LAContext new] canEvaluatePolicy:LAPolicyDeviceOwnerAuthenticationWithBiometrics error:&aerr];
+
+    if (!canAuthenticate)
+    {
+      // No usable biometrics – use the safest subset.
+      flags = kSecAccessControlDevicePasscode;
+    }
+  }
+#endif
+
+  return flags;
 }
 
 - (void)insertKeychainEntry:(NSDictionary *)attributes
