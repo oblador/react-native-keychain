@@ -16172,6 +16172,43 @@ __metadata:
   languageName: node
   linkType: hard
 
+"react-native-test-app@patch:react-native-test-app@npm%3A4.2.1#./.yarn/patches/react-native-test-app-npm-4.2.1-866b46545f.patch::locator=react-native-keychain%40workspace%3A.":
+  version: 4.2.1
+  resolution: "react-native-test-app@patch:react-native-test-app@npm%3A4.2.1#./.yarn/patches/react-native-test-app-npm-4.2.1-866b46545f.patch::version=4.2.1&hash=faaa1b&locator=react-native-keychain%40workspace%3A."
+  dependencies:
+    "@rnx-kit/react-native-host": ^0.5.4
+    "@rnx-kit/tools-react-native": ^2.1.0
+    ajv: ^8.0.0
+    cliui: ^8.0.0
+    fast-xml-parser: ^4.0.0
+    prompts: ^2.4.0
+    semver: ^7.3.5
+    uuid: ^11.0.0
+  peerDependencies:
+    "@callstack/react-native-visionos": 0.73 - 0.77
+    "@expo/config-plugins": ">=5.0"
+    react: 18.1 - 19.0
+    react-native: 0.70 - 0.78 || >=0.79.0-0 <0.79.0
+    react-native-macos: ^0.0.0-0 || 0.71 - 0.77
+    react-native-windows: ^0.0.0-0 || 0.70 - 0.77
+  peerDependenciesMeta:
+    "@callstack/react-native-visionos":
+      optional: true
+    "@expo/config-plugins":
+      optional: true
+    react-native-macos:
+      optional: true
+    react-native-windows:
+      optional: true
+  bin:
+    configure-test-app: scripts/configure.mjs
+    init: scripts/init.mjs
+    init-test-app: scripts/init.mjs
+    install-windows-test-app: windows/test-app.mjs
+  checksum: 26f6bfcfcf0646afadb73582895bc1a1b8ed9c4ba445dd61cb06942f9c880aec33197cf24290fc164e568f4a392c8953666ab49a263c34eb5dcdfe7ccd8878a2
+  languageName: node
+  linkType: hard
+
 "react-native@npm:0.77.1, react-native@npm:^0.77.1":
   version: 0.77.1
   resolution: "react-native@npm:0.77.1"
