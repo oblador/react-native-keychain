@@ -25,6 +25,8 @@ import com.oblador.keychain.resultHandler.ResultHandlerProvider
 import com.oblador.keychain.exceptions.KeychainException
 import com.oblador.keychain.exceptions.EmptyParameterException
 import com.oblador.keychain.exceptions.KeyStoreAccessException
+import javax.crypto.AEADBadTagException
+import javax.crypto.BadPaddingException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -278,11 +280,26 @@ class KeychainModule(reactContext: ReactApplicationContext) :
           credentials.putString(Maps.STORAGE, cipher?.getCipherStorageName())
           promise.resolve(credentials)
         } catch (e: KeyStoreAccessException) {
+          // Storage access errors not related to missing keys should be surfaced
           Log.e(KEYCHAIN_MODULE, e.message!!)
           promise.reject(Errors.E_STORAGE_ACCESS_ERROR, e)
         } catch (e: KeychainException) {
-          Log.e(KEYCHAIN_MODULE, e.message!!)
-          promise.reject(e.errorCode, e)
+          // Graceful stale handling: treat missing key or tag/padding failures as "not found".
+          // This avoids side effects after reinstall-and-restore (prefs restored, keystore wiped).
+          // We keep other errors explicit to avoid hiding genuine corruption/tampering issues.
+          val cause = e.cause
+          val isMissingKey = cause is KeyStoreAccessException && (cause.message?.contains("Missing key for alias") == true)
+          val isTagOrPaddingFailure = cause is AEADBadTagException || cause is BadPaddingException ||
+            (e.message?.contains("Authentication tag verification failed") == true) ||
+            (e.message?.contains("Could not decrypt data") == true)
+
+          if (isMissingKey || isTagOrPaddingFailure) {
+            Log.w(KEYCHAIN_MODULE, "Graceful stale credentials for service '$alias' -> resolving false")
+            promise.resolve(false)
+          } else {
+            Log.e(KEYCHAIN_MODULE, e.message!!)
+            promise.reject(e.errorCode, e)
+          }
         } catch (fail: Throwable) {
           Log.e(KEYCHAIN_MODULE, fail.message, fail)
           promise.reject(Errors.E_INTERNAL_ERROR, fail)
