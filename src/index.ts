@@ -6,6 +6,7 @@ import {
   SECURITY_LEVEL,
   STORAGE_TYPE,
   BIOMETRY_TYPE,
+  ERROR_CODE,
 } from './enums';
 import type {
   Result,
@@ -141,9 +142,7 @@ export function getAllGenericPasswordServices(
  * console.log('Internet credentials exist:', hasCredentials);
  * ```
  */
-export function hasInternetCredentials(
-  options: string | BaseOptions
-): Promise<boolean> {
+export function hasInternetCredentials(options: BaseOptions): Promise<boolean> {
   return RNKeychainManager.hasInternetCredentialsForOptions(options);
 }
 
@@ -382,6 +381,7 @@ export default {
   AUTHENTICATION_TYPE,
   BIOMETRY_TYPE,
   STORAGE_TYPE,
+  ERROR_CODE,
   getSecurityLevel,
   canImplyAuthentication,
   getSupportedBiometryType,
