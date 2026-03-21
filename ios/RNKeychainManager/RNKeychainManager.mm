@@ -484,8 +484,8 @@ SecAccessControlCreateFlags accessControlValue(NSDictionary *options)
 
 #if TARGET_OS_IOS || TARGET_OS_VISION
 RCT_EXPORT_METHOD(canCheckAuthentication:(NSDictionary * __nullable)options
-                  resolver:(RCTPromiseResolveBlock)resolve
-                  rejecter:(RCTPromiseRejectBlock)reject)
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject)
 {
   LAPolicy policyToEvaluate = authPolicy(options);
 
@@ -502,7 +502,7 @@ RCT_EXPORT_METHOD(canCheckAuthentication:(NSDictionary * __nullable)options
 
 #if TARGET_OS_IOS
 RCT_EXPORT_METHOD(isPasscodeAuthAvailable:(RCTPromiseResolveBlock)resolve
-                  rejecter:(RCTPromiseRejectBlock)reject)
+                  reject:(RCTPromiseRejectBlock)reject)
 {
   NSError *aerr = nil;
   LAContext *context = [LAContext new];
@@ -518,7 +518,7 @@ RCT_EXPORT_METHOD(isPasscodeAuthAvailable:(RCTPromiseResolveBlock)resolve
 
 #if TARGET_OS_IOS || TARGET_OS_VISION
 RCT_EXPORT_METHOD(getSupportedBiometryType:(RCTPromiseResolveBlock)resolve
-                  rejecter:(RCTPromiseRejectBlock)reject)
+                  reject:(RCTPromiseRejectBlock)reject)
 {
   NSError *aerr = nil;
   LAContext *context = [LAContext new];
@@ -545,10 +545,10 @@ RCT_EXPORT_METHOD(getSupportedBiometryType:(RCTPromiseResolveBlock)resolve
 #endif
 
 RCT_EXPORT_METHOD(setGenericPasswordForOptions:(NSDictionary *)options
-                  withUsername:(NSString *)username
-                  withPassword:(NSString *)password
-                  resolver:(RCTPromiseResolveBlock)resolve
-                  rejecter:(RCTPromiseRejectBlock)reject)
+                  username:(NSString *)username
+                  password:(NSString *)password
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject)
 {
   NSString *service = serviceValue(options);
   CFBooleanRef cloudSync = cloudSyncValue(options);
@@ -566,8 +566,8 @@ RCT_EXPORT_METHOD(setGenericPasswordForOptions:(NSDictionary *)options
 }
 
 RCT_EXPORT_METHOD(getGenericPasswordForOptions:(NSDictionary * __nullable)options
-                  resolver:(RCTPromiseResolveBlock)resolve
-                  rejecter:(RCTPromiseRejectBlock)reject)
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject)
 {
   NSString *service = serviceValue(options);
   NSString *authenticationPrompt = authenticationPromptValue(options);
@@ -622,8 +622,8 @@ RCT_EXPORT_METHOD(getGenericPasswordForOptions:(NSDictionary * __nullable)option
 }
 
 RCT_EXPORT_METHOD(resetGenericPasswordForOptions:(NSDictionary *)options
-                  resolver:(RCTPromiseResolveBlock)resolve
-                  rejecter:(RCTPromiseRejectBlock)reject)
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject)
 {
 
   OSStatus osStatus = [self deletePasswordsForOptions:options];
@@ -637,11 +637,11 @@ RCT_EXPORT_METHOD(resetGenericPasswordForOptions:(NSDictionary *)options
 }
 
 RCT_EXPORT_METHOD(setInternetCredentialsForServer:(NSString *)server
-                  withUsername:(NSString*)username
-                  withPassword:(NSString*)password
-                  withOptions:(NSDictionary *)options
-                  resolver:(RCTPromiseResolveBlock)resolve
-                  rejecter:(RCTPromiseRejectBlock)reject)
+                  username:(NSString*)username
+                  password:(NSString*)password
+                  options:(NSDictionary *)options
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject)
 {
   [self deleteCredentialsForServer:server withOptions: options];
   CFBooleanRef cloudSync = cloudSyncValue(options);
@@ -658,8 +658,8 @@ RCT_EXPORT_METHOD(setInternetCredentialsForServer:(NSString *)server
 }
 
 RCT_EXPORT_METHOD(hasInternetCredentialsForOptions:(NSDictionary *)options
-                  resolver:(RCTPromiseResolveBlock)resolve
-                  rejecter:(RCTPromiseRejectBlock)reject)
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject)
 {
   [self hasCredentialsWithSecClass:kSecClassInternetPassword
                            options:options
@@ -668,8 +668,8 @@ RCT_EXPORT_METHOD(hasInternetCredentialsForOptions:(NSDictionary *)options
 }
 
 RCT_EXPORT_METHOD(hasGenericPasswordForOptions:(NSDictionary *)options
-                  resolver:(RCTPromiseResolveBlock)resolve
-                  rejecter:(RCTPromiseRejectBlock)reject)
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject)
 {
   [self hasCredentialsWithSecClass:kSecClassGenericPassword
                            options:options
@@ -678,9 +678,9 @@ RCT_EXPORT_METHOD(hasGenericPasswordForOptions:(NSDictionary *)options
 }
 
 RCT_EXPORT_METHOD(getInternetCredentialsForServer:(NSString *)server
-                  withOptions:(NSDictionary * __nullable)options
-                  resolver:(RCTPromiseResolveBlock)resolve
-                  rejecter:(RCTPromiseRejectBlock)reject)
+                  options:(NSDictionary * __nullable)options
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject)
 {
   CFBooleanRef cloudSync = cloudSyncValue(options);
   NSString *authenticationPrompt = authenticationPromptValue(options);
@@ -730,8 +730,8 @@ RCT_EXPORT_METHOD(getInternetCredentialsForServer:(NSString *)server
 }
 
 RCT_EXPORT_METHOD(resetInternetCredentialsForOptions:(NSDictionary *)options
-                  resolver:(RCTPromiseResolveBlock)resolve
-                  rejecter:(RCTPromiseRejectBlock)reject)
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject)
 {
   NSString *server = serverValue(options);
   OSStatus osStatus = [self deleteCredentialsForServer:server withOptions:options];
@@ -744,7 +744,7 @@ RCT_EXPORT_METHOD(resetInternetCredentialsForOptions:(NSDictionary *)options
 }
 
 #if (TARGET_OS_IOS || TARGET_OS_VISION) && !TARGET_OS_UIKITFORMAC
-RCT_EXPORT_METHOD(requestSharedWebCredentials:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
+RCT_EXPORT_METHOD(requestSharedWebCredentials:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject)
 {
   SecRequestSharedWebCredential(NULL, NULL, ^(CFArrayRef credentials, CFErrorRef error) {
     if (error != NULL) {
@@ -771,10 +771,10 @@ RCT_EXPORT_METHOD(requestSharedWebCredentials:(RCTPromiseResolveBlock)resolve re
 
 
 RCT_EXPORT_METHOD(setSharedWebCredentialsForServer:(NSString *)server
-                  withUsername:(NSString *)username
-                  withPassword:(NSString *)password
-                  resolver:(RCTPromiseResolveBlock)resolve
-                  rejecter:(RCTPromiseRejectBlock)reject)
+                  username:(NSString *)username
+                  password:(NSString *)password
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject)
 {
   SecAddSharedWebCredential(
     (__bridge CFStringRef)server,
@@ -794,8 +794,8 @@ RCT_EXPORT_METHOD(setSharedWebCredentialsForServer:(NSString *)server
 #endif
 
 RCT_EXPORT_METHOD(getAllGenericPasswordServices:(NSDictionary * __nullable)options
-                  resolver:(RCTPromiseResolveBlock)resolve
-                  rejecter:(RCTPromiseRejectBlock)reject)
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject)
 {
   @try {
     NSArray *secItemClasses = [NSArray arrayWithObjects:
