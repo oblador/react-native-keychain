@@ -1,4 +1,4 @@
-import { NativeModules, Platform } from 'react-native';
+import { Platform } from 'react-native';
 import {
   ACCESSIBLE,
   ACCESS_CONTROL,
@@ -20,8 +20,7 @@ import type {
   AccessControlOption,
 } from './types';
 import { normalizeAuthPrompt } from './normalizeOptions';
-
-const { RNKeychainManager } = NativeModules;
+import RNKeychainManager from './NativeKeychainManager';
 
 /**
  * Saves the `username` and `password` combination for the given service.
@@ -46,7 +45,7 @@ export function setGenericPassword(
     normalizeAuthPrompt(options),
     username,
     password
-  );
+  ) as Promise<false | Result>;
 }
 
 /**
@@ -71,7 +70,7 @@ export function getGenericPassword(
 ): Promise<false | UserCredentials> {
   return RNKeychainManager.getGenericPasswordForOptions(
     normalizeAuthPrompt(options)
-  );
+  ) as Promise<false | UserCredentials>;
 }
 
 /**
@@ -138,9 +137,7 @@ export function getAllGenericPasswordServices(
  * console.log('Internet credentials exist:', hasCredentials);
  * ```
  */
-export function hasInternetCredentials(
-  options: string | BaseOptions
-): Promise<boolean> {
+export function hasInternetCredentials(options: BaseOptions): Promise<boolean> {
   return RNKeychainManager.hasInternetCredentialsForOptions(options);
 }
 
@@ -170,7 +167,7 @@ export function setInternetCredentials(
     username,
     password,
     normalizeAuthPrompt(options)
-  );
+  ) as Promise<false | Result>;
 }
 
 /**
@@ -198,7 +195,7 @@ export function getInternetCredentials(
   return RNKeychainManager.getInternetCredentialsForServer(
     server,
     normalizeAuthPrompt(options)
-  );
+  ) as Promise<false | UserCredentials>;
 }
 
 /**
@@ -234,7 +231,7 @@ export function getSupportedBiometryType(): Promise<null | BIOMETRY_TYPE> {
     return Promise.resolve(null);
   }
 
-  return RNKeychainManager.getSupportedBiometryType();
+  return RNKeychainManager.getSupportedBiometryType() as Promise<null | BIOMETRY_TYPE>;
 }
 
 /**
@@ -264,7 +261,9 @@ export function requestSharedWebCredentials(): Promise<
       )
     );
   }
-  return RNKeychainManager.requestSharedWebCredentials();
+  return RNKeychainManager.requestSharedWebCredentials!() as Promise<
+    false | SharedWebCredentials
+  >;
 }
 
 /**
@@ -296,7 +295,7 @@ export function setSharedWebCredentials(
       )
     );
   }
-  return RNKeychainManager.setSharedWebCredentialsForServer(
+  return RNKeychainManager.setSharedWebCredentialsForServer!(
     server,
     username,
     password
@@ -348,7 +347,9 @@ export function getSecurityLevel(
   if (!RNKeychainManager.getSecurityLevel) {
     return Promise.resolve(null);
   }
-  return RNKeychainManager.getSecurityLevel(options);
+  return RNKeychainManager.getSecurityLevel(
+    options
+  ) as Promise<null | SECURITY_LEVEL>;
 }
 
 /**
