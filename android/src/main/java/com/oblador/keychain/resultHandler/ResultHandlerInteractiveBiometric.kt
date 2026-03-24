@@ -30,6 +30,7 @@ open class ResultHandlerInteractiveBiometric(
   override var decryptionResult: DecryptionResult? = null
   override var encryptionResult: EncryptionResult? = null
   override var error: Throwable? = null
+  override val needsCryptoObjectBinding: Boolean get() = authenticateWithCryptoObject
   protected val storage: CipherStorageBase = storage as CipherStorageBase
   protected val executor: Executor = Executors.newSingleThreadExecutor()
   protected var context: CryptoContext? = null

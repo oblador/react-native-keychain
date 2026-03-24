@@ -119,17 +119,16 @@ class CipherStorageKeystoreRsaEcb(reactContext: ReactApplicationContext) :
         } catch (ex: UserNotAuthenticatedException) {
             Log.d(LOG_TAG, "Unlock of keystore is needed. Error: ${ex.message}", ex)
 
-            // Prepare cipher for CryptoObject binding to prevent timing issues
-            // between biometric authentication and crypto operations.
-            // This ensures the crypto operation is atomically bound to the biometric auth.
-            val cipher = try {
-                val c = getCachedInstance()
-                c.init(javax.crypto.Cipher.DECRYPT_MODE, key)
-                c
-            } catch (e: Throwable) {
-                Log.w(LOG_TAG, "Failed to initialize cipher for CryptoObject: ${e.message}", e)
-                null
-            }
+            val cipher = if (handler.needsCryptoObjectBinding) {
+                try {
+                    val c = getCachedInstance()
+                    c.init(javax.crypto.Cipher.DECRYPT_MODE, key)
+                    c
+                } catch (e: Throwable) {
+                    Log.w(LOG_TAG, "Failed to initialize cipher for CryptoObject: ${e.message}", e)
+                    null
+                }
+            } else null
 
             // expected that KEY instance is extracted and we caught exception on decryptBytes operation
             val context =

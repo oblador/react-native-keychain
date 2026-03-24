@@ -27,6 +27,9 @@ interface ResultHandler {
 
   /** Block thread and wait for any result of execution. */
   fun waitResult()
+
+  /** Whether the handler needs a pre-initialized cipher for CryptoObject binding. */
+  val needsCryptoObjectBinding: Boolean get() = false
 }
 
 /**
