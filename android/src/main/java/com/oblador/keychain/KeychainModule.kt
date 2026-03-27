@@ -11,7 +11,6 @@ import com.athex.knoxkeychain.utils.KnoxUtils
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
-import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
 import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.module.annotations.ReactModule
@@ -38,7 +37,7 @@ import kotlinx.coroutines.sync.withLock
 @ReactModule(name = KeychainModule.KEYCHAIN_MODULE)
 @Suppress("unused")
 class KeychainModule(reactContext: ReactApplicationContext) :
-        ReactContextBaseJavaModule(reactContext) {
+  NativeKeychainManagerSpec(reactContext) {
   @StringDef(
           AccessControl.NONE,
           AccessControl.USER_PRESENCE,
@@ -237,11 +236,11 @@ class KeychainModule(reactContext: ReactApplicationContext) :
   }
 
   @ReactMethod
-  fun setGenericPasswordForOptions(
-          options: ReadableMap?,
-          username: String,
-          password: String,
-          promise: Promise
+  override fun setGenericPasswordForOptions(
+    options: ReadableMap?,
+    username: String,
+    password: String,
+    promise: Promise
   ) {
     val service = getServiceOrDefault(options)
     setGenericPassword(service, username, password, options, promise)
@@ -330,7 +329,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
   }
 
   @ReactMethod
-  fun getAllGenericPasswordServices(options: ReadableMap?, promise: Promise) {
+  override fun getAllGenericPasswordServices(options: ReadableMap?, promise: Promise) {
     try {
       val services = doGetAllGenericPasswordServices()
       promise.resolve(Arguments.makeNativeArray<Any>(services.toTypedArray()))
@@ -358,7 +357,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
   }
 
   @ReactMethod
-  fun getGenericPasswordForOptions(options: ReadableMap?, promise: Promise) {
+  override fun getGenericPasswordForOptions(options: ReadableMap?, promise: Promise) {
     val service = getServiceOrDefault(options)
     getGenericPassword(service, options, promise)
   }
@@ -385,13 +384,13 @@ class KeychainModule(reactContext: ReactApplicationContext) :
   }
 
   @ReactMethod
-  fun resetGenericPasswordForOptions(options: ReadableMap?, promise: Promise) {
+  override fun resetGenericPasswordForOptions(options: ReadableMap?, promise: Promise) {
     val service = getServiceOrDefault(options)
     resetGenericPassword(service, promise)
   }
 
   @ReactMethod
-  fun hasInternetCredentialsForOptions(options: ReadableMap, promise: Promise) {
+  override fun hasInternetCredentialsForOptions(options: ReadableMap, promise: Promise) {
     val server = options.getString(Maps.SERVER)
     val alias = getAliasOrDefault(server)
     val resultSet = prefsStorage.getEncryptedEntry(alias)
@@ -404,7 +403,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
   }
 
   @ReactMethod
-  fun hasGenericPasswordForOptions(options: ReadableMap?, promise: Promise) {
+  override fun hasGenericPasswordForOptions(options: ReadableMap?, promise: Promise) {
     val service = getServiceOrDefault(options)
     val resultSet = prefsStorage.getEncryptedEntry(service)
     if (resultSet == null) {
@@ -416,30 +415,30 @@ class KeychainModule(reactContext: ReactApplicationContext) :
   }
 
   @ReactMethod
-  fun setInternetCredentialsForServer(
-          server: String,
-          username: String,
-          password: String,
-          options: ReadableMap?,
-          promise: Promise
+  override fun setInternetCredentialsForServer(
+    server: String,
+    username: String,
+    password: String,
+    options: ReadableMap?,
+    promise: Promise
   ) {
     setGenericPassword(server, username, password, options, promise)
   }
 
   @ReactMethod
-  fun getInternetCredentialsForServer(server: String, options: ReadableMap?, promise: Promise) {
+  override fun getInternetCredentialsForServer(server: String, options: ReadableMap?, promise: Promise) {
     getGenericPassword(server, options, promise)
   }
 
   @ReactMethod
-  fun resetInternetCredentialsForOptions(options: ReadableMap, promise: Promise) {
+  override fun resetInternetCredentialsForOptions(options: ReadableMap, promise: Promise) {
     val server = options.getString(Maps.SERVER)
     val alias = getAliasOrDefault(server)
     resetGenericPassword(alias, promise)
   }
 
   @ReactMethod
-  fun isPasscodeAuthAvailable(promise: Promise) {
+  override fun isPasscodeAuthAvailable(promise: Promise) {
     try {
       val reply: Boolean = DeviceAvailability.isDevicePasscodeAvailable(reactApplicationContext)
       promise.resolve(reply)
@@ -450,7 +449,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
   }
 
   @ReactMethod
-  fun getSupportedBiometryType(promise: Promise) {
+  override fun getSupportedBiometryType(promise: Promise) {
     try {
       var reply: String? = null
       if (!DeviceAvailability.isStrongBiometricAuthAvailable(reactApplicationContext)) {
@@ -472,7 +471,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
   }
 
   @ReactMethod
-  fun getSecurityLevel(options: ReadableMap?, promise: Promise) {
+  override fun getSecurityLevel(options: ReadableMap?, promise: Promise) {
     val accessControl = getAccessControlOrDefault(options)
     val useBiometry = getUseBiometry(accessControl)
     val usePasscode = getUsePasscode(accessControl)

@@ -8,16 +8,15 @@ function buildLoadedCredentialsRegex(
   storage?: string,
   service?: string
 ): RegExp {
-  let pattern = '^Credentials loaded!.*';
-  // Conditionally add storage if provided.
+  // Use lookaheads to match each field regardless of key order in JSON output
+  let pattern = '^Credentials loaded! ';
   if (storage) {
-    pattern += `"storage":"${storage}",`;
+    pattern += `(?=.*"storage":"${storage}")`;
   }
-  // Always add password and username.
-  pattern += `"password":"${password}","username":"${username}"`;
-  // Conditionally add service if provided.
+  pattern += `(?=.*"password":"${password}")`;
+  pattern += `(?=.*"username":"${username}")`;
   if (service) {
-    pattern += `,"service":"${service}"`;
+    pattern += `(?=.*"service":"${service}")`;
   }
   pattern += '.*$';
   return new RegExp(pattern);

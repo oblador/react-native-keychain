@@ -1,7 +1,3 @@
-import { NativeModules } from 'react-native';
-
-const { RNKeychainManager } = NativeModules;
-
 /**
  * Enum representing when a keychain item is accessible.
  */
@@ -56,15 +52,13 @@ export enum AUTHENTICATION_TYPE {
  */
 export enum SECURITY_LEVEL {
   /** Requires for the key to be stored in the Android Keystore, separate from the encrypted data. */
-  SECURE_SOFTWARE = RNKeychainManager &&
-  RNKeychainManager.SECURITY_LEVEL_SECURE_SOFTWARE,
+  SECURE_SOFTWARE = 'SECURE_SOFTWARE',
   /** Requires for the key to be stored on a secure hardware (Trusted Execution Environment or Secure Environment).
    * Read this article for more information: https://developer.android.com/privacy-and-security/keystore#ExtractionPrevention
    * */
-  SECURE_HARDWARE = RNKeychainManager &&
-  RNKeychainManager.SECURITY_LEVEL_SECURE_HARDWARE,
+  SECURE_HARDWARE = 'SECURE_HARDWARE',
   /** No security guarantees needed (default value). Credentials can be stored in FB Secure Storage. */
-  ANY = RNKeychainManager && RNKeychainManager.SECURITY_LEVEL_ANY,
+  ANY = 'ANY',
 }
 
 /**
