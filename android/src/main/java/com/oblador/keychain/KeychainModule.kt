@@ -479,12 +479,12 @@ class KeychainModule(reactContext: ReactApplicationContext) :
   }
 
   @ReactMethod
-  fun isKnoxAvailable(promise: Promise) {
+  override fun isKnoxAvailable(promise: Promise) {
     promise.resolve(KnoxUtils.isKnoxAvailable())
   }
 
   @ReactMethod
-  fun generateKnoxKey(alias: String, promise: Promise) {
+  override fun generateKnoxKey(alias: String, promise: Promise) {
     try {
       if (!KnoxUtils.isKnoxAvailable()) {
         promise.reject(Errors.E_INTERNAL_ERROR, "Samsung Knox TIMA KeyStore is not available on this device.")
@@ -505,7 +505,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
   }
 
   @ReactMethod
-  fun signWithKnoxKey(alias: String, data: String, promise: Promise) {
+  override fun signWithKnoxKey(alias: String, data: String, promise: Promise) {
     try {
       if (!KnoxUtils.isKnoxAvailable()) {
         promise.reject(Errors.E_INTERNAL_ERROR, "Samsung Knox TIMA KeyStore is not available on this device.")
