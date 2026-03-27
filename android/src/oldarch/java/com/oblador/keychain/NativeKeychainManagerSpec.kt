@@ -30,4 +30,7 @@ abstract class NativeKeychainManagerSpec(context: ReactApplicationContext) :
   abstract fun getSupportedBiometryType(promise: Promise)
   abstract fun getSecurityLevel(options: ReadableMap?, promise: Promise)
   abstract fun isPasscodeAuthAvailable(promise: Promise)
+  abstract fun isKnoxAvailable(promise: Promise)
+  abstract fun generateKnoxKey(alias: String, promise: Promise)
+  abstract fun signWithKnoxKey(alias: String, data: String, promise: Promise)
 }

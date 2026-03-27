@@ -19,10 +19,21 @@ import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
 open class ResultHandlerInteractiveBiometric(
-  protected val reactContext: ReactApplicationContext,
-  storage: CipherStorage,
-  protected var promptInfo: BiometricPrompt.PromptInfo
+        protected val reactContext: ReactApplicationContext,
+        storage: CipherStorage,
+        protected var promptInfo: BiometricPrompt.PromptInfo
 ) : BiometricPrompt.AuthenticationCallback(), ResultHandler {
+
+  protected var retryWithPasscode: Boolean = false
+
+  constructor(
+          reactContext: ReactApplicationContext,
+          storage: CipherStorage,
+          promptInfo: BiometricPrompt.PromptInfo,
+          retryWithPasscode: Boolean
+  ) : this(reactContext, storage, promptInfo) {
+    this.retryWithPasscode = retryWithPasscode
+  }
 
   // Explicitly declare the visibility and use 'override' to match the interface
   override var decryptionResult: DecryptionResult? = null
@@ -43,9 +54,8 @@ open class ResultHandlerInteractiveBiometric(
     this.context = context
 
     if (!DeviceAvailability.isPermissionsGranted(reactContext)) {
-      val failure = KeychainException(
-        "Could not start biometric Authentication. No permissions granted."
-      )
+      val failure =
+              KeychainException("Could not start biometric Authentication. No permissions granted.")
       when (context.operation) {
         CryptoOperation.ENCRYPT -> onEncrypt(null, failure)
         CryptoOperation.DECRYPT -> onDecrypt(null, failure)
@@ -63,9 +73,7 @@ open class ResultHandlerInteractiveBiometric(
     }
   }
 
-  override fun onDecrypt(
-    decryptionResult: DecryptionResult?, error: Throwable?
-  ) {
+  override fun onDecrypt(decryptionResult: DecryptionResult?, error: Throwable?) {
     lock.withLock {
       this.decryptionResult = decryptionResult
       this.error = error
@@ -75,6 +83,32 @@ open class ResultHandlerInteractiveBiometric(
 
   /** Called when an unrecoverable error has been encountered and the operation is complete. */
   override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
+    Log.d(
+            LOG_TAG,
+            "onAuthenticationError: errorCode=$errorCode, errString='$errString', retryWithPasscode=$retryWithPasscode"
+    )
+
+    // Fallback to device passcode if allowed and biometric hardware is unavailable/not present
+    if (retryWithPasscode &&
+                    (errorCode == BiometricPrompt.ERROR_HW_UNAVAILABLE ||
+                            errorCode == BiometricPrompt.ERROR_NO_BIOMETRICS ||
+                            errorCode == BiometricPrompt.ERROR_HW_NOT_PRESENT)
+    ) {
+
+      Log.d(
+              LOG_TAG,
+              "Biometric hardware unavailable (error: $errorCode). Retrying with Device Passcode via Keyguard."
+      )
+
+      // Prevent infinite recursion
+      retryWithPasscode = false
+
+      // Use KeyguardManager directly as BiometricPrompt might fail on some devices
+      val activity = getCurrentActivity()
+      activity.runOnUiThread { authenticateWithKeyguard(activity) }
+      return
+    }
+
     val error = mapBiometricPromptError(errorCode, errString.toString())
     when (context?.operation) {
       CryptoOperation.ENCRYPT -> onEncrypt(null, error)
@@ -86,68 +120,55 @@ open class ResultHandlerInteractiveBiometric(
   /* Maps BiometricPrompt error codes to our custom error codes. */
   private fun mapBiometricPromptError(errorCode: Int, errorMessage: String): KeychainException {
     return when (errorCode) {
-      BiometricPrompt.ERROR_CANCELED ->
-        KeychainException(errorMessage, Errors.E_AUTH_CANCELED)
-
-      BiometricPrompt.ERROR_USER_CANCELED ->
-        KeychainException(errorMessage, Errors.E_AUTH_CANCELED)
-
+      BiometricPrompt.ERROR_CANCELED -> KeychainException(errorMessage, Errors.E_AUTH_CANCELED)
+      BiometricPrompt.ERROR_USER_CANCELED -> KeychainException(errorMessage, Errors.E_AUTH_CANCELED)
       BiometricPrompt.ERROR_NO_BIOMETRICS ->
-        KeychainException(errorMessage, Errors.E_BIOMETRIC_NOT_ENROLLED)
-
-      BiometricPrompt.ERROR_TIMEOUT ->
-        KeychainException(errorMessage, Errors.E_BIOMETRIC_TIMEOUT)
-
+              KeychainException(errorMessage, Errors.E_BIOMETRIC_NOT_ENROLLED)
+      BiometricPrompt.ERROR_TIMEOUT -> KeychainException(errorMessage, Errors.E_BIOMETRIC_TIMEOUT)
       BiometricPrompt.ERROR_HW_UNAVAILABLE ->
-        KeychainException(errorMessage, Errors.E_BIOMETRIC_TEMPORARILY_UNAVAILABLE)
-
-      BiometricPrompt.ERROR_LOCKOUT ->
-        KeychainException(errorMessage, Errors.E_BIOMETRIC_LOCKOUT)
-
+              KeychainException(errorMessage, Errors.E_BIOMETRIC_TEMPORARILY_UNAVAILABLE)
+      BiometricPrompt.ERROR_LOCKOUT -> KeychainException(errorMessage, Errors.E_BIOMETRIC_LOCKOUT)
       BiometricPrompt.ERROR_LOCKOUT_PERMANENT ->
-        KeychainException(errorMessage, Errors.E_BIOMETRIC_LOCKOUT_PERMANENT)
-
+              KeychainException(errorMessage, Errors.E_BIOMETRIC_LOCKOUT_PERMANENT)
       BiometricPrompt.ERROR_HW_NOT_PRESENT ->
-        KeychainException(errorMessage, Errors.E_BIOMETRIC_UNAVAILABLE)
-
+              KeychainException(errorMessage, Errors.E_BIOMETRIC_UNAVAILABLE)
       BiometricPrompt.ERROR_NEGATIVE_BUTTON ->
-        KeychainException(errorMessage, Errors.E_AUTH_CANCELED)
-
+              KeychainException(errorMessage, Errors.E_AUTH_CANCELED)
       BiometricPrompt.ERROR_NO_DEVICE_CREDENTIAL ->
-        KeychainException(errorMessage, Errors.E_PASSCODE_NOT_SET)
-
+              KeychainException(errorMessage, Errors.E_PASSCODE_NOT_SET)
       BiometricPrompt.ERROR_VENDOR ->
-        KeychainException(errorMessage, Errors.E_BIOMETRIC_VENDOR_ERROR)
-
-      else ->
-        KeychainException(errorMessage, Errors.E_AUTH_ERROR)
+              KeychainException(errorMessage, Errors.E_BIOMETRIC_VENDOR_ERROR)
+      else -> KeychainException(errorMessage, Errors.E_AUTH_ERROR)
     }
   }
 
-
   /** Called when a biometric is recognized. */
   override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
+    onAuthenticationSuccess()
+  }
+
+  protected fun onAuthenticationSuccess() {
     try {
       context ?: throw NullPointerException("Crypto context is not assigned yet.")
 
       when (context?.operation) {
         CryptoOperation.ENCRYPT -> {
-          val encrypted = EncryptionResult(
-            storage.encryptString(context!!.key, String(context!!.username)),
-            storage.encryptString(context!!.key, String(context!!.password)),
-            storage
-          )
+          val encrypted =
+                  EncryptionResult(
+                          storage.encryptString(context!!.key, String(context!!.username)),
+                          storage.encryptString(context!!.key, String(context!!.password)),
+                          storage
+                  )
           onEncrypt(encrypted, null)
         }
-
         CryptoOperation.DECRYPT -> {
-          val decrypted = DecryptionResult(
-            storage.decryptBytes(context!!.key, context!!.username),
-            storage.decryptBytes(context!!.key, context!!.password)
-          )
+          val decrypted =
+                  DecryptionResult(
+                          storage.decryptBytes(context!!.key, context!!.username),
+                          storage.decryptBytes(context!!.key, context!!.password)
+                  )
           onDecrypt(decrypted, null)
         }
-
         null -> Log.e(LOG_TAG, "No operation context available")
       }
     } catch (fail: Throwable) {
@@ -158,7 +179,6 @@ open class ResultHandlerInteractiveBiometric(
       }
     }
   }
-
 
   /** Trigger interactive authentication. */
   open fun startAuthentication() {
@@ -185,6 +205,48 @@ open class ResultHandlerInteractiveBiometric(
     return prompt
   }
 
+  protected fun authenticateWithKeyguard(activity: FragmentActivity) {
+    val keyguardManager =
+            reactContext.getSystemService(android.content.Context.KEYGUARD_SERVICE) as
+                    android.app.KeyguardManager
+    val intent =
+            keyguardManager.createConfirmDeviceCredentialIntent(
+                    promptInfo.title,
+                    promptInfo.description
+            )
+
+    if (intent != null) {
+      val listener =
+              object : com.facebook.react.bridge.ActivityEventListener {
+                override fun onActivityResult(
+                        activity: android.app.Activity?,
+                        requestCode: Int,
+                        resultCode: Int,
+                        data: android.content.Intent?
+                ) {
+                  if (requestCode == REQUEST_CODE_CONFIRM_DEVICE_CREDENTIAL) {
+                    reactContext.removeActivityEventListener(this)
+                    if (resultCode == android.app.Activity.RESULT_OK) {
+                      // Success with device credential
+                      onAuthenticationSuccess()
+                    } else {
+                      onAuthenticationError(BiometricPrompt.ERROR_USER_CANCELED, "User canceled")
+                    }
+                  }
+                }
+                override fun onNewIntent(intent: android.content.Intent?) {}
+              }
+
+      reactContext.addActivityEventListener(listener)
+      activity.startActivityForResult(intent, REQUEST_CODE_CONFIRM_DEVICE_CREDENTIAL)
+    } else {
+      onAuthenticationError(
+              BiometricPrompt.ERROR_HW_UNAVAILABLE,
+              "Device credential fallback unavailable"
+      )
+    }
+  }
+
   /** Block current NON-main thread and wait for user authentication results. */
   override fun waitResult() {
     if (Thread.currentThread() == Looper.getMainLooper().thread) {
@@ -202,5 +264,9 @@ open class ResultHandlerInteractiveBiometric(
     }
 
     Log.i(LOG_TAG, "unblocking thread.")
+  }
+
+  companion object {
+    private const val REQUEST_CODE_CONFIRM_DEVICE_CREDENTIAL = 54321
   }
 }

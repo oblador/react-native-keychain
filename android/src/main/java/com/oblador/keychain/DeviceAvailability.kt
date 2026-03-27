@@ -9,7 +9,7 @@ import androidx.biometric.BiometricManager
 
 /**
  * @see
- *   [Biometric hardware](https://stackoverflow.com/questions/50968732/determine-if-biometric-hardware-is-present-and-the-user-has-enrolled-biometrics)
+ * [Biometric hardware](https://stackoverflow.com/questions/50968732/determine-if-biometric-hardware-is-present-and-the-user-has-enrolled-biometrics)
  */
 @Suppress("deprecation")
 object DeviceAvailability {
@@ -24,18 +24,13 @@ object DeviceAvailability {
 
   fun isStrongBiometricAuthAvailable(context: Context): Boolean {
     return BiometricManager.from(context)
-      .canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_STRONG) ==
-      BiometricManager.BIOMETRIC_SUCCESS
+            .canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_STRONG) ==
+            BiometricManager.BIOMETRIC_SUCCESS
   }
 
   fun isDevicePasscodeAvailable(context: Context): Boolean {
-    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-      BiometricManager.from(context)
-        .canAuthenticate(BiometricManager.Authenticators.DEVICE_CREDENTIAL) ==
-        BiometricManager.BIOMETRIC_SUCCESS
-    } else {
-      false
-    }
+    val km = context.getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
+    return km.isDeviceSecure
   }
 
   fun isFingerprintAuthAvailable(context: Context): Boolean {
@@ -59,10 +54,10 @@ object DeviceAvailability {
     // api28+
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
       context.checkSelfPermission(Manifest.permission.USE_BIOMETRIC) ==
-        PackageManager.PERMISSION_GRANTED
+              PackageManager.PERMISSION_GRANTED
     } else
-      context.checkSelfPermission(Manifest.permission.USE_FINGERPRINT) ==
-        PackageManager.PERMISSION_GRANTED
+            context.checkSelfPermission(Manifest.permission.USE_FINGERPRINT) ==
+                    PackageManager.PERMISSION_GRANTED
 
     // before api28
   }

@@ -37,6 +37,9 @@ export interface Spec extends TurboModule {
     username: string,
     password?: string
   ): Promise<void>;
+  isKnoxAvailable?(): Promise<boolean>;
+  generateKnoxKey?(alias: string): Promise<boolean>;
+  signWithKnoxKey?(alias: string, data: string): Promise<string>;
 }
 
 export default TurboModuleRegistry.getEnforcing<Spec>(
