@@ -7,11 +7,11 @@ export const waitForAuthValidity = async () => {
 };
 
 export const enterBiometrics = async () => {
-  // Biometric prompt is not available in the IOS simulator
-  // https://github.com/oblador/react-native-keychain/issues/340
   if (device.getPlatform() === 'android') {
     await new Promise((resolve) => setTimeout(resolve, 1000));
     cp.spawnSync('adb', ['-e', 'emu', 'finger', 'touch', '1']);
+  } else {
+    await device.matchFace();
   }
 };
 
