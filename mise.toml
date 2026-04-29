@@ -1,0 +1,11 @@
+[settings]
+idiomatic_version_file_enable_tools = ["node"]
+
+[settings.ruby]
+compile = false
+
+[tools]
+ruby = "3.4.9"
+java = "openjdk-17"
+"gem:bundler" = "latest"
+
