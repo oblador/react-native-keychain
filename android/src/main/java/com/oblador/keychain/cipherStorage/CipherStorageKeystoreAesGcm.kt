@@ -1,6 +1,7 @@
 package com.oblador.keychain.cipherStorage
 
 import android.os.Build
+import android.security.KeyStoreException
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyInfo
 import android.security.keystore.KeyProperties
@@ -23,6 +24,23 @@ import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
 import javax.crypto.SecretKeyFactory
 import javax.crypto.spec.GCMParameterSpec
+
+fun Throwable.isUserNotAuthenticatedError(): Boolean {
+  var cause: Throwable? = this
+  while (cause != null) {
+    if (cause is UserNotAuthenticatedException ||
+      // On Android 14 Pixel devices it sometimes throw a different exception.
+      Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && cause is KeyStoreException && cause.message?.contains(
+        "Key user not authenticated",
+        ignoreCase = true
+      ) == true
+    ) {
+      return true
+    }
+    cause = cause.cause
+  }
+  return false
+}
 
 class CipherStorageKeystoreAesGcm(
     reactContext: ReactApplicationContext, private val requiresAuth: Boolean
@@ -95,19 +113,21 @@ class CipherStorageKeystoreAesGcm(
                 encryptString(key, username), encryptString(key, password), this
             )
             handler.onEncrypt(result, null)
-        } catch (ex: UserNotAuthenticatedException) {
-            Log.d(LOG_TAG, "Unlock of keystore is needed. Error: ${ex.message}", ex)
-            val context = CryptoContext(
-                safeAlias,
-                key!!,
-                password.toByteArray(),
-                username.toByteArray(),
-                CryptoOperation.ENCRYPT
-            )
+        } catch (ex: Throwable) {
+            if (ex.isUserNotAuthenticatedError()) {
+                Log.d(LOG_TAG, "Unlock of keystore is needed. Error: ${ex.message}", ex)
+                val context = CryptoContext(
+                    safeAlias,
+                    key!!,
+                    password.toByteArray(),
+                    username.toByteArray(),
+                    CryptoOperation.ENCRYPT
+                )
 
-            handler.askAccessPermissions(context)
-        } catch (fail: Throwable) {
-            handler.onEncrypt(null, fail)
+                handler.askAccessPermissions(context)
+            } else {
+                handler.onEncrypt(null, ex)
+            }
         }
     }
 
@@ -133,16 +153,18 @@ class CipherStorageKeystoreAesGcm(
             )
 
             handler.onDecrypt(results, null)
-        } catch (ex: UserNotAuthenticatedException) {
-            Log.d(LOG_TAG, "Unlock of keystore is needed. Error: ${ex.message}", ex)
-            // expected that KEY instance is extracted and we caught exception on decryptBytes operation
-            val context =
-                CryptoContext(safeAlias, key!!, password, username, CryptoOperation.DECRYPT)
+        } catch (ex: Throwable) {
+            if (ex.isUserNotAuthenticatedError()) {
+                Log.d(LOG_TAG, "Unlock of keystore is needed. Error: ${ex.message}", ex)
+                // expected that KEY instance is extracted and we caught exception on decryptBytes operation
+                val context =
+                    CryptoContext(safeAlias, key!!, password, username, CryptoOperation.DECRYPT)
 
-            handler.askAccessPermissions(context)
-        } catch (fail: Throwable) {
-            // any other exception treated as a failure
-            handler.onDecrypt(null, fail)
+                handler.askAccessPermissions(context)
+            } else {
+                // any other exception treated as a failure
+                handler.onDecrypt(null, ex)
+            }
         }
     }
 
