@@ -106,8 +106,14 @@ class CipherStorageKeystoreRsaEcb(reactContext: ReactApplicationContext) :
         var key: Key? = null
 
         try {
-            // key is always NOT NULL otherwise GeneralSecurityException raised
-            key = extractGeneratedKey(safeAlias, level, retries)
+            // Do not create key on decrypt; missing key should be treated gracefully by caller.
+            // Avoid creating a new keypair on read; this would not help decrypt legacy
+            // ciphertext and would alter keystore listings unexpectedly.
+            key = getExistingKeyOrNull(safeAlias)
+            if (key == null) {
+                handler.onDecrypt(null, KeyStoreAccessException("Missing key for alias: $safeAlias"))
+                return
+            }
 
             val results =
                 CipherStorage.DecryptionResult(
