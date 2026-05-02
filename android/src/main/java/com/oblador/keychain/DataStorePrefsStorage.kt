@@ -8,7 +8,6 @@ import androidx.datastore.preferences.SharedPreferencesMigration
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
-import androidx.datastore.preferences.preferencesDataStore
 import com.facebook.react.bridge.ReactApplicationContext
 import com.oblador.keychain.PrefsStorageBase.Companion.KEYCHAIN_DATA
 import com.oblador.keychain.PrefsStorageBase.Companion.getKeyForCipherStorage
@@ -26,12 +25,26 @@ class DataStorePrefsStorage(
   private val coroutineScope: CoroutineScope,
 ) : PrefsStorageBase {
 
-  private val Context.prefs: DataStore<Preferences> by preferencesDataStore(
-    name = KEYCHAIN_DATA,
-    produceMigrations = ::sharedPreferencesMigration,
-    scope = coroutineScope,
-  )
-  private val prefs: DataStore<Preferences> = reactContext.prefs
+  companion object {
+    @Volatile
+    private var INSTANCE: DataStore<Preferences>? = null
+
+    private fun getDataStore(
+      context: Context,
+      coroutineScope: CoroutineScope,
+      produceMigrations: (Context) -> List<DataMigration<Preferences>>,
+    ): DataStore<Preferences> {
+      return INSTANCE ?: synchronized(this) {
+        INSTANCE ?: androidx.datastore.preferences.core.PreferenceDataStoreFactory.create(
+          produceFile = { context.applicationContext.filesDir.resolve("datastore/$KEYCHAIN_DATA.preferences_pb") },
+          migrations = produceMigrations(context.applicationContext),
+          scope = coroutineScope,
+        ).also { INSTANCE = it }
+      }
+    }
+  }
+
+  private val prefs: DataStore<Preferences> = getDataStore(reactContext, coroutineScope, ::sharedPreferencesMigration)
   private val prefsData: Preferences get() = callSuspendable { prefs.data.first() }
 
   private fun sharedPreferencesMigration(context: Context): List<DataMigration<Preferences>> {
