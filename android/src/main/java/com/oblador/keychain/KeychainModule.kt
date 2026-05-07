@@ -132,7 +132,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
   // endregion
   // region Members
   /** Name-to-instance lookup map. */
-  private val cipherStorageMap: MutableMap<String, CipherStorage> = HashMap()
+  private val cipherStorageMap: MutableMap<String, CipherStorage> = LinkedHashMap()
 
   /** Shared preferences storage. */
   private val prefsStorage: PrefsStorageBase
@@ -597,7 +597,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
       if (!isSupportedApi) continue
 
       // Is the API level better than the one we previously selected (if any)?
-      if (foundCipher != null && capabilityLevel < foundCipher.getCapabilityLevel()) continue
+      if (foundCipher != null && capabilityLevel <= foundCipher.getCapabilityLevel()) continue
 
       // if biometric supported but not configured properly than skip
       if (variant.isAuthSupported() && !isBiometry && !isPasscode) continue
