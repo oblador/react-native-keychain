@@ -149,10 +149,12 @@ class KeychainModule(reactContext: ReactApplicationContext) :
   init {
     prefsStorage = DataStorePrefsStorage(reactContext, coroutineScope)
     // Insertion order is the tie breaker when ciphers have equal capability levels
-    addCipherStorageToMap(CipherStorageKeystoreAesCbc(reactContext))
-    addCipherStorageToMap(CipherStorageKeystoreAesGcm(reactContext, false))
+    // AES-GCM will be preferred over RSA ECB
     addCipherStorageToMap(CipherStorageKeystoreAesGcm(reactContext, true))
     addCipherStorageToMap(CipherStorageKeystoreRsaEcb(reactContext))
+    // AES-GCM will be preferred over AES-CBC
+    addCipherStorageToMap(CipherStorageKeystoreAesGcm(reactContext, false))
+    addCipherStorageToMap(CipherStorageKeystoreAesCbc(reactContext))
   }
 
   // endregion
