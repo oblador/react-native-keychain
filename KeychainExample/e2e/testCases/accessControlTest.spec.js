@@ -144,6 +144,33 @@ describe('Access Control', () => {
     );
   });
 
+  it(':android:should prefer AES-GCM over RSA for biometric storage', async () => {
+    await expect(element(by.text('Keychain Example'))).toExist();
+    await element(by.id('usernameInput')).typeText('testUsernameCipherPref');
+    await element(by.id('passwordInput')).typeText('testPasswordCipherPref');
+    // Hide keyboard
+    await element(by.text('Keychain Example')).tap();
+
+    // Select biometric access control without specifying storage type
+    await element(by.text('Fingerprint')).tap();
+
+    await expect(element(by.text('Save'))).toBeVisible();
+    await element(by.text('Save')).tap();
+    await enterBiometrics();
+    await expectCredentialsSavedMessage();
+
+    await waitForAuthValidity();
+    await element(by.text('Load')).tap();
+    await enterBiometrics();
+
+    // Verify AES-GCM is selected, not RSA
+    await expectCredentialsLoadedMessage(
+      'testUsernameCipherPref',
+      'testPasswordCipherPref',
+      'KeystoreAESGCM'
+    );
+  });
+
   it('should reset all credentials', async () => {
     await expect(element(by.text('Keychain Example'))).toExist();
     // Hide keyboard
