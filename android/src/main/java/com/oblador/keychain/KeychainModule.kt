@@ -148,6 +148,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
   /** Default constructor. */
   init {
     prefsStorage = DataStorePrefsStorage(reactContext, coroutineScope)
+    // Insertion order is the tie breaker when ciphers have equal capability levels
     addCipherStorageToMap(CipherStorageKeystoreAesCbc(reactContext))
     addCipherStorageToMap(CipherStorageKeystoreAesGcm(reactContext, false))
     addCipherStorageToMap(CipherStorageKeystoreAesGcm(reactContext, true))
