@@ -23,12 +23,12 @@ function buildLoadedCredentialsRegex(
 }
 
 export async function expectCredentialsSavedMessage() {
-  const regex = /^Credentials saved! .*$/;
+  const regex = /^Credentials saved successfully!.*$/;
   await expectRegexText(regex, TIMEOUT);
 }
 
 export async function expectCredentialsResetMessage() {
-  const regex = /^Credentials Reset!$/;
+  const regex = /^Credentials cleared$/;
   await expectRegexText(regex, TIMEOUT);
 }
 

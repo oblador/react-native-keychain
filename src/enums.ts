@@ -130,6 +130,13 @@ export enum STORAGE_TYPE {
    * Uses asymmetric encryption and requires biometric authentication.
    */
   RSA = 'KeystoreRSAECB',
+  /**
+   * Samsung Knox hardware-backed encryption.
+   * Uses TIMAKeyStore (API < 31) or StrongBox (API >= 31) on Samsung devices.
+   * Falls back to standard Android Keystore on non-Samsung devices.
+   * @platform Android (Samsung devices)
+   */
+  KNOX = 'KnoxAES',
 }
 
 /**
