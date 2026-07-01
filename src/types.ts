@@ -1,6 +1,7 @@
 import type {
   ACCESS_CONTROL,
   ACCESSIBLE,
+  AUTHENTICATION_FRESHNESS,
   AUTHENTICATION_TYPE,
   SECURITY_LEVEL,
   STORAGE_TYPE,
@@ -86,6 +87,13 @@ export type GetOptions = {
    *
    */
   authenticationPrompt?: AuthenticationPrompt;
+  /** Whether a recent authentication may be reused for this read, or a fresh OS
+   * authentication prompt is required on every read. Only affects items stored
+   * with an access control that requires authentication.
+   * @platform iOS, visionOS, Android
+   * @default AUTHENTICATION_FRESHNESS.ALLOW_REUSE
+   */
+  authenticationFreshness?: AUTHENTICATION_FRESHNESS;
 } & BaseOptions &
   AccessControlOption;
 

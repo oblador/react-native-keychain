@@ -9,6 +9,14 @@ interface ResultHandler {
   /** Ask user for interaction, often its unlock of keystore by biometric data providing. */
   fun askAccessPermissions(context: CryptoContext)
 
+  /**
+   * Whether a fresh authentication prompt must be forced on every access,
+   * bypassing the key's post-authentication validity window. Defaults to false;
+   * only interactive handlers honor it.
+   */
+  val requireFreshAuth: Boolean
+    get() = false
+
   /** Handle decryption result or error. */
   fun onDecrypt(decryptionResult: DecryptionResult?, error: Throwable?)
 

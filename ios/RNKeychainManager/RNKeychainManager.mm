@@ -255,6 +255,9 @@ NSString *authenticationPromptValue(NSDictionary *options)
 #define kAuthenticationType @"authenticationType"
 #define kAuthenticationTypeBiometrics @"AuthenticationWithBiometrics"
 
+#define kAuthenticationFreshness @"authenticationFreshness"
+#define kAuthenticationFreshnessRequireFresh @"RequireFresh"
+
 #define kAccessControlType @"accessControl"
 #define kAccessControlUserPresence @"UserPresence"
 #define kAccessControlBiometryAny @"BiometryAny"
@@ -588,37 +591,67 @@ RCT_EXPORT_METHOD(getGenericPasswordForOptions:(NSDictionary * __nullable)option
     query[(__bridge NSString *)kSecAttrAccessGroup] = accessGroup;
   }
 
-  // Look up service in the keychain
-  NSDictionary *found = nil;
-  CFTypeRef foundTypeRef = NULL;
-  OSStatus osStatus = SecItemCopyMatching((__bridge CFDictionaryRef) query, (CFTypeRef*)&foundTypeRef);
+  // Look up the service in the keychain and resolve the promise.
+  void (^performLookup)(void) = ^{
+    NSDictionary *found = nil;
+    CFTypeRef foundTypeRef = NULL;
+    OSStatus osStatus = SecItemCopyMatching((__bridge CFDictionaryRef) query, (CFTypeRef*)&foundTypeRef);
 
-  if (osStatus != noErr && osStatus != errSecItemNotFound) {
-    NSError *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:osStatus userInfo:nil];
-    return rejectWithError(reject, error);
-  }
+    if (osStatus != noErr && osStatus != errSecItemNotFound) {
+      NSError *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:osStatus userInfo:nil];
+      return rejectWithError(reject, error);
+    }
 
-  found = (__bridge NSDictionary*)(foundTypeRef);
-  if (!found) {
-    return resolve(@(NO));
-  }
+    found = (__bridge NSDictionary*)(foundTypeRef);
+    if (!found) {
+      return resolve(@(NO));
+    }
 
-  // Found
-  NSString *username = (NSString *) [found objectForKey:(__bridge id)(kSecAttrAccount)];
-  NSString *password = [[NSString alloc] initWithData:[found objectForKey:(__bridge id)(kSecValueData)] encoding:NSUTF8StringEncoding];
+    // Found
+    NSString *username = (NSString *) [found objectForKey:(__bridge id)(kSecAttrAccount)];
+    NSString *password = [[NSString alloc] initWithData:[found objectForKey:(__bridge id)(kSecValueData)] encoding:NSUTF8StringEncoding];
 
-  CFRelease(foundTypeRef);
-  NSMutableDictionary* result = [@{@"storage": @"keychain"} mutableCopy];
-  if (service) {
-      result[@"service"] = service;
+    CFRelease(foundTypeRef);
+    NSMutableDictionary* result = [@{@"storage": @"keychain"} mutableCopy];
+    if (service) {
+        result[@"service"] = service;
+    }
+    if (username) {
+        result[@"username"] = username;
+    }
+    if (password) {
+        result[@"password"] = password;
+    }
+    return resolve([result copy]);
+  };
+
+#if TARGET_OS_IOS || TARGET_OS_VISION
+  // When AUTHENTICATION_FRESHNESS.REQUIRE_FRESH is requested, force a fresh
+  // device-owner authentication before the lookup. This is required because an
+  // item protected only by the device passcode is returned silently by
+  // SecItemCopyMatching while the device is unlocked (no prompt), and because
+  // biometric reuse (touchIDAuthenticationAllowableReuseDuration) would
+  // otherwise skip the prompt. Evaluating the policy on a dedicated LAContext
+  // with a zero reuse duration guarantees a prompt; passing that context via
+  // kSecUseAuthenticationContext lets the just-granted authorization satisfy
+  // the read without a second prompt.
+  if ([options[kAuthenticationFreshness] isEqualToString:kAuthenticationFreshnessRequireFresh]) {
+    LAContext *authContext = [LAContext new];
+    authContext.touchIDAuthenticationAllowableReuseDuration = 0;
+    [authContext evaluatePolicy:authPolicy(options)
+                localizedReason:authenticationPrompt
+                          reply:^(BOOL success, NSError * _Nullable authError) {
+      if (!success) {
+        return rejectWithError(reject, authError ?: [NSError errorWithDomain:NSOSStatusErrorDomain code:errSecUserCanceled userInfo:nil]);
+      }
+      query[(__bridge NSString *)kSecUseAuthenticationContext] = authContext;
+      performLookup();
+    }];
+    return;
   }
-  if (username) {
-      result[@"username"] = username;
-  }
-  if (password) {
-      result[@"password"] = password;
-  }
-  return resolve([result copy]);
+#endif
+
+  performLookup();
 }
 
 RCT_EXPORT_METHOD(resetGenericPasswordForOptions:(NSDictionary *)options

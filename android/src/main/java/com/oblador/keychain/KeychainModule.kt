@@ -78,6 +78,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
       const val ACCESSIBLE = "accessible"
       const val AUTH_PROMPT = "authenticationPrompt"
       const val AUTH_TYPE = "authenticationType"
+      const val AUTH_FRESHNESS = "authenticationFreshness"
       const val SERVICE = "service"
       const val SERVER = "server"
       const val SECURITY_LEVEL = "securityLevel"
@@ -85,6 +86,14 @@ class KeychainModule(reactContext: ReactApplicationContext) :
       const val USERNAME = "username"
       const val PASSWORD = "password"
       const val STORAGE = "storage"
+    }
+  }
+
+  /** `authenticationFreshness` option values (see AUTHENTICATION_FRESHNESS). */
+  internal annotation class AuthFreshness {
+    companion object {
+      const val ALLOW_REUSE = "AllowReuse"
+      const val REQUIRE_FRESH = "RequireFresh"
     }
   }
 
@@ -267,9 +276,10 @@ class KeychainModule(reactContext: ReactApplicationContext) :
           val useBiometry =
             getUseBiometry(accessControl) && (isFingerprintAuthAvailable || isFaceAuthAvailable || isIrisAuthAvailable)
           val promptInfo = getPromptInfo(options, usePasscode, useBiometry)
+          val requireFreshAuth = getRequireFreshAuth(options)
           val cipher = getCipherStorageByName(storageName)
           val decryptionResult =
-            decryptCredentials(alias, cipher!!, resultSet, promptInfo)
+            decryptCredentials(alias, cipher!!, resultSet, promptInfo, requireFreshAuth)
           val credentials = Arguments.createMap()
           credentials.putString(Maps.SERVICE, alias)
           credentials.putString(Maps.USERNAME, decryptionResult.username)
@@ -453,14 +463,15 @@ class KeychainModule(reactContext: ReactApplicationContext) :
     alias: String,
     current: CipherStorage,
     resultSet: PrefsStorageBase.ResultSet,
-    promptInfo: PromptInfo
+    promptInfo: PromptInfo,
+    requireFreshAuth: Boolean = false
   ): DecryptionResult {
     val storageName = resultSet.cipherStorageName
 
     // The encrypted data is encrypted using the current CipherStorage, so we just decrypt and
     // return
     if (storageName == current.getCipherStorageName()) {
-      return decryptToResult(alias, current, resultSet, promptInfo)
+      return decryptToResult(alias, current, resultSet, promptInfo, requireFreshAuth)
     }
 
     // The encrypted data is encrypted using an older CipherStorage, so we need to decrypt the data
@@ -473,7 +484,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
         )
 
     // decrypt using the older cipher storage
-    val decryptionResult = decryptToResult(alias, oldStorage, resultSet, promptInfo)
+    val decryptionResult = decryptToResult(alias, oldStorage, resultSet, promptInfo, requireFreshAuth)
     return decryptionResult
   }
 
@@ -483,9 +494,10 @@ class KeychainModule(reactContext: ReactApplicationContext) :
     alias: String,
     storage: CipherStorage,
     resultSet: PrefsStorageBase.ResultSet,
-    promptInfo: PromptInfo
+    promptInfo: PromptInfo,
+    requireFreshAuth: Boolean = false
   ): DecryptionResult {
-    val handler = getInteractiveHandler(storage, promptInfo)
+    val handler = getInteractiveHandler(storage, promptInfo, requireFreshAuth)
     storage.decrypt(
       handler,
       alias,
@@ -528,11 +540,21 @@ class KeychainModule(reactContext: ReactApplicationContext) :
   /** Get instance of handler that resolves access to the keystore on system request. */
   private fun getInteractiveHandler(
     current: CipherStorage,
-    promptInfo: PromptInfo
+    promptInfo: PromptInfo,
+    requireFreshAuth: Boolean = false
   ): ResultHandler {
     val reactContext = reactApplicationContext
-    return ResultHandlerProvider.getHandler(reactContext, current, promptInfo)
+    return ResultHandlerProvider.getHandler(reactContext, current, promptInfo, requireFreshAuth)
   }
+
+  /**
+   * Whether the caller asked to force a fresh authentication prompt on this read
+   * (`authenticationFreshness: RequireFresh`), bypassing the ~5s post-auth key
+   * validity window. Defaults to false (reuse allowed) when the option is absent.
+   */
+  private fun getRequireFreshAuth(options: ReadableMap?): Boolean =
+    options?.takeIf { it.hasKey(Maps.AUTH_FRESHNESS) }?.getString(Maps.AUTH_FRESHNESS) ==
+      AuthFreshness.REQUIRE_FRESH
 
   /** Remove key from old storage and add it to the new storage. */
   /* package */
