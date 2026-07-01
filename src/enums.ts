@@ -47,6 +47,26 @@ export enum AUTHENTICATION_TYPE {
 }
 
 /**
+ * Enum controlling whether a recent successful authentication may be reused to
+ * satisfy a read, or a fresh OS authentication prompt is required on every read.
+ *
+ * By default a keychain read can be satisfied without prompting if the user
+ * authenticated (or unlocked the device) very recently: on iOS an item
+ * protected only by the device passcode is returned silently while the device
+ * is unlocked, and biometrics honor `touchIDAuthenticationAllowableReuseDuration`;
+ * on Android the underlying key stays valid for a short window (~5s) after the
+ * last authentication. `REQUIRE_FRESH` forces a fresh prompt on the read.
+ */
+export enum AUTHENTICATION_FRESHNESS {
+  /** Default. A recent successful authentication (or device unlock) may satisfy
+   * the read without prompting again. */
+  ALLOW_REUSE = 'AllowReuse',
+  /** Force a fresh OS authentication prompt on every read; never reuse a recent
+   * unlock or a previous authentication. */
+  REQUIRE_FRESH = 'RequireFresh',
+}
+
+/**
  * Enum representing security levels.
  * @platform Android
  */

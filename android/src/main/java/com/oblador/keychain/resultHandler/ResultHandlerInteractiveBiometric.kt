@@ -21,7 +21,8 @@ import kotlin.concurrent.withLock
 open class ResultHandlerInteractiveBiometric(
   protected val reactContext: ReactApplicationContext,
   storage: CipherStorage,
-  protected var promptInfo: BiometricPrompt.PromptInfo
+  protected var promptInfo: BiometricPrompt.PromptInfo,
+  override val requireFreshAuth: Boolean = false
 ) : BiometricPrompt.AuthenticationCallback(), ResultHandler {
 
   // Explicitly declare the visibility and use 'override' to match the interface

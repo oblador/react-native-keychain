@@ -109,6 +109,19 @@ class CipherStorageKeystoreRsaEcb(reactContext: ReactApplicationContext) :
             // key is always NOT NULL otherwise GeneralSecurityException raised
             key = extractGeneratedKey(safeAlias, level, retries)
 
+            // When a fresh authentication is required, drive the interactive
+            // prompt up front for auth-gated keys instead of the optimistic path
+            // below, which would succeed silently inside the key's post-
+            // authentication validity window. Non-auth keys take the fast path.
+            val requiresUserAuth =
+                try { getKeyInfo(key).isUserAuthenticationRequired } catch (e: Exception) { false }
+            if (handler.requireFreshAuth && requiresUserAuth) {
+                handler.askAccessPermissions(
+                    CryptoContext(safeAlias, key, password, username, CryptoOperation.DECRYPT)
+                )
+                return
+            }
+
             val results =
                 CipherStorage.DecryptionResult(
                     decryptBytes(key, username),

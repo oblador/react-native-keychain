@@ -36,13 +36,14 @@ object ResultHandlerProvider {
   fun getHandler(
     reactContext: ReactApplicationContext,
     storage: CipherStorage,
-    promptInfo: BiometricPrompt.PromptInfo
+    promptInfo: BiometricPrompt.PromptInfo,
+    requireFreshAuth: Boolean = false
   ): ResultHandler {
     return if (storage.isAuthSupported()) {
       if (hasOnePlusBiometricBug()) {
-        ResultHandlerInteractiveBiometricManualRetry(reactContext, storage, promptInfo)
+        ResultHandlerInteractiveBiometricManualRetry(reactContext, storage, promptInfo, requireFreshAuth)
       } else {
-        ResultHandlerInteractiveBiometric(reactContext, storage, promptInfo)
+        ResultHandlerInteractiveBiometric(reactContext, storage, promptInfo, requireFreshAuth)
       }
     } else {
       ResultHandlerNonInteractive()
