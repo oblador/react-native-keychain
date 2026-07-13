@@ -25,6 +25,7 @@ async () => {
         'Credentials successfully loaded for user ' + credentials.username
       );
     } else {
+      // `false` means no credentials were found for the requested service.
       console.log('No credentials stored');
     }
   } catch (error) {
