@@ -33,8 +33,14 @@ export type BaseOptions = {
   service?: string;
   /** The server name to associate with the keychain item. */
   server?: string;
-  /** Whether to synchronize the keychain item to iCloud.
+  /** Whether to synchronize the keychain item to iCloud. Omitted and `false`
+   * keep the item on the device; `true` enables synchronization.
+   *
+   * Items unintentionally synchronized by affected earlier versions remain in
+   * iCloud. To migrate them, delete those entries with `cloudSync: true`, then
+   * recreate local-only entries with `cloudSync: false`.
    * @platform iOS
+   * @default false
    */
   cloudSync?: boolean;
   /** The access group to share keychain items between apps.

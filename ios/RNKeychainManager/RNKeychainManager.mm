@@ -236,7 +236,8 @@ NSString *accessGroupValue(NSDictionary *options)
 
 CFBooleanRef cloudSyncValue(NSDictionary *options)
 {
-  if (options && options[@"cloudSync"]) {
+  id cloudSync = options[@"cloudSync"];
+  if ([cloudSync isKindOfClass:[NSNumber class]] && [cloudSync boolValue]) {
     return kCFBooleanTrue;
   }
   return kCFBooleanFalse;
