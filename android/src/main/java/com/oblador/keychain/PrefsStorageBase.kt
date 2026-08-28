@@ -17,6 +17,9 @@ interface PrefsStorageBase {
 
   fun storeEncryptedEntry(service: String, encryptionResult: EncryptionResult)
 
+  /** Logical services with a complete stored credential, without enumerating other app keys. */
+  val serviceNames: Set<String>
+
   /**
    * List all types of cipher which are involved in en/decryption of the data stored herein.
    *

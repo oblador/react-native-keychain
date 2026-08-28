@@ -109,6 +109,9 @@ export function resetGenericPassword(options?: BaseOptions): Promise<boolean> {
 
 /**
  * Gets all service keys used in generic password keychain entries.
+ * On Android, generic and internet credentials share a namespace. The default
+ * service is returned as an empty string; unrelated Android Keystore aliases
+ * are not included.
  *
  * @returns {Promise<string[]>} Resolves to an array of strings representing service keys.
  *
