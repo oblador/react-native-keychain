@@ -31,6 +31,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.isActive
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runInterruptible
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
@@ -486,13 +487,15 @@ class KeychainModule(reactContext: ReactApplicationContext) :
     promptInfo: PromptInfo
   ): DecryptionResult {
     val handler = getInteractiveHandler(storage, promptInfo)
-    storage.decrypt(
-      handler,
-      alias,
-      resultSet.username!!,
-      resultSet.password!!,
-      SecurityLevel.ANY
-    )
+    runInterruptible {
+      storage.decrypt(
+        handler,
+        alias,
+        resultSet.username!!,
+        resultSet.password!!,
+        SecurityLevel.ANY
+      )
+    }
     val error = handler.error
     if (error != null) {
       throw KeychainException(error.message, error)
@@ -514,7 +517,9 @@ class KeychainModule(reactContext: ReactApplicationContext) :
     promptInfo: PromptInfo
   ): CipherStorage.EncryptionResult {
     val handler = getInteractiveHandler(storage, promptInfo)
-    storage.encrypt(handler, alias, username, password, securityLevel)
+    runInterruptible {
+      storage.encrypt(handler, alias, username, password, securityLevel)
+    }
     val error = handler.error
     if (error != null) {
       throw KeychainException(error.message, error)
