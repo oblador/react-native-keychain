@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Keyboard,
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -71,23 +72,81 @@ export default function App() {
     useState(0);
   const [hasGenericPassword, setHasGenericPassword] = useState(false);
   const [hasInternetCredentials, setHasInternetCredentials] = useState(false);
+  const [busy, setBusy] = useState(true);
+  const pending = useRef(true);
+  const mounted = useRef(false);
 
   useEffect(() => {
-    Keychain.getSupportedBiometryType().then((result) => {
-      setBiometryType(result);
-    });
-    Keychain.hasGenericPassword().then((result) => {
-      setHasGenericPassword(result);
-    });
-    Keychain.hasInternetCredentials({ server: 'https://example.com' }).then(
-      (result) => {
-        setHasInternetCredentials(result);
-      }
-    );
+    let active = true;
+    mounted.current = true;
+    Promise.allSettled([
+      Keychain.getSupportedBiometryType(),
+      Keychain.hasGenericPassword(),
+      Keychain.hasInternetCredentials({ server: 'https://example.com' }),
+    ])
+      .then(([biometry, generic, internet]) => {
+        if (!active) {
+          return;
+        }
+        if (biometry.status === 'fulfilled') {
+          setBiometryType(biometry.value);
+        }
+        if (generic.status === 'fulfilled') {
+          setHasGenericPassword(generic.value);
+        }
+        if (internet.status === 'fulfilled') {
+          setHasInternetCredentials(internet.value);
+        }
+        const failure = [biometry, generic, internet].find(
+          (result) => result.status === 'rejected'
+        );
+        if (failure?.status === 'rejected') {
+          setStatus('Could not check credentials, ' + failure.reason);
+        }
+      })
+      .catch((error) => {
+        if (active) {
+          setStatus('Could not check credentials, ' + error);
+        }
+      })
+      .finally(() => {
+        if (!active) {
+          return;
+        }
+        pending.current = false;
+        setBusy(false);
+      });
+    return () => {
+      active = false;
+      mounted.current = false;
+    };
   }, []);
 
-  const save = async () => {
+  const runOperation = async (
+    errorMessage: string,
+    operation: () => Promise<void>
+  ) => {
+    if (pending.current || !mounted.current) {
+      return;
+    }
+    pending.current = true;
+    setBusy(true);
     try {
+      await operation();
+    } catch (error) {
+      if (mounted.current) {
+        setStatus(errorMessage + error);
+      }
+    } finally {
+      pending.current = false;
+      if (mounted.current) {
+        setBusy(false);
+      }
+    }
+  };
+
+  const save = () =>
+    runOperation('Could not save credentials, ', async () => {
       const options = {
         authenticationPrompt: {
           title: 'Authentication needed',
@@ -96,9 +155,9 @@ export default function App() {
           cancel: 'Cancel',
         },
       };
-      const start = new Date();
+      const start = Date.now();
       if (type === 'internetCredentials') {
-        await Keychain.setInternetCredentials(
+        const result = await Keychain.setInternetCredentials(
           'https://example.com',
           username,
           password,
@@ -109,28 +168,37 @@ export default function App() {
             storage,
           }
         );
+        if (!result) {
+          throw new Error('Credentials were not saved');
+        }
+        if (mounted.current) {
+          setHasInternetCredentials(true);
+        }
       } else {
-        await Keychain.setGenericPassword(username, password, {
+        const result = await Keychain.setGenericPassword(username, password, {
           ...options,
           accessControl,
           securityLevel,
           storage,
         });
+        if (!result) {
+          throw new Error('Credentials were not saved');
+        }
+        if (mounted.current) {
+          setHasGenericPassword(true);
+        }
       }
 
-      const end = new Date();
+      if (!mounted.current) {
+        return;
+      }
       setUsername('');
       setPassword('');
-      setStatus(
-        `Credentials saved! takes: ${end.getTime() - start.getTime()} millis`
-      );
-    } catch (err) {
-      setStatus('Could not save credentials, ' + err);
-    }
-  };
+      setStatus(`Credentials saved! takes: ${Date.now() - start} millis`);
+    });
 
-  const load = async () => {
-    try {
+  const load = () =>
+    runOperation('Could not load credentials. ', async () => {
       const options = {
         authenticationPrompt: {
           title: 'Authentication needed',
@@ -154,29 +222,34 @@ export default function App() {
           accessControl,
         });
       }
+      if (!mounted.current) {
+        return;
+      }
       if (credentials) {
         setStatus('Credentials loaded! ' + JSON.stringify(credentials));
       } else {
         setStatus('No credentials stored.');
       }
-    } catch (err) {
-      setStatus('Could not load credentials. ' + err);
-    }
-  };
+    });
 
-  const reset = async () => {
-    try {
+  const reset = () =>
+    runOperation('Could not reset credentials, ', async () => {
       await Keychain.resetGenericPassword();
+      if (!mounted.current) {
+        return;
+      }
+      setHasGenericPassword(false);
       await Keychain.resetInternetCredentials({
         server: 'https://example.com',
       });
+      if (!mounted.current) {
+        return;
+      }
+      setHasInternetCredentials(false);
       setStatus('Credentials Reset!');
       setUsername('');
       setPassword('');
-    } catch (err) {
-      setStatus('Could not reset credentials, ' + err);
-    }
-  };
+    });
 
   const AC_VALUES =
     Platform.OS === 'ios'
@@ -190,109 +263,139 @@ export default function App() {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       style={styles.container}
     >
-      <View style={styles.content}>
-        <Text style={styles.title} onPress={() => Keyboard.dismiss()}>
-          Keychain Example
-        </Text>
-        <View style={styles.field}>
-          <Text style={styles.label}>Username</Text>
-          <TextInput
-            style={styles.input}
-            testID="usernameInput"
-            autoCapitalize="none"
-            value={username}
-            onChange={(event) => setUsername(event.nativeEvent.text)}
-            underlineColorAndroid="transparent"
-            blurOnSubmit={false}
-            returnKeyType="next"
-          />
-        </View>
-        <View style={styles.field}>
-          <Text style={styles.label}>Password</Text>
-          <TextInput
-            style={styles.input}
-            testID="passwordInput"
-            secureTextEntry
-            autoCapitalize="none"
-            value={password}
-            onChange={(event) => setPassword(event.nativeEvent.text)}
-            underlineColorAndroid="transparent"
-          />
-        </View>
-        <View style={styles.field}>
-          <Text style={styles.label}>Type</Text>
-          <SegmentedControlTab
-            selectedIndex={TYPE_OPTIONS.indexOf(type)}
-            values={TYPE_OPTIONS}
-            onTabPress={(index) => {
-              setType(TYPE_OPTIONS[index]);
-            }}
-          />
-        </View>
-        <View style={styles.field}>
-          <Text style={styles.label}>Access Control</Text>
-          <SegmentedControlTab
-            selectedIndex={selectedAccessControlIndex}
-            values={biometryType ? [...AC_VALUES, biometryType] : AC_VALUES}
-            onTabPress={(index) => {
-              setAccessControl(AC_MAP[index] || undefined);
-              setSelectedAccessControlIndex(index);
-            }}
-          />
-        </View>
-        {Platform.OS === 'android' && (
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <View style={styles.content}>
+          <Text style={styles.title} onPress={() => Keyboard.dismiss()}>
+            Keychain Example
+          </Text>
           <View style={styles.field}>
-            <Text style={styles.label}>Security Level</Text>
-            <SegmentedControlTab
-              selectedIndex={selectedSecurityIndex}
-              values={SECURITY_LEVEL_OPTIONS}
-              onTabPress={(index) => {
-                setSecurityLevel(SECURITY_LEVEL_MAP[index] || undefined);
-                setSelectedSecurityIndex(index);
-              }}
+            <Text style={styles.label}>Username</Text>
+            <TextInput
+              style={styles.input}
+              testID="usernameInput"
+              accessibilityLabel="Username"
+              editable={!busy}
+              autoCapitalize="none"
+              value={username}
+              onChangeText={setUsername}
+              underlineColorAndroid="transparent"
+              blurOnSubmit={false}
+              returnKeyType="next"
             />
-            <Text style={styles.label}>Storage</Text>
+          </View>
+          <View style={styles.field}>
+            <Text style={styles.label}>Password</Text>
+            <TextInput
+              style={styles.input}
+              testID="passwordInput"
+              accessibilityLabel="Password"
+              editable={!busy}
+              secureTextEntry
+              autoCapitalize="none"
+              value={password}
+              onChangeText={setPassword}
+              underlineColorAndroid="transparent"
+            />
+          </View>
+          <View style={styles.field}>
+            <Text style={styles.label}>Type</Text>
             <SegmentedControlTab
-              tabTextStyle={styles.tabText}
-              tabStyle={styles.tab}
-              selectedIndex={selectedStorageIndex}
-              values={SECURITY_STORAGE_OPTIONS}
+              enabled={!busy}
+              selectedIndex={TYPE_OPTIONS.indexOf(type)}
+              values={TYPE_OPTIONS}
               onTabPress={(index) => {
-                setStorage(SECURITY_STORAGE_MAP[index] || undefined);
-                setSelectedStorageIndex(index);
+                setType(TYPE_OPTIONS[index]);
               }}
             />
           </View>
-        )}
-        {!!status && <Text style={styles.status}>{status}</Text>}
-
-        <View style={styles.buttons}>
-          <TouchableHighlight onPress={save} style={styles.button}>
-            <View style={styles.save}>
-              <Text style={styles.buttonText}>Save</Text>
+          <View style={styles.field}>
+            <Text style={styles.label}>Access Control</Text>
+            <SegmentedControlTab
+              enabled={!busy}
+              selectedIndex={selectedAccessControlIndex}
+              values={biometryType ? [...AC_VALUES, biometryType] : AC_VALUES}
+              onTabPress={(index) => {
+                setAccessControl(AC_MAP[index] || undefined);
+                setSelectedAccessControlIndex(index);
+              }}
+            />
+          </View>
+          {Platform.OS === 'android' && (
+            <View style={styles.field}>
+              <Text style={styles.label}>Security Level</Text>
+              <SegmentedControlTab
+                enabled={!busy}
+                selectedIndex={selectedSecurityIndex}
+                values={SECURITY_LEVEL_OPTIONS}
+                onTabPress={(index) => {
+                  setSecurityLevel(SECURITY_LEVEL_MAP[index] || undefined);
+                  setSelectedSecurityIndex(index);
+                }}
+              />
+              <Text style={styles.label}>Storage</Text>
+              <SegmentedControlTab
+                enabled={!busy}
+                tabTextStyle={styles.tabText}
+                tabStyle={styles.tab}
+                selectedIndex={selectedStorageIndex}
+                values={SECURITY_STORAGE_OPTIONS}
+                onTabPress={(index) => {
+                  setStorage(SECURITY_STORAGE_MAP[index] || undefined);
+                  setSelectedStorageIndex(index);
+                }}
+              />
             </View>
-          </TouchableHighlight>
+          )}
+          <Text style={styles.status} accessibilityLiveRegion="polite">
+            {busy ? 'Working…' : status}
+          </Text>
 
-          <TouchableHighlight onPress={load} style={styles.button}>
-            <View style={styles.load}>
-              <Text style={styles.buttonText}>Load</Text>
-            </View>
-          </TouchableHighlight>
+          <View style={styles.buttons}>
+            <TouchableHighlight
+              onPress={save}
+              style={styles.button}
+              disabled={busy}
+              accessibilityRole="button"
+              accessibilityState={{ disabled: busy, busy }}
+            >
+              <View style={styles.save}>
+                <Text style={styles.buttonText}>Save</Text>
+              </View>
+            </TouchableHighlight>
 
-          <TouchableHighlight onPress={reset} style={styles.button}>
-            <View style={styles.reset}>
-              <Text style={styles.buttonText}>Reset</Text>
-            </View>
-          </TouchableHighlight>
+            <TouchableHighlight
+              onPress={load}
+              style={styles.button}
+              disabled={busy}
+              accessibilityRole="button"
+              accessibilityState={{ disabled: busy, busy }}
+            >
+              <View style={styles.load}>
+                <Text style={styles.buttonText}>Load</Text>
+              </View>
+            </TouchableHighlight>
+
+            <TouchableHighlight
+              onPress={reset}
+              style={styles.button}
+              disabled={busy}
+              accessibilityRole="button"
+              accessibilityState={{ disabled: busy, busy }}
+            >
+              <View style={styles.reset}>
+                <Text style={styles.buttonText}>Reset</Text>
+              </View>
+            </TouchableHighlight>
+          </View>
+
+          <Text style={styles.status}>
+            hasGenericPassword: {String(hasGenericPassword)}
+          </Text>
+          <Text style={styles.status}>
+            hasInternetCredentials: {String(hasInternetCredentials)}
+          </Text>
         </View>
-
-        <Text style={styles.status}>
-          hasGenericPassword: {String(hasGenericPassword)}
-        </Text>
-        <Text style={styles.status}>
-          hasInternetCredentials: {String(hasInternetCredentials)}
-        </Text>
-      </View>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 }
@@ -300,8 +403,12 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
     backgroundColor: '#F5FCFF',
+  },
+  scrollContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    paddingVertical: 20,
   },
   content: {
     marginHorizontal: 20,
@@ -325,7 +432,7 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: '#ccc',
     backgroundColor: 'white',
-    height: 32,
+    minHeight: 44,
     fontSize: 14,
     padding: 8,
   },
@@ -350,7 +457,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   save: {
-    backgroundColor: '#0c0',
+    backgroundColor: '#087b20',
   },
   load: {
     backgroundColor: '#333',
@@ -359,6 +466,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#c00',
   },
   buttonText: {
+    minHeight: 44,
     color: 'white',
     fontSize: 14,
     paddingHorizontal: 16,
