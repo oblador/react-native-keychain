@@ -250,6 +250,13 @@ NSString *authenticationPromptValue(NSDictionary *options)
   return nil;
 }
 
+static void useDataProtectionKeychain(NSMutableDictionary *query)
+{
+  if (@available(macOS 10.15, iOS 13.0, *)) {
+    query[(__bridge NSString *)kSecUseDataProtectionKeychain] = @(YES);
+  }
+}
+
 #pragma mark - Proposed functionality - Helpers
 
 #define kAuthenticationType @"authenticationType"
@@ -319,9 +326,7 @@ SecAccessControlCreateFlags accessControlValue(NSDictionary *options)
 
   NSMutableDictionary *mAttributes = attributes.mutableCopy;
 
-  if (@available(macOS 10.15, iOS 13.0, *)) {
-      mAttributes[(__bridge NSString *)kSecUseDataProtectionKeychain] = @(YES);
-  }
+  useDataProtectionKeychain(mAttributes);
 
   if (accessControl) {
     NSError *aerr = nil;
@@ -341,10 +346,10 @@ SecAccessControlCreateFlags accessControlValue(NSDictionary *options)
                                                                  &error);
 
     if (error) {
-      NSError *nsError = (__bridge NSError *)error;
+      NSError *nsError = CFBridgingRelease(error);
       return rejectWithError(reject, nsError);
     }
-    mAttributes[(__bridge NSString *)kSecAttrAccessControl] = (__bridge id)sacRef;
+    mAttributes[(__bridge NSString *)kSecAttrAccessControl] = CFBridgingRelease(sacRef);
   } else {
     mAttributes[(__bridge NSString *)kSecAttrAccessible] = (__bridge id)accessible;
   }
@@ -353,11 +358,21 @@ SecAccessControlCreateFlags accessControlValue(NSDictionary *options)
     mAttributes[(__bridge NSString *)kSecAttrAccessGroup] = accessGroup;
   }
 
-  attributes = [NSDictionary dictionaryWithDictionary:mAttributes];
+  // Validate the replacement before removing an existing credential.
+  OSStatus deleteStatus;
+  if ([attributes[(__bridge NSString *)kSecClass] isEqual:(__bridge id)kSecClassGenericPassword]) {
+    deleteStatus = [self deletePasswordsForOptions:options];
+  } else {
+    deleteStatus = [self deleteCredentialsForServer:attributes[(__bridge NSString *)kSecAttrServer] withOptions:options];
+  }
+  if (deleteStatus != errSecSuccess && deleteStatus != errSecItemNotFound) {
+    NSError *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:deleteStatus userInfo:nil];
+    return rejectWithError(reject, error);
+  }
 
-  OSStatus osStatus = SecItemAdd((__bridge CFDictionaryRef) attributes, NULL);
+  OSStatus osStatus = SecItemAdd((__bridge CFDictionaryRef)mAttributes, NULL);
 
-  if (osStatus != noErr && osStatus != errSecItemNotFound) {
+  if (osStatus != errSecSuccess) {
     NSError *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:osStatus userInfo:nil];
     return rejectWithError(reject, error);
   } else {
@@ -395,6 +410,7 @@ SecAccessControlCreateFlags accessControlValue(NSDictionary *options)
     queryParts[(__bridge NSString *)kSecUseAuthenticationUI] = (__bridge NSString *)kSecUseAuthenticationUIFail;
   }
 
+  useDataProtectionKeychain(queryParts);
   NSDictionary *query = [queryParts copy];
 
   // Perform the keychain query
@@ -431,20 +447,27 @@ SecAccessControlCreateFlags accessControlValue(NSDictionary *options)
     query[(__bridge NSString *)kSecAttrAccessGroup] = accessGroup;
   }
 
+  useDataProtectionKeychain(query);
   return SecItemDelete((__bridge CFDictionaryRef) query);
 }
 
 - (OSStatus)deleteCredentialsForServer:(NSString *)server withOptions:(NSDictionary * __nullable)options
 {
   CFBooleanRef cloudSync = cloudSyncValue(options);
-  NSDictionary *query = @{
+  NSString *accessGroup = accessGroupValue(options);
+  NSMutableDictionary *query = [@{
     (__bridge NSString *)kSecClass: (__bridge id)(kSecClassInternetPassword),
     (__bridge NSString *)kSecAttrServer: server,
     (__bridge NSString *)kSecAttrSynchronizable: (__bridge id)(cloudSync),
     (__bridge NSString *)kSecReturnAttributes: (__bridge id)kCFBooleanTrue,
     (__bridge NSString *)kSecReturnData: (__bridge id)kCFBooleanFalse
-  };
+  } mutableCopy];
 
+  if (accessGroup != nil) {
+    query[(__bridge NSString *)kSecAttrAccessGroup] = accessGroup;
+  }
+
+  useDataProtectionKeychain(query);
   return SecItemDelete((__bridge CFDictionaryRef) query);
 }
 
@@ -458,20 +481,22 @@ SecAccessControlCreateFlags accessControlValue(NSDictionary *options)
     [query setObject:(__bridge id)kSecUseAuthenticationUISkip forKey:(__bridge id)kSecUseAuthenticationUI];
   }
   NSMutableArray<NSString*> *services = [NSMutableArray<NSString*> new];
+  useDataProtectionKeychain(query);
   for (id secItemClass in secItemClasses) {
     [query setObject:secItemClass forKey:(__bridge id)kSecClass];
-    NSArray *result = nil;
     CFTypeRef resultRef = NULL;
     OSStatus osStatus = SecItemCopyMatching((__bridge CFDictionaryRef)query, (CFTypeRef*)&resultRef);
+    NSArray *result = CFBridgingRelease(resultRef);
     if (osStatus != noErr && osStatus != errSecItemNotFound) {
       NSError *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:osStatus userInfo:nil];
       @throw error;
     } else if (osStatus != errSecItemNotFound) {
-      result = (__bridge NSArray*)(resultRef);
       if (result != NULL) {
         for (id entry in result) {
           NSString *service = [entry objectForKey:(__bridge NSString *)kSecAttrService];
-          [services addObject:service];
+          if (service != nil) {
+            [services addObject:service];
+          }
         }
       }
     }
@@ -552,15 +577,13 @@ RCT_EXPORT_METHOD(setGenericPasswordForOptions:(NSDictionary *)options
 {
   NSString *service = serviceValue(options);
   CFBooleanRef cloudSync = cloudSyncValue(options);
-  NSDictionary *attributes = attributes = @{
+  NSDictionary *attributes = @{
     (__bridge NSString *)kSecClass: (__bridge id)(kSecClassGenericPassword),
     (__bridge NSString *)kSecAttrService: service,
     (__bridge NSString *)kSecAttrAccount: username,
     (__bridge NSString *)kSecAttrSynchronizable: (__bridge id)(cloudSync),
     (__bridge NSString *)kSecValueData: [password dataUsingEncoding:NSUTF8StringEncoding]
   };
-
-  [self deletePasswordsForOptions:options];
 
   [self insertKeychainEntry:attributes withOptions:options resolver:resolve rejecter:reject];
 }
@@ -580,15 +603,19 @@ RCT_EXPORT_METHOD(getGenericPasswordForOptions:(NSDictionary * __nullable)option
     (__bridge NSString *)kSecAttrSynchronizable: (__bridge id)(cloudSync),
     (__bridge NSString *)kSecReturnAttributes: (__bridge id)kCFBooleanTrue,
     (__bridge NSString *)kSecReturnData: (__bridge id)kCFBooleanTrue,
-    (__bridge NSString *)kSecMatchLimit: (__bridge NSString *)kSecMatchLimitOne,
-    (__bridge NSString *)kSecUseOperationPrompt: authenticationPrompt
+    (__bridge NSString *)kSecMatchLimit: (__bridge NSString *)kSecMatchLimitOne
   } mutableCopy];
+
+  if (authenticationPrompt != nil) {
+    query[(__bridge NSString *)kSecUseOperationPrompt] = authenticationPrompt;
+  }
 
   if (accessGroup != nil) {
     query[(__bridge NSString *)kSecAttrAccessGroup] = accessGroup;
   }
 
   // Look up service in the keychain
+  useDataProtectionKeychain(query);
   NSDictionary *found = nil;
   CFTypeRef foundTypeRef = NULL;
   OSStatus osStatus = SecItemCopyMatching((__bridge CFDictionaryRef) query, (CFTypeRef*)&foundTypeRef);
@@ -608,6 +635,10 @@ RCT_EXPORT_METHOD(getGenericPasswordForOptions:(NSDictionary * __nullable)option
   NSString *password = [[NSString alloc] initWithData:[found objectForKey:(__bridge id)(kSecValueData)] encoding:NSUTF8StringEncoding];
 
   CFRelease(foundTypeRef);
+  if (username == nil || password == nil) {
+    NSError *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:errSecDecode userInfo:nil];
+    return rejectWithError(reject, error);
+  }
   NSMutableDictionary* result = [@{@"storage": @"keychain"} mutableCopy];
   if (service) {
       result[@"service"] = service;
@@ -643,7 +674,6 @@ RCT_EXPORT_METHOD(setInternetCredentialsForServer:(NSString *)server
                   resolve:(RCTPromiseResolveBlock)resolve
                   reject:(RCTPromiseRejectBlock)reject)
 {
-  [self deleteCredentialsForServer:server withOptions: options];
   CFBooleanRef cloudSync = cloudSyncValue(options);
 
   NSDictionary *attributes = @{
@@ -692,15 +722,19 @@ RCT_EXPORT_METHOD(getInternetCredentialsForServer:(NSString *)server
     (__bridge NSString *)kSecReturnAttributes: (__bridge id)kCFBooleanTrue,
     (__bridge NSString *)kSecAttrSynchronizable: (__bridge id)(cloudSync),
     (__bridge NSString *)kSecReturnData: (__bridge id)kCFBooleanTrue,
-    (__bridge NSString *)kSecMatchLimit: (__bridge NSString *)kSecMatchLimitOne,
-    (__bridge NSString *)kSecUseOperationPrompt: authenticationPrompt
+    (__bridge NSString *)kSecMatchLimit: (__bridge NSString *)kSecMatchLimitOne
   } mutableCopy];
+
+  if (authenticationPrompt != nil) {
+    query[(__bridge NSString *)kSecUseOperationPrompt] = authenticationPrompt;
+  }
 
   if (accessGroup != nil) {
     query[(__bridge NSString *)kSecAttrAccessGroup] = accessGroup;
   }
 
   // Look up server in the keychain
+  useDataProtectionKeychain(query);
   NSDictionary *found = nil;
   CFTypeRef foundTypeRef = NULL;
   OSStatus osStatus = SecItemCopyMatching((__bridge CFDictionaryRef) query, (CFTypeRef*)&foundTypeRef);
@@ -720,6 +754,10 @@ RCT_EXPORT_METHOD(getInternetCredentialsForServer:(NSString *)server
   NSString *password = [[NSString alloc] initWithData:[found objectForKey:(__bridge id)(kSecValueData)] encoding:NSUTF8StringEncoding];
 
   CFRelease(foundTypeRef);
+  if (username == nil || password == nil) {
+    NSError *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:errSecDecode userInfo:nil];
+    return rejectWithError(reject, error);
+  }
   return resolve(@{
     @"server": server,
     @"username": username,
