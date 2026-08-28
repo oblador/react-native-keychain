@@ -26,7 +26,7 @@ export interface Spec extends TurboModule {
     server: string,
     options?: Object | null
   ): Promise<Object | null>;
-  resetInternetCredentialsForOptions(options: Object): Promise<void>;
+  resetInternetCredentialsForOptions(options: Object): Promise<boolean>;
   getSupportedBiometryType?(): Promise<string | null>;
   canCheckAuthentication?(options?: Object | null): Promise<boolean>;
   getSecurityLevel?(options?: Object | null): Promise<string | null>;
@@ -36,7 +36,7 @@ export interface Spec extends TurboModule {
     server: string,
     username: string,
     password?: string
-  ): Promise<void>;
+  ): Promise<boolean>;
 }
 
 export default TurboModuleRegistry.getEnforcing<Spec>(

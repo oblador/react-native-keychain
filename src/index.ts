@@ -11,6 +11,7 @@ import {
 import type {
   Result,
   UserCredentials,
+  InternetCredentials,
   SharedWebCredentials,
   GetOptions,
   GetAllOptions,
@@ -127,13 +128,13 @@ export function getAllGenericPasswordServices(
 /**
  * Checks if internet credentials exist for the given server.
  *
- * @param {BaseOptions} options - A keychain options objectnormalizeAuthPrompt(options).
+ * @param {BaseOptions} options - A keychain options object containing the server.
  *
  * @returns {Promise<boolean>} Resolves to `true` if internet credentials exist, otherwise `false`.
  *
  * @example
  * ```typescript
- * const hasCredentials = await Keychain.hasInternetCredentials('https://example.com');
+ * const hasCredentials = await Keychain.hasInternetCredentials({ server: 'https://example.com' });
  * console.log('Internet credentials exist:', hasCredentials);
  * ```
  */
@@ -176,7 +177,7 @@ export function setInternetCredentials(
  * @param {string} server - The server URL.
  * @param {GetOptions} [options] - A keychain options object.
  *
- * @returns {Promise<false | UserCredentials>} Resolves to an object containing `server`, `username`, `password`, and `storage` when successful, or `false` on failure.
+ * @returns {Promise<false | InternetCredentials>} Resolves to credentials containing `server` on iOS or `service` on Android, or `false` when no credentials are found.
  *
  * @example
  * ```typescript
@@ -191,27 +192,29 @@ export function setInternetCredentials(
 export function getInternetCredentials(
   server: string,
   options?: GetOptions
-): Promise<false | UserCredentials> {
+): Promise<false | InternetCredentials> {
   return RNKeychainManager.getInternetCredentialsForServer(
     server,
     normalizeAuthPrompt(options)
-  ) as Promise<false | UserCredentials>;
+  ) as Promise<false | InternetCredentials>;
 }
 
 /**
  * Deletes all internet password keychain entries for the given server.
  *
- * @param {BaseOptions} [options] - A keychain options object.
+ * @param {BaseOptions} options - A keychain options object containing the server.
  *
- * @returns {Promise<void>} Resolves when the operation is completed.
+ * @returns {Promise<boolean>} Resolves to `true` when the operation is completed.
  *
  * @example
  * ```typescript
- * await Keychain.resetInternetCredentials('https://example.com');
+ * await Keychain.resetInternetCredentials({ server: 'https://example.com' });
  * console.log('Credentials reset for server');
  * ```
  */
-export function resetInternetCredentials(options: BaseOptions): Promise<void> {
+export function resetInternetCredentials(
+  options: BaseOptions
+): Promise<boolean> {
   return RNKeychainManager.resetInternetCredentialsForOptions(options);
 }
 
@@ -245,7 +248,7 @@ export function getSupportedBiometryType(): Promise<null | BIOMETRY_TYPE> {
  * ```typescript
  * const credentials = await Keychain.requestSharedWebCredentials();
  * if (credentials) {
- *   console.log('Shared credentials retrieved:', credentials);
+ *   console.log('Shared credentials retrieved');
  * } else {
  *   console.log('No shared credentials available');
  * }
@@ -254,14 +257,14 @@ export function getSupportedBiometryType(): Promise<null | BIOMETRY_TYPE> {
 export function requestSharedWebCredentials(): Promise<
   false | SharedWebCredentials
 > {
-  if (Platform.OS !== 'ios') {
+  if (Platform.OS !== 'ios' || !RNKeychainManager.requestSharedWebCredentials) {
     return Promise.reject(
       new Error(
         `requestSharedWebCredentials() is not supported on ${Platform.OS} yet`
       )
     );
   }
-  return RNKeychainManager.requestSharedWebCredentials!() as Promise<
+  return RNKeychainManager.requestSharedWebCredentials() as Promise<
     false | SharedWebCredentials
   >;
 }
@@ -275,7 +278,7 @@ export function requestSharedWebCredentials(): Promise<
  * @param {string} username - The username or e-mail to be saved.
  * @param {string} [password] - The password to be saved.
  *
- * @returns {Promise<void>} Resolves when the operation is completed.
+ * @returns {Promise<boolean>} Resolves to `true` when the operation is completed.
  *
  * @example
  * ```typescript
@@ -287,15 +290,18 @@ export function setSharedWebCredentials(
   server: string,
   username: string,
   password?: string
-): Promise<void> {
-  if (Platform.OS !== 'ios') {
+): Promise<boolean> {
+  if (
+    Platform.OS !== 'ios' ||
+    !RNKeychainManager.setSharedWebCredentialsForServer
+  ) {
     return Promise.reject(
       new Error(
         `setSharedWebCredentials() is not supported on ${Platform.OS} yet`
       )
     );
   }
-  return RNKeychainManager.setSharedWebCredentialsForServer!(
+  return RNKeychainManager.setSharedWebCredentialsForServer(
     server,
     username,
     password
@@ -387,9 +393,11 @@ export default {
   setInternetCredentials,
   isPasscodeAuthAvailable,
   getInternetCredentials,
+  hasInternetCredentials,
   resetInternetCredentials,
   setGenericPassword,
   getGenericPassword,
+  hasGenericPassword,
   getAllGenericPasswordServices,
   resetGenericPassword,
   requestSharedWebCredentials,
