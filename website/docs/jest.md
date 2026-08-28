@@ -40,10 +40,10 @@ const keychainMock = {
     BIOMETRICS: 'MOCK_AuthenticationWithBiometrics',
   },
   STORAGE_TYPE: {
-    FB: 'MOCK_FacebookConceal',
-    AES: 'MOCK_KeystoreAESCBC',
+    AES_CBC: 'MOCK_KeystoreAESCBC',
+    AES_GCM: 'MOCK_KeystoreAESGCM',
+    AES_GCM_NO_AUTH: 'MOCK_KeystoreAESGCM_NoAuth',
     RSA: 'MOCK_KeystoreRSAECB',
-    KC: 'MOCK_keychain',
   },
   setGenericPassword: jest.fn().mockResolvedValue({
     service: 'mockService',
@@ -70,7 +70,8 @@ const keychainMock = {
     service: 'mockService',
     storage: 'mockStorage',
   }),
-  resetInternetCredentials: jest.fn().mockResolvedValue(),
+  hasInternetCredentials: jest.fn().mockResolvedValue(true),
+  resetInternetCredentials: jest.fn().mockResolvedValue(true),
   getSupportedBiometryType: jest.fn().mockResolvedValue('MOCK_TouchID'),
   canImplyAuthentication: jest.fn().mockResolvedValue(true),
   getSecurityLevel: jest.fn().mockResolvedValue('MOCK_SECURE_SOFTWARE'),
@@ -124,9 +125,9 @@ module.exports = {
 ```ts
 // jest.setup.js
 
-import keychainMock from './path/to/keychainMock';
+import mockKeychain from './path/to/keychainMock';
 
-jest.mock('react-native-keychain', () => keychainMock);
+jest.mock('react-native-keychain', () => mockKeychain);
 ```
 
 Ensure that the path to `keychainMock` is correct relative to your `jest.setup.js` file.

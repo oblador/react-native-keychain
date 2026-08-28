@@ -1,1 +1,11 @@
 /**/*.d.ts
+/lib/
+/website/build/
+/website/.docusaurus/
+/website/docs/api/
+/KeychainExample/dist/
+/KeychainExample/ios/Pods/
+/KeychainExample/ios/build/
+/KeychainExample/android/build/
+/KeychainExample/android/app/build/
+/android/build/

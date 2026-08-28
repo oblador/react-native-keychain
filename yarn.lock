@@ -19078,6 +19078,7 @@ __metadata:
     react-dom: ^18.0.0
     typedoc: ^0.26.7
     typedoc-plugin-markdown: ^4.2.8
+    typescript: ^5.2.2
   languageName: unknown
   linkType: soft
 

@@ -30,28 +30,11 @@ We offer three security levels for data storage:
 
 ### Secure Software vs Secure Hardware
 
- Android uses two primary levels of security for cryptographic key storage and operations:
+Android Keystore keys can be software-backed or hardware-backed. Both a **Trusted Execution Environment (TEE)** and **StrongBox** count as secure hardware; TEE is not software-only storage. StrongBox uses a separate secure processor with additional isolation. See the [Android Keystore documentation](https://developer.android.com/privacy-and-security/keystore).
 
-1. **Secure Hardware ([StrongBox Keymaster](https://source.android.com/docs/security/best-practices/hardware))**
-2. **Secure Software ([Trusted Execution Environment](https://source.android.com/docs/security/features/trusty))**
+`SECURITY_LEVEL.SECURE_SOFTWARE` requires at least Android Keystore storage, while `SECURITY_LEVEL.SECURE_HARDWARE` requires the generated key to be hardware-backed. The library attempts StrongBox where supported, then regular Keystore generation, and checks the resulting key against the requested level. A regular Keystore key may be hardware-backed, but this is not guaranteed solely by the absence of StrongBox.
 
-#### **What is Secure Hardware (StrongBox Keymaster)?**
-
-Secure Hardware refers to a dedicated, physically isolated security chip (e.g., StrongBox). It is designed to provide the highest level of security for cryptographic key operations.
-
-
-#### **What is Secure Software (TEE)?**
-
-Secure Software refers to the **Trusted Execution Environment (TEE)**, a secure area of the device's main processor. It provides a sandboxed environment to store and process cryptographic keys securely, but it is not physically isolated like Secure Hardware.
-
-
-#### **How Does It Affect `react-native-keychain`?**
-
-When using `react-native-keychain` on Android, the library relies on the Android KeyStore system to store and manage cryptographic keys. The level of security provided depends on the device and its capabilities:
-
-1. **StrongBox Enabled Devices**: If a device supports StrongBox, `react-native-keychain` can store keys in the **Secure Hardware**, offering the highest level of security.
-2. **TEE-Only Devices**: If StrongBox is not available, the keys are stored in the **TEE**, which is still secure but less resistant to physical attacks.
-
+The `getSecurityLevel()` capability query is not an attestation of a particular stored key. Specify `securityLevel` when saving if your application requires a minimum guarantee.
 
 ## iOS
 
