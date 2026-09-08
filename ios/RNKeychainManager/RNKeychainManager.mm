@@ -357,6 +357,16 @@ SecAccessControlCreateFlags accessControlValue(NSDictionary *options)
 
   OSStatus osStatus = SecItemAdd((__bridge CFDictionaryRef) attributes, NULL);
 
+  if (osStatus == errSecDuplicateItem) {
+    // The SecItemDelete issued by the caller can fail silently and leave the previous
+    // item in place. Apple's guidance for errSecDuplicateItem is to update that item.
+    osStatus = [self updateKeychainEntry:attributes];
+    if (osStatus != noErr) {
+      NSError *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:osStatus userInfo:nil];
+      return rejectWithError(reject, error);
+    }
+  }
+
   if (osStatus != noErr && osStatus != errSecItemNotFound) {
     NSError *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:osStatus userInfo:nil];
     return rejectWithError(reject, error);
@@ -367,6 +377,48 @@ SecAccessControlCreateFlags accessControlValue(NSDictionary *options)
       @"storage": @"keychain"
     });
   }
+}
+
+// Updates the existing item that made SecItemAdd fail with errSecDuplicateItem.
+// The query targets the primary key used by the add, and the update writes the same
+// data and accessibility the add would have written.
+- (OSStatus)updateKeychainEntry:(NSDictionary *)attributes
+{
+  id secClass = attributes[(__bridge NSString *)kSecClass];
+  NSString *accessGroup = attributes[(__bridge NSString *)kSecAttrAccessGroup];
+  id accessControl = attributes[(__bridge NSString *)kSecAttrAccessControl];
+
+  NSMutableDictionary *query = [@{
+    (__bridge NSString *)kSecClass: secClass,
+    (__bridge NSString *)kSecAttrAccount: attributes[(__bridge NSString *)kSecAttrAccount],
+    (__bridge NSString *)kSecAttrSynchronizable: attributes[(__bridge NSString *)kSecAttrSynchronizable]
+  } mutableCopy];
+
+  if ([secClass isEqual:(__bridge id)kSecClassInternetPassword]) {
+    query[(__bridge NSString *)kSecAttrServer] = attributes[(__bridge NSString *)kSecAttrServer];
+  } else {
+    query[(__bridge NSString *)kSecAttrService] = attributes[(__bridge NSString *)kSecAttrService];
+  }
+
+  if (@available(macOS 10.15, iOS 13.0, *)) {
+    query[(__bridge NSString *)kSecUseDataProtectionKeychain] = @(YES);
+  }
+
+  if (accessGroup != nil) {
+    query[(__bridge NSString *)kSecAttrAccessGroup] = accessGroup;
+  }
+
+  NSMutableDictionary *attributesToUpdate = [@{
+    (__bridge NSString *)kSecValueData: attributes[(__bridge NSString *)kSecValueData]
+  } mutableCopy];
+
+  if (accessControl != nil) {
+    attributesToUpdate[(__bridge NSString *)kSecAttrAccessControl] = accessControl;
+  } else {
+    attributesToUpdate[(__bridge NSString *)kSecAttrAccessible] = attributes[(__bridge NSString *)kSecAttrAccessible];
+  }
+
+  return SecItemUpdate((__bridge CFDictionaryRef) query, (__bridge CFDictionaryRef) attributesToUpdate);
 }
 
 - (void)hasCredentialsWithSecClass:(CFTypeRef)secClass
