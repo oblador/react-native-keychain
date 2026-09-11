@@ -18,25 +18,45 @@ import com.oblador.keychain.PrefsStorageBase.Companion.isKeyForCipherStorage
 import com.oblador.keychain.PrefsStorageBase.ResultSet
 import com.oblador.keychain.cipherStorage.CipherStorage
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+
+/**
+ * Process-wide owner of the RN_KEYCHAIN DataStore.
+ *
+ * Jetpack DataStore allows one active instance per file. A JS reload (DevSettings.reload,
+ * expo-updates reloadAsync, error-boundary restart) recreates the ReactContext and therefore a
+ * second KeychainModule / DataStorePrefsStorage while the first module's scope is merely cancelled,
+ * so a per-instance DataStore means two DataStores on the same file ("There are multiple DataStores
+ * active for the same file") and writes cancelled mid-flight. Keeping the DataStore and its owning
+ * scope here for the life of the process makes module recreation and KeychainModule.invalidate()
+ * irrelevant to it, and runs the SharedPreferences migration once per process.
+ */
+internal object KeychainDataStore {
+  private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+
+  private val Context.prefs: DataStore<Preferences> by preferencesDataStore(
+    name = KEYCHAIN_DATA,
+    produceMigrations = ::sharedPreferencesMigration,
+    scope = scope,
+  )
+
+  private fun sharedPreferencesMigration(context: Context): List<DataMigration<Preferences>> {
+    return listOf(SharedPreferencesMigration(context, KEYCHAIN_DATA))
+  }
+
+  fun get(context: Context): DataStore<Preferences> = context.applicationContext.prefs
+}
 
 class DataStorePrefsStorage(
   reactContext: ReactApplicationContext,
   private val coroutineScope: CoroutineScope,
 ) : PrefsStorageBase {
 
-  private val Context.prefs: DataStore<Preferences> by preferencesDataStore(
-    name = KEYCHAIN_DATA,
-    produceMigrations = ::sharedPreferencesMigration,
-    scope = coroutineScope,
-  )
-  private val prefs: DataStore<Preferences> = reactContext.prefs
+  private val prefs: DataStore<Preferences> = KeychainDataStore.get(reactContext)
   private val prefsData: Preferences get() = callSuspendable { prefs.data.first() }
-
-  private fun sharedPreferencesMigration(context: Context): List<DataMigration<Preferences>> {
-    return listOf(SharedPreferencesMigration(context, KEYCHAIN_DATA))
-  }
 
   override fun getEncryptedEntry(service: String): ResultSet? {
     val bytesForUsername = getBytesForUsername(service)
