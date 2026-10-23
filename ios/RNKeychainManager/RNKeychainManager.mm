@@ -421,6 +421,60 @@ SecAccessControlCreateFlags accessControlValue(NSDictionary *options)
   return SecItemUpdate((__bridge CFDictionaryRef) query, (__bridge CFDictionaryRef) attributesToUpdate);
 }
 
+// Writes an item without a window in which it does not exist. A delete followed by an add
+// loses the item if the process dies between the two calls, or if the add fails after the
+// delete succeeded. SecItemUpdate replaces the matching item in one call, so the add only
+// runs when nothing matches. Writes with an access control or access group keep the delete
+// and add: updating a protected item can require authentication, and the internet
+// credentials delete does not scope by access group.
+- (void)upsertKeychainEntry:(NSDictionary *)attributes
+                      query:(NSDictionary *)query
+                withOptions:(NSDictionary * __nullable)options
+             deleteExisting:(OSStatus (^)(void))deleteExisting
+                   resolver:(RCTPromiseResolveBlock)resolve
+                   rejecter:(RCTPromiseRejectBlock)reject
+{
+  if (accessControlValue(options) || accessGroupValue(options) != nil) {
+    deleteExisting();
+    return [self insertKeychainEntry:attributes withOptions:options resolver:resolve rejecter:reject];
+  }
+
+  NSMutableDictionary *mQuery = query.mutableCopy;
+  if (@available(macOS 10.15, iOS 13.0, *)) {
+    mQuery[(__bridge NSString *)kSecUseDataProtectionKeychain] = @(YES);
+  }
+
+  NSDictionary *changes = @{
+    (__bridge NSString *)kSecAttrAccount: attributes[(__bridge NSString *)kSecAttrAccount],
+    (__bridge NSString *)kSecValueData: attributes[(__bridge NSString *)kSecValueData],
+    (__bridge NSString *)kSecAttrAccessible: (__bridge id)accessibleValue(options)
+  };
+
+  OSStatus osStatus = SecItemUpdate((__bridge CFDictionaryRef) mQuery, (__bridge CFDictionaryRef) changes);
+
+  if (osStatus == errSecItemNotFound) {
+    return [self insertKeychainEntry:attributes withOptions:options resolver:resolve rejecter:reject];
+  }
+
+  // Items under several accounts match the query, and setting one account on all of them
+  // would collide. Fall back to removing them all and adding the new item, as before.
+  if (osStatus == errSecDuplicateItem) {
+    deleteExisting();
+    return [self insertKeychainEntry:attributes withOptions:options resolver:resolve rejecter:reject];
+  }
+
+  // Any other failure leaves the existing item untouched.
+  if (osStatus != noErr) {
+    NSError *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:osStatus userInfo:nil];
+    return rejectWithError(reject, error);
+  }
+
+  return resolve(@{
+    @"service": serviceValue(options),
+    @"storage": @"keychain"
+  });
+}
+
 - (void)hasCredentialsWithSecClass:(CFTypeRef)secClass
                            options:(NSDictionary *)options
                            resolver:(RCTPromiseResolveBlock)resolve
@@ -612,9 +666,18 @@ RCT_EXPORT_METHOD(setGenericPasswordForOptions:(NSDictionary *)options
     (__bridge NSString *)kSecValueData: [password dataUsingEncoding:NSUTF8StringEncoding]
   };
 
-  [self deletePasswordsForOptions:options];
+  NSDictionary *query = @{
+    (__bridge NSString *)kSecClass: (__bridge id)(kSecClassGenericPassword),
+    (__bridge NSString *)kSecAttrService: service,
+    (__bridge NSString *)kSecAttrSynchronizable: (__bridge id)(cloudSync)
+  };
 
-  [self insertKeychainEntry:attributes withOptions:options resolver:resolve rejecter:reject];
+  [self upsertKeychainEntry:attributes
+                      query:query
+                withOptions:options
+             deleteExisting:^OSStatus{ return [self deletePasswordsForOptions:options]; }
+                   resolver:resolve
+                   rejecter:reject];
 }
 
 RCT_EXPORT_METHOD(getGenericPasswordForOptions:(NSDictionary * __nullable)options
@@ -695,7 +758,6 @@ RCT_EXPORT_METHOD(setInternetCredentialsForServer:(NSString *)server
                   resolve:(RCTPromiseResolveBlock)resolve
                   reject:(RCTPromiseRejectBlock)reject)
 {
-  [self deleteCredentialsForServer:server withOptions: options];
   CFBooleanRef cloudSync = cloudSyncValue(options);
 
   NSDictionary *attributes = @{
@@ -706,7 +768,18 @@ RCT_EXPORT_METHOD(setInternetCredentialsForServer:(NSString *)server
     (__bridge NSString *)kSecAttrSynchronizable: (__bridge id)(cloudSync),
   };
 
-  [self insertKeychainEntry:attributes withOptions:options resolver:resolve rejecter:reject];
+  NSDictionary *query = @{
+    (__bridge NSString *)kSecClass: (__bridge id)(kSecClassInternetPassword),
+    (__bridge NSString *)kSecAttrServer: server,
+    (__bridge NSString *)kSecAttrSynchronizable: (__bridge id)(cloudSync)
+  };
+
+  [self upsertKeychainEntry:attributes
+                      query:query
+                withOptions:options
+             deleteExisting:^OSStatus{ return [self deleteCredentialsForServer:server withOptions:options]; }
+                   resolver:resolve
+                   rejecter:reject];
 }
 
 RCT_EXPORT_METHOD(hasInternetCredentialsForOptions:(NSDictionary *)options
