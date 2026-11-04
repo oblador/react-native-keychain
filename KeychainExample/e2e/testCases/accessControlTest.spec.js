@@ -20,8 +20,13 @@ describe('Access Control', () => {
         type,
       async () => {
         await expect(element(by.text('Keychain Example'))).toExist();
-        await element(by.id('usernameInput')).typeText('testUsernamePasscode');
-        await element(by.id('passwordInput')).typeText('testPasswordPasscode');
+        await element(by.text(type)).tap();
+        await element(by.id('usernameInput')).replaceText(
+          'testUsernamePasscode'
+        );
+        await element(by.id('passwordInput')).replaceText(
+          'testPasswordPasscode'
+        );
         // Hide keyboard
         await element(by.text('Keychain Example')).tap();
         await element(by.text('Passcode')).tap();
@@ -51,10 +56,11 @@ describe('Access Control', () => {
         type,
       async () => {
         await expect(element(by.text('Keychain Example'))).toExist();
-        await element(by.id('usernameInput')).typeText(
+        await element(by.text(type)).tap();
+        await element(by.id('usernameInput')).replaceText(
           'testUsernameBiometrics'
         );
-        await element(by.id('passwordInput')).typeText(
+        await element(by.id('passwordInput')).replaceText(
           'testPasswordBiometrics'
         );
         // Hide keyboard
@@ -89,8 +95,13 @@ describe('Access Control', () => {
         type,
       async () => {
         await expect(element(by.text('Keychain Example'))).toExist();
+        await element(by.text(type)).tap();
         await expect(
-          element(by.text('hasGenericPassword: true'))
+          element(
+            by.text(
+              `${type === 'genericPassword' ? 'hasGenericPassword' : 'hasInternetCredentials'}: true`
+            )
+          )
         ).toBeVisible();
         await element(by.text('Load')).tap();
         await enterBiometrics();
@@ -106,8 +117,9 @@ describe('Access Control', () => {
         type,
       async () => {
         await expect(element(by.text('Keychain Example'))).toExist();
-        await element(by.id('usernameInput')).typeText('testUsernameAny');
-        await element(by.id('passwordInput')).typeText('testPasswordAny');
+        await element(by.text(type)).tap();
+        await element(by.id('usernameInput')).replaceText('testUsernameAny');
+        await element(by.id('passwordInput')).replaceText('testPasswordAny');
         // Hide keyboard
         await element(by.text('Keychain Example')).tap();
         await element(by.text('None')).tap();
@@ -132,8 +144,13 @@ describe('Access Control', () => {
         type,
       async () => {
         await expect(element(by.text('Keychain Example'))).toExist();
+        await element(by.text(type)).tap();
         await expect(
-          element(by.text('hasGenericPassword: true'))
+          element(
+            by.text(
+              `${type === 'genericPassword' ? 'hasGenericPassword' : 'hasInternetCredentials'}: true`
+            )
+          )
         ).toBeVisible();
         await element(by.text('Load')).tap();
         await expectCredentialsLoadedMessage(

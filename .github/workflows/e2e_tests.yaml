@@ -190,12 +190,11 @@ jobs:
           path: |
             **/ios/Pods
             **/vendor/bundle
-          key: ${{ runner.os }}-cocoapods-${{ hashFiles('KeychainExample/ios/Podfile.lock') }}
+          key: ${{ runner.os }}-cocoapods-${{ hashFiles('KeychainExample/ios/Podfile.lock', 'KeychainExample/Gemfile.lock') }}
           restore-keys: |
             ${{ runner.os }}-cocoapods-
 
       - name: Install Bundle
-        if: steps.cocoapods-cache.outputs.cache-hit != 'true'
         run: |
           cd KeychainExample
           bundle install
@@ -217,10 +216,9 @@ jobs:
         working-directory: ./KeychainExample
         run: |
           yarn build:ios
-          cd ios && pod install && cd -
+          cd ios && bundle exec pod install && cd -
           yarn test:ios:build
         env:
-          RCT_NEW_ARCH_ENABLED: 0
           USE_HERMES: 1
 
       - name: Test iOS Release

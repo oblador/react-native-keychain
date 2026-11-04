@@ -2,14 +2,14 @@
 
 ## Project Overview
 
-**react-native-keychain** is a React Native library that provides secure credential storage using iOS Keychain and Android Keystore. It supports biometric authentication (Face ID, Touch ID, fingerprint), multiple encryption strategies, and both the Old and New (TurboModule/Fabric) React Native architectures.
+**react-native-keychain** is a React Native library that provides secure credential storage using iOS Keychain and Android Keystore. It supports biometric authentication (Face ID, Touch ID, fingerprint), multiple encryption strategies, and only the New (TurboModule/Fabric) React Native architecture on React Native 0.82+.
 
 - **Package name**: `react-native-keychain`
 - **Version**: 10.0.0
 - **License**: MIT
 - **Repository**: https://github.com/oblador/react-native-keychain
 - **Documentation**: https://oblador.github.io/react-native-keychain
-- **Platforms**: iOS 9+, Android API 23+, macOS Catalyst, visionOS 1.0+, tvOS 9+
+- **Platforms**: iOS 15.1+, Android API 24+, macOS Catalyst, visionOS 1.0+, tvOS 15.1+
 
 ## Repository Structure
 
@@ -43,12 +43,12 @@
 
 ### Native Bridge
 
-The library uses React Native's **TurboModule** system (New Architecture) with backward compatibility for the Bridge (Old Architecture):
+The library uses React Native's **TurboModule** system (New Architecture) exclusively:
 
 1. `src/NativeKeychainManager.ts` defines the `Spec` interface via `TurboModuleRegistry.getEnforcing<Spec>('RNKeychainManager')`.
 2. `src/index.ts` wraps all native calls with TypeScript types and option normalization.
-3. On iOS, `RNKeychainManager.mm` conditionally implements `NativeKeychainManagerSpec` (New Arch) or `RCTBridgeModule` (Old Arch).
-4. On Android, `KeychainModule.kt` is a `@ReactModule` supporting both architectures via conditional source sets (`src/newarch` vs `src/oldarch`).
+3. On iOS, `RNKeychainManager.mm` implements the Codegen-generated `NativeKeychainManagerSpec`.
+4. On Android, `KeychainModule.kt` is a `@ReactModule` extending the Codegen-generated `NativeKeychainManagerSpec` and registered by `BaseReactPackage`.
 
 ### Android Encryption Strategy
 
@@ -114,11 +114,11 @@ All functions are exported from `src/index.ts`:
 
 ### Prerequisites
 
-- Node.js >= 16
+- Node.js >= 20.19.4
 - Yarn 3.6.1 (uses workspaces)
-- Xcode (for iOS)
-- Android SDK with API 23+ (for Android)
-- CocoaPods (for iOS)
+- Xcode 16.1+ (for iOS)
+- Android SDK 36, minimum device API 24 (for Android)
+- CocoaPods 1.16.2 via Bundler (for iOS)
 
 ### Setup
 
@@ -145,7 +145,8 @@ yarn format
 cd KeychainExample
 
 # iOS
-pod install --project-directory=ios
+bundle install
+bundle exec pod install --project-directory=ios
 yarn start    # Metro bundler
 # Build & run via Xcode or react-native run-ios
 
@@ -195,7 +196,7 @@ E2E tests use biometric simulation: `device.matchFace()` on iOS, ADB fingerprint
 
 - **TypeScript**: Strict mode, no unused locals/parameters, `verbatimModuleSyntax`, ESNext target
 - **Android**: Kotlin with coroutines, Java 17 compatibility, AndroidX libraries
-- **iOS**: Objective-C++ (.mm files), supports both TurboModule and Bridge
+- **iOS**: Objective-C++ (.mm files), uses TurboModules only
 - **Formatting**: Prettier for JS/TS/JSON/MD files
 - **Linting**: ESLint with `@react-native/eslint-config`
 - **Option normalization**: All public functions normalize options through `normalizeAuthPrompt()` which sets default `title` and `cancel` for auth prompts
