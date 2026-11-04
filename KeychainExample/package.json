@@ -17,9 +17,10 @@
     "test:ios:run": "detox test --configuration ios.sim.release"
   },
   "dependencies": {
+    "@swmansion/react-native-bottom-sheet": "^0.17.1",
     "react": "19.1.1",
     "react-native": "0.82.1",
-    "react-native-segmented-control-tab": "^4.0.0"
+    "react-native-safe-area-context": "^5.6.2"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",

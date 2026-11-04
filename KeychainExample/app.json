@@ -4,7 +4,8 @@
   "components": [
     {
       "appKey": "KeychainExample",
-      "displayName": "KeychainExample"
+      "displayName": "KeychainExample",
+      "slug": "keychain"
     }
   ],
   "resources": {
@@ -19,5 +20,6 @@
   },
   "ios": {
     "bundleIdentifier": "keychain.example"
-  }
+  },
+  "singleApp": "keychain"
 }
