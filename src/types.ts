@@ -33,8 +33,11 @@ export type BaseOptions = {
   service?: string;
   /** The server name to associate with the keychain item. */
   server?: string;
-  /** Whether to synchronize the keychain item to iCloud.
+  /** Whether to synchronize the keychain item to iCloud. Omitted and `false`
+   * select non-synchronizable items; `true` selects synchronizable items.
+   * Use the same value when storing, reading, checking, and resetting an item.
    * @platform iOS
+   * @default false
    */
   cloudSync?: boolean;
   /** The access group to share keychain items between apps.

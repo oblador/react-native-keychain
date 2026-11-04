@@ -48,6 +48,8 @@ const SECURITY_STORAGE_MAP = [
 ];
 
 const TYPE_OPTIONS = ['genericPassword', 'internetCredentials'];
+const CLOUD_SYNC_OPTIONS = ['Default', 'Disabled', 'Enabled'];
+const CLOUD_SYNC_MAP = [undefined, false, true];
 
 export default function App() {
   const [username, setUsername] = useState('');
@@ -71,24 +73,33 @@ export default function App() {
     useState(0);
   const [hasGenericPassword, setHasGenericPassword] = useState(false);
   const [hasInternetCredentials, setHasInternetCredentials] = useState(false);
+  const [selectedCloudSyncIndex, setSelectedCloudSyncIndex] = useState(0);
+  const cloudSync = CLOUD_SYNC_MAP[selectedCloudSyncIndex];
+  const cloudSyncOptions = cloudSync === undefined ? {} : { cloudSync };
 
   useEffect(() => {
     Keychain.getSupportedBiometryType().then((result) => {
       setBiometryType(result);
     });
-    Keychain.hasGenericPassword().then((result) => {
+  }, []);
+
+  useEffect(() => {
+    const options = cloudSync === undefined ? {} : { cloudSync };
+    Keychain.hasGenericPassword(options).then((result) => {
       setHasGenericPassword(result);
     });
-    Keychain.hasInternetCredentials({ server: 'https://example.com' }).then(
-      (result) => {
-        setHasInternetCredentials(result);
-      }
-    );
-  }, []);
+    Keychain.hasInternetCredentials({
+      ...options,
+      server: 'https://example.com',
+    }).then((result) => {
+      setHasInternetCredentials(result);
+    });
+  }, [cloudSync, status]);
 
   const save = async () => {
     try {
       const options = {
+        ...cloudSyncOptions,
         authenticationPrompt: {
           title: 'Authentication needed',
           subtitle: 'Subtitle',
@@ -132,6 +143,7 @@ export default function App() {
   const load = async () => {
     try {
       const options = {
+        ...cloudSyncOptions,
         authenticationPrompt: {
           title: 'Authentication needed',
           subtitle: 'Subtitle',
@@ -166,8 +178,9 @@ export default function App() {
 
   const reset = async () => {
     try {
-      await Keychain.resetGenericPassword();
+      await Keychain.resetGenericPassword(cloudSyncOptions);
       await Keychain.resetInternetCredentials({
+        ...cloudSyncOptions,
         server: 'https://example.com',
       });
       setStatus('Credentials Reset!');
@@ -240,6 +253,19 @@ export default function App() {
             }}
           />
         </View>
+        {Platform.OS === 'ios' && (
+          <View style={styles.field}>
+            <Text style={styles.label}>iCloud Sync</Text>
+            <SegmentedControlTab
+              selectedIndex={selectedCloudSyncIndex}
+              values={CLOUD_SYNC_OPTIONS}
+              onTabPress={(index) => {
+                setSelectedCloudSyncIndex(index);
+                setStatus('');
+              }}
+            />
+          </View>
+        )}
         {Platform.OS === 'android' && (
           <View style={styles.field}>
             <Text style={styles.label}>Security Level</Text>
