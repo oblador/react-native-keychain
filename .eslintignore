@@ -1,1 +1,10 @@
 /**/*.d.ts
+
+lib/
+**/build/
+**/Pods/
+KeychainExample/dist/
+KeychainExample/vendor/
+website/docs/api/
+website/versioned_docs/
+website/.docusaurus/

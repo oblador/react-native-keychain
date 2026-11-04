@@ -77,9 +77,9 @@ jobs:
       fail-fast: false
       matrix:
         api-level:
-          - 33
           - 34
           - 35
+          - 36
 
     steps:
       - name: Enable KVM group perms
@@ -190,12 +190,11 @@ jobs:
           path: |
             **/ios/Pods
             **/vendor/bundle
-          key: ${{ runner.os }}-cocoapods-${{ hashFiles('KeychainExample/ios/Podfile.lock') }}
+          key: ${{ runner.os }}-cocoapods-${{ hashFiles('KeychainExample/ios/Podfile.lock', 'KeychainExample/Gemfile.lock') }}
           restore-keys: |
             ${{ runner.os }}-cocoapods-
 
       - name: Install Bundle
-        if: steps.cocoapods-cache.outputs.cache-hit != 'true'
         run: |
           cd KeychainExample
           bundle install
@@ -204,7 +203,7 @@ jobs:
         run: |
           cd KeychainExample
           brew tap wix/brew
-          brew install applesimutils
+          brew install wix/brew/applesimutils
           yarn detox clean-framework-cache
           yarn detox build-framework-cache
 
@@ -217,10 +216,9 @@ jobs:
         working-directory: ./KeychainExample
         run: |
           yarn build:ios
-          cd ios && pod install && cd -
+          cd ios && bundle exec pod install && cd -
           yarn test:ios:build
         env:
-          RCT_NEW_ARCH_ENABLED: 0
           USE_HERMES: 1
 
       - name: Test iOS Release

@@ -16,6 +16,8 @@ This library provides access to the Keychain (iOS) and Keystore (Android) for se
 
 ## Installation
 
+React Native **0.82 or later** with the **New Architecture** is required for the upcoming 11.x release. Use 10.x for older React Native versions or the Old Architecture. The iOS minimum is **15.1** and Android minimum is **API 24**. Development requires **Node.js 20.19.4+**, **JDK 17**, and **Xcode 16.1+**.
+
 1. Run `yarn add react-native-keychain`
 2. Run `pod install` in `ios/` directory to install iOS dependencies.
 3. If you want to support FaceID, add a `NSFaceIDUsageDescription` entry in your `Info.plist`.

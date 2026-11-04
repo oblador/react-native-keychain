@@ -19,12 +19,14 @@ For iOS, the library uses the Keychain Services API, while on Android, it uses t
 
 Supported platforms and versions:
 
-- **iOS**: Requires iOS 9.0+
-- **Android**: API 23+
+- **iOS**: Requires iOS 15.1+
+- **Android**: API 24+
 - **macOS Catalyst**: Supported
 - **visionOS**: Supported
 
 ## Installation
+
+React Native **0.82 or later** with the **New Architecture** is required for the upcoming 11.x release. Use 10.x for older React Native versions or the Old Architecture. The iOS minimum is **15.1** and Android minimum is **API 24**. Development requires **Node.js 20.19.4+**, **JDK 17**, and **Xcode 16.1+**.
 
 **react-native-keychain** is on the npm registry! Install it using your favorite Node.js package manager:
 

@@ -1,4 +1,8 @@
-ENV['RCT_NEW_ARCH_ENABLED'] = '1'
+# Use RN 0.82 precompiled libraries; its source fmt dependency fails on newer Xcode.
+# Set both variables to 0 to build React Native from source on a compatible Xcode.
+ENV['RCT_USE_RN_DEP'] ||= '1'
+ENV['RCT_USE_PREBUILT_RNCORE'] ||= '1'
+
 ws_dir = Pathname.new(__dir__)
 ws_dir = ws_dir.parent until
   File.exist?("#{ws_dir}/node_modules/react-native-test-app/test_app.rb") ||
@@ -7,4 +11,4 @@ require "#{ws_dir}/node_modules/react-native-test-app/test_app.rb"
 
 workspace 'KeychainExample.xcworkspace'
 
-use_test_app! :fabric_enabled => true, :bridgeless_enabled => true
+use_test_app!

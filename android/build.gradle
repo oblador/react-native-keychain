@@ -6,7 +6,7 @@ buildscript {
     mavenCentral()
   }
   dependencies {
-    classpath "com.android.tools.build:gradle:8.3.1"
+    classpath "com.android.tools.build:gradle:8.12.0"
     classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
   }
 }
@@ -15,47 +15,25 @@ def safeExtGet(prop, fallback) {
   return rootProject.ext.has(prop) ? rootProject.ext.get(prop) : fallback
 }
 
-def isNewArchitectureEnabled() {
-  return project.hasProperty("newArchEnabled") && project.newArchEnabled == "true"
-}
-
 apply plugin: 'com.android.library'
-apply plugin: 'kotlin-android'
-apply from: "$projectDir/react-native-helpers.gradle"
-
-if (isNewArchitectureEnabled()) {
-  apply plugin: "com.facebook.react"
+// AGP 9 provides Kotlin itself; older AGP versions still need the plugin.
+if (project.extensions.findByName('kotlin') == null) {
+  apply plugin: 'kotlin-android'
 }
+apply plugin: 'com.facebook.react'
 
 android {
-  def agpVersion = com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION
-  if (agpVersion.tokenize('.')[0].toInteger() >= 7) {
-    namespace = "com.oblador.keychain"
-    buildFeatures {
-      buildConfig true
-    }
-  }
+  namespace = "com.oblador.keychain"
   compileSdkVersion safeExtGet('compileSdkVersion', project.properties['RNKeychain_compileSdkVersion'].toInteger())
 
   defaultConfig {
     minSdkVersion safeExtGet('minSdkVersion', project.properties['RNKeychain_minSdkVersion'].toInteger())
     targetSdkVersion safeExtGet('targetSdkVersion', project.properties['RNKeychain_targetSdkVersion'].toInteger())
-    buildConfigField "boolean", "IS_NEW_ARCHITECTURE_ENABLED", isNewArchitectureEnabled().toString()
   }
 
   compileOptions {
     sourceCompatibility JavaVersion.VERSION_17
     targetCompatibility JavaVersion.VERSION_17
-  }
-
-  sourceSets {
-    main {
-      if (isNewArchitectureEnabled()) {
-        java.srcDirs += ['src/newarch']
-      } else {
-        java.srcDirs += ['src/oldarch']
-      }
-    }
   }
 }
 
@@ -67,13 +45,7 @@ repositories {
 def kotlin_version = safeExtGet('kotlinVersion', project.properties['RNKeychain_kotlinVersion'])
 
 dependencies {
-  if (project.ext.shouldConsumeReactNativeFromMavenCentral()) {
-    // noinspection GradleDynamicVersion
-    implementation 'com.facebook.react:react-android:+'
-  } else {
-    // noinspection GradleDynamicVersion
-    implementation 'com.facebook.react:react-native:+'
-  }
+  implementation 'com.facebook.react:react-android'
   implementation 'androidx.appcompat:appcompat:1.6.1'
   implementation 'androidx.legacy:legacy-support-v4:1.0.0'
   implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
@@ -93,10 +65,8 @@ dependencies {
   implementation("androidx.datastore:datastore-preferences:1.1.1")
 }
 
-if (isNewArchitectureEnabled()) {
-  react {
-    jsRootDir = file("../src/")
-    libraryName = "RNKeychain"
-    codegenJavaPackageName = "com.oblador.keychain"
-  }
+react {
+  jsRootDir = file("../src/")
+  libraryName = "RNKeychainSpec"
+  codegenJavaPackageName = "com.oblador.keychain"
 }

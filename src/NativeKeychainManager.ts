@@ -1,37 +1,49 @@
-/* eslint-disable @typescript-eslint/ban-types */
-// RNKeychainManager.ts
-import type { TurboModule } from 'react-native';
+import type { TurboModule, CodegenTypes } from 'react-native';
 import { TurboModuleRegistry } from 'react-native';
 
 export interface Spec extends TurboModule {
   setGenericPasswordForOptions(
-    options: Object | null | undefined,
+    options: CodegenTypes.UnsafeObject | null | undefined,
     username: string,
     password: string
-  ): Promise<Object | null>;
+  ): Promise<CodegenTypes.UnsafeObject | null>;
   getGenericPasswordForOptions(
-    options?: Object | null
-  ): Promise<false | Object>;
-  hasGenericPasswordForOptions(options?: Object | null): Promise<boolean>;
-  resetGenericPasswordForOptions(options?: Object | null): Promise<boolean>;
-  getAllGenericPasswordServices(options?: Object | null): Promise<string[]>;
-  hasInternetCredentialsForOptions(options: Object): Promise<boolean>;
+    options?: CodegenTypes.UnsafeObject | null
+  ): Promise<false | CodegenTypes.UnsafeObject>;
+  hasGenericPasswordForOptions(
+    options?: CodegenTypes.UnsafeObject | null
+  ): Promise<boolean>;
+  resetGenericPasswordForOptions(
+    options?: CodegenTypes.UnsafeObject | null
+  ): Promise<boolean>;
+  getAllGenericPasswordServices(
+    options?: CodegenTypes.UnsafeObject | null
+  ): Promise<string[]>;
+  hasInternetCredentialsForOptions(
+    options: CodegenTypes.UnsafeObject
+  ): Promise<boolean>;
   setInternetCredentialsForServer(
     server: string,
     username: string,
     password: string,
-    options?: Object | null
-  ): Promise<Object | null>;
+    options?: CodegenTypes.UnsafeObject | null
+  ): Promise<CodegenTypes.UnsafeObject | null>;
   getInternetCredentialsForServer(
     server: string,
-    options?: Object | null
-  ): Promise<Object | null>;
-  resetInternetCredentialsForOptions(options: Object): Promise<void>;
+    options?: CodegenTypes.UnsafeObject | null
+  ): Promise<CodegenTypes.UnsafeObject | null>;
+  resetInternetCredentialsForOptions(
+    options: CodegenTypes.UnsafeObject
+  ): Promise<void>;
   getSupportedBiometryType?(): Promise<string | null>;
-  canCheckAuthentication?(options?: Object | null): Promise<boolean>;
-  getSecurityLevel?(options?: Object | null): Promise<string | null>;
+  canCheckAuthentication?(
+    options?: CodegenTypes.UnsafeObject | null
+  ): Promise<boolean>;
+  getSecurityLevel?(
+    options?: CodegenTypes.UnsafeObject | null
+  ): Promise<string | null>;
   isPasscodeAuthAvailable?(): Promise<boolean>;
-  requestSharedWebCredentials?(): Promise<Object | null>;
+  requestSharedWebCredentials?(): Promise<CodegenTypes.UnsafeObject | null>;
   setSharedWebCredentialsForServer?(
     server: string,
     username: string,

@@ -10,7 +10,6 @@
 #import <LocalAuthentication/LocalAuthentication.h>
 #import "RNKeychainManager.h"
 #import <React/RCTConvert.h>
-#import <React/RCTBridge.h>
 
 #if __has_include("RCTUtils.h")
 #import "RCTUtils.h"
@@ -24,7 +23,6 @@
 
 @implementation RNKeychainManager
 
-@synthesize bridge = _bridge;
 RCT_EXPORT_MODULE();
 
 + (BOOL)requiresMainQueueSetup
@@ -808,10 +806,8 @@ RCT_EXPORT_METHOD(getAllGenericPasswordServices:(NSDictionary * __nullable)optio
   }
 }
 
-#ifdef RCT_NEW_ARCH_ENABLED
 - (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:(const facebook::react::ObjCTurboModule::InitParams &)params {
     return std::make_shared<facebook::react::NativeKeychainManagerSpecJSI>(params);
 }
-#endif
 
 @end
