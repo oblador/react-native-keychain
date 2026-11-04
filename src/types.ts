@@ -36,11 +36,6 @@ export type BaseOptions = {
   /** Whether to synchronize the keychain item to iCloud. Omitted and `false`
    * select non-synchronizable items; `true` selects synchronizable items.
    * Use the same value when storing, reading, checking, and resetting an item.
-   *
-   * Earlier versions incorrectly treated explicit `false` as `true` on iOS.
-   * Existing synchronized items are not migrated automatically. To retain
-   * their credentials locally, read with `cloudSync: true`, save and verify
-   * with `cloudSync: false`, then reset the old entry with `cloudSync: true`.
    * @platform iOS
    * @default false
    */
