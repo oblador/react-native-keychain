@@ -203,7 +203,7 @@ jobs:
         run: |
           cd KeychainExample
           brew tap wix/brew
-          brew install applesimutils
+          brew install wix/brew/applesimutils
           yarn detox clean-framework-cache
           yarn detox build-framework-cache
 
