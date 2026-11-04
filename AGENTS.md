@@ -187,7 +187,7 @@ E2E tests use biometric simulation: `device.matchFace()` on iOS, ADB fingerprint
 
 | Workflow | Trigger | What it does |
 |----------|---------|-------------|
-| `e2e_tests.yaml` | Push/PR to master | Builds APKs + iOS app, runs Detox E2E tests on Android API 33/34/35 emulators and iOS simulator |
+| `e2e_tests.yaml` | Push/PR to master | Builds APKs + iOS app, runs Detox E2E tests on Android API 34/35/36 emulators and iOS simulator |
 | `lint_and_types.yaml` | Push/PR to master | Runs ESLint + TypeScript typecheck |
 | `docs.yaml` | Release created | Builds Docusaurus site, deploys to GitHub Pages |
 | `deploy.yaml` | Release created | Builds library via bob, publishes to NPM |
