@@ -72,6 +72,20 @@ export type SetOptions = {
    *
    */
   authenticationPrompt?: AuthenticationPrompt;
+  /**
+   * Whether to use CryptoObject binding for biometric authentication.
+   * When enabled, the biometric authentication is atomically bound to the
+   * cryptographic operation, preventing race conditions where the KeyStore
+   * considers authentication expired despite BiometricPrompt reporting success.
+   *
+   * Note: When enabled, only Class 3 (Strong) biometrics are allowed (typically
+   * fingerprint). Face Unlock may not work on devices where it's classified as
+   * Class 2 (Weak).
+   *
+   * @platform Android
+   * @default false
+   */
+  authenticateWithCryptoObject?: boolean;
 } & BaseOptions &
   AccessControlOption;
 
@@ -89,6 +103,20 @@ export type GetOptions = {
    *
    */
   authenticationPrompt?: AuthenticationPrompt;
+  /**
+   * Whether to use CryptoObject binding for biometric authentication.
+   * When enabled, the biometric authentication is atomically bound to the
+   * cryptographic operation, preventing race conditions where the KeyStore
+   * considers authentication expired despite BiometricPrompt reporting success.
+   *
+   * Note: When enabled, only Class 3 (Strong) biometrics are allowed (typically
+   * fingerprint). Face Unlock may not work on devices where it's classified as
+   * Class 2 (Weak).
+   *
+   * @platform Android
+   * @default false
+   */
+  authenticateWithCryptoObject?: boolean;
 } & BaseOptions &
   AccessControlOption;
 

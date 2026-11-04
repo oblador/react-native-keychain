@@ -119,9 +119,20 @@ class CipherStorageKeystoreRsaEcb(reactContext: ReactApplicationContext) :
         } catch (ex: UserNotAuthenticatedException) {
             Log.d(LOG_TAG, "Unlock of keystore is needed. Error: ${ex.message}", ex)
 
+            val cipher = if (handler.needsCryptoObjectBinding) {
+                try {
+                    val c = getCachedInstance()
+                    c.init(javax.crypto.Cipher.DECRYPT_MODE, key)
+                    c
+                } catch (e: Throwable) {
+                    Log.w(LOG_TAG, "Failed to initialize cipher for CryptoObject: ${e.message}", e)
+                    null
+                }
+            } else null
+
             // expected that KEY instance is extracted and we caught exception on decryptBytes operation
             val context =
-                CryptoContext(safeAlias, key!!, password, username, CryptoOperation.DECRYPT)
+                CryptoContext(safeAlias, key!!, password, username, CryptoOperation.DECRYPT, cipher)
 
             handler.askAccessPermissions(context)
         } catch (fail: Throwable) {
