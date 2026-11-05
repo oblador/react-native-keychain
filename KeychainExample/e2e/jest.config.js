@@ -11,7 +11,9 @@ const excludedTag = configuration.startsWith('ios.')
 module.exports = {
   rootDir: '..',
   testMatch: ['<rootDir>/e2e/**/*.spec.js'],
-  testTimeout: 120000,
+  // Native sheets, authentication and result checks can take over two minutes
+  // on hosted simulators, especially during the first run after boot.
+  testTimeout: 180000,
   testNamePattern: excludedTag ? `^(?!.*${excludedTag})` : undefined,
   maxWorkers: 1,
   globalSetup: 'detox/runners/jest/globalSetup',
