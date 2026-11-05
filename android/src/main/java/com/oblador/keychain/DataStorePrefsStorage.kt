@@ -39,9 +39,10 @@ class DataStorePrefsStorage(
   }
 
   override fun getEncryptedEntry(service: String): ResultSet? {
-    val bytesForUsername = getBytesForUsername(service)
-    val bytesForPassword = getBytesForPassword(service)
-    val cipherStorageName = getCipherStorageName(service)
+    val data = prefsData
+    val bytesForUsername = getBytes(data, stringPreferencesKey(getKeyForUsername(service)))
+    val bytesForPassword = getBytes(data, stringPreferencesKey(getKeyForPassword(service)))
+    val cipherStorageName = data[stringPreferencesKey(getKeyForCipherStorage(service))]
 
     if (bytesForUsername == null || bytesForPassword == null || cipherStorageName == null) return null
 
@@ -80,14 +81,28 @@ class DataStorePrefsStorage(
   override val usedCipherNames: Set<String?>
     get() {
       val result: MutableSet<String?> = HashSet()
-      val keys = prefsData.asMap().keys.map { it.name }
-      for (key in keys) {
-        if (isKeyForCipherStorage(key)) {
-          val cipher = prefsData[stringPreferencesKey(key)]
-          result.add(cipher)
+      val data = prefsData
+      for (key in data.asMap().keys) {
+        if (isKeyForCipherStorage(key.name)) {
+          result.add(data[stringPreferencesKey(key.name)])
         }
       }
       return result
+    }
+
+  override val serviceNames: Set<String>
+    get() {
+      val data = prefsData
+      val services = HashSet<String>()
+      for (key in data.asMap().keys) {
+        if (!isKeyForCipherStorage(key.name)) continue
+        val service = key.name.removeSuffix(":c")
+        if (data[stringPreferencesKey(getKeyForUsername(service))] != null &&
+          data[stringPreferencesKey(getKeyForPassword(service))] != null) {
+          services.add(service)
+        }
+      }
+      return services
     }
 
   private fun <T> callSuspendable(block: suspend () -> T): T {
@@ -96,22 +111,7 @@ class DataStorePrefsStorage(
     }
   }
 
-  private fun getBytesForUsername(service: String): ByteArray? {
-    val key = stringPreferencesKey(getKeyForUsername(service))
-    return getBytes(key)
-  }
-
-  private fun getBytesForPassword(service: String): ByteArray? {
-    val key = stringPreferencesKey(getKeyForPassword(service))
-    return getBytes(key)
-  }
-
-  private fun getCipherStorageName(service: String): String? {
-    val key = stringPreferencesKey(getKeyForCipherStorage(service))
-    return prefsData[key]
-  }
-
-  private fun getBytes(prefKey: Preferences.Key<String>): ByteArray? {
-    return prefsData[prefKey]?.let { Base64.decode(it, Base64.DEFAULT) }
+  private fun getBytes(data: Preferences, prefKey: Preferences.Key<String>): ByteArray? {
+    return data[prefKey]?.let { Base64.decode(it, Base64.DEFAULT) }
   }
 }

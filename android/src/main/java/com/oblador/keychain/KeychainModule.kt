@@ -292,30 +292,10 @@ class KeychainModule(reactContext: ReactApplicationContext) :
 
   @ReactMethod
   override fun getAllGenericPasswordServices(options: ReadableMap?, promise: Promise) {
-    try {
-      val services = doGetAllGenericPasswordServices()
+    launchStorageOperation(promise) {
+      val services = prefsStorage.serviceNames
       promise.resolve(Arguments.makeNativeArray<Any>(services.toTypedArray()))
-    } catch (e: KeyStoreAccessException) {
-      promise.reject(Errors.E_STORAGE_ACCESS_ERROR, e)
     }
-  }
-
-  @Throws(KeyStoreAccessException::class)
-  private fun doGetAllGenericPasswordServices(): Collection<String> {
-    val cipherNames = prefsStorage.usedCipherNames
-    val ciphers: MutableCollection<CipherStorage?> = ArrayList(cipherNames.size)
-    for (storageName in cipherNames) {
-      val cipherStorage = getCipherStorageByName(storageName!!)
-      ciphers.add(cipherStorage)
-    }
-    val result: MutableSet<String> = HashSet()
-    for (cipher in ciphers) {
-      val aliases = cipher!!.getAllKeys()
-      for (alias in aliases) {
-        result.add(alias)
-      }
-    }
-    return result
   }
 
   @ReactMethod
@@ -325,7 +305,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
   }
 
   private fun resetGenericPassword(alias: String, promise: Promise) {
-    try {
+    launchStorageOperation(promise) {
       // First we clean up the cipher storage (using the cipher storage that was used to store the
       // entry)
       val resultSet = prefsStorage.getEncryptedEntry(alias)
@@ -336,12 +316,6 @@ class KeychainModule(reactContext: ReactApplicationContext) :
       // And then we remove the entry in the shared preferences
       prefsStorage.removeEntry(alias)
       promise.resolve(true)
-    } catch (e: KeyStoreAccessException) {
-      Log.e(KEYCHAIN_MODULE, e.message!!)
-      promise.reject(Errors.E_STORAGE_ACCESS_ERROR, e)
-    } catch (fail: Throwable) {
-      Log.e(KEYCHAIN_MODULE, fail.message, fail)
-      promise.reject(Errors.E_INTERNAL_ERROR, fail)
     }
   }
 
@@ -354,26 +328,33 @@ class KeychainModule(reactContext: ReactApplicationContext) :
   @ReactMethod
   override fun hasInternetCredentialsForOptions(options: ReadableMap, promise: Promise) {
     val server = options.getString(Maps.SERVER)
-    val alias = getAliasOrDefault(server)
-    val resultSet = prefsStorage.getEncryptedEntry(alias)
-    if (resultSet == null) {
-      Log.e(KEYCHAIN_MODULE, "No entry found for service: $alias")
-      promise.resolve(false)
-      return
-    }
-    promise.resolve(true)
+    hasCredentials(getAliasOrDefault(server), promise)
   }
 
   @ReactMethod
   override fun hasGenericPasswordForOptions(options: ReadableMap?, promise: Promise) {
-    val service = getServiceOrDefault(options)
-    val resultSet = prefsStorage.getEncryptedEntry(service)
-    if (resultSet == null) {
-      Log.e(KEYCHAIN_MODULE, "No entry found for service: $service")
-      promise.resolve(false)
-      return
+    hasCredentials(getServiceOrDefault(options), promise)
+  }
+
+  private fun hasCredentials(alias: String, promise: Promise) {
+    launchStorageOperation(promise) {
+      promise.resolve(prefsStorage.getEncryptedEntry(alias) != null)
     }
-    promise.resolve(true)
+  }
+
+  /** Reads and deletion must use the same storage lock as encryption and decryption. */
+  private fun launchStorageOperation(promise: Promise, operation: () -> Unit) {
+    coroutineScope.launch {
+      try {
+        mutex.withLock { operation() }
+      } catch (e: KeyStoreAccessException) {
+        promise.reject(Errors.E_STORAGE_ACCESS_ERROR, e)
+      } catch (e: KeychainException) {
+        promise.reject(e.errorCode, e)
+      } catch (fail: Throwable) {
+        promise.reject(Errors.E_INTERNAL_ERROR, fail)
+      }
+    }
   }
 
   @ReactMethod
