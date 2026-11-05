@@ -56,6 +56,23 @@ describe('Access Control', () => {
       }
     );
     it(
+      ':android:should retrieve passcode credentials after restart without accessControl - ' +
+        type,
+      async () => {
+        await expect(element(by.id('appTitle'))).toExist();
+        await selectOption(`type-${type}`);
+        await waitForAuthValidity();
+        await element(by.id('loadButton')).tap();
+        await enterPasscode();
+        await expectCredentialsLoadedMessage(
+          'testUsernamePasscode',
+          'testPasswordPasscode',
+          'KeystoreAESGCM'
+        );
+      }
+    );
+
+    it(
       ' should save and retrieve username and password with biometrics - ' +
         type,
       async () => {

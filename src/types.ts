@@ -76,7 +76,12 @@ export type SetOptions = {
   AccessControlOption;
 
 export type GetOptions = {
-  /** The access control policy to use for the keychain item. */
+  /** The access control policy to use for the keychain item.
+   * On Android, omitted options reuse the policy saved with the credentials.
+   * An explicit policy can narrow, but cannot broaden, the saved policy.
+   * Older entries without a saved policy allow strong biometrics or device
+   * credentials on Android 11+, and strong biometrics on earlier versions.
+   */
   accessControl?: ACCESS_CONTROL;
   /** Authentication prompt details or a title string.
    * @default
