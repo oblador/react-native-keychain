@@ -1,3 +1,4 @@
+import { selectOption, scrollToControl } from '../utils/workbenchHelpers';
 import { by, device, element, expect, waitFor } from 'detox';
 import {
   expectCredentialsLoadedMessage,
@@ -6,30 +7,35 @@ import {
 } from '../utils/statusMessageHelpers';
 
 async function selectCloudSync(mode) {
-  await element(by.text(mode)).tap();
+  await selectOption(`sync-${mode}`);
 }
 
 async function saveCredentials(username) {
+  await scrollToControl('usernameInput');
   await element(by.id('usernameInput')).replaceText(username);
+  await element(by.id('appTitle')).tap();
+  await scrollToControl('passwordInput');
   await element(by.id('passwordInput')).replaceText('test-password');
-  await element(by.text('Keychain Example')).tap();
-  await element(by.text('Save')).tap();
+  await element(by.id('appTitle')).tap();
+  await element(by.id('saveButton')).tap();
   await expectCredentialsSavedMessage();
 }
 
 async function loadCredentials(username) {
-  await element(by.text('Load')).tap();
+  await element(by.id('loadButton')).tap();
   await expectCredentialsLoadedMessage(username, 'test-password');
 }
 
 async function resetCredentials() {
-  await element(by.text('Reset')).tap();
+  await element(by.id('resetButton')).tap();
   await expectCredentialsResetMessage();
 }
 
 async function expectMissing() {
-  await element(by.text('Load')).tap();
-  await expect(element(by.text('No credentials stored.'))).toBeVisible();
+  await element(by.id('loadButton')).tap();
+  await expect(element(by.id('statusMessage'))).toHaveText(
+    'No credentials stored'
+  );
 }
 
 async function clearBothSyncModes() {
@@ -50,19 +56,17 @@ describe(':ios:cloudSync', () => {
   afterEach(clearBothSyncModes);
 
   for (const type of ['genericPassword', 'internetCredentials']) {
-    const hasLabel =
-      type === 'genericPassword'
-        ? 'hasGenericPassword'
-        : 'hasInternetCredentials';
+    const presenceID =
+      type === 'genericPassword' ? 'genericPresence' : 'internetPresence';
 
     async function expectExists(value) {
-      await waitFor(element(by.text(`${hasLabel}: ${value}`)))
-        .toBeVisible()
+      await waitFor(element(by.id(presenceID)))
+        .toHaveText(value ? 'Stored' : 'Empty')
         .withTimeout(10000);
     }
 
     it(`:ios:false and omitted options access the same ${type}`, async () => {
-      await element(by.text(type)).tap();
+      await selectOption(`type-${type}`);
       await selectCloudSync('Disabled');
       await saveCredentials('explicit-false');
 
@@ -88,7 +92,7 @@ describe(':ios:cloudSync', () => {
     });
 
     it(`:ios:true and false keep ${type} separate on read, replace and reset`, async () => {
-      await element(by.text(type)).tap();
+      await selectOption(`type-${type}`);
       await selectCloudSync('Enabled');
       await saveCredentials('synchronized');
 

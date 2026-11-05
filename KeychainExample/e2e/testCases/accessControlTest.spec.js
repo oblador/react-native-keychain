@@ -1,3 +1,4 @@
+import { selectOption, scrollToControl } from '../utils/workbenchHelpers';
 import { by, device, element, expect } from 'detox';
 import {
   waitForAuthValidity,
@@ -19,31 +20,34 @@ describe('Access Control', () => {
       ':android:should save and retrieve username and password with passcode - ' +
         type,
       async () => {
-        await expect(element(by.text('Keychain Example'))).toExist();
-        await element(by.text(type)).tap();
+        await expect(element(by.id('appTitle'))).toExist();
+        await selectOption(`type-${type}`);
+        await scrollToControl('usernameInput');
         await element(by.id('usernameInput')).replaceText(
           'testUsernamePasscode'
         );
+        await element(by.id('appTitle')).tap();
+        await scrollToControl('passwordInput');
         await element(by.id('passwordInput')).replaceText(
           'testPasswordPasscode'
         );
         // Hide keyboard
-        await element(by.text('Keychain Example')).tap();
-        await element(by.text('Passcode')).tap();
+        await element(by.id('appTitle')).tap();
+        await selectOption('access-Passcode');
 
-        await expect(element(by.text('Save'))).toBeVisible();
+        await expect(element(by.id('saveButton'))).toBeVisible();
 
-        await element(by.text('Save')).tap();
+        await element(by.id('saveButton')).tap();
         await enterPasscode();
         // Hide keyboard if open
-        await element(by.text('Keychain Example')).tap();
+        await element(by.id('appTitle')).tap();
         await expectCredentialsSavedMessage();
 
         await waitForAuthValidity();
-        await element(by.text('Load')).tap();
+        await element(by.id('loadButton')).tap();
         await enterPasscode();
         // Hide keyboard if open
-        await element(by.text('Keychain Example')).tap();
+        await element(by.id('appTitle')).tap();
         await expectCredentialsLoadedMessage(
           'testUsernamePasscode',
           'testPasswordPasscode',
@@ -55,32 +59,35 @@ describe('Access Control', () => {
       ' should save and retrieve username and password with biometrics - ' +
         type,
       async () => {
-        await expect(element(by.text('Keychain Example'))).toExist();
-        await element(by.text(type)).tap();
+        await expect(element(by.id('appTitle'))).toExist();
+        await selectOption(`type-${type}`);
+        await scrollToControl('usernameInput');
         await element(by.id('usernameInput')).replaceText(
           'testUsernameBiometrics'
         );
+        await element(by.id('appTitle')).tap();
+        await scrollToControl('passwordInput');
         await element(by.id('passwordInput')).replaceText(
           'testPasswordBiometrics'
         );
         // Hide keyboard
-        await element(by.text('Keychain Example')).tap();
+        await element(by.id('appTitle')).tap();
 
         if (device.getPlatform() === 'android') {
-          await element(by.text('Fingerprint')).tap();
-          await element(by.text('Software')).tap();
+          await selectOption('access-Fingerprint');
+          await selectOption('security-Software');
         } else {
-          await element(by.text('FaceID')).tap();
+          await selectOption('access-FaceID');
         }
 
-        await expect(element(by.text('Save'))).toBeVisible();
-        await element(by.text('Save')).tap();
+        await expect(element(by.id('saveButton'))).toBeVisible();
+        await element(by.id('saveButton')).tap();
         await enterBiometrics();
 
         await expectCredentialsSavedMessage();
 
         await waitForAuthValidity();
-        await element(by.text('Load')).tap();
+        await element(by.id('loadButton')).tap();
         await enterBiometrics();
 
         await expectCredentialsLoadedMessage(
@@ -94,16 +101,18 @@ describe('Access Control', () => {
       'should retrieve username and password after app launch with biometrics - ' +
         type,
       async () => {
-        await expect(element(by.text('Keychain Example'))).toExist();
-        await element(by.text(type)).tap();
+        await expect(element(by.id('appTitle'))).toExist();
+        await selectOption(`type-${type}`);
         await expect(
           element(
-            by.text(
-              `${type === 'genericPassword' ? 'hasGenericPassword' : 'hasInternetCredentials'}: true`
+            by.id(
+              type === 'genericPassword'
+                ? 'genericPresence'
+                : 'internetPresence'
             )
           )
-        ).toBeVisible();
-        await element(by.text('Load')).tap();
+        ).toHaveText('Stored');
+        await element(by.id('loadButton')).tap();
         await enterBiometrics();
         await expectCredentialsLoadedMessage(
           'testUsernameBiometrics',
@@ -116,22 +125,25 @@ describe('Access Control', () => {
       'should save and retrieve username and password without biometrics - ' +
         type,
       async () => {
-        await expect(element(by.text('Keychain Example'))).toExist();
-        await element(by.text(type)).tap();
+        await expect(element(by.id('appTitle'))).toExist();
+        await selectOption(`type-${type}`);
+        await scrollToControl('usernameInput');
         await element(by.id('usernameInput')).replaceText('testUsernameAny');
+        await element(by.id('appTitle')).tap();
+        await scrollToControl('passwordInput');
         await element(by.id('passwordInput')).replaceText('testPasswordAny');
         // Hide keyboard
-        await element(by.text('Keychain Example')).tap();
-        await element(by.text('None')).tap();
+        await element(by.id('appTitle')).tap();
+        await selectOption('access-None');
 
         if (device.getPlatform() === 'android') {
-          await element(by.text('Software')).tap();
+          await selectOption('security-Software');
         }
 
-        await expect(element(by.text('Save'))).toBeVisible();
-        await element(by.text('Save')).tap();
+        await expect(element(by.id('saveButton'))).toBeVisible();
+        await element(by.id('saveButton')).tap();
         await expectCredentialsSavedMessage();
-        await element(by.text('Load')).tap();
+        await element(by.id('loadButton')).tap();
         await expectCredentialsLoadedMessage(
           'testUsernameAny',
           'testPasswordAny'
@@ -143,16 +155,18 @@ describe('Access Control', () => {
       'should retrieve username and password after app launch without biometrics - ' +
         type,
       async () => {
-        await expect(element(by.text('Keychain Example'))).toExist();
-        await element(by.text(type)).tap();
+        await expect(element(by.id('appTitle'))).toExist();
+        await selectOption(`type-${type}`);
         await expect(
           element(
-            by.text(
-              `${type === 'genericPassword' ? 'hasGenericPassword' : 'hasInternetCredentials'}: true`
+            by.id(
+              type === 'genericPassword'
+                ? 'genericPresence'
+                : 'internetPresence'
             )
           )
-        ).toBeVisible();
-        await element(by.text('Load')).tap();
+        ).toHaveText('Stored');
+        await element(by.id('loadButton')).tap();
         await expectCredentialsLoadedMessage(
           'testUsernameAny',
           'testPasswordAny'
@@ -162,10 +176,10 @@ describe('Access Control', () => {
   });
 
   it('should reset all credentials', async () => {
-    await expect(element(by.text('Keychain Example'))).toExist();
+    await expect(element(by.id('appTitle'))).toExist();
     // Hide keyboard
 
-    await element(by.text('Reset')).tap();
+    await element(by.id('resetButton')).tap();
     await expectCredentialsResetMessage();
   });
 });

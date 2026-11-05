@@ -4574,6 +4574,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@swmansion/react-native-bottom-sheet@npm:^0.17.1":
+  version: 0.17.1
+  resolution: "@swmansion/react-native-bottom-sheet@npm:0.17.1"
+  peerDependencies:
+    react: ">=18.0.0"
+    react-native: ">=0.76.0"
+  checksum: 488f177285bf7fc5f2cff6dbd0486f7683117bd5bee6d714fe313cc67bfd0fe43d010313655a8f95c043fcb32653a79286927df539a25e97e0c9a5a1f6f8ead1
+  languageName: node
+  linkType: hard
+
 "@szmarczak/http-timer@npm:^5.0.1":
   version: 5.0.1
   resolution: "@szmarczak/http-timer@npm:5.0.1"
@@ -5450,6 +5460,7 @@ __metadata:
     "@react-native/metro-config": 0.82.1
     "@react-native/typescript-config": 0.82.1
     "@rnx-kit/polyfills": ^0.1.1
+    "@swmansion/react-native-bottom-sheet": ^0.17.1
     "@types/jest": ^29.2.1
     "@types/react": ^19.1.1
     babel-plugin-module-resolver: ^5.0.2
@@ -5458,7 +5469,7 @@ __metadata:
     jest-junit: ^16.0.0
     react: 19.1.1
     react-native: 0.82.1
-    react-native-segmented-control-tab: ^4.0.0
+    react-native-safe-area-context: ^5.6.2
     react-native-test-app: 4.4.12
   languageName: unknown
   linkType: soft
@@ -16433,10 +16444,13 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"react-native-segmented-control-tab@npm:^4.0.0":
-  version: 4.0.0
-  resolution: "react-native-segmented-control-tab@npm:4.0.0"
-  checksum: 4188c728351a23116b920d88ea99e76956195effc5e2bf687e84c11e3520f9f0ca1b566bc59eda99b806d3186ecb96e10cdeed85cf075cf3582dc581212a878f
+"react-native-safe-area-context@npm:^5.6.2":
+  version: 5.11.1
+  resolution: "react-native-safe-area-context@npm:5.11.1"
+  peerDependencies:
+    react: "*"
+    react-native: "*"
+  checksum: 74af6238b940bdce605f3bfbd19d1f552f2c3a3851f70a42160c85b7c1b06a3710651c40d2234b0088121ec5eb5f8c55296301c6acfd6c11781b1790629d3df2
   languageName: node
   linkType: hard
 
