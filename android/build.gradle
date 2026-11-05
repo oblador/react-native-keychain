@@ -27,6 +27,7 @@ android {
   compileSdkVersion safeExtGet('compileSdkVersion', project.properties['RNKeychain_compileSdkVersion'].toInteger())
 
   defaultConfig {
+    testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     minSdkVersion safeExtGet('minSdkVersion', project.properties['RNKeychain_minSdkVersion'].toInteger())
     targetSdkVersion safeExtGet('targetSdkVersion', project.properties['RNKeychain_targetSdkVersion'].toInteger())
   }
@@ -45,6 +46,9 @@ repositories {
 def kotlin_version = safeExtGet('kotlinVersion', project.properties['RNKeychain_kotlinVersion'])
 
 dependencies {
+  testImplementation 'junit:junit:4.13.2'
+  androidTestImplementation 'androidx.test.ext:junit:1.2.1'
+  androidTestImplementation 'androidx.test:runner:1.6.2'
   implementation 'com.facebook.react:react-android'
   implementation 'androidx.appcompat:appcompat:1.6.1'
   implementation 'androidx.legacy:legacy-support-v4:1.0.0'
