@@ -6,6 +6,10 @@ import {
   expectCredentialsResetMessage,
 } from '../utils/statusMessageHelpers';
 
+// These multi-scope scenarios repeatedly open native picker sheets. On hosted
+// simulators they can exceed the default two-minute budget while still progressing.
+jest.setTimeout(180000);
+
 async function selectCloudSync(mode) {
   await selectOption(`sync-${mode}`);
 }
