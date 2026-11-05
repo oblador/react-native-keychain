@@ -176,6 +176,20 @@ export default function App() {
     }
   };
 
+  const list = async () => {
+    try {
+      const identifiers =
+        type === 'internetCredentials'
+          ? await Keychain.getAllInternetCredentialServers(cloudSyncOptions)
+          : await Keychain.getAllGenericPasswordServices();
+      setStatus(
+        `${type === 'internetCredentials' ? 'Servers' : 'Services'}: ${JSON.stringify(identifiers)}`
+      );
+    } catch (err) {
+      setStatus('Could not list credentials, ' + err);
+    }
+  };
+
   const reset = async () => {
     try {
       await Keychain.resetGenericPassword(cloudSyncOptions);
@@ -290,7 +304,11 @@ export default function App() {
             />
           </View>
         )}
-        {!!status && <Text style={styles.status}>{status}</Text>}
+        {!!status && (
+          <Text testID="statusMessage" style={styles.status}>
+            {status}
+          </Text>
+        )}
 
         <View style={styles.buttons}>
           <TouchableHighlight onPress={save} style={styles.button}>
@@ -302,6 +320,12 @@ export default function App() {
           <TouchableHighlight onPress={load} style={styles.button}>
             <View style={styles.load}>
               <Text style={styles.buttonText}>Load</Text>
+            </View>
+          </TouchableHighlight>
+
+          <TouchableHighlight onPress={list} style={styles.button}>
+            <View style={styles.load}>
+              <Text style={styles.buttonText}>List</Text>
             </View>
           </TouchableHighlight>
 

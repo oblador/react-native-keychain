@@ -104,6 +104,25 @@ export type GetAllOptions = {
   skipUIAuth?: boolean;
 };
 
+/** Options for listing internet credential servers without reading passwords. */
+export type GetAllInternetCredentialServersOptions = Pick<
+  BaseOptions,
+  'cloudSync' | 'accessGroup'
+> & {
+  /** Skip items that would require authentication rather than displaying UI.
+   * @platform iOS, visionOS
+   * @default true
+   */
+  skipUIAuth?: boolean;
+  /** Include older Android records whose credential kind was not recorded.
+   * These may also contain generic password services. Re-saving an entry with
+   * setInternetCredentials identifies it for future listings.
+   * @platform Android
+   * @default false
+   */
+  includeLegacy?: boolean;
+};
+
 export type AccessControlOption = {
   /** The access control policy to use for the keychain item. */
   accessControl?: ACCESS_CONTROL;

@@ -19,6 +19,9 @@ export interface Spec extends TurboModule {
   getAllGenericPasswordServices(
     options?: CodegenTypes.UnsafeObject | null
   ): Promise<string[]>;
+  getAllInternetCredentialServers(
+    options?: CodegenTypes.UnsafeObject | null
+  ): Promise<string[]>;
   hasInternetCredentialsForOptions(
     options: CodegenTypes.UnsafeObject
   ): Promise<boolean>;
