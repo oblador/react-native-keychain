@@ -8,6 +8,7 @@
 This library provides access to the Keychain (iOS) and Keystore (Android) for securely storing credentials like passwords, tokens, or other sensitive information in React Native apps.
 
 - [Installation](#installation)
+- [Example app](#example-app)
 - [Documentation](#documentation)
 - [Changelog](#changelog)
 - [Maintainers](#maintainers)
@@ -22,6 +23,17 @@ React Native **0.82 or later** with the **New Architecture** is required for the
 2. Run `pod install` in `ios/` directory to install iOS dependencies.
 3. If you want to support FaceID, add a `NSFaceIDUsageDescription` entry in your `Info.plist`.
 4. Re-build your Android and iOS projects.
+
+## Example app
+
+The [example app](KeychainExample) lets you save, load, and reset generic passwords and internet credentials, choose protection options, and inspect the returned service or server and storage type. Retrieved passwords stay hidden until you reveal them.
+
+| iOS                                                                                                                                                         | Android                                                                                                                                                  |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| <img src="KeychainExample/media/ios-demo.gif" width="260" alt="iOS example: select Face ID protection, save credentials, and inspect the loaded result." /> | <img src="KeychainExample/media/android-demo.gif" width="260" alt="Android example: choose cipher storage, save credentials, and inspect the result." /> |
+| [Watch the iOS demo](KeychainExample/media/ios-demo.mp4)                                                                                                    | [Watch the Android demo](KeychainExample/media/android-demo.mp4)                                                                                         |
+
+To run it locally, install workspace dependencies with `yarn install`. For iOS, also run `bundle install` and `bundle exec pod install --project-directory=ios` from `KeychainExample/`. Then run `yarn workspace KeychainExample ios` or `yarn workspace KeychainExample android` from the repository root.
 
 ## Documentation
 

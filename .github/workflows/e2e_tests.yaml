@@ -130,24 +130,7 @@ jobs:
             sleep 3
             adb shell "screenrecord --bugreport /data/local/tmp/screenrecord.mp4 & echo \$! > /data/local/tmp/screenrecord_pid.txt" &
             adb shell settings put system pointer_location 1
-            adb shell locksettings set-pin 1111
-            sleep 3
-            adb shell am start -a android.settings.BIOMETRIC_ENROLL
-            sleep 3
-            adb shell input text 1111
-            adb shell input keyevent 66
-            sleep 3
-            adb shell input tap 900 2200
-            sleep 3
-            adb shell input tap 900 2200
-            sleep 3
-            adb -e emu finger touch 1
-            sleep 3
-            adb -e emu finger touch 1
-            sleep 3
-            adb -e emu finger touch 1
-            sleep 3
-            adb shell input keyevent KEYCODE_HOME
+            python3 .github/scripts/enroll-android.py
             adb shell "kill -2 \$(cat /data/local/tmp/screenrecord_pid.txt)"
             sleep 1
             adb pull /data/local/tmp/screenrecord.mp4 .
@@ -161,6 +144,7 @@ jobs:
           path: |
             KeychainExample/artifacts
             screenrecord.mp4
+            android-enrollment-failure.png
   build-ios:
     name: Build and Test iOS
     runs-on: macos-latest

@@ -1,35 +1,18 @@
-import { expectRegexText } from './detoxHelpers';
+import { by, element, expect, waitFor } from 'detox';
+import { scrollToControl } from './workbenchHelpers';
 
 const TIMEOUT = 10000;
 
-function buildLoadedCredentialsRegex(
-  username: string,
-  password: string,
-  storage?: string,
-  service?: string
-): RegExp {
-  // Use lookaheads to match each field regardless of key order in JSON output
-  let pattern = '^Credentials loaded! ';
-  if (storage) {
-    pattern += `(?=.*"storage":"${storage}")`;
-  }
-  pattern += `(?=.*"password":"${password}")`;
-  pattern += `(?=.*"username":"${username}")`;
-  if (service) {
-    pattern += `(?=.*"service":"${service}")`;
-  }
-  pattern += '.*$';
-  return new RegExp(pattern);
-}
-
 export async function expectCredentialsSavedMessage() {
-  const regex = /^Credentials saved! .*$/;
-  await expectRegexText(regex, TIMEOUT);
+  await waitFor(element(by.id('statusMessage')))
+    .toHaveText('Credentials saved')
+    .withTimeout(TIMEOUT);
 }
 
 export async function expectCredentialsResetMessage() {
-  const regex = /^Credentials Reset!$/;
-  await expectRegexText(regex, TIMEOUT);
+  await waitFor(element(by.id('statusMessage')))
+    .toHaveText('Credentials reset')
+    .withTimeout(TIMEOUT);
 }
 
 export async function expectCredentialsLoadedMessage(
@@ -38,11 +21,20 @@ export async function expectCredentialsLoadedMessage(
   storage?: string,
   service?: string
 ) {
-  const regex = buildLoadedCredentialsRegex(
-    username,
-    password,
-    storage,
-    service
-  );
-  await expectRegexText(regex, TIMEOUT);
+  await waitFor(element(by.id('statusMessage')))
+    .toHaveText('Credentials loaded')
+    .withTimeout(TIMEOUT);
+  await expect(element(by.id('loadedUsername'))).toHaveText(username);
+  await expect(element(by.id('loadedPassword'))).toHaveText('••••••••');
+  await scrollToControl('revealPassword');
+  await element(by.id('revealPassword')).tap();
+  await expect(element(by.id('loadedPassword'))).toHaveText(password);
+  await element(by.id('revealPassword')).tap();
+  await expect(element(by.id('loadedPassword'))).toHaveText('••••••••');
+  if (storage) {
+    await expect(element(by.id('loadedStorage'))).toHaveText(storage);
+  }
+  if (service) {
+    await expect(element(by.id('loadedService'))).toHaveText(service);
+  }
 }

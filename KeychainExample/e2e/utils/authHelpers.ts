@@ -9,7 +9,7 @@ export const waitForAuthValidity = async () => {
 export const enterBiometrics = async () => {
   if (device.getPlatform() === 'android') {
     await new Promise((resolve) => setTimeout(resolve, 1000));
-    cp.spawnSync('adb', ['-s', device.id, 'emu', 'finger', 'touch', '1']);
+    cp.execFileSync('adb', ['-s', device.id, 'emu', 'finger', 'touch', '1']);
   } else {
     await device.matchFace();
   }
@@ -18,8 +18,15 @@ export const enterBiometrics = async () => {
 export const enterPasscode = async () => {
   if (device.getPlatform() === 'android') {
     await new Promise((resolve) => setTimeout(resolve, 1000));
-    cp.spawnSync('adb', ['-s', device.id, 'shell', 'input', 'text', '1111']);
+    cp.execFileSync('adb', ['-s', device.id, 'shell', 'input', 'text', '1111']);
     await new Promise((resolve) => setTimeout(resolve, 1000));
-    cp.spawnSync('adb', ['-s', device.id, 'shell', 'input', 'keyevent', '66']);
+    cp.execFileSync('adb', [
+      '-s',
+      device.id,
+      'shell',
+      'input',
+      'keyevent',
+      '66',
+    ]);
   }
 };

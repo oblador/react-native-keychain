@@ -1,28 +1,37 @@
-import { by, device, element, expect, waitFor } from 'detox';
+import { by, device, element, waitFor } from 'detox';
 import { execFileSync } from 'child_process';
 import { enterBiometrics, waitForAuthValidity } from '../utils/authHelpers';
 import {
   expectCredentialsSavedMessage,
   expectCredentialsResetMessage,
 } from '../utils/statusMessageHelpers';
+import { scrollToControl, selectOption } from '../utils/workbenchHelpers';
 
-const servers = 'Servers: ["https://example.com"]';
+const servers = '["https://example.com"]';
 
-async function list(expected) {
-  await element(by.text('List')).tap();
-  await expect(element(by.id('statusMessage'))).toHaveText(expected);
+async function list(expected, title = 'Servers listed') {
+  await element(by.id('listButton')).tap();
+  await waitFor(element(by.id('statusMessage')))
+    .toHaveText(title)
+    .withTimeout(10000);
+  await waitFor(element(by.id('statusDetail')))
+    .toHaveText(expected)
+    .withTimeout(10000);
 }
 
 async function save(username) {
+  await scrollToControl('usernameInput');
   await element(by.id('usernameInput')).replaceText(username);
+  await element(by.id('appTitle')).tap();
+  await scrollToControl('passwordInput');
   await element(by.id('passwordInput')).replaceText('listing-secret');
-  await element(by.text('Keychain Example')).tap();
-  await element(by.text('Save')).tap();
+  await element(by.id('appTitle')).tap();
+  await element(by.id('saveButton')).tap();
   await expectCredentialsSavedMessage();
 }
 
 async function reset() {
-  await element(by.text('Reset')).tap();
+  await element(by.id('resetButton')).tap();
   await expectCredentialsResetMessage();
 }
 
@@ -31,9 +40,9 @@ describe('Credential listing', () => {
     await device.launchApp({ newInstance: true });
     await reset();
     if (device.getPlatform() === 'ios') {
-      await element(by.text('Enabled')).tap();
+      await selectOption('sync-Enabled');
       await reset();
-      await element(by.text('Default')).tap();
+      await selectOption('sync-Default');
     }
   });
 
@@ -44,52 +53,55 @@ describe('Credential listing', () => {
   it('lists server identifiers, excludes generic entries, and survives restart and overwrite', async () => {
     await save('generic-user');
     if (device.getPlatform() === 'android') {
-      await list('Services: [""]');
+      await list('[""]', 'Services listed');
     }
-    await element(by.text('internetCredentials')).tap();
-    await list('Servers: []');
+    await selectOption('type-internetCredentials');
+    await list('[]');
     await save('username-is-not-the-server');
     await list(servers);
     await device.launchApp({ newInstance: true });
-    await element(by.text('internetCredentials')).tap();
+    await selectOption('type-internetCredentials');
     await list(servers);
     await save('replacement-user');
     await list(servers);
     await reset();
-    await list('Servers: []');
+    await list('[]');
   });
 
   it(':android:lists protected entries without authentication and recovers after canceled reads', async () => {
     if (device.getPlatform() !== 'android') return;
-    await element(by.text('internetCredentials')).tap();
+    await selectOption('type-internetCredentials');
+    await scrollToControl('usernameInput');
     await element(by.id('usernameInput')).replaceText('protected-user');
+    await element(by.id('appTitle')).tap();
+    await scrollToControl('passwordInput');
     await element(by.id('passwordInput')).replaceText('protected-secret');
-    await element(by.text('Keychain Example')).tap();
-    await element(by.text('Fingerprint')).tap();
-    await element(by.text('Save')).tap();
+    await element(by.id('appTitle')).tap();
+    await selectOption('access-Fingerprint');
+    await element(by.id('saveButton')).tap();
     await enterBiometrics();
     await expectCredentialsSavedMessage();
     await waitForAuthValidity();
     await list(servers);
-    await element(by.text('Load')).tap();
+    await element(by.id('loadButton')).tap();
     execFileSync('adb', ['-s', device.id, 'shell', 'input', 'keyevent', '4']);
-    await waitFor(element(by.text(/^Could not load credentials\.[\s\S]*$/)))
-      .toBeVisible()
+    await waitFor(element(by.id('statusMessage')))
+      .toHaveText('Could not load credentials')
       .withTimeout(10000);
     await list(servers);
   });
 
   it(':ios:respects the synchronization scope', async () => {
     if (device.getPlatform() !== 'ios') return;
-    await element(by.text('internetCredentials')).tap();
-    await element(by.text('Enabled')).tap();
+    await selectOption('type-internetCredentials');
+    await selectOption('sync-Enabled');
     await save('cloud-user');
     await list(servers);
-    await element(by.text('Disabled')).tap();
-    await list('Servers: []');
-    await element(by.text('Default')).tap();
-    await list('Servers: []');
-    await element(by.text('Enabled')).tap();
+    await selectOption('sync-Disabled');
+    await list('[]');
+    await selectOption('sync-Default');
+    await list('[]');
+    await selectOption('sync-Enabled');
     await list(servers);
   });
 });
