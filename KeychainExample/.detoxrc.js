@@ -1,6 +1,7 @@
 /** @type {Detox.DetoxConfig} */
 module.exports = {
   testRunner: {
+    forwardEnv: true,
     args: {
       $0: 'jest',
       config: 'e2e/jest.config.js',
