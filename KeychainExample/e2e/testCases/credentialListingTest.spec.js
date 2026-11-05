@@ -79,7 +79,7 @@ describe('Credential listing', () => {
     await list(servers);
   });
 
-  it('respects the iOS synchronization scope', async () => {
+  it(':ios:respects the synchronization scope', async () => {
     if (device.getPlatform() !== 'ios') return;
     await element(by.text('internetCredentials')).tap();
     await element(by.text('Enabled')).tap();
