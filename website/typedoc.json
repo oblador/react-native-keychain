@@ -1,0 +1,31 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": ["../src/index.ts"],
+  "tsconfig": "../tsconfig.docs.json",
+  "plugin": ["typedoc-plugin-markdown"],
+  "out": "docs/api",
+  "name": "API reference",
+  "readme": "none",
+  "entryFileName": "index.md",
+  "hideBreadcrumbs": true,
+  "hidePageHeader": true,
+  "useCodeBlocks": true,
+  "excludePrivate": true,
+  "excludeProtected": true,
+  "excludeExternals": true,
+  "blockTags": [
+    "@param",
+    "@returns",
+    "@example",
+    "@default",
+    "@platform",
+    "@description",
+    "@throws",
+    "@see",
+    "@deprecated"
+  ],
+  "groupOrder": ["Functions", "Enumerations", "Type Aliases"],
+  "textContentMappings": {
+    "title.memberPage": "{name}"
+  }
+}

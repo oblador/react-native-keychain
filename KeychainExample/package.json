@@ -9,6 +9,7 @@
     "build:ios": "npm run mkdist && react-native bundle --entry-file index.js --platform ios --dev false --bundle-output dist/main.ios.jsbundle --assets-dest dist/assets",
     "mkdist": "node -e \"require('node:fs').mkdirSync('dist', { recursive: true, mode: 0o755 })\"",
     "start": "react-native start --reset-cache",
+    "test:unit": "jest --config package.json --runInBand",
     "test:android": "yarn test:android:build && yarn test:android:run",
     "test:android:build": "detox build --configuration android.emu.release",
     "test:android:run": "detox test --configuration android.emu.release",
@@ -17,30 +18,40 @@
     "test:ios:run": "detox test --configuration ios.sim.release"
   },
   "dependencies": {
-    "react": "18.2.0",
-    "react-native": "^0.77.1",
-    "react-native-segmented-control-tab": "^4.0.0"
+    "@swmansion/react-native-bottom-sheet": "^0.17.1",
+    "react": "19.1.1",
+    "react-native": "0.82.1",
+    "react-native-safe-area-context": "^5.6.2"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
     "@babel/preset-env": "^7.20.0",
     "@babel/runtime": "^7.20.0",
-    "@react-native/babel-preset": "0.77.1",
-    "@react-native/metro-config": "0.77.1",
-    "@react-native/typescript-config": "0.77.1",
+    "@react-native-community/cli": "20.0.0",
+    "@react-native-community/cli-platform-android": "20.0.0",
+    "@react-native-community/cli-platform-ios": "20.0.0",
+    "@react-native/babel-preset": "0.82.1",
+    "@react-native/metro-config": "0.82.1",
+    "@react-native/typescript-config": "0.82.1",
     "@rnx-kit/polyfills": "^0.1.1",
     "@types/jest": "^29.2.1",
-    "@types/react": "^18.3.0",
+    "@types/react": "^19.1.1",
     "babel-plugin-module-resolver": "^5.0.2",
-    "detox": "^20.34.4",
+    "detox": "20.51.4",
     "jest": "^29.6.3",
     "jest-junit": "^16.0.0",
-    "react-native-test-app": "4.2.1"
+    "react-native-test-app": "4.4.12"
   },
   "jest": {
-    "preset": "react-native"
+    "preset": "react-native",
+    "moduleNameMapper": {
+      "^react-native$": "<rootDir>/../node_modules/react-native"
+    },
+    "testMatch": [
+      "<rootDir>/__tests__/**/*.test.ts"
+    ]
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=20.19.4"
   }
 }

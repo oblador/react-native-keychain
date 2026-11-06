@@ -26,6 +26,7 @@ DerivedData
 build/
 .idea
 .gradle
+.kotlin/
 local.properties
 *.iml
 
@@ -96,8 +97,9 @@ KeychainExample/artifacts
 # React Native Bob Builder
 lib
 
-# Docosaurus
-/build
-website/docs/api
-.docusaurus
-.cache-loader
+# Documentation
+website/docs/api/
+website/.vitepress/.temp/
+website/.vitepress/cache/
+website/.vitepress/dist/
+.taste-skill/

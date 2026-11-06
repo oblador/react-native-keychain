@@ -10,7 +10,6 @@
 #import <LocalAuthentication/LocalAuthentication.h>
 #import "RNKeychainManager.h"
 #import <React/RCTConvert.h>
-#import <React/RCTBridge.h>
 
 #if __has_include("RCTUtils.h")
 #import "RCTUtils.h"
@@ -24,7 +23,6 @@
 
 @implementation RNKeychainManager
 
-@synthesize bridge = _bridge;
 RCT_EXPORT_MODULE();
 
 + (BOOL)requiresMainQueueSetup
@@ -236,7 +234,8 @@ NSString *accessGroupValue(NSDictionary *options)
 
 CFBooleanRef cloudSyncValue(NSDictionary *options)
 {
-  if (options && options[@"cloudSync"]) {
+  id cloudSync = options[@"cloudSync"];
+  if ([cloudSync isKindOfClass:[NSNumber class]] && [cloudSync boolValue]) {
     return kCFBooleanTrue;
   }
   return kCFBooleanFalse;
@@ -793,6 +792,45 @@ RCT_EXPORT_METHOD(setSharedWebCredentialsForServer:(NSString *)server
 }
 #endif
 
+RCT_EXPORT_METHOD(getAllInternetCredentialServers:(NSDictionary * __nullable)options
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject)
+{
+  NSMutableDictionary *query = [@{
+    (__bridge NSString *)kSecClass: (__bridge id)kSecClassInternetPassword,
+    (__bridge NSString *)kSecReturnAttributes: @YES,
+    (__bridge NSString *)kSecMatchLimit: (__bridge id)kSecMatchLimitAll,
+    (__bridge NSString *)kSecAttrSynchronizable: (__bridge id)cloudSyncValue(options),
+  } mutableCopy];
+  NSString *accessGroup = accessGroupValue(options);
+  if (accessGroup != nil) {
+    query[(__bridge NSString *)kSecAttrAccessGroup] = accessGroup;
+  }
+  if (options[@"skipUIAuth"] == nil || [options[@"skipUIAuth"] boolValue]) {
+    query[(__bridge NSString *)kSecUseAuthenticationUI] = (__bridge id)kSecUseAuthenticationUISkip;
+  }
+
+  CFTypeRef resultRef = NULL;
+  OSStatus status = SecItemCopyMatching((__bridge CFDictionaryRef)query, &resultRef);
+  // Transfer ownership before every return, including errors and no matches.
+  NSArray *items = CFBridgingRelease(resultRef);
+  if (status == errSecItemNotFound) {
+    return resolve(@[]);
+  }
+  if (status != errSecSuccess) {
+    return rejectWithError(reject, [NSError errorWithDomain:NSOSStatusErrorDomain code:status userInfo:nil]);
+  }
+
+  NSMutableOrderedSet<NSString *> *servers = [NSMutableOrderedSet orderedSet];
+  for (NSDictionary *item in items) {
+    NSString *server = item[(__bridge NSString *)kSecAttrServer];
+    if ([server isKindOfClass:[NSString class]]) {
+      [servers addObject:server];
+    }
+  }
+  return resolve(servers.array);
+}
+
 RCT_EXPORT_METHOD(getAllGenericPasswordServices:(NSDictionary * __nullable)options
                   resolve:(RCTPromiseResolveBlock)resolve
                   reject:(RCTPromiseRejectBlock)reject)
@@ -808,10 +846,8 @@ RCT_EXPORT_METHOD(getAllGenericPasswordServices:(NSDictionary * __nullable)optio
   }
 }
 
-#ifdef RCT_NEW_ARCH_ENABLED
 - (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:(const facebook::react::ObjCTurboModule::InitParams &)params {
     return std::make_shared<facebook::react::NativeKeychainManagerSpecJSI>(params);
 }
-#endif
 
 @end

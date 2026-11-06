@@ -6,10 +6,10 @@ import androidx.datastore.core.DataMigration
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.SharedPreferencesMigration
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
-import com.facebook.react.bridge.ReactApplicationContext
 import com.oblador.keychain.PrefsStorageBase.Companion.KEYCHAIN_DATA
 import com.oblador.keychain.PrefsStorageBase.Companion.getKeyForCipherStorage
 import com.oblador.keychain.PrefsStorageBase.Companion.getKeyForPassword
@@ -22,7 +22,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 
 class DataStorePrefsStorage(
-  reactContext: ReactApplicationContext,
+  reactContext: Context,
   private val coroutineScope: CoroutineScope,
 ) : PrefsStorageBase {
 
@@ -39,14 +39,22 @@ class DataStorePrefsStorage(
   }
 
   override fun getEncryptedEntry(service: String): ResultSet? {
-    val bytesForUsername = getBytesForUsername(service)
-    val bytesForPassword = getBytesForPassword(service)
-    val cipherStorageName = getCipherStorageName(service)
-
-    if (bytesForUsername == null || bytesForPassword == null || cipherStorageName == null) return null
-
-    return ResultSet(cipherStorageName, bytesForUsername, bytesForPassword)
+    val snapshot = prefsData
+    val username = snapshot[stringPreferencesKey(getKeyForUsername(service))] ?: return null
+    val password = snapshot[stringPreferencesKey(getKeyForPassword(service))] ?: return null
+    val cipher = snapshot[stringPreferencesKey(getKeyForCipherStorage(service))] ?: return null
+    return ResultSet(
+      cipher,
+      Base64.decode(username, Base64.DEFAULT),
+      Base64.decode(password, Base64.DEFAULT),
+      snapshot[intPreferencesKey("$service:a")],
+    )
   }
+
+  override fun getAllServices(): Set<String> = CredentialMetadata.services(prefsData)
+
+  override fun getInternetServers(includeLegacy: Boolean): Set<String> =
+    CredentialMetadata.internetServers(prefsData, includeLegacy)
 
   override fun removeEntry(service: String) {
     val keyForUsername = stringPreferencesKey(getKeyForUsername(service))
@@ -57,6 +65,8 @@ class DataStorePrefsStorage(
         it.remove(keyForUsername)
         it.remove(keyForPassword)
         it.remove(keyForCipherStorage)
+        it.remove(intPreferencesKey("$service:a"))
+        it.remove(stringPreferencesKey("$service:k"))
       }
     }
   }
@@ -64,6 +74,8 @@ class DataStorePrefsStorage(
   override fun storeEncryptedEntry(
     service: String,
     encryptionResult: CipherStorage.EncryptionResult,
+    authenticators: Int?,
+    credentialKind: String?,
   ) {
     val keyForUsername = stringPreferencesKey(getKeyForUsername(service))
     val keyForPassword = stringPreferencesKey(getKeyForPassword(service))
@@ -73,6 +85,10 @@ class DataStorePrefsStorage(
         it[keyForUsername] = Base64.encodeToString(encryptionResult.username, Base64.DEFAULT)
         it[keyForPassword] = Base64.encodeToString(encryptionResult.password, Base64.DEFAULT)
         it[keyForCipherStorage] = encryptionResult.cipherName
+        val authKey = intPreferencesKey("$service:a")
+        if (authenticators == null) it.remove(authKey) else it[authKey] = authenticators
+        val kindKey = stringPreferencesKey("$service:k")
+        if (credentialKind == null) it.remove(kindKey) else it[kindKey] = credentialKind
       }
     }
   }
@@ -96,22 +112,4 @@ class DataStorePrefsStorage(
     }
   }
 
-  private fun getBytesForUsername(service: String): ByteArray? {
-    val key = stringPreferencesKey(getKeyForUsername(service))
-    return getBytes(key)
-  }
-
-  private fun getBytesForPassword(service: String): ByteArray? {
-    val key = stringPreferencesKey(getKeyForPassword(service))
-    return getBytes(key)
-  }
-
-  private fun getCipherStorageName(service: String): String? {
-    val key = stringPreferencesKey(getKeyForCipherStorage(service))
-    return prefsData[key]
-  }
-
-  private fun getBytes(prefKey: Preferences.Key<String>): ByteArray? {
-    return prefsData[prefKey]?.let { Base64.decode(it, Base64.DEFAULT) }
-  }
 }

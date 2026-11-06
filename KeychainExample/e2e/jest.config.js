@@ -1,8 +1,20 @@
+// Detox forwards the selected configuration so the default CI commands honor
+// the platform tags used by the native-only test cases.
+const configuration = process.env.DETOX_CONFIGURATION || '';
+const excludedTag = configuration.startsWith('ios.')
+  ? ':android:'
+  : configuration.startsWith('android.')
+    ? ':ios:'
+    : null;
+
 /** @type {import('@jest/types').Config.InitialOptions} */
 module.exports = {
   rootDir: '..',
   testMatch: ['<rootDir>/e2e/**/*.spec.js'],
-  testTimeout: 120000,
+  // Native sheets, authentication and result checks can take over two minutes
+  // on hosted simulators, especially during the first run after boot.
+  testTimeout: 180000,
+  testNamePattern: excludedTag ? `^(?!.*${excludedTag})` : undefined,
   maxWorkers: 1,
   globalSetup: 'detox/runners/jest/globalSetup',
   globalTeardown: 'detox/runners/jest/globalTeardown',

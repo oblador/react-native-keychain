@@ -1,62 +1,56 @@
----
-id: platform-value-storage
-title: Platform value storage
----
+# Platform storage
 
-## Android
+The same JavaScript API uses different native storage systems on Apple platforms and Android.
 
-On Android, values are stored in `Jetpack DataStore`, encrypted with Android's Keystore system.
-The Keystore supports various encryption algorithms, such as AES and RSA. Securing sensitive data requires careful consideration of different storage options. This guide will help you choose the most appropriate storage type.
+## Apple Keychain
 
-### Security Levels
+Generic credentials use `kSecClassGenericPassword`; internet credentials use `kSecClassInternetPassword`. The `accessible` option controls when an item can be accessed, and `accessControl` adds an authentication policy.
 
-We offer three security levels for data storage:
+| Option          | What it controls                                            |
+| --------------- | ----------------------------------------------------------- |
+| `accessible`    | When the item is available, such as after the first unlock. |
+| `accessControl` | Whether authentication is required to access the item.      |
+| `accessGroup`   | The entitled Keychain group that owns the item.             |
+| `cloudSync`     | Whether to select synchronizable items.                     |
 
-#### 1. High Security (with Biometric Authentication)
+Keep the service or server, access group, and synchronization setting consistent across operations. See [Data persistence](./data-persistence.md) for synchronization and reinstall behavior.
 
-- **AES_GCM**: Symmetric encryption with biometric protection
-- **RSA**: Asymmetric encryption with biometric protection
-- Best for: Passwords, personal data, sensitive keys
+## Android Keystore
 
-#### 2. Medium Security (without Authentication)
+Encrypted credentials are stored in Jetpack DataStore. The encryption keys are managed by Android Keystore.
 
-- **AES_GCM_NO_AUTH**: Symmetric encryption without biometric requirements
-- Best for: Cached data, non-sensitive encrypted data
+When `storage` is omitted, the library selects a cipher using the Android version, requested access control, and available authentication methods. Without `storage` or `accessControl`, it selects storage that does not require user authentication. The returned `storage` field identifies the cipher used.
 
-#### 3. Legacy/Deprecated
+### Storage types
 
-- **AES_CBC**
-- ⚠️ Not recommended for new implementations
+| Storage           | Authentication | Use                                        |
+| ----------------- | -------------- | ------------------------------------------ |
+| `AES_GCM`         | Required       | AES-GCM with user authentication.          |
+| `RSA`             | Required       | RSA with user authentication.              |
+| `AES_GCM_NO_AUTH` | Not required   | AES-GCM without an authentication prompt.  |
+| `AES_CBC`         | Not required   | Legacy entries; deprecated for new writes. |
 
-### Secure Software vs Secure Hardware
+Authentication requirements and hardware protection are separate choices. An unauthenticated cipher still encrypts credentials; it simply does not require the user to approve access.
 
- Android uses two primary levels of security for cryptographic key storage and operations:
+```ts
+import * as Keychain from 'react-native-keychain';
 
-1. **Secure Hardware ([StrongBox Keymaster](https://source.android.com/docs/security/best-practices/hardware))**
-2. **Secure Software ([Trusted Execution Environment](https://source.android.com/docs/security/features/trusty))**
+await Keychain.setGenericPassword('session', 'example-token', {
+  service: 'com.example.session',
+  storage: Keychain.STORAGE_TYPE.AES_GCM_NO_AUTH,
+});
+```
 
-#### **What is Secure Hardware (StrongBox Keymaster)?**
+Reads use the cipher recorded with the entry. Changing the default for new writes does not automatically re-encrypt existing credentials. See [Common questions](./faq.md) before upgrading older Android installations.
 
-Secure Hardware refers to a dedicated, physically isolated security chip (e.g., StrongBox). It is designed to provide the highest level of security for cryptographic key operations.
+### Security levels
 
+[`SECURITY_LEVEL`](./api/enumerations/SECURITY_LEVEL.md) expresses the required protection of Android key material:
 
-#### **What is Secure Software (TEE)?**
+- `ANY` accepts the available level.
+- `SECURE_SOFTWARE` requires at least software protection.
+- `SECURE_HARDWARE` requires hardware-backed protection.
 
-Secure Software refers to the **Trusted Execution Environment (TEE)**, a secure area of the device's main processor. It provides a sandboxed environment to store and process cryptographic keys securely, but it is not physically isolated like Secure Hardware.
+Hardware-backed keys can use a Trusted Execution Environment (TEE) or StrongBox. A TEE is not the same as software-only key storage, and `SECURE_HARDWARE` does not specifically promise StrongBox. See [Android Keystore](https://developer.android.com/privacy-and-security/keystore) for the platform's security model.
 
-
-#### **How Does It Affect `react-native-keychain`?**
-
-When using `react-native-keychain` on Android, the library relies on the Android KeyStore system to store and manage cryptographic keys. The level of security provided depends on the device and its capabilities:
-
-1. **StrongBox Enabled Devices**: If a device supports StrongBox, `react-native-keychain` can store keys in the **Secure Hardware**, offering the highest level of security.
-2. **TEE-Only Devices**: If StrongBox is not available, the keys are stored in the **TEE**, which is still secure but less resistant to physical attacks.
-
-
-## iOS
-
-:::note
-For iOS standalone apps, data stored with `react-native-keychain` can persist across app installs.
-:::
-
-On iOS, values are stored using the keychain services as kSecClassGenericPassword. iOS has the additional option of being able to set the value's kSecAttrAccessible attribute, which controls when the value is available to be fetched.
+A device may not satisfy the requested level. Handle a rejected operation without silently lowering the requirement. Emulator results do not establish hardware-backed security on a real device.

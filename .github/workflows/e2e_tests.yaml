@@ -62,6 +62,7 @@ jobs:
         run: |
           yarn build:android
           yarn test:android:build
+          cd android && ./gradlew :react-native-keychain:testDebugUnitTest
 
       - name: Upload Test APKs
         uses: actions/upload-artifact@v4
@@ -77,9 +78,9 @@ jobs:
       fail-fast: false
       matrix:
         api-level:
-          - 33
           - 34
           - 35
+          - 36
 
     steps:
       - name: Enable KVM group perms
@@ -129,24 +130,7 @@ jobs:
             sleep 3
             adb shell "screenrecord --bugreport /data/local/tmp/screenrecord.mp4 & echo \$! > /data/local/tmp/screenrecord_pid.txt" &
             adb shell settings put system pointer_location 1
-            adb shell locksettings set-pin 1111
-            sleep 3
-            adb shell am start -a android.settings.BIOMETRIC_ENROLL
-            sleep 3
-            adb shell input text 1111
-            adb shell input keyevent 66
-            sleep 3
-            adb shell input tap 900 2200
-            sleep 3
-            adb shell input tap 900 2200
-            sleep 3
-            adb -e emu finger touch 1
-            sleep 3
-            adb -e emu finger touch 1
-            sleep 3
-            adb -e emu finger touch 1
-            sleep 3
-            adb shell input keyevent KEYCODE_HOME
+            python3 .github/scripts/enroll-android.py
             adb shell "kill -2 \$(cat /data/local/tmp/screenrecord_pid.txt)"
             sleep 1
             adb pull /data/local/tmp/screenrecord.mp4 .
@@ -160,6 +144,7 @@ jobs:
           path: |
             KeychainExample/artifacts
             screenrecord.mp4
+            android-enrollment-failure.png
   build-ios:
     name: Build and Test iOS
     runs-on: macos-latest
@@ -190,12 +175,11 @@ jobs:
           path: |
             **/ios/Pods
             **/vendor/bundle
-          key: ${{ runner.os }}-cocoapods-${{ hashFiles('KeychainExample/ios/Podfile.lock') }}
+          key: ${{ runner.os }}-cocoapods-${{ hashFiles('KeychainExample/ios/Podfile.lock', 'KeychainExample/Gemfile.lock') }}
           restore-keys: |
             ${{ runner.os }}-cocoapods-
 
       - name: Install Bundle
-        if: steps.cocoapods-cache.outputs.cache-hit != 'true'
         run: |
           cd KeychainExample
           bundle install
@@ -204,7 +188,7 @@ jobs:
         run: |
           cd KeychainExample
           brew tap wix/brew
-          brew install applesimutils
+          brew install wix/brew/applesimutils
           yarn detox clean-framework-cache
           yarn detox build-framework-cache
 
@@ -217,10 +201,9 @@ jobs:
         working-directory: ./KeychainExample
         run: |
           yarn build:ios
-          cd ios && pod install && cd -
+          cd ios && bundle exec pod install && cd -
           yarn test:ios:build
         env:
-          RCT_NEW_ARCH_ENABLED: 0
           USE_HERMES: 1
 
       - name: Test iOS Release

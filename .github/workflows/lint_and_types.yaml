@@ -41,3 +41,23 @@ jobs:
         run: yarn install --immutable
       - name: Check types
         run: yarn typecheck
+      - name: Check example and public API consumer types
+        run: yarn tsc -p KeychainExample/tsconfig.json
+      - name: Test public API contracts
+        run: yarn workspace KeychainExample test:unit
+  website:
+    name: Documentation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .node-version
+      - name: Enable corepack
+        run: corepack enable
+      - name: Install dependencies
+        run: yarn install --immutable
+      - name: Check website types
+        run: yarn workspace website typecheck
+      - name: Build website and check links
+        run: yarn workspace website build

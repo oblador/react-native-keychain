@@ -1,1 +1,11 @@
 /**/*.d.ts
+
+lib/
+**/build/
+**/Pods/
+KeychainExample/dist/
+KeychainExample/vendor/
+website/docs/api/
+website/.vitepress/.temp/
+website/.vitepress/cache/
+website/.vitepress/dist/
