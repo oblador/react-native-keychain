@@ -13,6 +13,7 @@ import com.oblador.keychain.resultHandler.CryptoContext
 import com.oblador.keychain.resultHandler.CryptoOperation
 import com.oblador.keychain.resultHandler.ResultHandler
 import com.oblador.keychain.exceptions.KeychainException
+import com.oblador.keychain.exceptions.KeyStoreAccessException
 import java.io.IOException
 import java.security.GeneralSecurityException
 import java.security.Key
@@ -127,7 +128,17 @@ class CipherStorageKeystoreAesGcm(
         var key: Key? = null
 
         try {
-            key = extractGeneratedKey(safeAlias, level, retries)
+            // Do not create key on decrypt; missing key should be treated gracefully by caller.
+            // Rationale: after app reinstall with backups, prefs may be restored but Keystore
+            // is wiped. Auto-generating a key here cannot decrypt old ciphertext and would
+            // mutate state (adding a new alias) which also changes what listing returns.
+            // Instead, surface a missing-key error to the handler; the module maps it to
+            // a graceful "not found" for callers by default.
+            key = getExistingKeyOrNull(safeAlias)
+            if (key == null) {
+                handler.onDecrypt(null, KeyStoreAccessException("Missing key for alias: $safeAlias"))
+                return
+            }
             val results = CipherStorage.DecryptionResult(
                 decryptBytes(key, username), decryptBytes(key, password)
             )

@@ -11,6 +11,7 @@ import com.oblador.keychain.SecurityLevel
 import com.oblador.keychain.cipherStorage.CipherStorageKeystoreAesCbc.IV.IV_LENGTH
 import com.oblador.keychain.resultHandler.ResultHandler
 import com.oblador.keychain.exceptions.KeychainException
+import com.oblador.keychain.exceptions.KeyStoreAccessException
 import java.io.IOException
 import java.security.GeneralSecurityException
 import java.security.Key
@@ -117,7 +118,14 @@ class CipherStorageKeystoreAesCbc(reactContext: ReactApplicationContext) :
         val retries = AtomicInteger(1)
 
         try {
-            val key = extractGeneratedKey(safeAlias, level, retries)
+            // Do not create key on decrypt; missing key should be treated gracefully by caller.
+            // See AES-GCM note: avoid creating new aliases during read which would
+            // change observable state without being able to decrypt restored ciphertext.
+            val key = getExistingKeyOrNull(safeAlias)
+            if (key == null) {
+                handler.onDecrypt(null, KeyStoreAccessException("Missing key for alias: $safeAlias"))
+                return
+            }
 
             val results = CipherStorage.DecryptionResult(
                 decryptBytes(key, username), decryptBytes(key, password), getSecurityLevel(key)
