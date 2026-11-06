@@ -28,7 +28,6 @@ import java.security.KeyStoreException
 import java.security.NoSuchAlgorithmException
 import java.security.ProviderException
 import java.security.UnrecoverableKeyException
-import java.util.Collections
 import java.util.concurrent.atomic.AtomicInteger
 import javax.crypto.Cipher
 import javax.crypto.CipherOutputStream
@@ -82,6 +81,7 @@ abstract class CipherStorageBase(protected val applicationContext: Context) : Ci
 
   /** Cached instance of the Keystore. */
   @Transient
+  @Volatile
   protected var cachedKeyStore: KeyStore? = null
 
   // region Overrides
@@ -116,8 +116,8 @@ abstract class CipherStorageBase(protected val applicationContext: Context) : Ci
       if (ks.containsAlias(safeAlias)) {
         ks.deleteEntry(safeAlias)
       }
-    } catch (ignored: GeneralSecurityException) {
-      /* only one exception can be raised by code: 'KeyStore is not loaded' */
+    } catch (error: GeneralSecurityException) {
+      throw KeyStoreAccessException("Could not remove key from keystore", error)
     }
   }
 
@@ -125,7 +125,11 @@ abstract class CipherStorageBase(protected val applicationContext: Context) : Ci
     val ks = getKeyStoreAndLoad()
     try {
       val aliases = ks.aliases()
-      return HashSet(Collections.list(aliases))
+      val result = HashSet<String>()
+      while (aliases.hasMoreElements()) {
+        result.add(aliases.nextElement())
+      }
+      return result
     } catch (e: KeyStoreException) {
       throw KeyStoreAccessException("Error accessing aliases in keystore $ks", e)
     }
@@ -339,32 +343,27 @@ abstract class CipherStorageBase(protected val applicationContext: Context) : Ci
     val cipher = getCachedInstance()
     try {
       ByteArrayInputStream(bytes).use { input ->
-        ByteArrayOutputStream().use { output ->
-          handler?.initialize(cipher, key, input)
+        handler?.initialize(cipher, key, input)
 
-          try {
-            val decrypted = cipher.doFinal(input.readBytes())
-            output.write(decrypted)
-          } catch (e: Exception) {
-            when {
-              e is UserNotAuthenticatedException -> throw e
-              e.cause is android.security.KeyStoreException &&
-                e.cause?.message?.contains("Key user not authenticated") == true -> {
-                throw UserNotAuthenticatedException()
-              }
-              e is javax.crypto.AEADBadTagException -> {
-                throw KeychainException(
-                  "Decryption failed: Authentication tag verification failed. " +
-                  "This usually indicates that the encrypted data was modified, corrupted, " +
-                  "or is being decrypted with the wrong key.",
-                  e
-                )
-              }
-              else -> throw e
+        try {
+          return String(cipher.doFinal(input.readBytes()), UTF8)
+        } catch (e: Exception) {
+          when {
+            e is UserNotAuthenticatedException -> throw e
+            e.cause is android.security.KeyStoreException &&
+              e.cause?.message?.contains("Key user not authenticated") == true -> {
+              throw UserNotAuthenticatedException()
             }
+            e is javax.crypto.AEADBadTagException -> {
+              throw KeychainException(
+                "Decryption failed: Authentication tag verification failed. " +
+                "This usually indicates that the encrypted data was modified, corrupted, " +
+                "or is being decrypted with the wrong key.",
+                e
+              )
+            }
+            else -> throw e
           }
-
-          return String(output.toByteArray(), UTF8)
         }
       }
     } catch (fail: Throwable) {

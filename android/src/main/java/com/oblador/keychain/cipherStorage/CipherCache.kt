@@ -25,10 +25,8 @@ object CipherCache {
      */
     @Throws(NoSuchAlgorithmException::class, NoSuchPaddingException::class)
     fun getCipher(transformation: String): Cipher {
-        return synchronized(this) {
-            (cipherCache.get() ?: mutableMapOf<String, Cipher>().also { cipherCache.set(it) })
-                .getOrPut(transformation) { Cipher.getInstance(transformation) }
-        }
+        return (cipherCache.get() ?: mutableMapOf<String, Cipher>().also { cipherCache.set(it) })
+            .getOrPut(transformation) { Cipher.getInstance(transformation) }
     }
 
     /**
