@@ -18,7 +18,18 @@ async function androidPrompt(passcode = false) {
       .split('\n')
       .filter((line) => /mCurrentFocus|mFocusedApp/.test(line))
       .join('\n');
-    if (!passcode && /BiometricPrompt/.test(focus)) return;
+    if (!passcode && /BiometricPrompt/.test(focus)) {
+      // The window can take focus before Android starts the fingerprint sensor.
+      // AOSP AuthSession starts it after onDialogAnimatedIn(): session state 3
+      // (AUTH_STARTED_UI_SHOWING), fingerprint modality 2, sensor state 3
+      // (AUTHENTICATING). Sending a fingerprint earlier can silently lose it.
+      const biometrics = await adb('shell', 'dumpsys', 'biometric');
+      if (
+        /CurrentSession:\s*State:\s*3\b/.test(biometrics.stdout) &&
+        /modality 2, state: 3\b/.test(biometrics.stdout)
+      )
+        return;
+    }
     if (
       passcode &&
       /BiometricPrompt|ConfirmDeviceCredential|ConfirmLockPassword/.test(focus)

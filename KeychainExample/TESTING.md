@@ -81,7 +81,8 @@ Put storage/query combinations in native tests. Add a Detox flow when the risk i
 at the JS/native boundary or in authentication UI. Do not restore picker, keyboard,
 scrolling or example-layout assertions to the library suite. Do not add blanket
 retries: capture the failure and fix its cause. Android prompt input waits for the
-focused system window; the 5.5-second wait is specifically for the Keystore's
+focused system window and an active fingerprint sensor or ready PIN editor;
+the 5.5-second wait is specifically for the Keystore's
 five-second authentication validity window to expire.
 
 Simulator checks do not establish biometric enforcement, cross-device iCloud
