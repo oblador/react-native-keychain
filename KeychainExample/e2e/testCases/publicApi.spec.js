@@ -7,15 +7,15 @@ import {
   dismissAuthenticationIfShown,
 } from '../utils/authHelpers';
 
-async function result(action, expected = 'ok') {
+async function result(action, expected = 'ok', timeout = 15000) {
   await waitFor(element(by.id('status')))
     .toHaveText(`${action}:${expected}`)
-    .withTimeout(15000);
+    .withTimeout(timeout);
 }
 
-async function run(action) {
+async function run(action, timeout) {
   await element(by.id(action)).tap();
-  await result(action);
+  await result(action, 'ok', timeout);
 }
 
 async function select(kind, mode = 'biometric') {
@@ -35,7 +35,9 @@ describe('Public API through TurboModules and native storage', () => {
   });
 
   it('preserves result shapes, identifiers, overwrite and isolation for both credential APIs', async () => {
-    await run('contract');
+    // This batch runs both APIs' storage lifecycles sequentially. Hosted iOS
+    // simulators can exceed the per-action wait while the batch is still pending.
+    await run('contract', device.getPlatform() === 'ios' ? 60000 : 15000);
     if (device.getPlatform() === 'android') {
       for (const kind of ['generic', 'internet']) {
         await select(kind);
