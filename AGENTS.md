@@ -34,10 +34,10 @@ legacy bridge fallback. The package version can lag unreleased changes on
 | Android persistence and migration          | `PrefsStorageBase.kt`, `DataStorePrefsStorage.kt` under the same Android package                                                             |
 | Android encryption and authentication flow | `cipherStorage/`, `resultHandler/`, `DeviceAvailability.kt` under the same Android package                                                   |
 | Example UI and regression coverage         | `KeychainExample/src/App.tsx`, `KeychainExample/e2e/testCases/`, `KeychainExample/e2e/utils/`                                                |
-| Documentation and site configuration       | `website/docs/`, `website/docusaurus.config.ts`                                                                                              |
+| Documentation and site configuration       | `website/docs/`, `website/.vitepress/config.ts`                                                                                              |
 
 Edit sources, not generated output: `lib/`, native Codegen output, Pods, native
-build directories, `website/docs/api/`, `website/build/`, or `.docusaurus/`.
+build directories, `website/docs/api/`, `website/.vitepress/dist/`, or `website/.vitepress/cache/`.
 Do not hand-edit lockfiles or regenerate them for unrelated changes.
 
 ## Contracts to preserve
@@ -187,9 +187,10 @@ hardware-backed security.
 - Make the smallest correction in the existing guide or TSDoc. Use realistic
   examples and current behavior; keep debugging narratives and implementation
   checklists in code comments, tests, or the PR description.
-- Edit current docs in `website/docs/`; leave `website/versioned_docs/` and
-  versioned sidebars alone unless the task targets that release. Do not create a
-  documentation version or publish as a side effect of a routine change.
+- Edit current docs in `website/docs/`. VitePress publishes one current version;
+  do not add versioned docs or a version selector. API pages are regenerated from
+  TypeScript before each build. The Docs workflow publishes on `release.published`
+  and `workflow_dispatch`; routine changes should be validated without publishing.
 - Before handing off, review the diff for unrelated edits and generated files.
   Report the behavior changed, checks actually run, and unverified platforms or
   scenarios. If native tools or devices are unavailable, state the limitation and

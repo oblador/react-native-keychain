@@ -41,3 +41,19 @@ jobs:
         run: yarn install --immutable
       - name: Check types
         run: yarn typecheck
+  website:
+    name: Documentation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .node-version
+      - name: Enable corepack
+        run: corepack enable
+      - name: Install dependencies
+        run: yarn install --immutable
+      - name: Check website types
+        run: yarn workspace website typecheck
+      - name: Build website and check links
+        run: yarn workspace website build
