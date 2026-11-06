@@ -1,27 +1,18 @@
 package com.oblador.keychain.resultHandler
 
+import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import androidx.biometric.BiometricPrompt
 import com.facebook.react.bridge.ReactApplicationContext
 import com.oblador.keychain.cipherStorage.CipherStorage
-import com.oblador.keychain.cipherStorage.CipherStorage.DecryptionResult
-import com.oblador.keychain.cipherStorage.CipherStorage.EncryptionResult
 
 class ResultHandlerInteractiveBiometricManualRetry(
   reactContext: ReactApplicationContext,
   storage: CipherStorage,
   promptInfo: BiometricPrompt.PromptInfo
 ) :
-  ResultHandlerInteractiveBiometric(reactContext, storage, promptInfo),
-  ResultHandler {
-
-  // Explicitly declare visibility and use 'override' to match the interface
-  override var decryptionResult: DecryptionResult? = null
-  override var encryptionResult: EncryptionResult? = null
-  override var error: Throwable? = null
-
-  private var presentedPrompt: BiometricPrompt? = null
+  ResultHandlerInteractiveBiometric(reactContext, storage, promptInfo) {
   private var didFailBiometric: Boolean = false
 
   /** Manually cancel current (invisible) authentication to clear the fragment. */
@@ -42,13 +33,15 @@ class ResultHandlerInteractiveBiometricManualRetry(
 
   /** Called when an unrecoverable error has been encountered and the operation is complete. */
   override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
-    if (didFailBiometric) {
+    if (isComplete) return
+    if (didFailBiometric && errorCode == BiometricPrompt.ERROR_CANCELED) {
       this.presentedPrompt = null
       this.didFailBiometric = false
       retryAuthentication()
       return
     }
 
+    didFailBiometric = false
     super.onAuthenticationError(errorCode, errString)
   }
 
@@ -71,41 +64,11 @@ class ResultHandlerInteractiveBiometricManualRetry(
     super.onAuthenticationSucceeded(result)
   }
 
-  /** Trigger interactive authentication. */
-  override fun startAuthentication() {
-    val activity = getCurrentActivity()
-
-    // Code can be executed only from MAIN thread
-    if (Thread.currentThread() != Looper.getMainLooper().thread) {
-      activity.runOnUiThread { startAuthentication() }
-      waitResult()
-      return
-    }
-
-    this.presentedPrompt = authenticateWithPrompt(activity)
-  }
-
   /** Trigger interactive authentication without invoking another waitResult() */
   protected fun retryAuthentication() {
     Log.d(LOG_TAG, "Retrying biometric authentication.")
 
-    val activity = getCurrentActivity()
-
-    if (Thread.currentThread() != Looper.getMainLooper().thread) {
-      try {
-        /*
-         * NOTE: Applications should not cancel and authenticate in a short succession
-         * Waiting 100ms in a non-UI thread to make sure previous BiometricPrompt is cleared by OS
-         */
-        Thread.sleep(100)
-      } catch (ignored: InterruptedException) {
-        // Shutdown sequence
-      }
-
-      activity.runOnUiThread { retryAuthentication() }
-      return
-    }
-
-    this.presentedPrompt = authenticateWithPrompt(activity)
+    // Let the previous prompt clear without sleeping on the callback executor.
+    Handler(Looper.getMainLooper()).postDelayed({ startAuthentication() }, 100)
   }
 }
