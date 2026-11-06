@@ -61,7 +61,7 @@ export type SetOptions = {
    * @default 'Best available storage'
    */
   storage?: STORAGE_TYPE;
-  /** Authentication prompt details or a title string.
+  /** Authentication prompt details.
    * @default
    * ```json
    * {
@@ -83,7 +83,7 @@ export type GetOptions = {
    * credentials on Android 11+, and strong biometrics on earlier versions.
    */
   accessControl?: ACCESS_CONTROL;
-  /** Authentication prompt details or a title string.
+  /** Authentication prompt details.
    * @default
    * ```json
    * {
@@ -143,7 +143,7 @@ export type Result = {
   /** The service name associated with the keychain item. */
   service: string;
   /** The storage type used for the keychain item. */
-  storage: STORAGE_TYPE;
+  storage: STORAGE_TYPE | 'keychain';
 };
 
 /**
@@ -156,6 +156,10 @@ export type UserCredentials = {
   password: string;
 } & Result;
 
+/** Internet credentials use `server` on iOS and `service` on Android. */
+export type InternetCredentials = Omit<UserCredentials, 'service'> &
+  ({ server: string; service?: string } | { service: string; server?: string });
+
 /**
  * Shared web credentials returned by keychain functions.
  * @platform iOS
@@ -163,4 +167,4 @@ export type UserCredentials = {
 export type SharedWebCredentials = {
   /** The server associated with the keychain item. */
   server: string;
-} & UserCredentials;
+} & Omit<UserCredentials, 'service'>;

@@ -37,7 +37,7 @@ export interface Spec extends TurboModule {
   ): Promise<CodegenTypes.UnsafeObject | null>;
   resetInternetCredentialsForOptions(
     options: CodegenTypes.UnsafeObject
-  ): Promise<void>;
+  ): Promise<boolean>;
   getSupportedBiometryType?(): Promise<string | null>;
   canCheckAuthentication?(
     options?: CodegenTypes.UnsafeObject | null
@@ -51,7 +51,7 @@ export interface Spec extends TurboModule {
     server: string,
     username: string,
     password?: string
-  ): Promise<void>;
+  ): Promise<boolean>;
 }
 
 export default TurboModuleRegistry.getEnforcing<Spec>(

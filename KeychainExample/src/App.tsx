@@ -171,7 +171,9 @@ function Workbench() {
   const [refresh, setRefresh] = useState(0);
   const [busy, setBusy] = useState<Operation | null>(null);
   const [outcome, setOutcome] = useState<Outcome | null>(null);
-  const [loaded, setLoaded] = useState<Keychain.UserCredentials | null>(null);
+  const [loaded, setLoaded] = useState<
+    Keychain.UserCredentials | Keychain.InternetCredentials | null
+  >(null);
   const [revealed, setRevealed] = useState(false);
   const cloudSync = CLOUD_SYNC_MAP[selectedCloudSyncIndex];
   const cloudSyncOptions = cloudSync === undefined ? {} : { cloudSync };
