@@ -47,6 +47,39 @@ See the `KeychainExample` for a fully working project example.
 Both `setGenericPassword` and `setInternetCredentials` only support strings. If you need to store objects, use `JSON.stringify` when storing and `JSON.parse` when retrieving.
 :::
 
+## Store multiple values
+
+Use a different `service` for each value you want to store independently. Pass the
+same `service` when reading or resetting that entry. Changing only the `username`
+does not create a separate entry; saving to the same service replaces its
+credentials within the selected storage scope.
+
+```typescript
+import * as Keychain from 'react-native-keychain';
+
+await Keychain.setGenericPassword('session', 'example-access-token', {
+  service: 'com.example.access-token',
+});
+await Keychain.setGenericPassword('session', 'example-refresh-token', {
+  service: 'com.example.refresh-token',
+});
+
+const accessCredentials = await Keychain.getGenericPassword({
+  service: 'com.example.access-token',
+});
+const refreshCredentials = await Keychain.getGenericPassword({
+  service: 'com.example.refresh-token',
+});
+
+// Remove only the access token; the refresh token remains stored.
+await Keychain.resetGenericPassword({ service: 'com.example.access-token' });
+```
+
+Each read returns `false` if that entry is missing; otherwise, its `password` field
+contains the stored token. These operations can run in separate functions or at
+different times as long as the service names match. On iOS, also use the same
+`accessGroup` and `cloudSync` options when writing, reading, and resetting an entry.
+
 ## List stored internet credential servers
 
 ```typescript
