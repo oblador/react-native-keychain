@@ -125,17 +125,18 @@ For release E2E builds, run these from `KeychainExample/`, as CI does:
 
 ```sh
 # iOS, after installing pods
-yarn build:ios
+yarn build:e2e:ios
 yarn test:ios:build
+python3 ../.github/scripts/run-ios-native-tests.py
 yarn test:ios:run
 
 # Android, after configuring the SDK and emulator
-yarn build:android
+yarn build:e2e:android
 yarn test:android:build
 yarn test:android:run
 ```
 
-The `build:ios` and `build:android` scripts prepare the JavaScript bundles;
+The `build:e2e:ios` and `build:e2e:android` scripts prepare the dedicated test bundles;
 `test:*:build` builds the native test apps. The `test:ios`/`test:android`
 shortcuts combine the native build and run steps only. Rebuild affected artifacts
 before testing; reusing an old release binary does not verify edited sources.
@@ -156,11 +157,12 @@ before testing; reusing an old release binary does not verify edited sources.
   tests that repeat implementation details, trivial checks, or duplicate coverage.
   Keep fixtures and validation proportional to the change.
 
-Use existing suites as starting points: `basicCredentialsTest.spec.js` for
-persistence across restart, `cloudSyncTest.spec.js` for iOS query isolation,
-`accessControlTest.spec.js` for authentication, and `storageTypesTest.spec.js` /
-`securityLevelTest.spec.js` for Android. Cover both credential APIs when they
-share the changed behavior.
+Use `KeychainExample/TESTING.md` for the coverage split and native test commands.
+Start storage/query regressions in Android's `src/androidTest` or the example's
+`ios/KeychainNativeTests`. Keep `e2e/testCases/publicApi.spec.js` focused on the
+public JS/native boundary, restart persistence and Android authentication. The
+physical-device iOS cancellation test lives in `ios/KeychainUITests`; it explicitly
+skips Simulator, which does not enforce Keychain biometric access controls.
 
 For storage/query changes, check missing items, overwrite, existence, reset,
 restart persistence, and isolation of unrelated entries. For authentication

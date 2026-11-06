@@ -11,4 +11,20 @@ require "#{ws_dir}/node_modules/react-native-test-app/test_app.rb"
 
 workspace 'KeychainExample.xcworkspace'
 
-use_test_app!
+# React Native Test App generates the host's Info.plist during pod installation.
+configure_test_host = proc do |installer|
+  project = installer.aggregate_targets.find { |target| target.name == 'Pods-ReactTestApp' }.user_project
+  path = project.path.dirname.join('Info.plist')
+  info = Xcodeproj::Plist.read_from_path(path)
+  info['NSFaceIDUsageDescription'] = 'Verify access to protected credentials in the Keychain example.'
+  Xcodeproj::Plist.write_to_path(info, path)
+end
+
+use_test_app! :post_install => configure_test_host do |app|
+  app.tests do
+    pod 'KeychainNativeTests', :path => 'KeychainNativeTests'
+  end
+  app.ui_tests do
+    pod 'KeychainUITests', :path => 'KeychainUITests'
+  end
+end

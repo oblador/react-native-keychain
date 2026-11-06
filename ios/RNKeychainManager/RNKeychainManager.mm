@@ -436,13 +436,18 @@ SecAccessControlCreateFlags accessControlValue(NSDictionary *options)
 - (OSStatus)deleteCredentialsForServer:(NSString *)server withOptions:(NSDictionary * __nullable)options
 {
   CFBooleanRef cloudSync = cloudSyncValue(options);
-  NSDictionary *query = @{
+  NSString *accessGroup = accessGroupValue(options);
+  NSMutableDictionary *query = [@{
     (__bridge NSString *)kSecClass: (__bridge id)(kSecClassInternetPassword),
     (__bridge NSString *)kSecAttrServer: server,
     (__bridge NSString *)kSecAttrSynchronizable: (__bridge id)(cloudSync),
     (__bridge NSString *)kSecReturnAttributes: (__bridge id)kCFBooleanTrue,
     (__bridge NSString *)kSecReturnData: (__bridge id)kCFBooleanFalse
-  };
+  } mutableCopy];
+
+  if (accessGroup != nil) {
+    query[(__bridge NSString *)kSecAttrAccessGroup] = accessGroup;
+  }
 
   return SecItemDelete((__bridge CFDictionaryRef) query);
 }

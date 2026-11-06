@@ -40,7 +40,9 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
       - name: Check types
-        run: yarn typecheck
+        run: |
+          yarn typecheck
+          yarn tsc -p KeychainExample/tsconfig.json --noEmit
   website:
     name: Documentation
     runs-on: ubuntu-latest
