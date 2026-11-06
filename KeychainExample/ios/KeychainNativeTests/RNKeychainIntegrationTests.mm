@@ -54,8 +54,8 @@ typedef void (^KeychainCall)(RCTPromiseResolveBlock, RCTPromiseRejectBlock);
 - (id)save:(BOOL)internet options:(NSDictionary *)extra username:(NSString *)username {
   NSDictionary *options = [self options:extra];
   return [self invoke:^(RCTPromiseResolveBlock resolve, RCTPromiseRejectBlock reject) {
-    if (internet) [self.manager setInternetCredentialsForServer:self.identifier username:username password:@"密碼 🔑" options:options resolve:resolve reject:reject];
-    else [self.manager setGenericPasswordForOptions:options username:username password:@"密碼 🔑" resolve:resolve reject:reject];
+    if (internet) [self.manager setInternetCredentialsForServer:self.identifier username:username password:@"password 🔑" options:options resolve:resolve reject:reject];
+    else [self.manager setGenericPasswordForOptions:options username:username password:@"password 🔑" resolve:resolve reject:reject];
   } error:nil];
 }
 
@@ -97,7 +97,7 @@ typedef void (^KeychainCall)(RCTPromiseResolveBlock, RCTPromiseRejectBlock);
   for (NSNumber *kind in @[@NO, @YES]) {
     NSDictionary *value = [self read:kind.boolValue options:@{}];
     XCTAssertEqualObjects(value[@"username"], @"replacement");
-    XCTAssertTrue([value[@"password"] isEqualToString:@"密碼 🔑"]);
+    XCTAssertTrue([value[@"password"] isEqualToString:@"password 🔑"]);
     XCTAssertEqualObjects(value[kind.boolValue ? @"server" : @"service"], self.identifier);
   }
   [self reset:NO options:@{}];

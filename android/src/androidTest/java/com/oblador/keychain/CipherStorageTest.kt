@@ -45,7 +45,7 @@ class CipherStorageTest {
 
   private fun encrypt(cipher: CipherStorage, alias: String): CipherStorage.EncryptionResult {
     val handler = ResultHandlerNonInteractive()
-    cipher.encrypt(handler, alias, "użytkownik 🔑", "密碼\u0000secret", SecurityLevel.ANY)
+    cipher.encrypt(handler, alias, "test-user 🔑", "password 🔒\u0000secret", SecurityLevel.ANY)
     assertNull(handler.error)
     return requireNotNull(handler.encryptionResult)
   }
@@ -80,8 +80,8 @@ class CipherStorageTest {
       val handler = ResultHandlerNonInteractive()
       cipher.decrypt(handler, service, entry.username!!, entry.password!!, SecurityLevel.ANY)
       assertNull(handler.error)
-      assertEquals("użytkownik 🔑", handler.decryptionResult!!.username)
-      assertEquals("密碼\u0000secret", handler.decryptionResult!!.password)
+      assertEquals("test-user 🔑", handler.decryptionResult!!.username)
+      assertEquals("password 🔒\u0000secret", handler.decryptionResult!!.password)
     }
   }
 
