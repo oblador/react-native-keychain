@@ -24,19 +24,6 @@ buildscript {
 
 allprojects {
     repositories {
-        maven {
-            // All of React Native (JS, Obj-C sources, Android binaries) is installed from npm
-            url({
-                def searchDir = rootDir.toPath()
-                do {
-                    def p = searchDir.resolve("node_modules/react-native/android")
-                    if (p.toFile().exists()) {
-                        return p.toRealPath().toString()
-                    }
-                } while (searchDir = searchDir.getParent())
-                throw new GradleException("Could not find `react-native`");
-            }())
-        }
         mavenCentral()
         google()
         // START:detox
@@ -68,11 +55,7 @@ allprojects {
             androidExtension.sourceSets.androidTest.java.srcDirs += "$rootDir/app/src/androidTest/java"
 
             project.dependencies {
-                if (reactNativeVersion > 0 && reactNativeVersion < v(0, 73, 0)) {
-                    androidTestImplementation('com.wix:detox-legacy:+')
-                } else {
-                    androidTestImplementation('com.wix:detox:+')
-                }
+                androidTestImplementation('com.wix:detox:+')
                 implementation 'androidx.appcompat:appcompat:1.1.0'
             }
         }

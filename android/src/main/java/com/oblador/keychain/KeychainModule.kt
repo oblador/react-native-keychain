@@ -186,7 +186,8 @@ class KeychainModule(reactContext: ReactApplicationContext) :
     username: String,
     password: String,
     options: ReadableMap?,
-    promise: Promise
+    promise: Promise,
+    credentialKind: String = CredentialMetadata.GENERIC
   ) {
     coroutineScope.launch {
       mutex.withLock {
@@ -196,13 +197,13 @@ class KeychainModule(reactContext: ReactApplicationContext) :
           val storage = getSelectedStorage(options)
           throwIfInsufficientLevel(storage, level)
           val accessControl = getAccessControlOrDefault(options)
-          val usePasscode = getUsePasscode(accessControl) && isPasscodeAvailable
-          val useBiometry =
-            getUseBiometry(accessControl) && (isFingerprintAuthAvailable || isFaceAuthAvailable || isIrisAuthAvailable)
-          val promptInfo = getPromptInfo(options, usePasscode, useBiometry)
+          val authenticators = AuthenticationPolicy.forWrite(
+            accessControl, storage.isAuthSupported(), Build.VERSION.SDK_INT
+          )
+          val promptInfo = getPromptInfo(options, authenticators)
           val result =
             encryptToResult(alias, storage, username, password, level, promptInfo)
-          prefsStorage.storeEncryptedEntry(alias, result)
+          prefsStorage.storeEncryptedEntry(alias, result, authenticators, credentialKind)
           val results = Arguments.createMap()
           results.putString(Maps.SERVICE, alias)
           results.putString(Maps.STORAGE, storage.getCipherStorageName())
@@ -262,19 +263,20 @@ class KeychainModule(reactContext: ReactApplicationContext) :
             return@launch
           }
           val storageName = resultSet.cipherStorageName
-          val accessControl = getAccessControlOrDefault(options)
-          val usePasscode = getUsePasscode(accessControl) && isPasscodeAvailable
-          val useBiometry =
-            getUseBiometry(accessControl) && (isFingerprintAuthAvailable || isFaceAuthAvailable || isIrisAuthAvailable)
-          val promptInfo = getPromptInfo(options, usePasscode, useBiometry)
           val cipher = getCipherStorageByName(storageName)
+            ?: throw KeyStoreAccessException("Unknown cipher storage: $storageName")
+          val authenticators = AuthenticationPolicy.forRead(
+            getAccessControlOrDefault(options), resultSet.authenticators,
+            cipher.isAuthSupported(), Build.VERSION.SDK_INT
+          )
+          val promptInfo = getPromptInfo(options, authenticators)
           val decryptionResult =
-            decryptCredentials(alias, cipher!!, resultSet, promptInfo)
+            decryptCredentials(alias, cipher, resultSet, promptInfo)
           val credentials = Arguments.createMap()
           credentials.putString(Maps.SERVICE, alias)
           credentials.putString(Maps.USERNAME, decryptionResult.username)
           credentials.putString(Maps.PASSWORD, decryptionResult.password)
-          credentials.putString(Maps.STORAGE, cipher?.getCipherStorageName())
+          credentials.putString(Maps.STORAGE, cipher.getCipherStorageName())
           promise.resolve(credentials)
         } catch (e: KeyStoreAccessException) {
           Log.e(KEYCHAIN_MODULE, e.message!!)
@@ -292,30 +294,31 @@ class KeychainModule(reactContext: ReactApplicationContext) :
 
   @ReactMethod
   override fun getAllGenericPasswordServices(options: ReadableMap?, promise: Promise) {
-    try {
-      val services = doGetAllGenericPasswordServices()
-      promise.resolve(Arguments.makeNativeArray<Any>(services.toTypedArray()))
-    } catch (e: KeyStoreAccessException) {
-      promise.reject(Errors.E_STORAGE_ACCESS_ERROR, e)
+    coroutineScope.launch {
+      mutex.withLock {
+        try {
+          promise.resolve(Arguments.makeNativeArray(prefsStorage.getAllServices().toList()))
+        } catch (e: Throwable) {
+          promise.reject(Errors.E_STORAGE_ACCESS_ERROR, e)
+        }
+      }
     }
   }
 
-  @Throws(KeyStoreAccessException::class)
-  private fun doGetAllGenericPasswordServices(): Collection<String> {
-    val cipherNames = prefsStorage.usedCipherNames
-    val ciphers: MutableCollection<CipherStorage?> = ArrayList(cipherNames.size)
-    for (storageName in cipherNames) {
-      val cipherStorage = getCipherStorageByName(storageName!!)
-      ciphers.add(cipherStorage)
-    }
-    val result: MutableSet<String> = HashSet()
-    for (cipher in ciphers) {
-      val aliases = cipher!!.getAllKeys()
-      for (alias in aliases) {
-        result.add(alias)
+  @ReactMethod
+  override fun getAllInternetCredentialServers(options: ReadableMap?, promise: Promise) {
+    coroutineScope.launch {
+      mutex.withLock {
+        try {
+          val includeLegacy = options?.hasKey("includeLegacy") == true &&
+            !options.isNull("includeLegacy") && options.getBoolean("includeLegacy")
+          val servers = prefsStorage.getInternetServers(includeLegacy)
+          promise.resolve(Arguments.makeNativeArray(servers.toList()))
+        } catch (e: Throwable) {
+          promise.reject(Errors.E_STORAGE_ACCESS_ERROR, e)
+        }
       }
     }
-    return result
   }
 
   @ReactMethod
@@ -384,7 +387,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
     options: ReadableMap?,
     promise: Promise
   ) {
-    setGenericPassword(server, username, password, options, promise)
+    setGenericPassword(server, username, password, options, promise, CredentialMetadata.INTERNET)
   }
 
   @ReactMethod
@@ -751,19 +754,18 @@ class KeychainModule(reactContext: ReactApplicationContext) :
     }
 
     /** Extract user specified prompt info from options. */
-    private fun getPromptInfo(
+    internal fun getPromptInfo(
       options: ReadableMap?,
-      usePasscode: Boolean,
-      useBiometry: Boolean
+      authenticators: Int?
     ): PromptInfo {
       val promptInfoOptionsMap =
         if (options != null && options.hasKey(Maps.AUTH_PROMPT)) options.getMap(Maps.AUTH_PROMPT)
         else null
 
       val promptInfoBuilder = PromptInfo.Builder()
-      promptInfoOptionsMap?.getString(AuthPromptOptions.TITLE)?.let {
-        promptInfoBuilder.setTitle(it)
-      }
+      promptInfoBuilder.setTitle(
+        promptInfoOptionsMap?.getString(AuthPromptOptions.TITLE) ?: "Authenticate to retrieve secret"
+      )
       promptInfoOptionsMap?.getString(AuthPromptOptions.SUBTITLE)?.let {
         promptInfoBuilder.setSubtitle(it)
       }
@@ -771,28 +773,15 @@ class KeychainModule(reactContext: ReactApplicationContext) :
         promptInfoBuilder.setDescription(it)
       }
 
-      val allowedAuthenticators = when {
-        usePasscode && useBiometry ->
-          BiometricManager.Authenticators.BIOMETRIC_STRONG or BiometricManager.Authenticators.DEVICE_CREDENTIAL
-
-        usePasscode ->
-          BiometricManager.Authenticators.DEVICE_CREDENTIAL
-
-        useBiometry ->
-          BiometricManager.Authenticators.BIOMETRIC_STRONG
-
-        else ->
-          null
+      if (authenticators != null) {
+        promptInfoBuilder.setAllowedAuthenticators(authenticators)
       }
-
-      if (allowedAuthenticators != null) {
-        promptInfoBuilder.setAllowedAuthenticators(allowedAuthenticators)
-      }
-
-      if (!usePasscode) {
-        promptInfoOptionsMap?.getString(AuthPromptOptions.CANCEL)?.let {
-          promptInfoBuilder.setNegativeButtonText(it)
-        }
+      val allowsPasscode = authenticators != null &&
+        authenticators and BiometricManager.Authenticators.DEVICE_CREDENTIAL != 0
+      if (!allowsPasscode) {
+        promptInfoBuilder.setNegativeButtonText(
+          promptInfoOptionsMap?.getString(AuthPromptOptions.CANCEL) ?: "Cancel"
+        )
       }
 
       /* Bypass confirmation to avoid KeyStore unlock timeout being exceeded when using passive biometrics */

@@ -33,8 +33,11 @@ export type BaseOptions = {
   service?: string;
   /** The server name to associate with the keychain item. */
   server?: string;
-  /** Whether to synchronize the keychain item to iCloud.
+  /** Whether to synchronize the keychain item to iCloud. Omitted and `false`
+   * select non-synchronizable items; `true` selects synchronizable items.
+   * Use the same value when storing, reading, checking, and resetting an item.
    * @platform iOS
+   * @default false
    */
   cloudSync?: boolean;
   /** The access group to share keychain items between apps.
@@ -73,7 +76,12 @@ export type SetOptions = {
   AccessControlOption;
 
 export type GetOptions = {
-  /** The access control policy to use for the keychain item. */
+  /** The access control policy to use for the keychain item.
+   * On Android, omitted options reuse the policy saved with the credentials.
+   * An explicit policy can narrow, but cannot broaden, the saved policy.
+   * Older entries without a saved policy allow strong biometrics or device
+   * credentials on Android 11+, and strong biometrics on earlier versions.
+   */
   accessControl?: ACCESS_CONTROL;
   /** Authentication prompt details or a title string.
    * @default
@@ -94,6 +102,25 @@ export type GetAllOptions = {
    * @platform iOS
    */
   skipUIAuth?: boolean;
+};
+
+/** Options for listing internet credential servers without reading passwords. */
+export type GetAllInternetCredentialServersOptions = Pick<
+  BaseOptions,
+  'cloudSync' | 'accessGroup'
+> & {
+  /** Skip items that would require authentication rather than displaying UI.
+   * @platform iOS, visionOS
+   * @default true
+   */
+  skipUIAuth?: boolean;
+  /** Include older Android records whose credential kind was not recorded.
+   * These may also contain generic password services. Re-saving an entry with
+   * setInternetCredentials identifies it for future listings.
+   * @platform Android
+   * @default false
+   */
+  includeLegacy?: boolean;
 };
 
 export type AccessControlOption = {

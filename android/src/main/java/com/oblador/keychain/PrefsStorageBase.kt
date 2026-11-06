@@ -9,13 +9,23 @@ interface PrefsStorageBase {
     @JvmField @field:KnownCiphers @param:KnownCiphers val cipherStorageName: String,
     usernameBytes: ByteArray?,
     passwordBytes: ByteArray?,
+    val authenticators: Int? = null,
   ) : CipherResult<ByteArray?>(usernameBytes, passwordBytes)
 
   fun getEncryptedEntry(service: String): ResultSet?
 
+  fun getAllServices(): Set<String>
+
+  fun getInternetServers(includeLegacy: Boolean): Set<String>
+
   fun removeEntry(service: String)
 
-  fun storeEncryptedEntry(service: String, encryptionResult: EncryptionResult)
+  fun storeEncryptedEntry(
+    service: String,
+    encryptionResult: EncryptionResult,
+    authenticators: Int? = null,
+    credentialKind: String? = null,
+  )
 
   /**
    * List all types of cipher which are involved in en/decryption of the data stored herein.

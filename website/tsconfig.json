@@ -1,7 +1,14 @@
 {
-  // This file is not used in compilation. It is here just for a nice editor experience.
-  "extends": "@docusaurus/tsconfig",
   "compilerOptions": {
-    "baseUrl": "."
-  }
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "types": ["node"],
+    "lib": ["ES2022", "DOM"]
+  },
+  "include": [".vitepress/**/*.ts"]
 }
