@@ -2,6 +2,9 @@
 
 import PackageDescription
 
+// React Native's SPM autolinker resolves this package through
+// <app>/ios/build/generated/autolinking/libs/RNKeychain. Dependency paths
+// below are relative to that symlink, not the npm package's install directory.
 let package = Package(
     name: "RNKeychain",
     platforms: [.iOS("15.1")],
@@ -30,6 +33,7 @@ let package = Package(
             cxxSettings: [
                 .define("RCT_NEW_ARCH_ENABLED", to: "1"),
                 .headerSearchPath("../../spm-headers"),
+                // Match the configuration-dependent ABI of prebuilt React Native.
                 .define("DEBUG", .when(configuration: .debug)),
                 .define("NDEBUG", .when(configuration: .release)),
             ],
