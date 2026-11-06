@@ -14,6 +14,7 @@ import type {
   SharedWebCredentials,
   GetOptions,
   GetAllOptions,
+  GetAllInternetCredentialServersOptions,
   BaseOptions,
   SetOptions,
   AuthenticationTypeOption,
@@ -123,6 +124,30 @@ export function getAllGenericPasswordServices(
   options?: GetAllOptions
 ): Promise<string[]> {
   return RNKeychainManager.getAllGenericPasswordServices(options);
+}
+
+/**
+ * Lists distinct internet credential servers without returning usernames or passwords.
+ * Returns an empty array when no matching entries exist. Ordering is unspecified.
+ *
+ * On iOS, `cloudSync` and `accessGroup` select the same scope as credential reads.
+ * Items requiring authentication are skipped by default; set `skipUIAuth: false`
+ * to allow authentication UI.
+ *
+ * On Android, only entries saved as internet credentials by this version are
+ * included by default. `includeLegacy: true` also includes unclassified older
+ * records, which may contain generic password services. Generic and internet
+ * credentials still share a namespace on Android.
+ *
+ * @example
+ * ```ts
+ * const servers = await Keychain.getAllInternetCredentialServers();
+ * ```
+ */
+export function getAllInternetCredentialServers(
+  options?: GetAllInternetCredentialServersOptions
+): Promise<string[]> {
+  return RNKeychainManager.getAllInternetCredentialServers(options);
 }
 
 /**
@@ -392,6 +417,7 @@ export default {
   setGenericPassword,
   getGenericPassword,
   getAllGenericPasswordServices,
+  getAllInternetCredentialServers,
   resetGenericPassword,
   requestSharedWebCredentials,
   setSharedWebCredentials,

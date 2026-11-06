@@ -66,7 +66,7 @@ const authenticationPrompt = {
   cancel: 'Cancel',
 };
 
-type Operation = 'save' | 'load' | 'reset';
+type Operation = 'save' | 'load' | 'list' | 'reset';
 type Outcome = {
   title: string;
   detail: string;
@@ -291,6 +291,19 @@ function Workbench() {
             detail: 'Save a credential to try it out.',
           });
         }
+      } else if (operation === 'list') {
+        const identifiers =
+          type === 'internetCredentials'
+            ? await Keychain.getAllInternetCredentialServers(cloudSyncOptions)
+            : await Keychain.getAllGenericPasswordServices();
+        setOutcome({
+          title:
+            type === 'internetCredentials'
+              ? 'Servers listed'
+              : 'Services listed',
+          detail: JSON.stringify(identifiers),
+          duration: Date.now() - start,
+        });
       } else {
         await Keychain.resetGenericPassword(cloudSyncOptions);
         await Keychain.resetInternetCredentials({
@@ -539,7 +552,7 @@ function Workbench() {
                   : (outcome?.title ?? 'No operation yet')}
               </Text>
             </View>
-            <Text style={styles.resultDetail}>
+            <Text testID="statusDetail" style={styles.resultDetail}>
               {outcome?.detail ??
                 'Save, load, and test credentials on this device.'}
             </Text>
@@ -585,7 +598,7 @@ function Workbench() {
         </ScrollView>
         <View style={styles.actionBar}>
           <View style={styles.actions}>
-            {(['save', 'load', 'reset'] as const).map((operation) => (
+            {(['save', 'load', 'list', 'reset'] as const).map((operation) => (
               <Pressable
                 key={operation}
                 testID={`${operation}Button`}
@@ -593,7 +606,7 @@ function Workbench() {
                 accessibilityLabel={
                   operation === 'reset'
                     ? 'Reset both credential types'
-                    : `${operation === 'save' ? 'Save' : 'Load'} credentials`
+                    : `${operation === 'save' ? 'Save' : operation === 'load' ? 'Load' : 'List'} credentials`
                 }
                 accessibilityState={{ disabled, busy: busy === operation }}
                 disabled={disabled}
@@ -615,7 +628,9 @@ function Workbench() {
                     ? 'Save'
                     : operation === 'load'
                       ? 'Load'
-                      : 'Reset'}
+                      : operation === 'list'
+                        ? 'List'
+                        : 'Reset'}
                 </Text>
               </Pressable>
             ))}

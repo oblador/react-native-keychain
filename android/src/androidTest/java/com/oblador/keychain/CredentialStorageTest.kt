@@ -46,6 +46,24 @@ class CredentialStorageTest {
     }
   }
 
+  @Test fun internetKindIsPersistedReplacedAndRemovedWithTheRecord() {
+    val entry = EncryptionResult(byteArrayOf(1), byteArrayOf(2), "KeystoreAESGCM")
+    try {
+      storage.storeEncryptedEntry("server", entry)
+      assertTrue(storage.getInternetServers(false).isEmpty())
+      assertEquals(setOf("server"), storage.getInternetServers(true))
+      storage.storeEncryptedEntry("server", entry, 15, CredentialMetadata.INTERNET)
+      assertEquals(setOf("server"), storage.getInternetServers(false))
+      storage.storeEncryptedEntry("server", entry, null, CredentialMetadata.GENERIC)
+      assertTrue(storage.getInternetServers(true).isEmpty())
+      storage.removeEntry("server")
+      storage.storeEncryptedEntry("server", entry)
+      assertTrue(storage.getInternetServers(false).isEmpty())
+    } finally {
+      storage.removeEntry("server")
+    }
+  }
+
   @Test fun promptButtonsMatchTheAllowedAuthenticators() {
     val biometric = KeychainModule.getPromptInfo(null, 15)
     assertEquals(15, biometric.allowedAuthenticators)

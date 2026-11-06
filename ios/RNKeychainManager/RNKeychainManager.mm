@@ -792,6 +792,45 @@ RCT_EXPORT_METHOD(setSharedWebCredentialsForServer:(NSString *)server
 }
 #endif
 
+RCT_EXPORT_METHOD(getAllInternetCredentialServers:(NSDictionary * __nullable)options
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject)
+{
+  NSMutableDictionary *query = [@{
+    (__bridge NSString *)kSecClass: (__bridge id)kSecClassInternetPassword,
+    (__bridge NSString *)kSecReturnAttributes: @YES,
+    (__bridge NSString *)kSecMatchLimit: (__bridge id)kSecMatchLimitAll,
+    (__bridge NSString *)kSecAttrSynchronizable: (__bridge id)cloudSyncValue(options),
+  } mutableCopy];
+  NSString *accessGroup = accessGroupValue(options);
+  if (accessGroup != nil) {
+    query[(__bridge NSString *)kSecAttrAccessGroup] = accessGroup;
+  }
+  if (options[@"skipUIAuth"] == nil || [options[@"skipUIAuth"] boolValue]) {
+    query[(__bridge NSString *)kSecUseAuthenticationUI] = (__bridge id)kSecUseAuthenticationUISkip;
+  }
+
+  CFTypeRef resultRef = NULL;
+  OSStatus status = SecItemCopyMatching((__bridge CFDictionaryRef)query, &resultRef);
+  // Transfer ownership before every return, including errors and no matches.
+  NSArray *items = CFBridgingRelease(resultRef);
+  if (status == errSecItemNotFound) {
+    return resolve(@[]);
+  }
+  if (status != errSecSuccess) {
+    return rejectWithError(reject, [NSError errorWithDomain:NSOSStatusErrorDomain code:status userInfo:nil]);
+  }
+
+  NSMutableOrderedSet<NSString *> *servers = [NSMutableOrderedSet orderedSet];
+  for (NSDictionary *item in items) {
+    NSString *server = item[(__bridge NSString *)kSecAttrServer];
+    if ([server isKindOfClass:[NSString class]]) {
+      [servers addObject:server];
+    }
+  }
+  return resolve(servers.array);
+}
+
 RCT_EXPORT_METHOD(getAllGenericPasswordServices:(NSDictionary * __nullable)options
                   resolve:(RCTPromiseResolveBlock)resolve
                   reject:(RCTPromiseRejectBlock)reject)

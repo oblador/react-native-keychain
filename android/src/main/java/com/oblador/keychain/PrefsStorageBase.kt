@@ -16,12 +16,15 @@ interface PrefsStorageBase {
 
   fun getAllServices(): Set<String>
 
+  fun getInternetServers(includeLegacy: Boolean): Set<String>
+
   fun removeEntry(service: String)
 
   fun storeEncryptedEntry(
     service: String,
     encryptionResult: EncryptionResult,
     authenticators: Int? = null,
+    credentialKind: String? = null,
   )
 
   /**

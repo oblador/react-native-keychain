@@ -53,6 +53,9 @@ class DataStorePrefsStorage(
 
   override fun getAllServices(): Set<String> = CredentialMetadata.services(prefsData)
 
+  override fun getInternetServers(includeLegacy: Boolean): Set<String> =
+    CredentialMetadata.internetServers(prefsData, includeLegacy)
+
   override fun removeEntry(service: String) {
     val keyForUsername = stringPreferencesKey(getKeyForUsername(service))
     val keyForPassword = stringPreferencesKey(getKeyForPassword(service))
@@ -63,6 +66,7 @@ class DataStorePrefsStorage(
         it.remove(keyForPassword)
         it.remove(keyForCipherStorage)
         it.remove(intPreferencesKey("$service:a"))
+        it.remove(stringPreferencesKey("$service:k"))
       }
     }
   }
@@ -71,6 +75,7 @@ class DataStorePrefsStorage(
     service: String,
     encryptionResult: CipherStorage.EncryptionResult,
     authenticators: Int?,
+    credentialKind: String?,
   ) {
     val keyForUsername = stringPreferencesKey(getKeyForUsername(service))
     val keyForPassword = stringPreferencesKey(getKeyForPassword(service))
@@ -82,6 +87,8 @@ class DataStorePrefsStorage(
         it[keyForCipherStorage] = encryptionResult.cipherName
         val authKey = intPreferencesKey("$service:a")
         if (authenticators == null) it.remove(authKey) else it[authKey] = authenticators
+        val kindKey = stringPreferencesKey("$service:k")
+        if (credentialKind == null) it.remove(kindKey) else it[kindKey] = credentialKind
       }
     }
   }

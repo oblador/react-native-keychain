@@ -186,7 +186,8 @@ class KeychainModule(reactContext: ReactApplicationContext) :
     username: String,
     password: String,
     options: ReadableMap?,
-    promise: Promise
+    promise: Promise,
+    credentialKind: String = CredentialMetadata.GENERIC
   ) {
     coroutineScope.launch {
       mutex.withLock {
@@ -202,7 +203,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
           val promptInfo = getPromptInfo(options, authenticators)
           val result =
             encryptToResult(alias, storage, username, password, level, promptInfo)
-          prefsStorage.storeEncryptedEntry(alias, result, authenticators)
+          prefsStorage.storeEncryptedEntry(alias, result, authenticators, credentialKind)
           val results = Arguments.createMap()
           results.putString(Maps.SERVICE, alias)
           results.putString(Maps.STORAGE, storage.getCipherStorageName())
@@ -305,6 +306,22 @@ class KeychainModule(reactContext: ReactApplicationContext) :
   }
 
   @ReactMethod
+  override fun getAllInternetCredentialServers(options: ReadableMap?, promise: Promise) {
+    coroutineScope.launch {
+      mutex.withLock {
+        try {
+          val includeLegacy = options?.hasKey("includeLegacy") == true &&
+            !options.isNull("includeLegacy") && options.getBoolean("includeLegacy")
+          val servers = prefsStorage.getInternetServers(includeLegacy)
+          promise.resolve(Arguments.makeNativeArray(servers.toList()))
+        } catch (e: Throwable) {
+          promise.reject(Errors.E_STORAGE_ACCESS_ERROR, e)
+        }
+      }
+    }
+  }
+
+  @ReactMethod
   override fun getGenericPasswordForOptions(options: ReadableMap?, promise: Promise) {
     val service = getServiceOrDefault(options)
     getGenericPassword(service, options, promise)
@@ -370,7 +387,7 @@ class KeychainModule(reactContext: ReactApplicationContext) :
     options: ReadableMap?,
     promise: Promise
   ) {
-    setGenericPassword(server, username, password, options, promise)
+    setGenericPassword(server, username, password, options, promise, CredentialMetadata.INTERNET)
   }
 
   @ReactMethod
