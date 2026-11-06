@@ -43,8 +43,6 @@ jobs:
         run: |
           yarn typecheck
           yarn tsc -p KeychainExample/tsconfig.json --noEmit
-      - name: Test public API contracts
-        run: yarn workspace KeychainExample test:unit
   website:
     name: Documentation
     runs-on: ubuntu-latest

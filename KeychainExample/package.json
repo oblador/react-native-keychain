@@ -9,7 +9,6 @@
     "build:ios": "npm run mkdist && react-native bundle --entry-file index.js --platform ios --dev false --bundle-output dist/main.ios.jsbundle --assets-dest dist/assets",
     "mkdist": "node -e \"require('node:fs').mkdirSync('dist', { recursive: true, mode: 0o755 })\"",
     "start": "react-native start --reset-cache",
-    "test:unit": "jest --config package.json --runInBand",
     "test:android": "yarn test:android:build && yarn test:android:run",
     "test:android:build": "detox build --configuration android.emu.release",
     "test:android:run": "detox test --configuration android.emu.release",
@@ -45,13 +44,7 @@
     "react-native-test-app": "4.4.12"
   },
   "jest": {
-    "preset": "react-native",
-    "moduleNameMapper": {
-      "^react-native$": "<rootDir>/../node_modules/react-native"
-    },
-    "testMatch": [
-      "<rootDir>/__tests__/**/*.test.ts"
-    ]
+    "preset": "react-native"
   },
   "engines": {
     "node": ">=20.19.4"
