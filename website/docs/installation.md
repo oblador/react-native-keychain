@@ -49,6 +49,20 @@ For Face ID, add a purpose string to the app's `Info.plist`:
 
 Rebuild the iOS app after installing the package or changing native configuration.
 
+### Swift Package Manager (preview)
+
+For iOS apps using React Native 0.88 or newer, this library also ships a `Package.swift` for React Native's experimental SwiftPM autolinking. Install the npm package as above, then run from your app's iOS directory:
+
+```sh
+npx react-native spm add --deintegrate --yes
+```
+
+`--deintegrate` removes the app's CocoaPods integration; omit it for an app that has never used CocoaPods. For an app already using SwiftPM, run `npx react-native spm update` after adding this library. Open the app's `.xcodeproj` and rebuild.
+
+The manifest relies on React Native's generated packages and app-specific Codegen output. Adding this repository directly through Xcode's **Add Package Dependencies** is not supported. Other native dependencies in your app also need SwiftPM support. See [React Native's SwiftPM guide](https://github.com/react/react-native/blob/v0.88.1/packages/react-native/scripts/spm/__docs__/spm-scripts.md) for setup and limitations.
+
+SwiftPM support here is iOS-only. CocoaPods remains supported, including for the other Apple platforms. The Face ID configuration above applies to either setup.
+
 ## Android setup
 
 React Native autolinking connects the native module. Rebuild the Android app after installing the package.

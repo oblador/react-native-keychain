@@ -15,7 +15,9 @@
     "test:android:run": "detox test --configuration android.emu.release",
     "test:ios": "yarn test:ios:build && yarn test:ios:run",
     "test:ios:build": "detox build --configuration ios.sim.release",
-    "test:ios:run": "detox test --configuration ios.sim.release"
+    "test:ios:run": "detox test --configuration ios.sim.release",
+    "build:e2e:android": "npm run mkdist && react-native bundle --entry-file e2e/app/index.js --platform android --dev false --bundle-output dist/main.android.jsbundle --assets-dest dist/res",
+    "build:e2e:ios": "npm run mkdist && react-native bundle --entry-file e2e/app/index.js --platform ios --dev false --bundle-output dist/main.ios.jsbundle --assets-dest dist/assets"
   },
   "dependencies": {
     "@swmansion/react-native-bottom-sheet": "^0.17.1",

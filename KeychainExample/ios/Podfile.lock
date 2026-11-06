@@ -3,6 +3,9 @@ PODS:
   - hermes-engine (0.82.1):
     - hermes-engine/Pre-built (= 0.82.1)
   - hermes-engine/Pre-built (0.82.1)
+  - KeychainNativeTests (1.0.0):
+    - RNKeychain
+  - KeychainUITests (1.0.0)
   - RCTDeprecation (0.82.1)
   - RCTRequired (0.82.1)
   - RCTTypeSafety (0.82.1):
@@ -1828,6 +1831,8 @@ PODS:
 DEPENDENCIES:
   - FBLazyVector (from `../node_modules/react-native/Libraries/FBLazyVector`)
   - hermes-engine (from `../node_modules/react-native/sdks/hermes-engine/hermes-engine.podspec`)
+  - KeychainNativeTests (from `KeychainNativeTests`)
+  - KeychainUITests (from `KeychainUITests`)
   - RCTDeprecation (from `../node_modules/react-native/ReactApple/Libraries/RCTFoundation/RCTDeprecation`)
   - RCTRequired (from `../node_modules/react-native/Libraries/Required`)
   - RCTTypeSafety (from `../node_modules/react-native/Libraries/TypeSafety`)
@@ -1909,6 +1914,10 @@ EXTERNAL SOURCES:
   hermes-engine:
     :podspec: "../node_modules/react-native/sdks/hermes-engine/hermes-engine.podspec"
     :tag: hermes-2025-09-01-RNv0.82.0-265ef62ff3eb7289d17e366664ac0da82303e101
+  KeychainNativeTests:
+    :path: KeychainNativeTests
+  KeychainUITests:
+    :path: KeychainUITests
   RCTDeprecation:
     :path: "../node_modules/react-native/ReactApple/Libraries/RCTFoundation/RCTDeprecation"
   RCTRequired:
@@ -2059,6 +2068,8 @@ EXTERNAL SOURCES:
 SPEC CHECKSUMS:
   FBLazyVector: 2e5b5553df729e080483373db6f045201ff4e6db
   hermes-engine: 273e30e7fb618279934b0b95ffab60ecedb7acf5
+  KeychainNativeTests: 8d48e71710a9dd3222473c322f73ad9b0afdbb96
+  KeychainUITests: e15eccbabca90f54c5b31d7ab23bc00894c1a2d0
   RCTDeprecation: c6b36da89aa26090c8684d29c2868dcca2cd4554
   RCTRequired: 1413a0844770d00fa1f1bb2da4680adfa8698065
   RCTTypeSafety: 354b4bb344998550c45d054ef66913837948f958
@@ -2133,6 +2144,6 @@ SPEC CHECKSUMS:
   RNKeychain: 3aa474e72535dc25526f48d8f3b3627e6e408d7f
   Yoga: 9a5a710cf47e32646c6d4689c74ce4c17f13ccdb
 
-PODFILE CHECKSUM: c9b7144d1afd20094faec7bef19f59fd8d71280a
+PODFILE CHECKSUM: da9395195c927b6b250118d1484574a5195200fe
 
 COCOAPODS: 1.16.2

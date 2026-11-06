@@ -12,7 +12,9 @@
     "ios/RNKeychainManager",
     "lib",
     "src",
-    "RNKeychain.podspec"
+    "RNKeychain.podspec",
+    "Package.swift",
+    "spm-headers"
   ],
   "scripts": {
     "format": "prettier '{,typings/,KeychainExample/}*.{md,js,json,ts,tsx}' --write",
@@ -105,6 +107,9 @@
         }
       ]
     ]
+  },
+  "swiftpmConfig": {
+    "name": "RNKeychain"
   },
   "peerDependencies": {
     "react": ">=19.1.1",

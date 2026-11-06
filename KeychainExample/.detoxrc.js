@@ -23,7 +23,7 @@ module.exports = {
       binaryPath:
         'ios/build/Build/Products/Release-iphonesimulator/ReactTestApp.app',
       build:
-        'xcodebuild ONLY_ACTIVE_ARCH=YES -workspace ios/KeychainExample.xcworkspace -UseNewBuildSystem=YES -scheme KeychainExample -configuration Release -sdk iphonesimulator -derivedDataPath ios/build',
+        'xcodebuild build-for-testing ONLY_ACTIVE_ARCH=YES -workspace ios/KeychainExample.xcworkspace -UseNewBuildSystem=YES -scheme KeychainExample -configuration Release -sdk iphonesimulator -derivedDataPath ios/build',
     },
     'android.debug': {
       type: 'android.apk',
