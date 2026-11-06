@@ -53,7 +53,8 @@ export function setGenericPassword(
  *
  * @param {GetOptions} [options] - A keychain options object.
  *
- * @returns {Promise<false | UserCredentials>} Resolves to an object containing `service`, `username`, `password`, and `storage` when successful, or `false` on failure.
+ * @returns {Promise<false | UserCredentials>} Resolves to an object containing `service`, `username`, `password`, and `storage` when credentials are found, or `false` when no credentials exist for the requested service.
+ * Keychain access errors reject the promise.
  *
  * @example
  * ```typescript
