@@ -1,4 +1,4 @@
-name: 'E2E Tests'
+name: 'Native and E2E Tests'
 
 on:
   push:
@@ -60,15 +60,22 @@ jobs:
           JAVA_OPTS: '-XX:MaxHeapSize=6g'
         working-directory: ./KeychainExample
         run: |
-          yarn build:android
+          yarn build:e2e:android
           yarn test:android:build
-          cd android && ./gradlew :react-native-keychain:testDebugUnitTest
+          cd android && ./gradlew :react-native-keychain:testDebugUnitTest :react-native-keychain:assembleDebugAndroidTest
 
       - name: Upload Test APKs
         uses: actions/upload-artifact@v4
         with:
           name: test-apk
           path: KeychainExample/android/app/build/outputs/apk
+          retention-days: 1
+
+      - name: Upload native test APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-test-apk
+          path: android/build/outputs/apk/androidTest/debug/*.apk
           retention-days: 1
 
   test-android:
@@ -114,6 +121,11 @@ jobs:
           name: test-apk
           path: KeychainExample/android/app/build/outputs/apk
 
+      - uses: actions/download-artifact@v4
+        with:
+          name: native-test-apk
+          path: native-test-apk
+
       - name: Display structure of downloaded files
         run: ls -R KeychainExample/android/app/build/outputs/apk
 
@@ -130,6 +142,7 @@ jobs:
             sleep 3
             adb shell "screenrecord --bugreport /data/local/tmp/screenrecord.mp4 & echo \$! > /data/local/tmp/screenrecord_pid.txt" &
             adb shell settings put system pointer_location 1
+            python3 .github/scripts/run-android-native-tests.py native-test-apk/*.apk
             python3 .github/scripts/enroll-android.py
             adb shell "kill -2 \$(cat /data/local/tmp/screenrecord_pid.txt)"
             sleep 1
@@ -145,6 +158,7 @@ jobs:
             KeychainExample/artifacts
             screenrecord.mp4
             android-enrollment-failure.png
+            android-native-results.txt
   build-ios:
     name: Build and Test iOS
     runs-on: macos-latest
@@ -200,11 +214,14 @@ jobs:
       - name: Build iOS Release
         working-directory: ./KeychainExample
         run: |
-          yarn build:ios
+          yarn build:e2e:ios
           cd ios && bundle exec pod install && cd -
           yarn test:ios:build
         env:
           USE_HERMES: 1
+
+      - name: Test native iOS Keychain behavior
+        run: python3 .github/scripts/run-ios-native-tests.py
 
       - name: Test iOS Release
         run: |
@@ -216,4 +233,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ios-test-artifacts
-          path: KeychainExample/artifacts
+          path: |
+            KeychainExample/artifacts
+            KeychainExample/ios/build/native-tests.xcresult

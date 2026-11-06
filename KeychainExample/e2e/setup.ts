@@ -5,8 +5,3 @@ beforeAll(async () => {
     await device.setBiometricEnrollment(true);
   }
 });
-
-afterAll(async () => {
-  await device.uninstallApp();
-  await device.installApp();
-});
