@@ -6,5 +6,6 @@ lib/
 KeychainExample/dist/
 KeychainExample/vendor/
 website/docs/api/
-website/versioned_docs/
-website/.docusaurus/
+website/.vitepress/.temp/
+website/.vitepress/cache/
+website/.vitepress/dist/

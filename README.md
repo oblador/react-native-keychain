@@ -1,5 +1,5 @@
 <h1 align="center"><img
-    src="website/static/img/logo.png"
+    src="website/docs/public/img/logo.png"
     align="center" width="50" height="50" alt=""
   /> react-native-keychain</h1>
 
@@ -37,7 +37,7 @@ To run it locally, install workspace dependencies with `yarn install`. For iOS, 
 
 ## Documentation
 
-Please refer to the documentation website on https://oblador.github.io/react-native-keychain
+Read the [documentation](https://oblador.github.io/react-native-keychain/) for setup, guides, and the API reference. To work on the VitePress site, see [website/README.md](website/README.md).
 
 ## Changelog
 

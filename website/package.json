@@ -2,50 +2,23 @@
   "name": "website",
   "version": "0.0.0",
   "private": true,
+  "type": "module",
   "scripts": {
-    "docusaurus": "docusaurus",
-    "start": "docusaurus start",
-    "build": "docusaurus build",
-    "swizzle": "docusaurus swizzle",
-    "deploy": "docusaurus deploy",
-    "clear": "docusaurus clear",
-    "serve": "docusaurus serve",
-    "write-translations": "docusaurus write-translations",
-    "write-heading-ids": "docusaurus write-heading-ids",
-    "typecheck": "tsc"
-  },
-  "dependencies": {
-    "@docusaurus/core": "3.5.2",
-    "@docusaurus/preset-classic": "3.5.2",
-    "@mdx-js/react": "^3.0.0",
-    "clsx": "^2.0.0",
-    "prism-react-renderer": "^2.3.0",
-    "react": "^18.3.1",
-    "react-dom": "^18.0.0"
+    "api": "typedoc --options typedoc.json",
+    "start": "yarn api && vitepress dev . --host 127.0.0.1",
+    "build": "yarn api && vitepress build . && node scripts/redirects.mjs && node scripts/check-links.mjs",
+    "serve": "vitepress preview . --host 127.0.0.1",
+    "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
-    "@docusaurus/module-type-aliases": "3.5.2",
-    "@docusaurus/tsconfig": "3.5.2",
-    "@docusaurus/types": "3.5.2",
-    "@types/react": "^18.3.0",
-    "docusaurus-plugin-typedoc": "^1.0.5",
+    "@types/node": "^22.0.0",
     "typedoc": "^0.26.7",
     "typedoc-plugin-markdown": "^4.2.8",
-    "typescript": "~5.6.3"
-  },
-  "browserslist": {
-    "production": [
-      ">0.5%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 3 chrome version",
-      "last 3 firefox version",
-      "last 5 safari version"
-    ]
+    "typescript": "~5.6.3",
+    "vitepress": "1.6.4",
+    "vue": "3.5.30"
   },
   "engines": {
-    "node": ">=18.0"
+    "node": ">=20.19.4"
   }
 }

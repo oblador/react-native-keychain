@@ -1,55 +1,71 @@
 ---
-id: index
-title: react-native-keychain
+title: Getting started
+description: Store and retrieve passwords and tokens with Apple Keychain and Android Keystore in React Native.
 ---
 
-import Tabs from '@theme/Tabs';
-import TabItem from '@theme/TabItem';
+# Getting started
 
-## Overview
+Keep passwords and tokens in Apple Keychain and Android Keystore, with one API for your React Native app.
 
-**react-native-keychain** is a library that provides keychain/keystore access for React Native applications. It allows you to securely store and retrieve sensitive information such as passwords, internet credentials, and tokens using native encryption mechanisms provided by iOS and Android.
+`react-native-keychain` stores a username and a secret together. Use it for a session token, saved sign-in, or credentials tied to a server. You can also require biometrics or a device passcode before access.
 
-This library supports various security features such as biometric authentication (Face ID, Touch ID, Fingerprint), passcode authentication, secure storage levels, as well as customizable options for accessing and storing data.
+## Install
 
-## Support
+::: code-group
 
-This library supports both iOS and Android platforms. Additionally, it has support for macOS Catalyst and visionOS.
-For iOS, the library uses the Keychain Services API, while on Android, it uses the Android Keystore.
-
-Supported platforms and versions:
-
-- **iOS**: Requires iOS 15.1+
-- **Android**: API 24+
-- **macOS Catalyst**: Supported
-- **visionOS**: Supported
-
-## Installation
-
-React Native **0.82 or later** with the **New Architecture** is required for the upcoming 11.x release. Use 10.x for older React Native versions or the Old Architecture. The iOS minimum is **15.1** and Android minimum is **API 24**. Development requires **Node.js 20.19.4+**, **JDK 17**, and **Xcode 16.1+**.
-
-**react-native-keychain** is on the npm registry! Install it using your favorite Node.js package manager:
-
-<Tabs>
-<TabItem value="npm" label="npm">
-
-```bash
+```sh [npm]
 npm install react-native-keychain
 ```
 
-</TabItem>
-<TabItem value="yarn" label="Yarn">
-
-```bash
+```sh [Yarn]
 yarn add react-native-keychain
 ```
 
-</TabItem>
-<TabItem value="pnpm" label="pnpm">
-
-```bash
+```sh [pnpm]
 pnpm add react-native-keychain
 ```
 
-</TabItem>
-</Tabs>
+:::
+
+Install the iOS pods and rebuild your app before calling the library. See [Installation](./installation.md) for requirements, native setup, and Face ID configuration.
+
+## Your first credential
+
+Use the same `service` when saving, reading, and removing a credential. The `password` field can hold a token as well as a password.
+
+```ts
+import * as Keychain from 'react-native-keychain';
+
+const options = { service: 'com.example.session' };
+
+// Save after signing in. Replace this sample with your session token.
+await Keychain.setGenericPassword('session', 'example-token', options);
+
+// Read when you need the token.
+const credentials = await Keychain.getGenericPassword(options);
+if (credentials) {
+  const token = credentials.password;
+  // Use the token in your authenticated request.
+}
+
+// Remove when signing out.
+await Keychain.resetGenericPassword(options);
+```
+
+A read returns `false` when no matching credential exists. Authentication and storage failures reject the promise: handle those separately from a missing credential. See [Store and retrieve](./usage.md) for a complete example with error handling.
+
+## Choose a credential API
+
+| You want to store         | Use                      | Identify the entry with |
+| ------------------------- | ------------------------ | ----------------------- |
+| A token or an app sign-in | `setGenericPassword`     | `service`               |
+| Credentials for a server  | `setInternetCredentials` | `server`                |
+
+On iOS, these use different Keychain item classes. On Android, they share a namespace, so use different identifiers for unrelated entries.
+
+## Next steps
+
+- [Store and retrieve](./usage.md) — overwrite entries, store multiple tokens, and work with servers.
+- [Authentication](./authentication.md) — require biometrics or a passcode and handle failures.
+- [Example app](./example-app.md) — try save, load, and reset on a device.
+- [API reference](./api/index.md) — find every function, option, and enum.

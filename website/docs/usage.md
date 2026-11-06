@@ -1,51 +1,61 @@
----
-id: usage
-title: Usage
----
+# Store and retrieve
 
-## Basic Usage
+Save credentials under a stable identifier, then use that identifier for every read, check, and reset.
 
-To use `react-native-keychain`, follow the example below to securely store and retrieve credentials.
+## Save, read, and remove
 
-```tsx
+```ts
 import * as Keychain from 'react-native-keychain';
 
-async () => {
-  const username = 'zuck';
-  const password = 'poniesRgr8';
+const options = { service: 'com.example.session' };
 
-  // Store the credentials
-  await Keychain.setGenericPassword(username, password, {
-    service: 'service_key',
-  });
+// Save after a successful sign-in.
+await Keychain.setGenericPassword('session', 'example-token', options);
 
-  try {
-    // Retrieve the credentials
-    const credentials = await Keychain.getGenericPassword({
-      service: 'service_key',
-    });
-    if (credentials) {
-      console.log(
-        'Credentials successfully loaded for user ' + credentials.username
-      );
-    } else {
-      // `false` means no credentials were found for the requested service.
-      console.log('No credentials stored');
-    }
-  } catch (error) {
-    console.error('Failed to access Keychain', error);
+try {
+  const credentials = await Keychain.getGenericPassword(options);
+  if (credentials) {
+    // Use credentials.password in an authenticated request.
+  } else {
+    // No credential exists for this service. Offer sign-in.
   }
+} catch {
+  // Access failed or authentication was cancelled. Offer retry or sign-in.
+}
 
-  // Reset the stored credentials
-  await Keychain.resetGenericPassword({ service: 'service_key' });
-};
+// Check existence without reading the secret.
+const exists = await Keychain.hasGenericPassword(options);
+
+// Remove the credential when signing out.
+await Keychain.resetGenericPassword(options);
 ```
 
-See the `KeychainExample` for a fully working project example.
+Handle rejected promises from save, existence checks, and reset in your app too. Saving to an existing service replaces that entry within the selected scope.
 
-:::note
-Both `setGenericPassword` and `setInternetCredentials` only support strings. If you need to store objects, use `JSON.stringify` when storing and `JSON.parse` when retrieving.
+::: info Strings only
+Both credential APIs accept strings. Use `JSON.stringify` when storing an object and `JSON.parse` after reading it. Keep large application data in a separate store.
 :::
+
+## Credentials for a server
+
+Pass the server as the first argument when saving or reading, and inside the options object when checking or removing:
+
+```ts
+import * as Keychain from 'react-native-keychain';
+
+const server = 'https://api.example.com';
+
+await Keychain.setInternetCredentials(
+  server,
+  'example-user',
+  'example-password'
+);
+const credentials = await Keychain.getInternetCredentials(server);
+const exists = await Keychain.hasInternetCredentials({ server });
+await Keychain.resetInternetCredentials({ server });
+```
+
+On Android, service and server identifiers share one namespace. Use distinct identifiers for entries you want to keep separate. On iOS, generic and internet credentials use different Keychain classes.
 
 ## Store multiple values
 
